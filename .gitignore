@@ -1,0 +1,18 @@
+# Secrets / credentials
+.streamlit/secrets.toml
+google_credentials.json
+dac-classroom-agent-*.json
+*.json.key
+OAuth client created.txt
+
+# Data / cache (may contain personal data)
+classroom_cache.db
+*.xlsx
+
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Backup
+_backup/
