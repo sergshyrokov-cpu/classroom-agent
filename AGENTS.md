@@ -52,11 +52,13 @@ exception by recording it as a resolved Open Decision:
 | API conventions | `docs/architecture/api-conventions.md` |
 | Persistence conventions | `docs/architecture/persistence-conventions.md` |
 | Security conventions | `docs/architecture/security-conventions.md` |
+| Testing conventions | `docs/architecture/testing-conventions.md` |
 | Product context | `docs/product/` (vision, epic-map, business-glossary, business-rules, personas, non-functional-requirements) |
 
 Rule identifiers used throughout this file: **AD-** architecture decisions
 (`architecture.md`), **AC-** API conventions, **PC-** persistence conventions,
-**SC-** security conventions — all in `docs/architecture/`; **NFR-**
+**SC-** security conventions, **TC-** testing conventions — all in
+`docs/architecture/`; **NFR-**
 non-functional requirements in `docs/product/non-functional-requirements.md`.
 
 `trebovaniya.md` outranks every document under `docs/`. The files in
@@ -262,26 +264,17 @@ is an Open Decision — raise it, do not resolve it yourself.
 # Testing Strategy
 
 `TEST_WRITING` runs before `IMPLEMENTATION` — tests are written against the
-approved Specification and API design, never against finished code.
+approved Specification and API design, never against finished code. The full
+rules are `docs/architecture/testing-conventions.md` (TC-*).
 
-- All business logic in the Application layer has automated unit tests.
-- Integration tests run against real PostgreSQL via **Testcontainers**, each
-  test class getting an isolated database. The EF Core InMemory provider is
-  forbidden — it hides constraint, unique-index and cascade defects
-  (`docs/architecture/persistence-conventions.md` PC-1).
-- No automated test calls a live Google API. The ports `IClassroomReader`,
-  `IDirectoryReader`, `IMeetReportsReader` and `IWorkspaceCredentialProvider`
-  are substituted in tests (AD-4); fixtures use synthetic data, never a real
-  roster, real student emails or a real service-account key. Verifying a scope
-  against a live domain is a manual task for the Owner, not a test.
-- Every endpoint in the approved OpenAPI contract has at least one test
-  asserting its status codes and error body shape (`api-conventions.md` AC-5, AC-6).
-- Authorization is tested per role: for each protected endpoint, one test proves
-  an allowed role succeeds and one proves a forbidden role is refused.
-- Read-only mode is tested as behavior, not as UI state — a blocked operation
-  must fail in the Application layer (`architecture.md` AD-6).
-- Tests live in `tests/ClassroomAgent.Tests/`, namespaces mirroring the
-  production tree (`docs/architecture/package-map.md`).
+Three that are never negotiable:
+
+- No automated test calls a live Google API; the Google ports are substituted
+  and fixtures are synthetic (TC-4).
+- Integration tests run against real PostgreSQL via Testcontainers; the EF Core
+  InMemory provider is forbidden (TC-2).
+- Every protected endpoint has both an allowed-role and a forbidden-role test;
+  read-only mode is tested in the Application layer, not as UI state (TC-5).
 
 ---
 

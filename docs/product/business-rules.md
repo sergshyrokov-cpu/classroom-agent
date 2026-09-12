@@ -1,5 +1,7 @@
 # Business Rules
 
+> **Normative.** A Specification cites these by id instead of restating them.
+
 Stable, cross-story rules. A Specification cites these by id rather than
 restating them. Each rule names its source in `trebovaniya.md`.
 
@@ -114,11 +116,6 @@ last error and last successful run. *(§3, Epic 5)*
 
 ## Data model
 
-**BR-050** A person's Classroom role (`teacher` / `student`) belongs to their
-membership of a course, not to the person: the same person can be a teacher on
-one course and a student on another. *(§7, item 4 — open question; treat as a
-constraint on any design that touches rosters)*
-
 **BR-051** A `Group` is a Workspace group with its own email. Attaching that
 email to a course roster enrolls all of the group's current and future members.
 `Course` ↔ `Group` is many-to-many. *(§3)*
@@ -150,3 +147,15 @@ never appears in an HTTP error body. *(§5,
 **BR-072** A retention and deletion policy for student personal data is **not
 yet defined** (`trebovaniya.md` §7, item 5). A Story that needs one raises an
 Open Decision; nobody invents a period.
+
+## Constraints from unresolved questions
+
+These are **not rules**. They record the shape a future decision is expected to
+take. A Specification must not cite them as settled — it raises the Open
+Decision instead (`trebovaniya.md` §7).
+
+**C-050 (from §7 item 4)** A person's Classroom role (`teacher` / `student`)
+most likely belongs to their membership of a course, not to the person: the same
+person can be a teacher on one course and a student on another. A design
+touching rosters should avoid foreclosing this, but the model change itself is
+still open. Blocks US-022.

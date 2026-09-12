@@ -1,5 +1,8 @@
 # Epic Map
 
+> **Planning, non-normative.** Candidate Stories are proposals, not
+> commitments; `docs/catalog/stories.yaml` owns Story lifecycle status.
+
 Epics follow `trebovaniya.md` section 4. Epic numbering is kept identical to the
 requirements document so the two can be cross-read; the ordering below is
 delivery order, which is not the same thing.

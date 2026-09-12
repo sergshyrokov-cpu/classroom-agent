@@ -1,5 +1,12 @@
 # Product Vision
 
+> **Orientation, non-normative.** Never cite this document as a requirement:
+> `trebovaniya.md`, `business-rules.md` and `non-functional-requirements.md`
+> are what a Specification cites.
+>
+> Roles are defined normatively in `business-rules.md` (BR-001, BR-002) and
+> `business-glossary.md`. Where this description disagrees with them, they win.
+
 ## What this is
 
 A system that lets school staff see what is actually happening in Google

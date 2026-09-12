@@ -1,5 +1,8 @@
 # Business Glossary
 
+> **Normative for terminology.** Use these terms in specifications, designs,
+> code and tests; see "Terms to avoid" at the end.
+
 Terms used consistently across specifications, designs, code and tests. Russian
 terms from `trebovaniya.md` are given so the two documents can be read together.
 

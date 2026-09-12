@@ -1,5 +1,7 @@
 # Non-Functional Requirements
 
+> **Normative.** A Specification cites these by id.
+
 From `trebovaniya.md` section 5, plus the parameters fixed in sections 8 and 9.
 A Specification cites these by id.
 

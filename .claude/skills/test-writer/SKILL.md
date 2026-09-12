@@ -69,6 +69,7 @@ Read (registry keys, resolved via `artifact-paths.yaml`):
 Read relevant project conventions from:
 
 - `docs/architecture/architecture.md`
+- `docs/architecture/testing-conventions.md`
 - `docs/architecture/api-conventions.md`
 - `docs/architecture/persistence-conventions.md`
 - `docs/architecture/security-conventions.md`
@@ -347,7 +348,8 @@ Create executable tests under:
 Use the same root namespace (`ClassroomAgent.Tests`) mirroring the
 application's namespace tree.
 
-Follow project testing conventions and existing test patterns.
+Follow `docs/architecture/testing-conventions.md` (TC-*) and existing test
+patterns.
 
 Prefer descriptive test names that express behavior and expected outcome.
 

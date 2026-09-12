@@ -1,5 +1,12 @@
 # Personas
 
+> **Orientation, non-normative.** Explains who the system is designed for.
+> Not a source of requirements — an annoyance listed here is context, not an
+> acceptance criterion.
+>
+> Roles are defined normatively in `business-rules.md` (BR-001, BR-002) and
+> `business-glossary.md`. Where this description disagrees with them, they win.
+
 Three people use the first version. Teachers and students are data, not users
 (Epic 7).
 
