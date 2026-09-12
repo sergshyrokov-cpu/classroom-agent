@@ -1,0 +1,49 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find . -maxdepth 3 -not -path '*/\\\\.*')",
+      "Bash(dotnet build *)",
+      "Bash(dotnet test *)",
+      "Bash(dotnet format *)",
+      "Bash(dotnet ef *)",
+      "Bash(dotnet list package *)",
+      "Bash(dotnet restore *)",
+      "Bash(dotnet new *)",
+      "Bash(dotnet sln *)",
+      "Bash(dotnet --list-sdks)",
+      "Bash(dotnet --version)",
+      "PowerShell(git *)",
+      "mcp__github__get_me",
+      "mcp__github__search_repositories",
+      "mcp__github__list_issues"
+    ]
+  },
+  "enableAllProjectMcpServers": false,
+  "enabledMcpjsonServers": [
+    "github"
+  ],
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/log-tool.py\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-backslash-prompt.py\""
+          }
+        ]
+      }
+    ]
+  },
+  "outputStyle": "Concise"
+}

@@ -1,0 +1,227 @@
+# =============================================================================
+# CANONICAL WORKFLOW + ROUTING DEFINITION
+# =============================================================================
+# This file is the ONLY authoritative definition of the story-delivery
+# workflow: stage identifiers, stage order, stage ownership, normal
+# transitions, loop-back targets, and human gates.
+#
+# No Skill, command, or prose document may define an alternative stage list,
+# alternative stage identifiers, or alternative routing. Prose docs
+# (stages.md, AGENTS.md, Skill "Position in Workflow" sections) are
+# explanatory and MUST stay consistent with this file.
+#
+# Artifact locations referenced here are registry KEYS defined in
+# docs/workflow/artifact-paths.yaml. Never put a filesystem path in this file.
+#
+# Result contract (see docs/workflow/artifact-lifecycle.md):
+#   verdict = PASS            -> orchestrator advances to `next`
+#   verdict = CHANGES_REQUIRED-> orchestrator routes to loop_back[<key>]
+#                                (the Skill selects the key; it MUST exist here)
+#   verdict = BLOCKED         -> orchestrator holds at the current stage and
+#                                surfaces blocking_issues
+#   verdict = NOT_APPLICABLE  -> only where `optional: true`; advances to `next`
+#
+# Only story-orchestrator may record a transition (docs/workflow/workflow-state.yaml
+# + append docs/workflow/history.jsonl). Stage Skills never mutate workflow state.
+#
+# -----------------------------------------------------------------------------
+# SCOPE NOTE (classroom-agent)
+# -----------------------------------------------------------------------------
+# This is the LIGHTWEIGHT variant of the workflow: 6 automated stages, 2 human
+# gates, 1 terminal stage. The project is a solo rewrite, so the review- and
+# planning-heavy stages of the full harness were deliberately dropped:
+#
+#   BACKLOG_SYNC              - no GitHub-issue backlog; Stories are authored
+#                               directly in docs/stories/
+#   CLARIFICATION             - requirements were clarified conversationally and
+#                               are frozen in trebovaniya.md (v12)
+#   SPEC_REVIEW               - the human gate after SPECIFICATION covers it
+#   DESIGN_REVIEW             - API/DB design is reviewed at the same gate
+#   IMPACT_ANALYSIS           - codebase is new; impact is the Story scope
+#   IMPLEMENTATION_PLANNING   - specification + designs are the plan
+#   PLAN_REVIEW               - no plan artifact to review
+#   IMPLEMENTATION_VERIFICATION - tests are the verification (test-writer runs
+#                               before dotnet-implementor)
+#   RECONCILIATION            - single-author project; drift is visible directly
+#   PR_PREPARATION / READY_FOR_PR - no PR flow; commits land on master
+#   ARCHIVED                  - COMPLETED is terminal here
+#
+# Restoring any of them means: re-adding the stage below, restoring its Skill
+# under .claude/skills/, and re-adding its artifact to artifact-paths.yaml.
+# =============================================================================
+
+version: 2
+workflow: story-delivery
+
+# Ordered list of canonical stage identifiers. This is the authoritative set.
+stage_order:
+  - SPECIFICATION
+  - HUMAN_SPEC_APPROVAL
+  - API_DESIGN
+  - DB_DESIGN
+  - TEST_WRITING
+  - IMPLEMENTATION
+  - SECURITY_REVIEW
+  - HUMAN_PR_APPROVAL
+  - COMPLETED
+
+# Artifact types that are produced only when the approved Specification does NOT
+# mark that area NOT_APPLICABLE. When a stage lists one of these in `inputs`, the
+# input is REQUIRED unless the owning stage (API_DESIGN / DB_DESIGN) recorded a
+# NOT_APPLICABLE verdict, in which case the consuming stage proceeds without it.
+# A dry-run / validator treats these as "conditionally required".
+conditional_artifacts:
+  - api_design
+  - openapi
+  - database_design
+  - entity_model
+
+# Retired identifiers -> canonical replacement or REMOVED in this variant.
+# MUST NOT appear anywhere in the active harness.
+retired_identifiers:
+  CLARIFY: REMOVED
+  CLARIFICATION: REMOVED
+  BACKLOG_SYNC: REMOVED
+  SPEC_WRITE: SPECIFICATION
+  SPEC_REVIEW: REMOVED
+  DESIGN: [API_DESIGN, DB_DESIGN]
+  DESIGN_REVIEW: REMOVED
+  IMPACT_ANALYSIS: REMOVED
+  PLANNING: REMOVED
+  IMPLEMENTATION_PLANNING: REMOVED
+  PLAN_REVIEW: REMOVED
+  TESTING: TEST_WRITING
+  VERIFICATION: REMOVED
+  IMPLEMENTATION_VERIFICATION: REMOVED
+  IMPLEMENTATION_VERIFY: REMOVED
+  RECONCILIATION: REMOVED
+  HUMAN_REVIEW: HUMAN_PR_APPROVAL
+  PR_PREPARATION: REMOVED
+  PULL_REQUEST: REMOVED
+  READY_FOR_PR: REMOVED
+  DONE: COMPLETED
+  ARCHIVED: REMOVED
+
+stages:
+
+  SPECIFICATION:
+    type: automated_skill
+    skill: spec-writer
+    purpose: >
+      Turn the Story and its Acceptance Criteria into an implementable
+      Specification, grounded in trebovaniya.md. Any gap that cannot be
+      resolved from trebovaniya.md is recorded as an Open Decision rather
+      than guessed.
+    inputs: [story]
+    outputs: [specification, open_decisions]
+    next: HUMAN_SPEC_APPROVAL
+
+  HUMAN_SPEC_APPROVAL:
+    type: human_gate
+    owner: human
+    required_artifacts: [specification]
+    approve_command: "/so:approve"
+    reject_command: "/so:reject"
+    on_approve: API_DESIGN
+    on_reject: SPECIFICATION
+    meaning: >
+      The human reads the Specification and any Open Decisions. This gate also
+      absorbs what SPEC_REVIEW did in the full harness — there is no automated
+      spec reviewer in this variant.
+
+  API_DESIGN:
+    type: automated_skill
+    skill: openapi-designer
+    inputs: [specification, open_decisions]
+    outputs: [api_design, openapi]
+    next: DB_DESIGN
+    optional: true
+    optional_when: >
+      The approved Specification explicitly states the Story does not change
+      public API behavior. Record the decision; emit verdict NOT_APPLICABLE.
+    loop_back:
+      invalid_specification: SPECIFICATION
+
+  DB_DESIGN:
+    type: automated_skill
+    skill: db-designer
+    inputs: [specification, api_design, openapi, open_decisions]
+    outputs: [database_design, entity_model]
+    next: TEST_WRITING
+    optional: true
+    optional_when: >
+      The approved Specification explicitly states the Story does not change
+      persistence behavior. Record the decision; emit verdict NOT_APPLICABLE.
+    loop_back:
+      invalid_specification: SPECIFICATION
+      changes_required_api: API_DESIGN
+
+  TEST_WRITING:
+    type: automated_skill
+    skill: test-writer
+    inputs: [story, specification, api_design, openapi, database_design,
+             entity_model]
+    outputs: [test_strategy, ac_test_matrix, test_generation_report]
+    next: IMPLEMENTATION
+    loop_back:
+      changes_required_tests: TEST_WRITING
+      invalid_specification: SPECIFICATION
+      invalid_api_design: API_DESIGN
+      invalid_database_design: DB_DESIGN
+
+  IMPLEMENTATION:
+    type: automated_skill
+    skill: dotnet-implementor
+    inputs: [story, open_decisions, specification, api_design, openapi,
+             database_design, entity_model, test_strategy, ac_test_matrix]
+    outputs: [implementation_report]
+    next: SECURITY_REVIEW
+    loop_back:
+      partial: IMPLEMENTATION
+      blocked_by_specification: SPECIFICATION
+      blocked_by_api_design: API_DESIGN
+      blocked_by_database_design: DB_DESIGN
+
+  SECURITY_REVIEW:
+    type: automated_skill
+    skill: security-reviewer
+    purpose: >
+      The one automated reviewer kept in this variant. The system handles
+      personal data of minors, Google OAuth, service-account impersonation and
+      a Control Plane authorization model — see trebovaniya.md sections 5 and 9.
+    inputs: [story, specification, implementation_report, api_design, openapi,
+             database_design, entity_model, test_strategy, ac_test_matrix,
+             open_decisions]
+    outputs: [security_review]
+    next: HUMAN_PR_APPROVAL
+    loop_back:
+      changes_required: IMPLEMENTATION
+      invalid_security_design: API_DESIGN
+
+  HUMAN_PR_APPROVAL:
+    type: human_gate
+    owner: human
+    required_artifacts: [implementation_report, security_review]
+    approve_command: "/so:approve"
+    reject_command: "/so:reject"
+    on_approve: COMPLETED
+    on_reject: IMPLEMENTATION
+    meaning: >
+      The human reviews the implementation report and the security review, then
+      commits. There is no PR flow in this project — commits land on master.
+
+  COMPLETED:
+    type: terminal
+    owner: story-orchestrator
+    meaning: >
+      The Story is delivered and committed. Terminal in this variant; there is
+      no separate ARCHIVED stage.
+
+# Input rule: every entry in a stage's `inputs` is either always-required or
+# listed in `conditional_artifacts` above (required unless its owning design
+# stage recorded NOT_APPLICABLE). The orchestrator resolves each to a path via
+# artifact-paths.yaml before invoking the stage Skill.
+#
+# Loop-back rule: a Skill may name a loop_back key only if that key exists under
+# the current stage's `loop_back` map in this file. The orchestrator rejects an
+# unknown key and holds the stage as BLOCKED pending human decision.
