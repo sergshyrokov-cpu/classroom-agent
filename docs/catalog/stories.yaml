@@ -1,0 +1,190 @@
+# =============================================================================
+# CANONICAL STORY LIFECYCLE STATUS REGISTRY
+# =============================================================================
+# Authoritative source for each Story's lifecycle status.
+#
+# Owner: story-orchestrator — it updates the active Story's `state` on
+#        activation and on COMPLETED. There is no backlog-sync stage in this
+#        workflow variant: Stories are authored by a human in docs/stories/
+#        and registered here by hand.
+#
+# Story Markdown files under docs/stories/ do NOT carry a mutable status field.
+#
+# state enum: BACKLOG | READY | IN_PROGRESS | COMPLETED
+#
+#   BACKLOG     — a candidate from docs/product/epic-map.md; no Story file yet
+#   READY       — the Story file exists in docs/stories/ and may be activated
+#   IN_PROGRESS — currently moving through the delivery workflow
+#   COMPLETED   — delivered and committed
+#
+# Delivery order follows epic-map.md: EPIC-8 (bootstrap) → EPIC-6 → EPIC-1 →
+# EPIC-2/5 → EPIC-3 → EPIC-4. Stories marked `blocked_by` must not be activated
+# until the named open question in trebovaniya.md section 7 is resolved.
+# =============================================================================
+version: 1
+
+stories:
+
+  # --- EPIC-8: Owner and Control Plane (bootstrap) -------------------------
+  - id: US-001
+    epic: EPIC-8
+    title: Owner first-run setup
+    state: READY
+  - id: US-002
+    epic: EPIC-8
+    title: Register an Installation
+    state: BACKLOG
+  - id: US-003
+    epic: EPIC-8
+    title: Manage AllowedAdmin entries
+    state: BACKLOG
+  - id: US-004
+    epic: EPIC-8
+    title: Suspend and resume an Installation
+    state: BACKLOG
+  - id: US-005
+    epic: EPIC-8
+    title: Installation legitimacy check and grace period
+    state: BACKLOG
+  - id: US-006
+    epic: EPIC-8
+    title: Control Plane push on status change
+    state: BACKLOG
+  - id: US-007
+    epic: EPIC-8
+    title: Read-only mode enforcement
+    state: BACKLOG
+
+  # --- EPIC-6: Program settings / Admin panel ------------------------------
+  - id: US-008
+    epic: EPIC-6
+    title: Admin sign-in via Google OAuth with AllowedAdmin verification
+    state: BACKLOG
+  - id: US-009
+    epic: EPIC-6
+    title: Configure WorkspaceConnection
+    state: BACKLOG
+  - id: US-010
+    epic: EPIC-6
+    title: Connection instructions for the school super-admin
+    state: BACKLOG
+  - id: US-011
+    epic: EPIC-6
+    title: Check access diagnostic
+    state: BACKLOG
+  - id: US-012
+    epic: EPIC-6
+    title: Create and manage Dean accounts
+    state: BACKLOG
+
+  # --- EPIC-1: Synchronization ---------------------------------------------
+  - id: US-013
+    epic: EPIC-1
+    title: Background synchronization service
+    state: BACKLOG
+  - id: US-014
+    epic: EPIC-1
+    title: Sync courses and rosters
+    state: BACKLOG
+  - id: US-015
+    epic: EPIC-1
+    title: Sync coursework and submissions
+    state: BACKLOG
+  - id: US-016
+    epic: EPIC-1
+    title: Sync Workspace groups and their membership
+    state: BACKLOG
+    blocked_by: >
+      trebovaniya.md section 7 item 3 — Group has no membership link in the
+      model. Also requires Admin SDK Directory API scopes no school has
+      authorized yet (section 6).
+  - id: US-017
+    epic: EPIC-1
+    title: Retry, backoff and permission-error handling
+    state: BACKLOG
+  - id: US-018
+    epic: EPIC-1
+    title: Incremental synchronization
+    state: BACKLOG
+  - id: US-019
+    epic: EPIC-1
+    title: Trigger a synchronization from the UI
+    state: BACKLOG
+
+  # --- EPIC-2: Courses, participants, groups -------------------------------
+  - id: US-020
+    epic: EPIC-2
+    title: Course list with filters and search
+    state: BACKLOG
+  - id: US-021
+    epic: EPIC-2
+    title: Course detail with roster
+    state: BACKLOG
+  - id: US-022
+    epic: EPIC-2
+    title: Teachers and their courses
+    state: BACKLOG
+    blocked_by: >
+      trebovaniya.md section 7 item 4 — the Classroom role is modelled on the
+      participant, but belongs on the course membership.
+  - id: US-023
+    epic: EPIC-2
+    title: Groups and their membership
+    state: BACKLOG
+    blocked_by: >
+      trebovaniya.md section 7 item 3 — same gap as US-016.
+
+  # --- EPIC-5: Database management -----------------------------------------
+  - id: US-024
+    epic: EPIC-5
+    title: Database statistics and last synchronization view
+    state: BACKLOG
+
+  # --- EPIC-3: Gradebook and printable templates ---------------------------
+  - id: US-025
+    epic: EPIC-3
+    title: Journal view for a period
+    state: BACKLOG
+    blocked_by: >
+      trebovaniya.md section 7 item 2 — Submission lacks state, submission date
+      and late flag, so "submitted, ungraded" cannot be told from "not
+      submitted".
+  - id: US-026
+    epic: EPIC-3
+    title: Distinguish graded coursework from ungraded material
+    state: BACKLOG
+  - id: US-027
+    epic: EPIC-3
+    title: Configurable report templates
+    state: BACKLOG
+  - id: US-028
+    epic: EPIC-3
+    title: Export a journal to Excel using a school template
+    state: BACKLOG
+  - id: US-029
+    epic: EPIC-3
+    title: Export a journal to Word
+    state: BACKLOG
+  - id: US-030
+    epic: EPIC-3
+    title: Assemble several templates into one printed journal
+    state: BACKLOG
+
+  # --- EPIC-4: Attendance ---------------------------------------------------
+  - id: US-031
+    epic: EPIC-4
+    title: Sync Meet attendance from Admin Reports API
+    state: BACKLOG
+  - id: US-032
+    epic: EPIC-4
+    title: Link a Meet session to a course
+    state: BACKLOG
+    blocked_by: >
+      trebovaniya.md section 7 item 1 — MeetSession has no course link and the
+      derivation (calendar id, meeting code) is undecided.
+  - id: US-033
+    epic: EPIC-4
+    title: Attendance report for a period
+    state: BACKLOG
+    blocked_by: >
+      Depends on US-032.
