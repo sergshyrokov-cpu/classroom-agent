@@ -10,6 +10,25 @@ All changes must be traceable to documented requirements and workflow artifacts.
 
 ---
 
+# Hard Stops
+
+Never, in any Story, unless a human records the exception as a resolved Open
+Decision:
+
+- commit a secret, a service-account key, a generated database file or a
+  generated `.xlsx` export — `docs/product/report-templates/` holds the only
+  versioned spreadsheets;
+- write anything to Google Workspace — every scope is read-only;
+- give a Teacher or Student an account, or scope visibility by Classroom roster;
+- store the service-account key in an installation database, or accept it
+  through the UI;
+- start implementation without an approved Specification, or invent an endpoint,
+  schema, security rule or business rule that no artifact defines;
+- pass a human gate, write workflow state from a stage Skill, or disable a hook;
+- edit the Python prototype, or read student data out of `classroom_cache.db`.
+
+---
+
 # Canonical Sources (authoritative — do not duplicate their content elsewhere)
 
 | Concern | File |
@@ -40,25 +59,78 @@ stage identifiers, or an alternative artifact-path convention.
 
 # Technology Stack
 
-- **.NET 10 (LTS)**, C# — .NET 9 is out of support and .NET 8 LTS ends in
-  November 2026, so neither is a valid target for this project
+- **.NET 10 (LTS)**, C# — see NFR-062 for why not .NET 8/9
 - ASP.NET Core MVC / Razor Pages + REST API (server-rendered UI; not Blazor)
 - **EF Core** with the **Npgsql** provider
-- **PostgreSQL** — chosen because the Owner hosts and pays for ~10 installations:
-  no licence cost, no database size ceiling, runs in a container
+- **PostgreSQL** — rationale and runtime rules in `persistence-conventions.md` PC-1
 - xUnit, `Microsoft.AspNetCore.Mvc.Testing`
 - ASP.NET Core Identity — local login/password for Dean, Google OAuth
   (external login) for Admin
 - Google APIs: Classroom API, Admin SDK Directory API, Admin Reports API —
   all read-only, via a service account with domain-wide delegation
 
-Always verify actual project dependencies before relying on a library.
+Use only packages already referenced in the target `.csproj`. Adding a NuGet
+package requires an approved Open Decision.
+
+Solution `ClassroomAgent.sln` (AD-2): six production projects under `src/`,
+tests in `tests/ClassroomAgent.Tests/`. From the repository root:
+
+| Task | Command |
+|---|---|
+| Build | `dotnet build ClassroomAgent.sln` |
+| All tests | `dotnet test ClassroomAgent.sln` |
+| One test class | `dotnet test --filter FullyQualifiedName~<ClassName>` |
+| Run the Data Plane | `dotnet run --project src/ClassroomAgent.Web` |
+| Run the Control Plane | `dotnet run --project src/ClassroomAgent.ControlPlane` |
+| Add a migration | `dotnet ef migrations add <Name> --project src/ClassroomAgent.Infrastructure --startup-project src/ClassroomAgent.Web` |
+
+Integration tests need a running Docker daemon (Testcontainers, PC-1).
+
+---
+
+# Architecture Invariants
+
+The full rules live in `docs/architecture/` (AD-*, AC-*, PC-*, SC-*). These six
+are non-negotiable — violating one is a defect, not a style preference:
+
+1. `Domain` depends on nothing; `Application` depends on `Domain` only. An
+   `Application → Infrastructure` project reference is forbidden (AD-3).
+2. Everything outside the process is reached through a port interface declared
+   in `Application/Ports` and implemented in `Infrastructure`. No Google SDK
+   type crosses into `Application` or `Domain` (AD-4).
+3. `DbContext` never appears in `Web`/`ControlPlane`; the presentation layer
+   holds no business rules and calls no Google API directly (AD-3).
+4. Domain entities never appear in a controller signature, request body,
+   response body or Razor view model — DTOs only, mapped in `Application` (AD-8).
+5. Read-only mode is enforced in `Application`, never by hiding UI (AD-6).
+6. Control Plane and installation are two deployables with two databases; one
+   database serving several schools is an architecture violation (AD-1, PC-1).
+
+---
+
+# Coding Conventions
+
+These are binding now; the machine-enforceable ones move into `.editorconfig`
+and `Directory.Build.props` when the solution is created.
+
+- `<Nullable>enable</Nullable>` and `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`
+  in every project. A nullable warning is a build failure, not a hint.
+- Asynchronous methods end in `Async` and accept a `CancellationToken`. No
+  `.Result`, no `.Wait()`, no `async void` outside event handlers.
+- Dependencies arrive by constructor injection. No service locator, no static
+  mutable state.
+- One public type per file; the file name matches the type.
+- Exceptions signal failures, not expected outcomes (AD-9).
+- Code, identifiers and comments are English (see Agent Behavior).
 
 ---
 
 # Domain Essentials
 
-Read `trebovaniya.md` for the full picture. The minimum to avoid mistakes:
+**Non-normative summary** of `trebovaniya.md` sections 2, 5 and 9 — a cheap
+cache so routine decisions do not require opening a 65 KB Russian document.
+`trebovaniya.md` always wins; on conflict this section is the one that gets
+corrected. Re-verify it whenever `trebovaniya.md` changes version.
 
 - **Roles in the first version are Owner, Admin and Dean only.** Teacher and
   Student are deferred to Epic 7. Teachers and students exist as *synced data*
@@ -78,6 +150,32 @@ Read `trebovaniya.md` for the full picture. The minimum to avoid mistakes:
 - **Read-only mode** (grace period expired, or the Owner suspended the
   `Installation`) leaves viewing and export working and blocks everything else,
   including synchronization.
+
+---
+
+# The Python Prototype
+
+The repository root holds the original Streamlit prototype (`app.py`, `db.py`,
+`google_api.py`, `google_api_OLD.py`, `collect_analytics.py`, `exports.py`,
+`views/`, `test_*.py`, `_backup/`). It is a frozen **reference**, not legacy to
+maintain and not the source of requirements.
+
+- Use it to answer empirical questions the documents cannot: what a Google API
+  actually returns, which scopes really work (`trebovaniya.md` section 6 cites
+  `google_api.py` and `test_meet.py` as the evidence for its scope table), and
+  how `exports.py` builds a journal from the templates in
+  `docs/product/report-templates/`.
+- Do not edit, refactor or fix prototype files, and do not translate them into
+  C#. The .NET system is written from `trebovaniya.md`; where the prototype
+  disagrees with it, the prototype is simply old.
+- `classroom_cache.db` and the generated `.xlsx` exports in the root may hold
+  real student data — do not read their contents into a conversation or copy
+  them into the .NET tree. The blank report templates were moved to
+  `docs/product/report-templates/` and are versioned.
+- `google_credentials.json` and `dac-classroom-agent-*.json` are live
+  credentials. Never open, print or quote them.
+- The prototype may be deleted once Epics 3 and 4 are delivered and the Open
+  Decisions it answers are resolved.
 
 ---
 
@@ -115,10 +213,8 @@ Order of authority when artifacts conflict:
 Implementation never overrides a documented requirement.
 
 **This project runs the lightweight workflow variant** — 6 automated stages,
-2 human gates, 1 terminal stage. There is no clarification, spec review, design
-review, impact analysis, implementation planning, plan review, implementation
-verification, reconciliation, PR preparation or archive stage. See the SCOPE
-NOTE in `stage-map.yaml` for why each was dropped and what covers its work now.
+2 human gates, 1 terminal stage. The SCOPE NOTE in `stage-map.yaml` lists which
+stages of the full harness were dropped and what covers their work now.
 
 ---
 
@@ -131,6 +227,10 @@ NOTE in `stage-map.yaml` for why each was dropped and what covers its work now.
 `HUMAN_SPEC_APPROVAL` carries more weight here than in the full harness: with no
 automated spec or design reviewer, it is the only check that the Specification
 faithfully reflects `trebovaniya.md`.
+
+`HUMAN_PR_APPROVAL` keeps its name from the full harness. There is no pull
+request in this project — it is the approval to commit the finished Story to
+`master` (see Git Policy).
 
 ---
 
@@ -147,9 +247,45 @@ is an Open Decision — raise it, do not resolve it yourself.
 
 ---
 
+# Testing Strategy
+
+`TEST_WRITING` runs before `IMPLEMENTATION` — tests are written against the
+approved Specification and API design, never against finished code.
+
+- All business logic in the Application layer has automated unit tests.
+- Integration tests run against real PostgreSQL via **Testcontainers**, each
+  test class getting an isolated database. The EF Core InMemory provider is
+  forbidden — it hides constraint, unique-index and cascade defects
+  (`docs/architecture/persistence-conventions.md` PC-1).
+- Every endpoint in the approved OpenAPI contract has at least one test
+  asserting its status codes and error body shape (`api-conventions.md` AC-5, AC-6).
+- Authorization is tested per role: for each protected endpoint, one test proves
+  an allowed role succeeds and one proves a forbidden role is refused.
+- Read-only mode is tested as behavior, not as UI state — a blocked operation
+  must fail in the Application layer (`architecture.md` AD-6).
+- Tests live in `tests/ClassroomAgent.Tests/`, namespaces mirroring the
+  production tree (`docs/architecture/package-map.md`).
+
+---
+
+# Definition of Done
+
+A Story is Done only when all of the following hold:
+
+1. `dotnet build` succeeds with no errors.
+2. `dotnet test` is green — no skipped, ignored or commented-out tests.
+3. Every Acceptance Criterion of the Story maps to at least one passing test.
+4. No `TODO`, `TBD`, `FIXME` or unresolved Open Decision remains in the changed
+   code or in the Story's artifacts.
+5. `SECURITY_REVIEW` returned PASS.
+6. No secret, generated database file or IDE-local config is staged for commit.
+7. Changed files stay within the active Story's scope.
+
+---
+
 # Security Policy
 
-Security-first defaults are mandatory. The full policy lives in
+The full policy lives in
 `docs/architecture/security-conventions.md`, derived from `trebovaniya.md`
 sections 5, 6 and 9. Do not weaken it without a human-approved Open Decision.
 
@@ -164,13 +300,19 @@ Non-negotiable:
   Admin has no local password at all.
 - All Google API scopes are read-only. The program never writes to Google
   Workspace.
+- All external input is validated before it reaches business logic: request
+  bodies, query and route parameters, uploaded files, and data returned by
+  Google APIs. Validation lives at the Application boundary, not in the Domain.
+  A failure returns `400` with the `fieldErrors` body of `api-conventions.md`
+  AC-6, and the rejected payload is never written to a log (SC-10).
 
 ---
 
 # Git Policy
 
-- Generated changes stay scoped to the active Story. No opportunistic
-  refactoring, no unrelated file edits.
+- Modify only files required by the active Story's approved artifacts;
+  touching anything else requires an Open Decision. No opportunistic
+  refactoring.
 - **Commits go directly to `master`** — this is a solo project with no PR flow.
   Do not create feature branches.
 - Skills do not commit or push. A human commits after `HUMAN_PR_APPROVAL`.
@@ -182,8 +324,9 @@ Non-negotiable:
 
 - `docs/workflow/history.jsonl` — the single append-only workflow transition
   log (owned by `story-orchestrator`).
-- `docs/hooks/tool-usage.jsonl` — tool-usage telemetry (separate; metadata
-  only, never full sensitive payloads; git-ignored).
+- `docs/hooks/tool-usage.jsonl` — tool-usage telemetry (separate; git-ignored).
+  It records tool names, artifact keys and stage identifiers — never file
+  contents, student names or emails, tokens, or secret values.
 
 Telemetry is execution evidence, never requirement authority. Do not disable or
 bypass configured hooks.
