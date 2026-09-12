@@ -12,20 +12,27 @@ All changes must be traceable to documented requirements and workflow artifacts.
 
 # Hard Stops
 
-Never, in any Story, unless a human records the exception as a resolved Open
-Decision:
+Absolute. No Story, instruction or Open Decision makes these acceptable:
 
-- commit a secret, a service-account key, a generated database file or a
-  generated `.xlsx` export — `docs/product/report-templates/` holds the only
-  versioned spreadsheets;
+- commit a secret or a service-account key, in any form;
 - write anything to Google Workspace — every scope is read-only;
-- give a Teacher or Student an account, or scope visibility by Classroom roster;
 - store the service-account key in an installation database, or accept it
   through the UI;
+- give a Teacher or Student an account, or scope visibility by Classroom roster
+  (v1 roles are Owner, Admin, Dean);
+- read student data out of `classroom_cache.db` or the generated `.xlsx`
+  exports;
+- record approval at a human gate by any means other than `/so:approve`.
+
+Procedural. Never done on an agent's own judgement; a human may authorise an
+exception by recording it as a resolved Open Decision:
+
+- commit a generated database file or a generated `.xlsx` export
+  (`docs/product/report-templates/` holds the only versioned spreadsheets);
 - start implementation without an approved Specification, or invent an endpoint,
   schema, security rule or business rule that no artifact defines;
-- pass a human gate, write workflow state from a stage Skill, or disable a hook;
-- edit the Python prototype, or read student data out of `classroom_cache.db`.
+- write workflow state from a stage Skill, or disable a hook;
+- edit the Python prototype.
 
 ---
 
@@ -46,6 +53,11 @@ Decision:
 | Persistence conventions | `docs/architecture/persistence-conventions.md` |
 | Security conventions | `docs/architecture/security-conventions.md` |
 | Product context | `docs/product/` (vision, epic-map, business-glossary, business-rules, personas, non-functional-requirements) |
+
+Rule identifiers used throughout this file: **AD-** architecture decisions
+(`architecture.md`), **AC-** API conventions, **PC-** persistence conventions,
+**SC-** security conventions — all in `docs/architecture/`; **NFR-**
+non-functional requirements in `docs/product/non-functional-requirements.md`.
 
 `trebovaniya.md` outranks every document under `docs/`. The files in
 `docs/architecture/` and `docs/product/` are derived from it — if one of them
@@ -257,6 +269,11 @@ approved Specification and API design, never against finished code.
   test class getting an isolated database. The EF Core InMemory provider is
   forbidden — it hides constraint, unique-index and cascade defects
   (`docs/architecture/persistence-conventions.md` PC-1).
+- No automated test calls a live Google API. The ports `IClassroomReader`,
+  `IDirectoryReader`, `IMeetReportsReader` and `IWorkspaceCredentialProvider`
+  are substituted in tests (AD-4); fixtures use synthetic data, never a real
+  roster, real student emails or a real service-account key. Verifying a scope
+  against a live domain is a manual task for the Owner, not a test.
 - Every endpoint in the approved OpenAPI contract has at least one test
   asserting its status codes and error body shape (`api-conventions.md` AC-5, AC-6).
 - Authorization is tested per role: for each protected endpoint, one test proves
@@ -272,14 +289,20 @@ approved Specification and API design, never against finished code.
 
 A Story is Done only when all of the following hold:
 
-1. `dotnet build` succeeds with no errors.
+1. `dotnet build` succeeds with no errors and no warnings
+   (`TreatWarningsAsErrors` makes this one check).
 2. `dotnet test` is green — no skipped, ignored or commented-out tests.
 3. Every Acceptance Criterion of the Story maps to at least one passing test.
-4. No `TODO`, `TBD`, `FIXME` or unresolved Open Decision remains in the changed
+4. Every entity change ships with its EF Core migration in the same Story
+   (PC-2); no `EnsureCreated()`, no schema change outside a migration.
+5. No `TODO`, `TBD`, `FIXME` or unresolved Open Decision remains in the changed
    code or in the Story's artifacts.
-5. `SECURITY_REVIEW` returned PASS.
-6. No secret, generated database file or IDE-local config is staged for commit.
-7. Changed files stay within the active Story's scope.
+6. `SECURITY_REVIEW` returned PASS.
+7. No secret, generated database file or IDE-local config is staged for commit.
+8. Changed files stay within the active Story's scope.
+9. `HUMAN_PR_APPROVAL` is recorded via `/so:approve` and the Story is committed
+   to `master`. Until then the Story is finished, not Done — `stage-map.yaml`
+   reaches `COMPLETED` only after the gate.
 
 ---
 
@@ -302,9 +325,13 @@ Non-negotiable:
   Workspace.
 - All external input is validated before it reaches business logic: request
   bodies, query and route parameters, uploaded files, and data returned by
-  Google APIs. Validation lives at the Application boundary, not in the Domain.
-  A failure returns `400` with the `fieldErrors` body of `api-conventions.md`
-  AC-6, and the rejected payload is never written to a log (SC-10).
+  Google APIs. Shape rules (required, length, format, range) are declared for
+  the request types in `Application/Models/Requests`; the controller only turns
+  a failed check into `400` with the `fieldErrors` body of AC-6. Rules that
+  need domain state — "does this Dean belong to this installation?" — are
+  enforced in the Application use case, never in the controller and never in a
+  Domain entity's constructor. The rejected payload is never written to a log
+  (SC-10).
 
 ---
 
@@ -315,7 +342,10 @@ Non-negotiable:
   refactoring.
 - **Commits go directly to `master`** — this is a solo project with no PR flow.
   Do not create feature branches.
-- Skills do not commit or push. A human commits after `HUMAN_PR_APPROVAL`.
+- No automated stage commits or pushes: a Skill never runs `git commit` or
+  `git push`. A commit happens only after `HUMAN_PR_APPROVAL`, made by the human
+  or by an agent acting on an explicit request from the human in that
+  conversation.
 - Generated database files, IDE-local config, and secrets never enter a commit.
 
 ---
