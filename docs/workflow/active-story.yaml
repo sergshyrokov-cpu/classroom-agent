@@ -6,10 +6,7 @@ version: 1
 active_story: null
 story_path: null
 source:
-  type: local_only
-  repository: null
-  issue_number: null
-  issue_url: null
+  type: authored
 activated_at: null
 activated_by: null
 status: NOT_STARTED

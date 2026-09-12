@@ -19,23 +19,21 @@ orchestrator records the transition.
 ```yaml
 version: 1
 active_story: US-001                                    # canonical Story id, or null when idle
-story_path: docs/stories/US-001-register-customer.md    # resolved from artifact-paths.yaml `story`
+story_path: docs/stories/US-001-owner-first-run-setup.md  # resolved from artifact-paths.yaml `story`
 source:
-  type: github_issue | local_only                      # local_only when no GitHub source
-  repository: null                                      # "owner/repo" or null
-  issue_number: null                                    # integer or null
-  issue_url: null                                       # string or null
+  type: authored                                        # the only value in this variant
 activated_at: null                                      # ISO-8601 or null
 activated_by: null                                      # actor string or null
-status: NOT_STARTED | IN_PROGRESS | COMPLETED | ARCHIVED
+status: NOT_STARTED | IN_PROGRESS | COMPLETED
 ```
 
 Rules:
 - Exactly one Story may be active. Multiple `active_story` values, or a value
   that disagrees with `workflow-state.yaml.story`, is an INCONSISTENT state and
   blocks `continue`.
-- `source.*` stays `null` when `.mcp.json` defines no GitHub repository. Do not
-  fabricate repository names or issue numbers.
+- `source.type` is always `authored`: Stories are written by a human in
+  `docs/stories/`. There is no backlog-sync stage and no issue tracker source in
+  this variant, so no repository or issue fields exist to fill in.
 - `status` here is the Story's participation status, mirrored into
   `docs/catalog/stories.yaml` atomically by the orchestrator.
 
@@ -64,7 +62,6 @@ non_blocking_findings: []              # carried-forward advisory findings
 started_at: null                       # ISO-8601 when first automated stage ran
 updated_at: null                       # ISO-8601 of last orchestrator write
 completed_at: null                     # ISO-8601 when stage COMPLETED was reached
-archived_at: null                      # ISO-8601 when stage ARCHIVED was reached
 ```
 
 ### `pending_human_gate` sub-object
@@ -73,16 +70,16 @@ Present (non-null) exactly when `current_stage` is a `human_gate` stage.
 
 ```yaml
 pending_human_gate:
-  stage: HUMAN_SPEC_APPROVAL           # the human_gate stage id
+  stage: HUMAN_PR_APPROVAL             # the human_gate stage id
   status: PENDING | APPROVED | REJECTED
   required_artifacts:                  # copied from stage-map.yaml, with resolved paths + versions
-    - type: implementation_plan
-      path: docs/plans/US-001-implementation-plan.md
+    - type: implementation_report
+      path: docs/evidence/US-001-implementation-report.md
       version: 1
-    - type: plan_review
-      path: docs/reviews/plans/US-001-plan-review.md
+    - type: security_review
+      path: docs/reviews/security/US-001-security-review.md
       version: 1
-  automated_verdict: PASS              # verdict of the review stage that fed this gate
+  automated_verdict: PASS              # verdict of SECURITY_REVIEW, the stage feeding this gate
   blocking_findings: []                # from that review
   requested_at: <ISO-8601>
   decided_at: null
@@ -131,5 +128,6 @@ One JSON object per line, append-only. Owned by `story-orchestrator`
 `verdict` in a history event is one of the review verdicts
 (`PASS` / `CHANGES_REQUIRED` / `BLOCKED` / `NOT_APPLICABLE`) or one of the
 lifecycle-event markers: `ACTIVATED` (Story activation, `from_stage: null`
-or `null`), `HUMAN_APPROVED` / `HUMAN_REJECTED` (a human gate, `skill: null`),
-`ARCHIVED` (archive mode).
+or `null`) and `HUMAN_APPROVED` / `HUMAN_REJECTED` (a human gate,
+`skill: null`). There is no `ARCHIVED` marker — archive mode is retired in this
+variant.

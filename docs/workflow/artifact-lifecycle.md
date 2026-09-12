@@ -22,11 +22,13 @@ Applies to every story-level artifact (front-matter `status:` field).
 | `IN_REVIEW` | A downstream review stage is currently evaluating it. |
 | `APPROVED` | Passed its review gate (and human gate where one exists). Safe to consume downstream. |
 | `SUPERSEDED` | A newer version exists. The newer artifact's `supersedes:` points here. Never used as a current input. |
-| `ARCHIVED` | Belongs to a delivery that has completed archive mode. Retained for history only. |
+
+`ARCHIVED` is **retired in this variant**: there is no archive mode, so no
+artifact can reach that status. See the SCOPE NOTE in `stage-map.yaml`.
 
 Rules:
 - A revised artifact increments `version:` and sets `supersedes:` to the prior path/version. The prior revision becomes `SUPERSEDED`.
-- Reviewers MUST check that every input artifact they consumed is the current (non-`SUPERSEDED`, non-`ARCHIVED`) version and that its `version:` matches what downstream artifacts recorded consuming.
+- Reviewers MUST check that every input artifact they consumed is the current (non-`SUPERSEDED`) version and that its `version:` matches what downstream artifacts recorded consuming.
 - Stale input (a review or evidence artifact generated from a now-`SUPERSEDED` upstream) blocks progression until the dependent stage is re-run.
 
 ---
@@ -74,7 +76,9 @@ Stored in `workflow-state.yaml` (`status:` and inside `pending_human_gate`).
 | `IN_PROGRESS` | An automated stage is the current stage and is runnable. |
 | `WAITING_FOR_HUMAN` | Current stage is a `human_gate`; `pending_human_gate.status = PENDING`. |
 | `BLOCKED` | Last stage returned `BLOCKED`, or a workflow invariant failed. |
-| `COMPLETED` | Reached stage `COMPLETED` (human confirmed PR merged / delivery done). |
-| `ARCHIVED` | Reached stage `ARCHIVED` via archive mode. |
+| `COMPLETED` | Reached stage `COMPLETED` — the Story is delivered and committed. Terminal. |
+
+`ARCHIVED` is **retired in this variant**: `COMPLETED` is terminal and there is
+no `ARCHIVED` stage to reach (`stage-map.yaml` `retired_identifiers`).
 
 `pending_human_gate.status` sub-enum: `PENDING`, `APPROVED`, `REJECTED`.

@@ -104,10 +104,6 @@ artifacts:
     pattern: docs/workflow/history.jsonl
     owner: story-orchestrator
 
-  project_state:
-    pattern: docs/knowledge/project-state.md
-    owner: story-orchestrator
-
 # =============================================================================
 # Removed in the lightweight variant (their stages were dropped — see the
 # SCOPE NOTE in stage-map.yaml). MUST NOT appear in any Skill or config;
@@ -124,6 +120,9 @@ artifacts:
 #   traceability                (reconciliation-reviewer)
 #   pr_summary                  (pr-preparer)
 #   delivery_summary            (story-orchestrator, archive mode)
+#   project_state               (story-orchestrator) — cross-story knowledge
+#                               file from the full harness; no stage in this
+#                               variant produces or reads it
 #
 # Note: open_decisions changed owner from us-clarifier to spec-writer.
 # =============================================================================

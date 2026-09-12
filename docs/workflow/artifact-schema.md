@@ -29,7 +29,7 @@ supersedes: null                            # or the relative path of the prior 
 | `artifact_type` | Must match a registry key in `artifact-paths.yaml`. |
 | `story` | Canonical Story id. Must equal `workflow-state.yaml.story`. |
 | `version` | `1` on first creation. A re-run that changes content increments it. |
-| `status` | One of `DRAFT, IN_REVIEW, APPROVED, SUPERSEDED, ARCHIVED`. New artifacts start `DRAFT`. A review stage may set an input's `status` progression only through the orchestrator-recorded result; Skills do not silently flip other artifacts' status. |
+| `status` | One of `DRAFT, IN_REVIEW, APPROVED, SUPERSEDED` (`artifact-lifecycle.md` §1). New artifacts start `DRAFT`. A review stage may set an input's `status` progression only through the orchestrator-recorded result; Skills do not silently flip other artifacts' status. |
 | `created_at` / `updated_at` | Generated at runtime from the system clock. Example dates in Skill docs are illustrative only and must be labelled as such. |
 | `produced_by` | The Skill named as `owner` of this `artifact_type` in `artifact-paths.yaml`. |
 | `inputs[]` | One entry per consumed artifact, with the version that was read. Enables stale-input detection. |
@@ -61,24 +61,20 @@ is the traceability anchor for the contract.
 
 ## Story artifact exception
 
-The `story` artifact (`docs/stories/{story_id}-{slug}.md`) is authored by a human
-by a human — it is an **input** to the
-workflow, not a stage output. It does **not** carry the produced-artifact block
-above (no `produced_by`, `inputs`, or `version` progression). Its front matter is:
+The `story` artifact (`docs/stories/{story_id}-{slug}.md`) is authored by a
+human — it is an **input** to the workflow, not a stage output. It does **not**
+carry the produced-artifact block above (no `produced_by`, `inputs`, or
+`version` progression). Its front matter is:
 
 ```yaml
 ---
 id: US-001
-epic: EPIC-1
-title: Customer Registration
-slug: register-customer
+epic: EPIC-8
+title: Owner first-run setup
+slug: owner-first-run-setup
 priority: HIGH
 source:
-  type: github_issue | local_only
-  repository: <owner/repo or null>
-  issue_number: <int or null>
-  issue_url: <string or null>
-  last_synced_at: <ISO-8601 or null>
+  type: authored          # the only value: a human writes the Story in docs/stories/
 ---
 ```
 

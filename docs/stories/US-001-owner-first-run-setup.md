@@ -6,10 +6,6 @@ slug: owner-first-run-setup
 priority: HIGH
 source:
   type: authored
-  repository: null
-  issue_number: null
-  issue_url: null
-  last_synced_at: null
 # Lifecycle status is owned by docs/catalog/stories.yaml (not this file).
 ---
 
