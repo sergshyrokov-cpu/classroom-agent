@@ -53,12 +53,13 @@ exception by recording it as a resolved Open Decision:
 | Persistence conventions | `docs/architecture/persistence-conventions.md` |
 | Security conventions | `docs/architecture/security-conventions.md` |
 | Testing conventions | `docs/architecture/testing-conventions.md` |
+| Deployment & operations | `docs/architecture/deployment-conventions.md` |
 | Product context | `docs/product/` (vision, epic-map, business-glossary, business-rules, personas, non-functional-requirements) |
 
 Rule identifiers used throughout this file: **AD-** architecture decisions
 (`architecture.md`), **AC-** API conventions, **PC-** persistence conventions,
-**SC-** security conventions, **TC-** testing conventions — all in
-`docs/architecture/`; **NFR-**
+**SC-** security conventions, **TC-** testing conventions,
+**DC-** deployment & operations — all in `docs/architecture/`; **NFR-**
 non-functional requirements in `docs/product/non-functional-requirements.md`.
 
 `trebovaniya.md` outranks every document under `docs/`. The files in
