@@ -8,6 +8,8 @@ OAuth client created.txt
 # Data / cache (may contain personal data)
 classroom_cache.db
 *.xlsx
+# except versioned report templates (no student data — see their README)
+!docs/product/report-templates/*.xlsx
 
 # Python
 __pycache__/
