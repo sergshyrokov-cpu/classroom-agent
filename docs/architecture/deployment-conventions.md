@@ -107,7 +107,9 @@ the previous one — the dependency is real, not stylistic
   quarter, together with the restore test (DC-13). Steps: create a new key → put
   it in the secret store under the **same reference** → restart the installation
   → run "check access" → delete the old key in Google Cloud → record it in the
-  operations journal (SC-12). No code and no database change.
+  operations journal (SC-12). No code and no database change. If the
+  installation is in read-only mode, "check access" is unavailable (BR-026): keep
+  the old key until a successful check after the mode ends.
 - **Suspected leak:** (1) delete the key at once, before investigating —
   access tokens already issued with it live at most an hour; (2) issue a new key
   and check access; (3) review Google Cloud audit logs for what the key was used

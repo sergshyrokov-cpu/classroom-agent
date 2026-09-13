@@ -95,7 +95,9 @@ check is the fallback when a push does not arrive. *(§9)*
 **BR-026** In read-only mode, viewing and exporting already-synced data keep
 working and everything else is blocked for both roles — for example
 synchronization (including pulling Meet data), report template edits, linking
-Meet meeting codes, Dean account management and connection settings. The only
+Meet meeting codes, Dean account management, connection settings and "check
+access". In read-only mode the system makes no call to Google at all; the
+connection instructions stay viewable (v39). The only
 writes permitted are a closed list of service writes: audit rows; sign-in
 bookkeeping (Identity failed-attempt counting and lockout, creating the
 `AppUser` of an approved Admin at their first login, and a Dean changing their

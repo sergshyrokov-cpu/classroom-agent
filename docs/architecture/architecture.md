@@ -122,7 +122,8 @@ closed list of service writes in BR-026 — audit rows, sign-in bookkeeping
 (including creating an approved Admin's `AppUser`), the legitimacy-check state,
 and the retention purge. Everything else is blocked — for example
 synchronization, Meet meeting-code linking, account management, connection
-settings, report template edits. See `trebovaniya.md` section 2 and 9.
+settings, "check access", report template edits. No port that calls Google
+(`IClassroomReader`, `IMeetReportsReader`) is invoked in read-only mode. See `trebovaniya.md` section 2 and 9.
 
 ## AD-7 Transaction boundary policy
 
