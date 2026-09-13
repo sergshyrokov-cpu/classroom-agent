@@ -75,7 +75,8 @@ installation by the Owner from the school's written agreement; an installation
 without it does not start. Expired data is physically deleted by a daily purge
 that also runs in read-only mode. *(§5, `persistence-conventions.md` PC-11)*
 
-**NFR-025** Audited actions are recorded in an append-only `AuditEvent` table —
+**NFR-025** Audited actions are recorded in an `AuditEvent` table whose rows are
+never updated and are deleted only by the retention purge —
 sign-ins and refusals, account management, connection changes, manual
 synchronization, and every export of a journal or report. A row identifies the
 actor, action, target and outcome by internal id only and never carries personal

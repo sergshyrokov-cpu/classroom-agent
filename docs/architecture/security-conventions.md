@@ -175,8 +175,10 @@ when" — above all, who took personal data out of the system.
 - **A row never carries personal data** — SC-10 binds it exactly as it binds
   logs: no names, no email addresses, no grades. An export row records course
   ids, the period, the template id and the row count, never the file's contents.
-- **Append-only.** The application never updates or deletes an audit row, and no
-  use case exposes a way to.
+- **Never updated; deleted only by the retention purge.** An audit row is never
+  changed. The only path that deletes one is the retention purge (PC-11); no
+  user-facing use case, endpoint or screen can edit or delete a row. Any other
+  update or delete path is a Critical finding (`trebovaniya.md` §5, v27).
 - **There is no audit screen in the first version** — rows are written, not
   shown. Viewing is deferred to EPIC-9 (`trebovaniya.md` section 4,
   `docs/product/epic-map.md`), because it requires a new cell in the permission

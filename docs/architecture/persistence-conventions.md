@@ -138,8 +138,9 @@ resulting migration must both match them.
 - Dean passwords are stored only as an ASP.NET Core Identity password hash.
   Admin has no local password column at all — Admin authenticates through Google
   OAuth (external login).
-- **`AuditEvent` is append-only**: no use case updates or deletes a row, and the
-  entity exposes no way to (SC-11). It carries internal identifiers only — a
+- **`AuditEvent` is never updated and is deleted only by the retention purge**
+  (PC-11): no other use case updates or deletes a row, and the entity exposes no
+  way to (SC-11). It carries internal identifiers only — a
   migration adding a name, email or grade column to it is a Critical finding.
 - Journals, grades and Meet participation are personal data of students, potentially
   minors. `db-designer` marks such columns and states their handling rules.
@@ -180,7 +181,8 @@ the product enforces the period the school agreed with the Owner.
 - **Synchronization never deletes teaching data.** A participant who disappears
   from Google stays until their courses expire; only the purge deletes.
 - `AuditEvent` rows are purged when their own timestamp is more than N years old,
-  independently of the courses they mention (SC-11).
+  independently of the courses they mention (SC-11). This is the only deletion of
+  audit rows, and a test proves it removes rows older than N and nothing newer.
 - A `MeetSession` whose meeting code is linked to no course is purged with its
   participations when its own date is more than N years old (`trebovaniya.md`
   section 5, v23).
