@@ -6,13 +6,18 @@ or project not listed here requires an approved decision.
 
 ## Project dependency graph
 
+`A ──→ B` means A references B. The table below is authoritative.
+
 ```
-Domain        ← Application ← Infrastructure
-                    ↑              ↑
-                   Web ────────────┘        (Data Plane host)
-                    │
-Contracts ←─────────┴───────────→ ControlPlane   (separate host, own DB)
+Web (Data Plane host) ──→ Application ──→ Domain
+  │  │                         ↑             ↑
+  │  └──────→ Infrastructure ──┴─────────────┘
+  │                │
+  └──────→ Contracts ←── ControlPlane   (separate host, own DB)
 ```
+
+`Web` and `ControlPlane` both reference `Contracts`; they never reference each
+other.
 
 | Project | May reference | Must not reference |
 |---|---|---|
@@ -73,7 +78,7 @@ Epic 7 — do not add them speculatively.
 |---|---|---|
 | `Controllers` | REST API controllers | no business logic, no `DbContext` |
 | `Pages` / `Views` | Razor pages and views | presentation only |
-| `BackgroundServices` | `SyncBackgroundService` | `architecture.md` AD-5 |
+| `BackgroundServices` | `SyncBackgroundService` (Classroom and the Meet event pull — both are synchronization, `trebovaniya.md` §2), `RetentionPurgeBackgroundService` (daily, PC-11), `LegitimacyCheckBackgroundService` (every 6 hours, BR-024) | `architecture.md` AD-5 |
 | `Security` | Identity setup, Google OAuth external login, authorization policy registration | `security-conventions.md` |
 | `Configuration` | `IServiceCollection` extensions wiring `Infrastructure` | no business logic |
 | `Exceptions` | the single `IExceptionHandler` | |

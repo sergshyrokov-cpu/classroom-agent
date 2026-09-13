@@ -109,8 +109,9 @@ Show the state of the local database and let it be refreshed.
 ### Candidate User Stories
 
 - US-024 Database statistics and last synchronization view
-- US-037 Retention purge: daily deletion of expired courses, orphaned
-  participants and old audit rows (`persistence-conventions.md` PC-11)
+- US-037 Retention purge: daily deletion of expired courses, leavers' memberships,
+  unlinked Meet meetings, unused accounts, orphaned participants and old audit
+  rows — the full list is `persistence-conventions.md` PC-11
 
 ---
 
@@ -151,7 +152,8 @@ class leaves no Meet data (BR-060).
   participant overlap, unassigned-meetings list, confirmation and re-linking by a
   Dean or Admin (BR-065)
 - US-033 Built-in Meet reports for a course and period: summary, meeting list,
-  student participation, one meeting in detail (BR-062…BR-064)
+  student participation, one meeting in detail, and their export (BR-062…BR-064;
+  `trebovaniya.md` §2 permission matrix)
 
 ---
 
