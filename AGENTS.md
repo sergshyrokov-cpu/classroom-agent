@@ -79,6 +79,7 @@ stage identifiers, or an alternative artifact-path convention.
 - **EF Core** with the **Npgsql** provider
 - **PostgreSQL** — rationale and runtime rules in `persistence-conventions.md` PC-1
 - xUnit, `Microsoft.AspNetCore.Mvc.Testing`
+- Serilog — structured logging to a rolling file (DC-10, approved in v15)
 - ASP.NET Core Identity — local login/password for Dean, Google OAuth
   (external login) for Admin
 - Google APIs: Classroom API, Admin SDK Directory API, Admin Reports API —
@@ -345,6 +346,9 @@ Non-negotiable:
 ---
 
 # Observability
+
+This section is about the **harness**. Application logging and health checks are
+`deployment-conventions.md` DC-10 and DC-11.
 
 - `docs/workflow/history.jsonl` — the single append-only workflow transition
   log (owned by `story-orchestrator`).

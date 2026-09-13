@@ -135,6 +135,50 @@ the previous one — the dependency is real, not stylistic
   (`trebovaniya.md` §7 item 5). Until it is settled, no Story may delete school
   data as part of an operational procedure.
 
+## DC-10 Logging
+
+- **Serilog**, structured, written to a rolling file on the installation: one
+  JSON object per line, a new file per day, kept **30 days** with a size cap.
+  The console sink is for local development only.
+- Levels:
+  - `Information` — application start and stop; synchronization start and finish
+    with counters; legitimacy check result changes.
+  - `Warning` — retried transient Google failures (`429`, `5xx`), a push from
+    the Control Plane that had to be retried.
+  - `Error` — permission failures (`403 unauthorized_client`, `access_denied`,
+    missing scope), unhandled exceptions, a legitimacy check that failed after
+    retries, an installation entering read-only mode.
+  - `Debug` is disabled outside local development.
+- Every log line written inside a request carries the request identifier; every
+  line written by a synchronization run carries that run's identifier, so one
+  run can be read end to end.
+- **SC-10 binds every line without exception**: internal identifiers only —
+  never a student or teacher name, email or grade; never a key, connection
+  string or token; never a raw Google API error object. A log line may say
+  *which* course or participant id was involved, never who they are.
+- Logs are the Owner's diagnostic tool. What a Dean or Admin sees about
+  synchronization comes from `SyncState`, not from logs (BR-044).
+
+## DC-11 Health checks
+
+- Two endpoints, both answering with status only and no diagnostic detail:
+  - **liveness** — the process is up. No dependency is touched.
+  - **readiness** — the database is reachable, the last successful legitimacy
+    check is within the grace period (BR-025), and the synchronization
+    background service is running.
+- Both are reachable **only from the Owner's private network**, like the service
+  channel (DC-6, SC-9). A publicly reachable endpoint that reports internal
+  state would contradict SC-6.
+- Readiness reports `Unhealthy` when the installation cannot serve its purpose.
+  Read-only mode is **not** unhealthy: it is a defined operating state (DC-7),
+  and reporting it as a failure would page the Owner for a school that is
+  working exactly as designed.
+- Metrics and centralized log collection are **out of scope for the first
+  version**: for ~10 installations, readiness plus `SyncState` answer "is this
+  school working". Shipping logs off a school's server is a privacy decision
+  (`trebovaniya.md` section 5) that has not been taken — deliberately deferred,
+  not forgotten.
+
 ## DC-9 What is not decided yet
 
 A deployment or operations Story that needs one of these raises an Open Decision
@@ -144,11 +188,10 @@ and stops. It does not improvise.
 |---|---|
 | Backup and restore of installation databases | §7 item 8 |
 | Service-account key rotation and compromise response | §7 item 9 |
-| Application observability: logging, health checks, metrics | §7 item 12 |
 | Behaviour when Control Plane and installation versions differ | §7 item 13 |
 | Retention and deletion of student personal data | §7 item 5 |
 
-Two of these bite at the first production deployment rather than later: without
-item 12 a stalled synchronization is invisible until someone phones the school,
-and without item 13 the first partial upgrade of ~10 installations has undefined
-behaviour.
+Item 13 bites at the first partial upgrade of ~10 installations: until it is
+settled, the behaviour of an installation talking to a differently-versioned
+Control Plane is undefined. Centralized log collection (DC-11) is a further
+decision, deliberately deferred rather than open by omission.

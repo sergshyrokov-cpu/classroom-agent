@@ -40,6 +40,15 @@ take a school down. *(§9)*
 pushed immediately by the Control Plane, with 3 retries and exponential backoff.
 The periodic check is the guarantee; the push is the optimization. *(§9)*
 
+**NFR-015** Each installation writes structured logs (Serilog, JSON, one file
+per day, retained 30 days) and exposes liveness and readiness endpoints reachable
+only from the Owner's private network. *(§8, `deployment-conventions.md` DC-10,
+DC-11)*
+
+**NFR-016** Metrics and centralized log collection are out of scope for the
+first version. Readiness plus `SyncState` are how the Owner sees that a school is
+working. *(§8, DC-11)*
+
 ## Security and privacy
 
 **NFR-020** The service-account key is never in the repository, never in the

@@ -143,8 +143,10 @@ pages are disabled outside local development.
 - Personal data of students is never written to application logs. A log line may
   reference a course or a participant by internal id, never by name, email or
   grade.
-- Telemetry (`docs/hooks/tool-usage.jsonl`) records metadata only and is
-  git-ignored.
+- Application logging is defined in `deployment-conventions.md` DC-10; the
+  constraints in this section bind every line it writes.
+- Telemetry (`docs/hooks/tool-usage.jsonl`) is harness tooling, not application
+  logging: it records metadata only and is git-ignored.
 
 ## SC-11 Audit
 
