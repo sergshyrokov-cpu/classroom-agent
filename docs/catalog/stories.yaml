@@ -182,13 +182,14 @@ stories:
     state: BACKLOG
     blocked_by: >
       Depends on US-013 (SyncState).
+  # US-037 purges teaching data only; purging Meet data is added later by the
+  # Meet pull Story of EPIC-4, so this Story does not wait for that epic.
   - id: US-037
     epic: EPIC-5
-    title: Retention purge of expired courses, leavers, unlinked meetings, accounts and audit rows
+    title: Retention purge of expired courses, leavers, accounts and audit rows
     state: BACKLOG
     blocked_by: >
-      Depends on US-015 (the teaching data it purges). Purging Meet data is added
-      later by US-031, so this Story does not wait for EPIC-4.
+      Depends on US-015 (the teaching data it purges).
 
   # --- EPIC-3: Gradebook and printable templates ---------------------------
   - id: US-025
