@@ -34,7 +34,7 @@ implements it; `Web` wires them.
 
 `ControlPlane → Domain` is equally forbidden. The Control Plane knows nothing
 about courses, journals or students — only `Installation`, `AllowedAdmin`,
-`Owner` and check results (`trebovaniya.md` section 9).
+`Owner`, check results and its own `AuditEvent` (`trebovaniya.md` section 9).
 
 ## Namespaces within each project
 
@@ -54,7 +54,7 @@ Epic 7 — do not add them speculatively.
 | Namespace | Contains | Depends on |
 |---|---|---|
 | `UseCases` | one class per use case: orchestration, transaction boundary, read-only-mode check | `Domain`, `Ports`, `Models`, `Exceptions` |
-| `Ports` | interfaces for every external system (`architecture.md` AD-4) | `Domain`, `Models` |
+| `Ports` | interfaces for every external system (`architecture.md` AD-4) — only Google and the Control Plane; a port to any other external system needs a separate decision (SC-13) | `Domain`, `Models` |
 | `Models.Dtos` | API and view-model **response** types | leaf |
 | `Models.Requests` | API **request** types with Data Annotations | `Validation` |
 | `Validation` | custom `ValidationAttribute` / `IValidatableObject` | `Domain` (read-only) |
@@ -80,7 +80,7 @@ Epic 7 — do not add them speculatively.
 | `Controllers` | REST API controllers | no business logic, no `DbContext` |
 | `Pages` / `Views` | Razor pages and views | presentation only |
 | `BackgroundServices` | `SyncBackgroundService` (Classroom and the Meet event pull — both are synchronization, `trebovaniya.md` §2), `RetentionPurgeBackgroundService` (daily, PC-11), `LegitimacyCheckBackgroundService` (every 6 hours, BR-024) | `architecture.md` AD-5 |
-| `Security` | Identity setup, Google OAuth external login, authorization policy registration | `security-conventions.md` |
+| `Security` | Identity setup, Google OAuth external login, authorization policy registration, the deny-by-default fallback policy and the closed list of anonymous endpoints | `security-conventions.md` SC-4 |
 | `Configuration` | `IServiceCollection` extensions wiring `Infrastructure` | no business logic |
 | `Exceptions` | the single `IExceptionHandler` | |
 
@@ -98,9 +98,9 @@ email checked at an Admin login (SC-12).
 | Namespace | Contains | Notes |
 |---|---|---|
 | `Controllers` | Owner UI + the check endpoints called by installations | HTTP mapping only: no business rules, no `DbContext` (AD-3) |
-| `Services` | business rules and transaction boundaries: Installation status, `AllowedAdmin`, legitimacy and compatibility checks; return DTOs | the only callers of `Persistence` |
+| `Services` | business rules and transaction boundaries: Owner first-run setup with the one-time setup code, Owner sign-in and its audit, Installation status, `AllowedAdmin`, legitimacy and compatibility checks; return DTOs | the only callers of `Persistence` |
 | `Persistence` | its **own** `DbContext`: `Owner`, `Installation`, `AllowedAdmin`, `InstanceLicenseCheck`, `AuditEvent` | separate database |
-| `Security` | Owner authentication (Identity, first-run setup) | |
+| `Security` | Identity and cookie wiring, the deny-by-default fallback policy and the anonymous endpoints of SC-4 | no business rules — setup and sign-in logic is in `Services` |
 | `Localization` | its own translation files (Ukrainian, English) for the Owner UI — it cannot reference `Application.Localization` | NFR-073 |
 | `Push` | outbound status-change notification to installations | `architecture.md` AD-1, `trebovaniya.md` section 9 |
 
