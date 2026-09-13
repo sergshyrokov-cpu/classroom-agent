@@ -144,10 +144,11 @@ and `Directory.Build.props` when the solution is created.
 
 # Domain Essentials
 
-**Non-normative summary** of `trebovaniya.md` sections 2, 5 and 9 — a cheap
-cache so routine decisions do not require opening a 65 KB Russian document.
+**Non-normative summary** of `trebovaniya.md` sections 2, 5, 6 and 9 — a cheap
+cache so routine decisions do not require opening a ~140 KB Russian document.
 `trebovaniya.md` always wins; on conflict this section is the one that gets
-corrected. Re-verify it whenever `trebovaniya.md` changes version.
+corrected. **Verified against v51.** When `trebovaniya.md` moves past that
+version, re-verify this section and update the marker.
 
 - **Roles in the first version are Owner, Admin and Dean only.** Teacher and
   Student are deferred to Epic 7. Teachers and students exist as *synced data*
@@ -172,6 +173,12 @@ corrected. Re-verify it whenever `trebovaniya.md` changes version.
   including synchronization and Meet code linking. Only the closed list of
   service writes in BR-026 still runs (audit, sign-in bookkeeping,
   legitimacy-check state, retention purge).
+- **The UI is Ukrainian and English — installation and Control Plane alike**
+  (NFR-073). Ukrainian is the default; each user's choice is stored on their
+  account. No user-visible string is hard-coded: screens, error messages, the
+  super-admin instructions and the labels written into exports come from
+  translation files (`Application.Localization`, `ControlPlane.Localization`).
+  Data from Google and text a Dean wrote into a template are never translated.
 
 ---
 
