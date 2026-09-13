@@ -135,11 +135,12 @@ resulting migration must both match them.
 ## PC-9 Sensitive data
 
 - **The service-account key is never stored in the database.**
-  `WorkspaceConnection` holds the domain, the impersonation user and a
-  *reference to a secret* (name or path); the key itself lives in the configured
-  secret store, placed there by the Owner at deployment
-  (`trebovaniya.md` sections 5 and 9, `security-conventions.md` SC-7). A
-  migration or entity adding a key/credential column is a Critical finding.
+  `WorkspaceConnection` holds only the domain and the impersonation user. The key
+  lives in the configured secret store, placed there by the Owner at deployment,
+  and the reference to it (name or path) lives in the installation's
+  configuration (DC-3) — not in the database (`trebovaniya.md` sections 3, 5 and
+  9, v33; `security-conventions.md` SC-7). A migration or entity adding a key,
+  credential or secret-reference column is a Critical finding.
 - Dean passwords are stored only as an ASP.NET Core Identity password hash.
   Admin has no local password column at all — Admin authenticates through Google
   OAuth (external login).

@@ -165,8 +165,8 @@ corrected. Re-verify it whenever `trebovaniya.md` changes version.
 - **Dean does the day-to-day work**; Admin installs, configures and grants roles.
   The permission matrix is in `trebovaniya.md` section 2 — do not invent cells.
 - **The service-account key never reaches a school.** The Owner places it at
-  deployment time; `WorkspaceConnection` stores a *reference to a secret*, never
-  the key itself.
+  deployment time and sets the *reference* to it in the installation's
+  configuration; the database holds neither the key nor the reference.
 - **Read-only mode** (grace period expired, or the Owner suspended the
   `Installation`) leaves viewing and export working and blocks everything else,
   including synchronization and Meet code linking. Only the closed list of

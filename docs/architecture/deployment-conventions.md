@@ -94,8 +94,9 @@ the previous one — the dependency is real, not stylistic
   PC-9, NFR-020).
 - One Cloud project owned by the Owner, **a separate service account per
   school** (§6): a leaked key compromises one school, not all of them.
-- `WorkspaceConnection` stores only a *reference* to the secret. An entity or
-  migration adding a key column is a Critical finding (PC-9).
+- The *reference* to the secret lives only in the installation's configuration
+  (DC-3); `WorkspaceConnection` holds neither key nor reference. An entity or
+  migration adding a key or reference column is a Critical finding (PC-9).
 - The school never receives a key. It receives a client ID, which is public.
 - **Delegation is bound to the service account's client ID, not to a key.**
   Replacing a key is therefore entirely the Owner's work; the school's

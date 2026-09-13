@@ -52,7 +52,7 @@ terms from `trebovaniya.md` are given so the two documents can be read together.
 | **MeetParticipation** | подключение к встрече | One participant's connection to a meeting: account (or external / no account), join time, duration in seconds. |
 | **MeetingCodeLink** | привязка кода встречи | Links a Meet meeting code to a course — suggested automatically or confirmed by a Dean or Admin. A course may have several codes, because a reset Classroom link gets a new one. |
 | **SyncState** | статус синхронизации | Status, counters, last error and last successful run of the background synchronization. |
-| **WorkspaceConnection** | подключение к Workspace | One installation's connection settings: domain, impersonation user, and a *reference* to the service-account secret. |
+| **WorkspaceConnection** | подключение к Workspace | One installation's connection settings: domain and impersonation user (the technical account). The reference to the service-account secret is installation configuration, not part of it. |
 | **ReportTemplate** | шаблон отчёта | A configurable journal/report layout: full, short, or matching the school's paper academic journal. |
 | **AllowedAdmin** | разрешённый Админ | A Control Plane record: an email permitted to be Admin of one `Installation`. Several per installation are allowed. |
 | **InstanceLicenseCheck** | проверка легитимности | The result of the periodic check of one `Installation`. |

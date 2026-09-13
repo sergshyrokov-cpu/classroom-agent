@@ -98,8 +98,9 @@ pages are disabled outside local development.
 - **The service-account key never reaches a school and never enters the
   database.** The Owner places it at deployment time in the configured secret
   store (Key Vault, environment variable, mounted secret file).
-  `WorkspaceConnection` stores a *reference* to it, never the material
-  (`persistence-conventions.md` PC-9).
+  The *reference* to it (secret name or path) lives only in the installation's
+  configuration, set by the Owner (DC-3); the database holds neither the key nor
+  the reference (`persistence-conventions.md` PC-9, `trebovaniya.md` §3, v33).
 - There is **no UI to upload a key**. An Admin configures the domain and the
   impersonation user only. Adding an upload form is a Critical finding.
 - One Cloud project owned by the Owner, **a separate service account per
