@@ -225,7 +225,7 @@ offline with materials in Classroom; missing Meet data never means an absence.
 **BR-061** Meet data arrives from Google with a delay of up to ~24 hours and is
 kept by Google for 180 days, so the system pulls it regularly and keeps its own
 history. The product states the delay rather than presenting data as live. *(§3,
-§6)*
+§4 Epic 4, §6, v47)*
 
 **BR-062** In the first version Meet reports are built for one selected
 Classroom course and period and show facts only — no lesson plan, lesson length,
@@ -304,4 +304,4 @@ EPIC-10)*
 
 **BR-077** An erasure never comes back: after a database is restored from a
 backup, every erasure recorded in the operations journal after the backup's date
-is re-applied before the school gets the installation back. *(§9, DC-13)*
+is re-applied before the school gets the installation back. *(§9, DC-13, v47)*

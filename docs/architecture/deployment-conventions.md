@@ -202,12 +202,10 @@ without long-lived keys (DC-5).
 - Levels:
   - `Information` — application start and stop; synchronization start and finish
     with counters; legitimacy check result changes.
-  - `Warning` — retried transient Google failures (`429`, `5xx`), a push from
-    the Control Plane that had to be retried, an installation entering read-only
-    mode (with the reason).
+  - `Warning` — retried transient Google failures (`429`, `5xx`), an
+    installation entering read-only mode (with the reason).
   - `Error` — permission failures (`403 unauthorized_client`, `access_denied`,
-    missing scope), unhandled exceptions, a legitimacy check that failed after
-    retries.
+    missing scope), unhandled exceptions, every unsuccessful legitimacy check.
   - `Debug` is disabled outside local development.
 - Every log line written inside a request carries the request identifier; every
   line written by a synchronization run carries that run's identifier, so one

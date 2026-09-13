@@ -75,7 +75,7 @@ body. *(§5, `security-conventions.md` SC-10)*
 **NFR-024** Student personal data is kept for a retention period N set per
 installation by the Owner from the school's written agreement; an installation
 without it does not start. Expired data is physically deleted by a daily purge
-that also runs in read-only mode. *(§5, `persistence-conventions.md` PC-11)*
+that also runs in read-only mode. *(§5, v47, `persistence-conventions.md` PC-11)*
 
 **NFR-025** Audited actions are recorded in an `AuditEvent` table whose rows are
 never updated and are deleted only by the retention purge —
