@@ -186,8 +186,8 @@ the product enforces the period the school agreed with the Owner.
   the start of any `MeetSession` reached through its meeting codes.
 - **A leaver has their own expiry.** A `CourseMembership` with `on_roster` false
   and `last_seen_at` more than N years ago is deleted together with that person's
-  `Submission` rows in the course and their `MeetParticipation` rows in meetings
-  reached through the course's meeting codes — even if the course itself is still
+  `Submission` rows in the course and their `MeetParticipation` rows (matched by
+  email, PC-12) in meetings reached through the course's meeting codes — even if the course itself is still
   kept (`trebovaniya.md` section 5, v31).
 - A `ClassroomParticipant` is deleted when no remaining `CourseMembership`
   references it.
@@ -214,9 +214,19 @@ the product enforces the period the school agreed with the Owner.
 Decided in `trebovaniya.md` sections 3 and 4 (v23).
 
 - A Meet `call_ended` event carries about 60 fields, most of them network
-  telemetry. Only what the reports need is stored: conference id, meeting code,
-  organizer, participant identifier and whether it is external, join time and
-  duration. Telemetry is discarded at ingestion.
+  telemetry. Only what the reports need is stored. Telemetry is discarded at
+  ingestion.
+  - `MeetSession`: conference id, meeting code, organizer email, start and end.
+    Google sends no session start or end: they are computed at ingestion from the
+    connections (earliest join, latest join + duration) and stored.
+  - `MeetParticipation`: `endpoint_id`, the domain account's email — or, for
+    external guests and connections without an account, only an "other
+    participant" flag with no address or name — join time and duration.
+- **`MeetParticipation` has no foreign key to `ClassroomParticipant`.** Whether a
+  person was a student or teacher of the course is resolved when a report is
+  built, by matching the email against the roster on the meeting's date
+  (BR-051). A migration adding such a foreign key, or storing an external guest's
+  identity, is a finding (`trebovaniya.md` section 3, v37).
 - **Durations are stored in seconds, never as percentages.** A future version
   relates them to lesson length from a timetable (Epic 11); stored percentages
   would have to be recomputed.
