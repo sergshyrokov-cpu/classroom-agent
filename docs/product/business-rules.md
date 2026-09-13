@@ -69,6 +69,11 @@ check is the fallback when a push does not arrive. *(§9)*
 (the grace period) have passed since the last successful check, or when its
 `Installation` status is suspended. *(§9)*
 
+**BR-027** A check answered `upgrade_required` — the installation's version is
+no longer supported by the Control Plane — is an unsuccessful check. It therefore
+consumes the grace period instead of stopping the school at once, and the reason
+is surfaced to the Admin. *(§8, `deployment-conventions.md` DC-12)*
+
 **BR-026** In read-only mode, viewing and exporting already-synced data keep
 working; synchronization, account management, connection settings and report
 template edits are blocked. *(§2, §9)*

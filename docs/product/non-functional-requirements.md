@@ -40,6 +40,13 @@ take a school down. *(§9)*
 pushed immediately by the Control Plane, with 3 retries and exponential backoff.
 The periodic check is the guarantee; the push is the optimization. *(§9)*
 
+**NFR-017** An installation reports its application and contract version on
+every legitimacy check. A Control Plane answer of `upgrade_required` counts as an
+unsuccessful check, so the 7-day grace period applies before read-only — a
+version gap never stops a school immediately. The Control Plane is always
+upgraded first and supports older installations. *(§8,
+`deployment-conventions.md` DC-12)*
+
 **NFR-015** Each installation writes structured logs (Serilog, JSON, one file
 per day, retained 30 days) and exposes liveness and readiness endpoints reachable
 only from the Owner's private network. *(§8, `deployment-conventions.md` DC-10,

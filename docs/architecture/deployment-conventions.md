@@ -179,6 +179,37 @@ the previous one — the dependency is real, not stylistic
   (`trebovaniya.md` section 5) that has not been taken — deliberately deferred,
   not forgotten.
 
+## DC-12 Version compatibility between the two planes
+
+Ten schools are never upgraded in the same minute, so a version gap is a normal
+operating condition, not an incident (`trebovaniya.md` §8, decided in v16).
+
+- **The installation reports its version on the legitimacy check.** Every
+  6-hourly check carries the installation's application version (semantic
+  versioning, NFR-061) and its contract version. There is no separate
+  version-polling mechanism.
+- **The Control Plane answers with a compatibility state**: `supported`,
+  `upgrade_recommended` or `upgrade_required`, alongside the legitimacy verdict.
+- **`upgrade_required` counts as an unsuccessful check.** It does not switch the
+  school off: the existing grace period applies, so the installation keeps
+  working for 7 days and only then enters read-only (BR-025, DC-7). The Owner
+  gets a week; a school never stops mid-lesson because of a deployment.
+- The reason is recorded and surfaced to the Admin the way a Google permission
+  failure is (AD-5), and logged at `Error` (DC-10). `upgrade_recommended` is
+  logged at `Warning` and changes nothing operationally.
+- **The Control Plane is upgraded first and must keep working with older
+  installations.** The reverse — an installation newer than the Control Plane —
+  is not supported: keeping one shared service ahead is cheaper than keeping ten
+  school servers ahead. DC-2 step 1 already puts the Control Plane first.
+- **`ClassroomAgent.Contracts` evolves additively**: new optional fields are
+  allowed; removing a field, renaming it or changing its meaning is not. Both
+  sides ignore unknown fields. A breaking change requires a new Control Plane
+  endpoint version and a window during which it serves both. `AC-1` governs the
+  public REST API, not this channel (AC-7) — this rule is the channel's own.
+- **An unparseable push breaks nothing**: the installation logs at `Error` and
+  waits for the periodic check, which is the designed guarantee; the push is the
+  optimization (NFR-014).
+
 ## DC-9 What is not decided yet
 
 A deployment or operations Story that needs one of these raises an Open Decision
@@ -188,10 +219,10 @@ and stops. It does not improvise.
 |---|---|
 | Backup and restore of installation databases | §7 item 8 |
 | Service-account key rotation and compromise response | §7 item 9 |
-| Behaviour when Control Plane and installation versions differ | §7 item 13 |
 | Retention and deletion of student personal data | §7 item 5 |
 
-Item 13 bites at the first partial upgrade of ~10 installations: until it is
-settled, the behaviour of an installation talking to a differently-versioned
-Control Plane is undefined. Centralized log collection (DC-11) is a further
-decision, deliberately deferred rather than open by omission.
+None of the three blocks writing code today, but items 8 and 9 block the first
+production deployment: a school hosted without a backup procedure or a key
+rotation procedure is an operational risk the Owner carries personally.
+Centralized log collection (DC-11) is a further decision, deliberately deferred
+rather than open by omission.
