@@ -148,6 +148,32 @@ Report who was actually present at video lessons, from Google's own records.
 
 ---
 
+## EPIC-9 (future)
+
+Audit log viewing
+
+### Goal
+
+Out of scope for the first version. `AuditEvent` rows are written from v1
+(`security-conventions.md` SC-11); only the screen that reads them is deferred.
+
+### Deferred
+
+- An audit viewing screen: filters by period, actor and action type, paged
+  output, internal ids resolved to readable names **in the view** without ever
+  writing names into the rows themselves, and no way to edit or delete a row.
+
+### Blocked until decided
+
+- Who may see the audit log — a new cell in the permission matrix
+  (`trebovaniya.md` §2). The likely answer is the installation's Admin, with the
+  Owner seeing only Control Plane audit, but that is a decision, not a given.
+- Whether a Dean sees their own actions, given that Dean exports are the main
+  content of the log.
+- Retention of audit rows, tied to `trebovaniya.md` §7 item 5.
+
+---
+
 ## EPIC-7 (future)
 
 Teacher role and student access

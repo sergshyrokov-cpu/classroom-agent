@@ -171,9 +171,10 @@ when" — above all, who took personal data out of the system.
   ids, the period, the template id and the row count, never the file's contents.
 - **Append-only.** The application never updates or deletes an audit row, and no
   use case exposes a way to.
-- **There is no audit screen in the first version.** Adding one requires a new
-  cell in the permission matrix (`trebovaniya.md` section 2), which is a decision
-  nobody may invent (SC-1).
+- **There is no audit screen in the first version** — rows are written, not
+  shown. Viewing is deferred to EPIC-9 (`trebovaniya.md` section 4,
+  `docs/product/epic-map.md`), because it requires a new cell in the permission
+  matrix (section 2), which is a decision nobody may invent (SC-1).
 - **Retention is not yet fixed**: audit rows are themselves personal data, so
   their retention is part of section 7 item 5. Until it is settled they are kept
   at least as long as the data they describe.
