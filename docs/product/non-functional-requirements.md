@@ -148,8 +148,9 @@ the core. *(§5, `architecture.md` AD-3)*
 **NFR-061** Semantic versioning of releases and versioned EF Core migrations.
 *(§5)*
 
-**NFR-062** Target framework **.NET 10 (LTS)**, supported to November 2028.
-.NET 9 is out of support and .NET 8 LTS ends in November 2026. *(§8)*
+**NFR-062** Target framework **.NET 10 (LTS)**, supported to 14 November 2028.
+.NET 9 (STS) and .NET 8 (LTS) both reach end of support on 10 November 2026.
+*(§8, v49)*
 
 ## User interface
 
