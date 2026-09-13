@@ -81,6 +81,24 @@ Admin's account (BR-015, SC-8).
 - Every API endpoint and every Razor page declares its required role as an
   authorization policy. There is no default-allow: an endpoint reachable without
   a declared policy is a Critical finding (`api-conventions.md` AC-9).
+- **Deny by default.** Both hosts set a fallback policy requiring an
+  authenticated user, so a forgotten attribute closes an endpoint rather than
+  opening it.
+- **Anonymous access is a closed list.** Only these endpoints may allow
+  anonymous access, each with the protection that replaces a role:
+
+  | Endpoint | Host | Protected by |
+  |---|---|---|
+  | Dean sign-in page | installation | Identity lockout after failed attempts |
+  | Google OAuth start and callback | installation | Google OAuth, then the `AllowedAdmin` check (SC-3) |
+  | Status-change push receiver | installation | private network (SC-9) |
+  | Liveness and readiness | installation | private network (DC-11) |
+  | Owner sign-in | Control Plane | private network, Identity lockout |
+  | First-run setup | Control Plane | private network and the one-time setup code (SC-2) |
+  | Legitimacy check and Admin login check | Control Plane | private network (SC-9) |
+
+  An anonymous endpoint not on this list is a Critical finding; adding one
+  requires extending the list.
 - Policies are defined in `Application/Authorization` and registered in the
   host's `Security` namespace, so the matrix lives in one place and can be
   compared against `trebovaniya.md` section 2.

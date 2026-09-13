@@ -126,7 +126,8 @@ Every endpoint declares the roles allowed to reach it, matching the permission
 matrix in `trebovaniya.md` section 2. `openapi-designer` records the required
 role per operation; `dotnet-implementor` implements it as an authorization
 policy (`security-conventions.md` SC-4). An endpoint with no declared policy is
-a Critical finding, not a default-allow.
+a Critical finding, not a default-allow. Anonymous access is allowed only for
+the closed list of endpoints in SC-4.
 
 ## AC-10 Exception-handler location
 

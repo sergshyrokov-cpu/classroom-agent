@@ -61,6 +61,8 @@ Derived from `trebovaniya.md` sections 5 and 9, and from the workflow order in
   proves a forbidden role is refused (`security-conventions.md` SC-4,
   `api-conventions.md` AC-9). An endpoint with no authorization test is treated
   as an endpoint with no policy.
+- A test enumerates every endpoint of each host and fails if one allows
+  anonymous access without being on the SC-4 list.
 - Read-only mode is tested in the Application layer: a blocked write must fail
   with the conflict behaviour of AD-6 / SC-5 even when the HTTP endpoint is
   called directly. Asserting that a Razor button is hidden is not a test of
