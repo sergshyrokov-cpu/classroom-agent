@@ -91,7 +91,8 @@ email checked at an Admin login (SC-12).
 
 | Namespace | Contains | Notes |
 |---|---|---|
-| `Controllers` | Owner UI + the check endpoint called by installations | |
+| `Controllers` | Owner UI + the check endpoints called by installations | HTTP mapping only: no business rules, no `DbContext` (AD-3) |
+| `Services` | business rules and transaction boundaries: Installation status, `AllowedAdmin`, legitimacy and compatibility checks; return DTOs | the only callers of `Persistence` |
 | `Persistence` | its **own** `DbContext`: `Owner`, `Installation`, `AllowedAdmin`, `InstanceLicenseCheck`, `AuditEvent` | separate database |
 | `Security` | Owner authentication (Identity, first-run setup) | |
 | `Push` | outbound status-change notification to installations | `architecture.md` AD-1, `trebovaniya.md` section 9 |

@@ -15,6 +15,9 @@ Derived from `trebovaniya.md` sections 5 and 9, and from the workflow order in
   it must fail if the Specification is violated.
 - All business logic in the Application layer has automated unit tests.
   Use cases are the unit under test, ports are substituted.
+- Business logic in `ClassroomAgent.ControlPlane.Services` is covered the same
+  way; since it uses its `DbContext` directly, it is tested against PostgreSQL
+  (TC-2).
 
 ## TC-2 Integration tests run against real PostgreSQL
 

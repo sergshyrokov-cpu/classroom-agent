@@ -114,8 +114,9 @@ are non-negotiable — violating one is a defect, not a style preference:
 2. Everything outside the process is reached through a port interface declared
    in `Application/Ports` and implemented in `Infrastructure`. No Google SDK
    type crosses into `Application` or `Domain` (AD-4).
-3. `DbContext` never appears in `Web`/`ControlPlane`; the presentation layer
-   holds no business rules and calls no Google API directly (AD-3).
+3. `DbContext` never appears in `Web`. In `ControlPlane` it is used only in the
+   `Persistence` and `Services` namespaces, never in `Controllers`. Presentation
+   code holds no business rules and calls no Google API directly (AD-3).
 4. Domain entities never appear in a controller signature, request body,
    response body or Razor view model — DTOs only, mapped in `Application` (AD-8).
 5. Read-only mode is enforced in `Application`, never by hiding UI (AD-6).

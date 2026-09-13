@@ -45,22 +45,35 @@ without an approved decision.
 ## AD-3 Layered architecture (Clean Architecture)
 
 ```
-Web / ControlPlane → Application → Domain
+Web → Application → Domain
                           ↓
                     Infrastructure
 ```
 
 | Layer | Project | Responsibility | Must not |
 |---|---|---|---|
-| Presentation | `Web`, `ControlPlane` | HTTP mapping, Razor views, DTO binding, auth wiring, hosted services | contain business rules; touch `DbContext`; call a Google API directly |
+| Presentation | `Web` | HTTP mapping, Razor views, DTO binding, auth wiring, hosted services | contain business rules; touch `DbContext`; call a Google API directly |
 | Application | `Application` | use cases, orchestration, transaction boundaries, entity↔DTO mapping, **port interfaces** | depend on EF Core, `HttpContext`, or any Google SDK type |
 | Domain | `Domain` | entities, value objects, enums, invariants | depend on anything else in the solution |
 | Infrastructure | `Infrastructure` | EF Core `DbContext` and repositories, Google API clients, secret access | contain business logic; be referenced by `Domain` or `Application` at compile time except through DI |
 
 **Dependency rule:** `Domain` depends on nothing. `Application` depends on
 `Domain` only. `Infrastructure` depends on `Application` and `Domain` and
-*implements* the ports declared in `Application`. `Web`/`ControlPlane` depend on
-`Application` and wire `Infrastructure` implementations at startup.
+*implements* the ports declared in `Application`. `Web` depends on
+`Application` and wires `Infrastructure` implementations at startup.
+
+**The Control Plane is one project with internal boundaries.** It references only
+`Contracts` (AD-1), so the layers above do not apply to it as projects. Inside
+`ClassroomAgent.ControlPlane`:
+
+- `Services` holds the business rules (Installation status, `AllowedAdmin`,
+  legitimacy and compatibility checks) and opens transactions (AD-7);
+- `Persistence` holds its own `DbContext`, used only from `Services`;
+- `Controllers` do HTTP mapping only: no business rules, no `DbContext`, and no
+  persistence entity in a signature or body — `Services` return DTOs.
+
+The boundary is kept by review and tests, not by the compiler; a controller
+touching `DbContext` is a defect.
 
 `Application → Infrastructure` as a project reference is forbidden. Anything
 `Application` needs from the outside world is a port interface it declares and
@@ -113,7 +126,8 @@ settings, report template edits. See `trebovaniya.md` section 2 and 9.
 
 ## AD-7 Transaction boundary policy
 
-- Transactions begin and end in the **Application** layer.
+- Transactions begin and end in the **Application** layer; in the Control Plane,
+  in its `Services` namespace (AD-3).
 - Repositories stage changes and never call `SaveChangesAsync()`; the owning use
   case commits.
 - Several writes that must be atomic are wrapped in an explicit
