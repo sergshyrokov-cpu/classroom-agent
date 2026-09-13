@@ -62,7 +62,8 @@ upgraded first and supports older installations. *(§8,
 
 **NFR-020** The service-account key is never in the repository, never in the
 installation database, and never uploadable through the UI. It is placed by the
-Owner at deployment in a secret store. *(§5, `security-conventions.md` SC-7)*
+Owner at deployment in a secret store; the reference to it lives in installation
+configuration, not in the database. *(§5, v33, `security-conventions.md` SC-7)*
 
 **NFR-021** Every Google OAuth scope is read-only. *(§1)*
 
@@ -78,9 +79,10 @@ without it does not start. Expired data is physically deleted by a daily purge
 that also runs in read-only mode. *(§5, v47, `persistence-conventions.md` PC-11)*
 
 **NFR-025** Audited actions are recorded in an `AuditEvent` table whose rows are
-never updated and are deleted only by the retention purge —
-sign-ins and refusals, account management, connection changes, manual
-synchronization, and every export of a journal or report. A row identifies the
+never updated and are deleted only by the retention purge — for example sign-ins
+and refusals, account management, connection changes, manual synchronization,
+and every export of a journal or report; the full list is
+`security-conventions.md` SC-11. A row identifies the
 actor, action, target and outcome by internal id only and never carries personal
 data. A refused sign-in with no account records an anonymous actor and the
 refusal category, never the login typed. There is no audit screen in the first
@@ -91,15 +93,23 @@ their own timestamp, Control Plane rows are kept indefinitely. *(§5,
 **NFR-026** The Control Plane has no path to a school's teaching data and
 receives no school statistics; the service channel carries installation id,
 versions, status and compatibility state, plus the email checked at an Admin
-login. The Owner's server-level access is operational,
-governed by the written agreement with the school and recorded in an operations
-journal. *(§9, `security-conventions.md` SC-12)*
+login. The whole Control Plane, the Owner UI included, is reachable only from
+the Owner's private network, and the Owner account is created only with a
+one-time setup code printed to the server console (v35). The Owner's
+server-level access is operational, governed by the written agreement with the
+school and recorded in an operations journal. *(§9, `security-conventions.md`
+SC-2, SC-9, SC-12)*
 
 **NFR-027** Each school's service-account key is replaced every 90 days without
 interrupting Google access and without action from the school; the installation
 restarts briefly, outside teaching hours. On a suspected leak the key is
 deleted immediately, a new one issued, usage reviewed, and the school informed
 without delay. *(§9, `deployment-conventions.md` DC-5)*
+
+**NFR-028** School data leaves the installation only for Google (read-only) and
+the Control Plane service channel. No AI, speech-recognition, analytics,
+telemetry or other external service receives school data in the first version.
+*(§6, v52, `business-rules.md` BR-078, `security-conventions.md` SC-13)*
 
 ## Data storage
 
@@ -131,8 +141,9 @@ opposite of the prototype. *(§5)*
 
 ## Portability
 
-**NFR-050** The Google Workspace domain, the impersonation user and the
-service-account reference are configuration, never compile-time constants. The
+**NFR-050** The Google Workspace domain and the impersonation user are settings
+entered by the Admin; the service-account reference is installation
+configuration. None of them is a compile-time constant (v33). The
 prototype's hard-coded `admin@dac.ukr.education` is a defect being fixed.
 *(§5)*
 
@@ -168,10 +179,10 @@ if unset; each Admin and Dean may choose their own, stored on their account.
 Screens, error messages and hints, the super-admin connection instructions, and
 the labels the system writes into exports (in the exporting user's language) are
 translated; text a Dean wrote into a template and data from Google are shown as
-is. Date and number formats follow the language. (Time zone: NFR-074.) The Control Plane UI is likewise in
-Ukrainian and English: Ukrainian by default, the Owner's choice stored on the
-Owner account. A new language is added through translation files without code changes.
-*(§5, v51)*
+is. Date and number formats follow the language. The Control Plane UI is
+likewise in Ukrainian and English: Ukrainian by default, the Owner's choice
+stored on the Owner account. A new language is added through translation files
+without code changes. Time zone handling is NFR-074. *(§5, v51)*
 
 **NFR-074** The school's time zone is a required installation setting set by the
 Owner at deployment; an installation without it does not start. All time is
