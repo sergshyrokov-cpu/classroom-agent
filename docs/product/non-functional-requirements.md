@@ -94,7 +94,8 @@ governed by the written agreement with the school and recorded in an operations
 journal. *(§9, `security-conventions.md` SC-12)*
 
 **NFR-027** Each school's service-account key is replaced every 90 days without
-downtime and without action from the school. On a suspected leak the key is
+interrupting Google access and without action from the school; the installation
+restarts briefly, outside teaching hours. On a suspected leak the key is
 deleted immediately, a new one issued, usage reviewed, and the school informed
 without delay. *(§9, `deployment-conventions.md` DC-5)*
 

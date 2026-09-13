@@ -103,11 +103,13 @@ the previous one — the dependency is real, not stylistic
 - **Delegation is bound to the service account's client ID, not to a key.**
   Replacing a key is therefore entirely the Owner's work; the school's
   super-admin does nothing. A service account can hold several keys at once, so
-  rotation causes no downtime (`trebovaniya.md` §9, v22).
+  Google access is never interrupted: the old key stays valid until the new one
+  is checked. The installation itself restarts for a few seconds, outside
+  teaching hours (`trebovaniya.md` §9, v22, v44).
 - **Planned rotation every 90 days** per school — conveniently all at once each
   quarter, together with the restore test (DC-13). Steps: create a new key → put
   it in the secret store under the **same reference** → restart the installation
-  → run "check access" → delete the old key in Google Cloud → record it in the
+  outside teaching hours → run "check access" → delete the old key in Google Cloud → record it in the
   operations journal (SC-12). No code and no database change. If the
   installation is in read-only mode, "check access" is unavailable (BR-026): keep
   the old key until a successful check after the mode ends.
