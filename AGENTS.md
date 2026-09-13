@@ -191,7 +191,11 @@ maintain and not the source of requirements.
 - `google_credentials.json` and `dac-classroom-agent-*.json` are live
   credentials. Never open, print or quote them.
 - The prototype may be deleted once Epics 3 and 4 are delivered and the Open
-  Decisions it answers are resolved.
+  Decisions it answers are resolved. **Retiring it has a mandatory first step:**
+  `dac-classroom-agent-*.json` is a *live* service-account key. Remind the human
+  to delete that key in Google Cloud Console first, and only then the file — a
+  key copy outside the secret store is forbidden (DC-5). Never delete either
+  yourself: the key belongs to the Owner, and removing it stops the prototype.
 
 ---
 
