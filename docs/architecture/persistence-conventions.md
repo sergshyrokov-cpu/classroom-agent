@@ -94,12 +94,13 @@ resulting migration must both match them.
 - Populated by an `ISaveChangesInterceptor` registered on the `DbContext`, which
   stamps entities in `Added`/`Modified` state — never by hand in a use case.
 - `created_at` is non-null and never updated after insert; `updated_at` is
-  non-null.
+  non-null. For `AuditEvent`, which is never updated (PC-9), `updated_at` always
+  equals `created_at`.
 - **All time is stored in UTC.** Presentation converts for display into the
   school's time zone — a required installation setting (DC-3), which also sets
-  the day boundaries of a selected period (`trebovaniya.md` section 5, v40). Journals and
-  Meet statistics span academic periods and Meet events come from Google in UTC;
-  mixing local time in storage would corrupt the reports.
+  the day boundaries of a selected period (`trebovaniya.md` section 5, v40).
+  Journals and Meet statistics span academic periods and Meet events come from
+  Google in UTC; mixing local time in storage would corrupt the reports.
 
 ## PC-7 Indexes
 
@@ -109,9 +110,9 @@ resulting migration must both match them.
 - Required by the synchronization design: a unique index on every Google-side
   identifier column (PC-3), because upsert matches on it.
 - Required by the reporting design: composite indexes supporting the journal
-  query (course + period) and the Meet statistics queries (meeting code + date range, participant + date
-  range), and roster-on-a-date lookups on `CourseMembership` (course +
-  `first_seen_at` / `last_seen_at`, PC-8).
+  query (course + period), the Meet statistics queries (meeting code + date
+  range, participant email + date range — PC-12), and roster-on-a-date lookups
+  on `CourseMembership` (course + `first_seen_at` / `last_seen_at`, PC-8).
   Several years of courses and grades is the stated growth expectation
   (`trebovaniya.md` section 5).
 - `db-designer` lists the required indexes; the migration creates them.
@@ -192,8 +193,8 @@ the product enforces the period the school agreed with the Owner.
 - **A leaver has their own expiry.** A `CourseMembership` with `on_roster` false
   and `last_seen_at` more than N years ago is deleted together with that person's
   `Submission` rows in the course and their `MeetParticipation` rows (matched by
-  email, PC-12) in meetings reached through the course's meeting codes — even if the course itself is still
-  kept (`trebovaniya.md` section 5, v31).
+  email, PC-12) in meetings reached through the course's meeting codes — even if
+  the course itself is still kept (`trebovaniya.md` section 5, v31).
 - A `ClassroomParticipant` is deleted when no remaining `CourseMembership`
   references it.
 - **Deletion is physical** and happens in one transaction per course, so a
@@ -203,9 +204,10 @@ the product enforces the period the school agreed with the Owner.
 - **Synchronization never deletes teaching data.** A participant who disappears
   from Google stays until their courses or their own leaver period expire; only
   the purge deletes.
-- `AuditEvent` rows are purged when their own timestamp is more than N years old,
-  independently of the courses they mention (SC-11). This is the only deletion of
-  audit rows, and a test proves it removes rows older than N and nothing newer.
+- Installation `AuditEvent` rows are purged when their own timestamp is more than
+  N years old, independently of the courses they mention (SC-11). This is the only
+  deletion of audit rows, and a test proves it removes rows older than N and
+  nothing newer. Control Plane audit rows are never purged (SC-11, v45).
 - **`AppUser` rows** (Admin and Dean) are deleted when their last successful
   sign-in — or creation, if they never signed in — is more than N years ago,
   whether or not disabled; the installation cannot know an Admin was revoked.
@@ -217,9 +219,11 @@ the product enforces the period the school agreed with the Owner.
   participations when its own date is more than N years old (`trebovaniya.md`
   section 5, v23).
 - Each purge run writes one `AuditEvent`: actor `system`, counts of courses,
-  participants, accounts and audit rows removed, no personal data.
+  leavers' memberships, unlinked Meet meetings, participants, accounts and audit
+  rows removed, no personal data.
 - **The purge runs in read-only mode** — one of the service writes permitted
-  there (BR-026, BR-075). It runs in the Web host's background services; once a day is enough.
+  there (BR-026, BR-075). It runs in the Web host's background services, once a
+  day.
 
 ## PC-12 Meet data
 
