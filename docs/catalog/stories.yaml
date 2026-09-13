@@ -78,6 +78,13 @@ stories:
     epic: EPIC-6
     title: Create and manage Dean accounts
     state: BACKLOG
+  - id: US-039
+    epic: EPIC-6
+    title: Choose UI language (Admin, Dean and Owner)
+    state: BACKLOG
+    blocked_by: >
+      Depends on US-001 (Owner account) and US-008 / US-012 (Admin and Dean
+      accounts exist).
 
   # --- EPIC-1: Synchronization ---------------------------------------------
   - id: US-013

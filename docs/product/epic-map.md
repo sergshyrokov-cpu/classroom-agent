@@ -58,6 +58,10 @@ and manage Dean accounts.
   technical-account requirements, BR-015)
 - US-011 "Check access" diagnostic against Classroom and Reports APIs
 - US-012 Create and manage Dean accounts
+- US-039 Choose UI language — Ukrainian or English, stored on the user's account,
+  for Admins and Deans in the installation and for the Owner in the Control Plane;
+  the school's default comes from installation configuration (NFR-073). Also allowed
+  in read-only mode (BR-026)
 
 ---
 

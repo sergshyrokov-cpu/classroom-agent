@@ -7,6 +7,7 @@ priority: HIGH
 source:
   type: authored
 # Lifecycle status is owned by docs/catalog/stories.yaml (not this file).
+# Aligned with trebovaniya.md v51.
 ---
 
 # User Story
@@ -30,18 +31,22 @@ Admin login and no Workspace connection.
 
 It is also the one account with no external authority behind it. An Admin is
 vouched for by the Owner; the Owner is vouched for by nobody, which is why the
-account is claimed once, at first run, and never re-openable afterwards.
+account is claimed once, at first run, with a code only someone on the server
+can see, and is never re-openable afterwards.
 
 ---
 
 # Scope
 
 **In scope:** the Control Plane (`ClassroomAgent.ControlPlane`) only — its own
-host, its own database, ASP.NET Core Identity.
+host, its own database, ASP.NET Core Identity; the one-time setup code; Owner
+sign-in; the `AuditEvent` table of the Control Plane for the events this Story
+produces; Ukrainian and English translation files for every page and message
+this Story adds.
 
 **Out of scope:** anything in a school installation; `Installation` and
 `AllowedAdmin` management (US-002, US-003); password reset and account recovery;
-a second Owner account.
+a second Owner account; the Owner switching their own UI language (US-039).
 
 ---
 
@@ -70,6 +75,7 @@ a second Owner account.
 - exactly one Owner account is created via ASP.NET Core Identity;
 - the password is stored only as an Identity hash — never in plain text, never
   recoverable;
+- the account's UI language is Ukrainian (NFR-073);
 - the Owner is signed in and lands on the Control Plane home page;
 - the account lives in the Control Plane database only, and no row is written
   to any installation's `AppUser` table (BR-005).
@@ -143,6 +149,51 @@ a second Owner account.
 - a restart while no Owner account exists generates a new code, and the
   previous one stops working.
 
+## AC-008 Sign-in is audited
+
+**Given** the Control Plane `AuditEvent` table (SC-11)
+
+**When** anyone signs in, or fails to sign in, as the Owner
+
+**Then**:
+
+- a successful sign-in writes a row with the Owner account's internal id and
+  role as actor, outcome, UTC time and request id;
+- a refused sign-in writes a row with outcome "refused" and the refusal
+  category — unknown login or wrong password (or locked out, per OD-001); the
+  actor is the Owner account's id when the login exists, otherwise "anonymous";
+- no row carries the login or password typed, or any other personal data
+  (`trebovaniya.md` §5, v45);
+- no use case, endpoint or page can update or delete a Control Plane audit row;
+  these rows are kept indefinitely (v45).
+
+## AC-009 Pages are translated, Ukrainian by default
+
+**Given** the setup page, the sign-in page and every message this Story shows
+
+**When** they are displayed
+
+**Then**:
+
+- they are in Ukrainian;
+- no user-visible string is hard-coded: each comes from
+  `ClassroomAgent.ControlPlane.Localization` and exists in both Ukrainian and
+  English (NFR-073);
+- date and number formats follow the Ukrainian locale.
+
+## AC-010 Only the setup and sign-in pages are anonymous
+
+**Given** the Control Plane is running
+
+**When** any endpoint is requested without a signed-in Owner
+
+**Then**:
+
+- only the first-run setup and Owner sign-in endpoints (and nothing else this
+  Story adds) allow anonymous access — they are on the SC-4 closed list;
+- every other endpoint is closed by the deny-by-default fallback policy, and a
+  test enumerating endpoints proves it (TC-5).
+
 ---
 
 # Open Decisions
@@ -154,7 +205,11 @@ must be decided at `HUMAN_SPEC_APPROVAL`, not guessed: it is the only account
 protecting the entire service, and ASP.NET Core Identity's defaults are a
 starting point, not an approved decision.
 
-Affects: AC-005, AC-006.
+Affects: AC-005, AC-006, AC-008.
+
+*Resolved:* **where the Owner switches UI language** — in the separate
+cross-cutting Story US-039, which covers the Owner, Admins and Deans. This Story
+ships translations and a Ukrainian default only (AC-009).
 
 ---
 
@@ -163,14 +218,16 @@ Affects: AC-005, AC-006.
 - The whole Control Plane, the setup page included, is reachable only from the
   Owner's private network (DC-6, SC-9, `trebovaniya.md` v35). The setup code of
   AC-007 protects the account even if that network is misconfigured.
+- The Control Plane is one project with internal boundaries (`architecture.md`
+  AD-3): the setup and sign-in logic and its transactions live in
+  `ControlPlane.Services`; `Controllers` hold no business rules and never touch
+  `DbContext`.
 - The Control Plane knows nothing about courses, participants or grades. It must
   not reference `ClassroomAgent.Domain` (`package-map.md`).
 - The Control Plane has no path to teaching data and receives no school
   statistics (SC-12, decided in `trebovaniya.md` v20). Nothing this Story adds —
   pages, endpoints, contract types — may create one.
-- Owner sign-in is an audited action (SC-11, NFR-025, decided in
-  `trebovaniya.md` v17). This Story is therefore the first to need the
-  `AuditEvent` table in the Control Plane database: sign-in and refused sign-in
-  are recorded with actor, outcome and request id, and no personal data. Creating
-  the Owner account at first run is not in the audited list — the Specification
-  should say explicitly whether it becomes one.
+- This Story is the first to need the Control Plane `AuditEvent` table (AC-008).
+  Creating the Owner account at first run and submitting a wrong setup code are
+  not in the audited list of `trebovaniya.md` §5 — the Specification should say
+  explicitly whether they become audited events.
