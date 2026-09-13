@@ -35,12 +35,12 @@ the previous one — the dependency is real, not stylistic
    server console, and the single Owner account is claimed once with it
    (`docs/stories/US-001-owner-first-run-setup.md`). Until it exists nothing
    else is configurable.
-3. Owner registers the school as an `Installation`: name, Google Workspace
-   domain, status.
-4. Owner adds the school's administrator email(s) to `AllowedAdmin` for that
-   `Installation`.
-5. Owner creates the school's service account in the Owner's Cloud project and
-   gives the school's super-admin its client ID and the scope list from
+3. Owner creates the school's service account in the Owner's Cloud project.
+4. Owner registers the school as an `Installation`: name, Google Workspace
+   domain, status, and that service account's client ID — required
+   (`trebovaniya.md` §3, v43).
+5. Owner adds the school's administrator email(s) to `AllowedAdmin` for that
+   `Installation`, and gives the school's super-admin the client ID and the scope list from
    `trebovaniya.md` §6. The super-admin authorizes domain-wide delegation in the
    school's own Google console and creates the technical account with read-only
    roles (BR-015) — the Owner cannot do either step (BR-032).
@@ -118,7 +118,8 @@ the previous one — the dependency is real, not stylistic
   on further notification; (5) record all of it in the operations journal.
 - **Recreate the service account itself** only if the account, not just a key,
   is compromised: a new account has a new client ID, and the school must
-  authorize delegation again.
+  authorize delegation again. The Owner updates the client ID on the
+  `Installation` (an audited Control Plane action, SC-11).
 - **No copy of a key exists outside the secret store** — no downloaded files, no
   "just in case" copies.
 - Keyless access (Workload Identity Federation) is Google's recommended path but

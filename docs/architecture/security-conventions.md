@@ -188,7 +188,7 @@ when" — above all, who took personal data out of the system.
   a synchronization by hand; linking a Meet meeting code to a course or
   re-linking it; **exporting a journal or report**.
 - **Audited in the Control Plane:** Owner sign-in, creating an `Installation`,
-  suspending and resuming one, adding and revoking an `AllowedAdmin`.
+  changing its service-account client ID, suspending and resuming one, adding and revoking an `AllowedAdmin`.
 - **A row carries:** UTC timestamp, actor (`AppUser` id and role, or `system` for
   background work), action, target (entity type and internal id), outcome
   (succeeded / refused), and the request identifier that links it to the logs.

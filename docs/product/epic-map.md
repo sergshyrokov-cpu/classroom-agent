@@ -32,7 +32,7 @@ installation. This epic is the bootstrap.
 ### Candidate User Stories
 
 - US-001 Owner first-run setup (Control Plane account)
-- US-002 Register an Installation (school, domain, status)
+- US-002 Register an Installation (school, domain, service-account client ID, status)
 - US-003 Manage AllowedAdmin entries for an Installation
 - US-004 Suspend and resume an Installation
 - US-005 Installation legitimacy check and grace period
