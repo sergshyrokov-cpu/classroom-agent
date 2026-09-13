@@ -176,6 +176,7 @@ decision:
 | To verify | Where it is tracked |
 |---|---|
 | Minimum Google Workspace roles the impersonation user needs | §7 item 10 |
+| Whether Classroom still returns submissions of a student removed from a course | §7 item 14 |
 
 A deployment or operations Story that finds a new gap raises an Open Decision
 and stops; it does not improvise. Two things are deliberately deferred rather

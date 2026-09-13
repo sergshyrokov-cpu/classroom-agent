@@ -161,6 +161,14 @@ last error and last successful run. *(§3, Epic 5)*
 membership of a course (`CourseMembership`), not to the person: the same person
 can teach one course and study on another. *(§3, v23 — was §7 item 4)*
 
+**BR-051** Classroom gives no join or leave dates, so a `CourseMembership` records
+what synchronization observed: when the person was first and last seen on the
+roster, and whether they are on it now. A membership is never deleted when the
+person leaves the roster. A period's journal lists students on the roster for at
+least part of the period plus anyone with submissions in it; in Meet reports, a
+course's students and teachers are those on the roster on the meeting's date.
+*(§3, §4 Epic 3, Epic 4, v31)*
+
 **BR-052** A `CourseWork` is either graded work (`courseWork`) or an ungraded
 material (`material`); journals must distinguish them. Its date follows the
 cascade `scheduledTime` → `dueDate` → `updateTime` → `creationTime`. Materials
@@ -212,8 +220,9 @@ norms or comparison of teachers (EPIC-11). *(§4 Epic 4)*
 is not merged. *(§3, §4 Epic 4)*
 
 **BR-064** Only personal domain accounts are counted. An organizer who is not a
-teacher of the course is marked "not a teacher of this course"; a domain account
-not on the course list is shown apart, marked "not on the course list"; external
+teacher of the course on the meeting's date is marked "not a teacher of this
+course"; a domain account not on the course roster on that date is shown apart,
+marked "not on the course list" (BR-051); external
 guests and connections without an account are shown as "other participants".
 *(§4 Epic 4)*
 
@@ -239,8 +248,11 @@ never appears in an HTTP error body. *(§5,
 **BR-072** Student personal data is kept for a retention period N agreed
 between the school and the Owner and set at deployment. The unit is the course: a
 course and everything under it is deleted once it is archived or gone from Google
-and its last activity is more than N years ago; a participant is deleted once no
-remaining course references them. Deletion is physical. *(§5, PC-11)*
+and its last activity is more than N years ago. A person who has left a course's
+roster loses that membership, with their submissions and Meet participation in
+that course, once they were last seen more than N years ago — even while the
+course is active. A participant is deleted once no remaining membership references
+them. Deletion is physical. *(§5, PC-11, v31)*
 
 **BR-073** Every export of a journal or report is audited: who, when, which
 courses, which period, which template, how many rows. The exported content itself
@@ -248,7 +260,8 @@ is never stored in the audit trail. *(§5, `security-conventions.md` SC-11)*
 
 **BR-074** A student who disappears from Google is not deleted by
 synchronization. Their grades stay in the journals of the period they studied
-until the course itself expires — a journal is a record, not a live view. *(§5)*
+until the retention period expires — the course's, or their own as a leaver
+(BR-072) — a journal is a record, not a live view. *(§5)*
 
 **BR-075** The retention purge runs in read-only mode too — it is one of the
 service writes permitted there (BR-026). Retention is an obligation, not a feature: a suspended school must not keep

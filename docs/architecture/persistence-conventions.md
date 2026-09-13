@@ -105,7 +105,8 @@ resulting migration must both match them.
   identifier column (PC-3), because upsert matches on it.
 - Required by the reporting design: composite indexes supporting the journal
   query (course + period) and the Meet statistics queries (meeting code + date range, participant + date
-  range).
+  range), and roster-on-a-date lookups on `CourseMembership` (course +
+  `first_seen_at` / `last_seen_at`, PC-8).
   Several years of courses and grades is the stated growth expectation
   (`trebovaniya.md` section 5).
 - `db-designer` lists the required indexes; the migration creates them.
@@ -116,7 +117,11 @@ resulting migration must both match them.
 - `CourseMembership` is an explicit entity between `Course` and
   `ClassroomParticipant` carrying the Classroom role (`teacher` / `student`) — the
   role belongs to the membership, not the person (`trebovaniya.md` section 3,
-  v23). Unique on (course, participant).
+  v23). Unique on (course, participant). It also carries `first_seen_at`,
+  `last_seen_at` and `on_roster` — what synchronization observed, since Classroom
+  gives no join or leave dates (BR-051). Leaving the roster clears `on_roster`;
+  the row is never deleted by synchronization. Journal and Meet queries filter by
+  these dates, so they are indexed with the course (PC-7).
 - `MeetingCodeLink` maps a meeting code to one `Course`: unique on the code,
   several codes per course (a reset Classroom link gets a new code). `MeetSession`
   reaches its course only through this link and has no course column of its own,
@@ -173,13 +178,20 @@ the product enforces the period the school agreed with the Owner.
   archived in Google or no longer returned by it, **and** its most recent
   Google-side update time (of the course or anything under it) is more than N
   years ago.
-- A `ClassroomParticipant` is deleted when no remaining course references it.
+- **A leaver has their own expiry.** A `CourseMembership` with `on_roster` false
+  and `last_seen_at` more than N years ago is deleted together with that person's
+  `Submission` rows in the course and their `MeetParticipation` rows in meetings
+  reached through the course's meeting codes — even if the course itself is still
+  kept (`trebovaniya.md` section 5, v31).
+- A `ClassroomParticipant` is deleted when no remaining `CourseMembership`
+  references it.
 - **Deletion is physical** and happens in one transaction per course, so a
   course is never left half-deleted (AD-7). Rows are removed child-first by the
   purge use case; foreign keys stay `Restrict` (PC-8) — the purge does not rely
   on cascades.
 - **Synchronization never deletes teaching data.** A participant who disappears
-  from Google stays until their courses expire; only the purge deletes.
+  from Google stays until their courses or their own leaver period expire; only
+  the purge deletes.
 - `AuditEvent` rows are purged when their own timestamp is more than N years old,
   independently of the courses they mention (SC-11). This is the only deletion of
   audit rows, and a test proves it removes rows older than N and nothing newer.
