@@ -139,7 +139,8 @@ the previous one — the dependency is real, not stylistic
   version, an operational procedure performed by the Owner — there is no function
   for it yet (EPIC-10). It is executed **only after the school has removed that
   person from Google Workspace**: synchronization would otherwise re-import them
-  on its next run.
+  on its next run. Like every operational access to a school database, it is
+  recorded in the Owner's operations journal (SC-12).
 
 ## DC-10 Logging
 

@@ -67,9 +67,10 @@ One Owner for the whole service, not per school.
 - Places the service-account key on each installation at deployment. Schools
   never handle keys.
 
-**Does not:** look at any school's courses, grades or attendance. Whether the
-Control Plane may read Data Plane data at all is an open question, and the
-assumed answer is no.
+**Does not:** look at any school's courses, grades or attendance, and receives
+no statistics about them. As the host they can reach a school's database, but
+only for operational work agreed with the school — each access written into
+their operations journal.
 
 **Has no access to** a school's Google Admin console, and does not need it: the
 school's own super-admin authorizes the service account once, using a client ID

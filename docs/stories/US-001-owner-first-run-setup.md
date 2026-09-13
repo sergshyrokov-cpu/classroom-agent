@@ -146,9 +146,9 @@ Affects: AC-005, AC-006.
 
 - The Control Plane knows nothing about courses, participants or grades. It must
   not reference `ClassroomAgent.Domain` (`package-map.md`).
-- `trebovaniya.md` §7 item 6 leaves open whether the Control Plane may read Data
-  Plane data at all; the assumed answer is no. This Story must not create any
-  path that would allow it.
+- The Control Plane has no path to teaching data and receives no school
+  statistics (SC-12, decided in `trebovaniya.md` v20). Nothing this Story adds —
+  pages, endpoints, contract types — may create one.
 - Owner sign-in is an audited action (SC-11, NFR-025, decided in
   `trebovaniya.md` v17). This Story is therefore the first to need the
   `AuditEvent` table in the Control Plane database: sign-in and refused sign-in

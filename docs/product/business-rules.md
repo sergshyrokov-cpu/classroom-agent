@@ -22,7 +22,14 @@ layout change is not acceptable. *(§2)*
 **BR-004** Both Admin and Dean may start a synchronization. *(§2)*
 
 **BR-005** The Owner is never stored in an installation's `AppUser` table and
-does not access a school's teaching data. *(§3, §9)*
+has no access to a school's teaching data through the application: the Control
+Plane receives only installation id, version and status — no statistics. *(§3,
+§9, SC-12)*
+
+**BR-006** The Owner's access to a school's database on the servers is
+operational only — migrations, decommissioning, erasure on the school's request,
+and backups once decided — governed by the written agreement with the school and
+recorded in the Owner's operations journal. *(§9, SC-12)*
 
 ## Admin identity
 

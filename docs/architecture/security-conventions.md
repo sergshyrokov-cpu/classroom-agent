@@ -28,10 +28,8 @@ area as production severity.
 - The permission matrix in `trebovaniya.md` section 2 is authoritative. Do not
   invent a cell. Admin and Dean see the same data; they differ in the right to
   configure and to manage accounts.
-- The Owner has no access to a school's teaching data. Whether the Control Plane
-  may read Data Plane data at all is still an open question
-  (`trebovaniya.md` section 7, item 6) — the assumed answer is no. Do not build
-  a path that would allow it.
+- The Owner has no access to a school's teaching data **through the
+  application**, and only operational access on the servers (SC-12).
 
 ## SC-2 Authentication
 
@@ -182,3 +180,36 @@ when" — above all, who took personal data out of the system.
 - The table and its writing path are created by the first Story that introduces
   an audited action; every later Story that introduces one writes its event and
   proves it with a test.
+
+## SC-12 The Owner and teaching data
+
+Decided in `trebovaniya.md` section 9 (v20). Two levels are kept apart: the
+application, where the Owner has no access, and the servers, which the Owner
+hosts and therefore can reach.
+
+**Application — no path exists, and that is checkable:**
+
+- `ClassroomAgent.Contracts` carries no teaching-data type. The legitimacy check
+  and the status push carry the installation id, its version and its status —
+  nothing else.
+- **No school statistics reach the Control Plane**, not even anonymous counts of
+  courses or participants. Adding any is a separate decision, not an
+  implementation detail.
+- `ClassroomAgent.ControlPlane` never references `ClassroomAgent.Domain`
+  (`package-map.md`). A Control Plane endpoint, query or contract field that
+  exposes Data Plane content is a Critical finding.
+- The Owner has no account in any installation (BR-005), and readiness reports
+  state only (DC-11).
+
+**Servers — operational access only:**
+
+- The Owner touches a school's database only to apply migrations (DC-4),
+  decommission the school (DC-8), erase one person's data on the school's
+  written request (BR-076), and — once decided — back it up and restore it.
+  Never to look at teaching data for the Owner's own purposes.
+- The rules of that access are part of the written agreement with the school,
+  the same one that fixes the retention period (PC-11).
+- **Every operational access is recorded in the Owner's operations journal**:
+  date, school, task, and a reference to the school's request where there is
+  one. The journal is kept outside the application — an organizational control,
+  not a feature — and is shown to the school on request.

@@ -82,7 +82,9 @@ Epic 7 — do not add them speculatively.
 
 Wire types for the Control Plane ↔ Data Plane channel only: the legitimacy
 check request/response and the status-change push payload. No behaviour, no
-dependencies. Both hosts reference it so the contract cannot drift.
+dependencies. Both hosts reference it so the contract cannot drift. It never
+carries teaching data or school statistics — only installation id, version and
+status (SC-12).
 
 ### `ClassroomAgent.ControlPlane`
 
