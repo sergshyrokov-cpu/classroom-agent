@@ -54,7 +54,8 @@ and manage Dean accounts.
 
 - US-008 Admin sign-in via Google OAuth with AllowedAdmin verification
 - US-009 Configure WorkspaceConnection (domain, impersonation user)
-- US-010 Connection instructions for the school's super-admin (client ID + scopes)
+- US-010 Connection instructions for the school's super-admin (client ID + scopes +
+  technical-account requirements, BR-015)
 - US-011 "Check access" diagnostic against Classroom and Reports APIs
 - US-012 Create and manage Dean accounts
 

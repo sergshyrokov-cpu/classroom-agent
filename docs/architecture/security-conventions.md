@@ -47,8 +47,10 @@ area as production severity.
 ## SC-3 Admin identity and the AllowedAdmin check
 
 One email is simultaneously the Admin's OAuth login, the `AllowedAdmin` entry in
-the Control Plane, the `AppUser` with role Admin, and the impersonation user in
-`WorkspaceConnection` (`trebovaniya.md` section 9).
+the Control Plane, and the `AppUser` with role Admin (`trebovaniya.md` section 9).
+It is a domain administrator account, never a super-admin. The impersonation user
+in `WorkspaceConnection` is a separate technical account of the school, not any
+Admin's account (BR-015, SC-8).
 
 - The `AppUser` with role Admin is created **just-in-time** on the first
   successful OAuth login with an email present in `AllowedAdmin` for this
@@ -120,7 +122,10 @@ pages are disabled outside local development.
 - The scope list is fixed in `trebovaniya.md` section 6 and is what a school's
   super-admin authorizes. Adding a scope is a requirements change, not an
   implementation detail: it forces every school to re-authorize.
-- Data is read through impersonation of the school's domain administrator.
+- Data is read through impersonation of the school's technical account (BR-015):
+  no person behind it, not a super-admin, read-only roles for Classroom and
+  Admin Reports only. A design that impersonates an Admin's or a super-admin's
+  account is a finding.
   The Admin's own OAuth session is **never** used to call a Google data API —
   it authenticates the human, nothing more.
 - Permission failures (`403 unauthorized_client`, `access_denied`, missing
@@ -138,8 +143,8 @@ pages are disabled outside local development.
 - The school-facing web UI is an ordinary public HTTPS application; the
   isolation applies to the service channel only. Do not confuse the two.
 - The domain an installation may work with comes from the Control Plane. Saving
-  a `WorkspaceConnection` whose domain differs from the `Installation` domain
-  must be refused — this is the control that stops the program from being
+  a `WorkspaceConnection` whose domain, or whose impersonation user's email
+  domain, differs from the `Installation` domain must be refused (BR-020) — this is the control that stops the program from being
   pointed at a domain the Owner never approved.
 
 ## SC-10 Error and log hygiene

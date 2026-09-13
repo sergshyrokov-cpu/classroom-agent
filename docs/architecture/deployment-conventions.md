@@ -41,13 +41,15 @@ the previous one — the dependency is real, not stylistic
 5. Owner creates the school's service account in the Owner's Cloud project and
    gives the school's super-admin its client ID and the scope list from
    `trebovaniya.md` §6. The super-admin authorizes domain-wide delegation in the
-   school's own Google console — the Owner cannot do this step (BR-032).
+   school's own Google console and creates the technical account with read-only
+   roles (BR-015) — the Owner cannot do either step (BR-032).
 6. Deploy the installation: its database, its migrations, its configuration
    (DC-3) including the retention period agreed with the school, and the
    service-account key placed in the secret store (DC-5).
 7. The Admin signs in with Google OAuth, is matched against `AllowedAdmin`, and
-   saves the `WorkspaceConnection` (domain + impersonation user). The domain
-   must equal the one on the `Installation` or the save is refused (BR-020).
+   saves the `WorkspaceConnection` (domain + the technical account as
+   impersonation user). The domain, and the domain of that account's email, must
+   equal the one on the `Installation` or the save is refused (BR-020).
 8. The Admin creates Dean accounts. The school is live.
 
 ## DC-3 Configuration

@@ -34,9 +34,18 @@ recorded in the Owner's operations journal. *(§9, SC-12)*
 
 ## Admin identity
 
-**BR-010** One email identifies an Admin everywhere: OAuth login, `AllowedAdmin`
-entry in the Control Plane, `AppUser` with role Admin, and impersonation user in
-`WorkspaceConnection`. Only the service-account email is separate. *(§9)*
+**BR-010** One email identifies an Admin everywhere in the program: OAuth login,
+`AllowedAdmin` entry in the Control Plane, and `AppUser` with role Admin. It is a
+domain administrator account, never a super-admin. The impersonation user is
+**not** an Admin's account (BR-015). *(§1, §2, §9, v30)*
+
+**BR-015** Teaching data is read on behalf of a **technical account** of the
+school — the impersonation user in `WorkspaceConnection`. The school's
+super-admin creates it at onboarding; no person stands behind it, it is not a
+super-admin, and it holds read-only roles for Classroom and Admin Reports only.
+Nobody signs in to the program with it and it is not in `AllowedAdmin`. The Admin
+enters its email in the connection settings. Staff leaving or an Admin being
+revoked therefore never stops synchronization. *(§9, v30)*
 
 **BR-011** An `AppUser` with role Admin is created automatically on the first
 successful Google OAuth login by an email present in `AllowedAdmin` for this
@@ -58,7 +67,8 @@ involved. *(§2)*
 
 **BR-020** An installation may only work with the Google Workspace domain
 recorded on its `Installation` in the Control Plane. Saving a
-`WorkspaceConnection` with a different domain is refused. *(§9)*
+`WorkspaceConnection` whose domain, or whose impersonation user's email domain,
+differs from it is refused. *(§3, §9)*
 
 **BR-021** Moving a school to another domain means creating a **new**
 `Installation` with a new database — not editing the domain of an existing one.
@@ -101,7 +111,7 @@ is surfaced to the Admin. *(§8, `deployment-conventions.md` DC-12)*
 Google Workspace. *(§1)*
 
 **BR-031** Teaching data is read exclusively through the service account with
-domain-wide delegation, impersonating the school's domain administrator. The
+domain-wide delegation, impersonating the school's technical account (BR-015). The
 Admin's own OAuth session authenticates the human and is never used to call a
 Google data API. Synchronization therefore works while no one is logged in.
 *(§9)*

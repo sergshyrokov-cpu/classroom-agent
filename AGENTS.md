@@ -155,10 +155,13 @@ corrected. Re-verify it whenever `trebovaniya.md` changes version.
   login or scope visibility by Classroom roster.
 - **Owner** lives in the Control Plane (separate service, separate database),
   never in an installation's `AppUser` table.
-- **Admin is a Google Workspace domain administrator of that school.** One email
-  is simultaneously the OAuth login, the `AllowedAdmin` entry in the Control
-  Plane, the `AppUser` with role Admin, and the impersonation user in
-  `WorkspaceConnection`. Only the service-account email is separate.
+- **Admin is a Google Workspace domain administrator of that school, never a
+  super-admin.** One email is simultaneously the OAuth login, the `AllowedAdmin`
+  entry in the Control Plane and the `AppUser` with role Admin.
+- **Data is read as a technical account, not as a person.** The impersonation
+  user in `WorkspaceConnection` is a school account with read-only roles, created
+  by the school's super-admin; nobody logs in with it (BR-015). The prototype's
+  impersonation of a super-admin is not a precedent.
 - **Dean does the day-to-day work**; Admin installs, configures and grants roles.
   The permission matrix is in `trebovaniya.md` section 2 — do not invent cells.
 - **The service-account key never reaches a school.** The Owner places it at

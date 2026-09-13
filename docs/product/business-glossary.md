@@ -11,7 +11,7 @@ terms from `trebovaniya.md` are given so the two documents can be read together.
 | Term | Русский | Meaning |
 |---|---|---|
 | **Owner** | Владелец | The one person who owns, hosts and supports the service for all schools. Lives in the Control Plane; has no account in any installation. |
-| **Admin** | Админ | A Google Workspace domain administrator at one school, who is also the administrator of that school's installation. One email serves as OAuth login, `AllowedAdmin` entry, `AppUser`, and impersonation user. |
+| **Admin** | Админ | A Google Workspace domain administrator at one school, who is also the administrator of that school's installation. Not a super-admin. One email serves as OAuth login, `AllowedAdmin` entry and `AppUser`; the impersonation user is a separate technical account. |
 | **Dean** | Декан, учебная часть | The primary user: views courses, gradebooks and Meet activity statistics, exports reports, triggers synchronization. |
 | **Teacher** | Преподаватель | A person teaching a course. **Data only in the first version** — not an account (Epic 7). |
 | **Student** | Студент | A person enrolled in a course. **Data only** (Epic 7). |
@@ -34,7 +34,8 @@ terms from `trebovaniya.md` are given so the two documents can be read together.
 | **Service account** | A machine identity in the Owner's Cloud project used to read a school's data. One per school. Its key never leaves the Owner's infrastructure. |
 | **Client ID** | The service account's public identifier. Given to the school so its super-admin can authorize it. Not a secret. |
 | **Domain-wide delegation (DWD)** | The Google mechanism by which a school's super-admin authorizes a service account to read that domain's data, for a named list of scopes. Authorized only by the domain owner — the Owner cannot do it for them. |
-| **Impersonation user** | The school account the service account acts as when calling Google APIs. The same account as the Admin's. |
+| **Impersonation user** | The school account the service account acts as when calling Google APIs: a **technical account** created by the school's super-admin, with no person behind it, not a super-admin, read-only roles only. Never an Admin's account (BR-015). |
+| **Technical account** | See *impersonation user*. |
 | **Scope** | A named Google permission. Every scope this system uses is read-only. |
 
 ## Domain entities
