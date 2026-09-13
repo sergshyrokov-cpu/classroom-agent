@@ -44,10 +44,12 @@ without an approved decision.
 
 ## AD-3 Layered architecture (Clean Architecture)
 
+`A → B` means A references B.
+
 ```
-Web → Application → Domain
-                          ↓
-                    Infrastructure
+Web            → Application → Domain
+Web            → Infrastructure            (wiring only, at startup)
+Infrastructure → Application, Domain       (implements the ports)
 ```
 
 | Layer | Project | Responsibility | Must not |
@@ -95,6 +97,11 @@ Each external dependency is reached through an interface declared in
 No Google SDK type crosses into `Application` or `Domain`. Sync code works with
 domain entities, not `Google.Apis.Classroom.v1.Data.*`.
 
+Google and the Control Plane are the only external systems that receive or
+provide school data. A port to any other external system — an AI or
+speech-recognition service (future Epic 13), analytics, telemetry — requires a
+separate approved decision (SC-13, BR-078).
+
 ## AD-5 Background synchronization
 
 - Synchronization runs in a `BackgroundService` hosted by `ClassroomAgent.Web`,
@@ -108,6 +115,9 @@ domain entities, not `Google.Apis.Classroom.v1.Data.*`.
   scope) are **not** retried — they mean the school has not completed
   domain-wide delegation. They are recorded in `SyncState` with a diagnosable
   message and surfaced to the Admin (`trebovaniya.md` Epic 1, Epic 6).
+- The Meet event pull is part of synchronization. Two more background services
+  run in `ClassroomAgent.Web`: the retention purge, once a day (PC-11), and the
+  legitimacy check, every 6 hours (BR-024) (`package-map.md`).
 
 ## AD-6 Read-only mode is enforced in Application, not the UI
 
@@ -122,7 +132,8 @@ closed list of service writes in BR-026 — that list is the only source; do not
 restate it here. Everything else is blocked — for example
 synchronization, Meet meeting-code linking, account management, connection
 settings, "check access", report template edits. No port that calls Google
-(`IClassroomReader`, `IMeetReportsReader`) is invoked in read-only mode. See `trebovaniya.md` section 2 and 9.
+(`IClassroomReader`, `IMeetReportsReader`) is invoked in read-only mode. See
+`trebovaniya.md` sections 2 and 9.
 
 ## AD-7 Transaction boundary policy
 
@@ -164,11 +175,18 @@ settings, "check access", report template edits. No port that calls Google
 - Startup wiring lives in `Program.cs` and `IServiceCollection` extension
   methods under `Configuration`.
 - No business logic in a `Configuration` extension method.
-- Settings come from `appsettings.json` / `appsettings.{Environment}.json` /
-  environment variables, never hard-coded. **The Google Workspace domain, the
-  impersonation user and the service-account key are never compile-time
-  constants** — the prototype's hard-coded `admin@dac.ukr.education` is a
-  defect being fixed, not a pattern to copy (`trebovaniya.md` section 5).
+- Nothing school-specific is hard-coded — the prototype's hard-coded
+  `admin@dac.ukr.education` is a defect being fixed, not a pattern to copy
+  (`trebovaniya.md` section 5). Values come from two different places:
+  - **Installation configuration** — `appsettings.json` /
+    `appsettings.{Environment}.json` / environment variables, set by the Owner at
+    deployment (DC-3): the database connection string, the Control Plane
+    endpoint, the reference to the service-account key, the retention period N,
+    the school's time zone and the default UI language. They are validated at
+    startup; without N or the time zone the installation refuses to start.
+  - **Settings entered by the Admin** and stored in `WorkspaceConnection`: the
+    Google Workspace domain and the technical account used as impersonation user
+    (v30, v33). They are not deployment configuration.
 
 ## AD-11 Reuse over duplication
 
