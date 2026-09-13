@@ -24,7 +24,9 @@ Three people use the first version. Teachers and students are data, not users
   Admin for every layout tweak would make the Admin an operator.
 - Links a Meet meeting code to its course when the system cannot tell which
   course a meeting belongs to.
-- Logs in with a login and password issued by the Admin.
+- Logs in with a login and password issued by the Admin, and changes it on first
+  login after an Admin reset.
+- Works in Ukrainian or English, whichever they choose.
 
 **Cannot:** configure the Google Workspace connection, create accounts.
 
@@ -34,15 +36,18 @@ happened in the lesson; being told "ask the administrator" for a layout change.
 
 ## Admin — администратор программы
 
-A **Google Workspace domain administrator at the school** — the same person,
-the same account. Not a separate IT role invented by this system.
+A **Google Workspace domain administrator at the school**, signing in with a
+personal admin account — not a super-admin, ideally not the account used for
+daily mail. Not a separate IT role invented by this system.
 
 - Present mainly at the beginning: connects the installation to the school's
-  Workspace (domain, impersonation user), creates Dean accounts.
+  Workspace (domain and the school's technical account as impersonation user),
+  creates Dean accounts.
 - After setup, appears rarely — to fix a connection, add a Dean, or check why
   synchronization is failing.
 - Logs in through Google OAuth with the domain administrator account. Has no
   password in this system at all.
+- Works in Ukrainian or English, whichever they choose.
 - Sees all the same data as the Dean. This is deliberate: they are technically
   able to see it anyway, and denying it would only hamper diagnosis.
 
@@ -63,11 +68,14 @@ One Owner for the whole service, not per school.
 - Registers each school as an `Installation`: name, Google Workspace domain,
   status, and the client ID of the school's service account.
 - Maintains the list of emails allowed to be Admin at each school, and revokes
-  them when someone leaves or a school stops cooperating.
+  them when someone leaves.
 - Suspends a whole school when the relationship ends — without logging into that
   school's server.
 - Places the service-account key on each installation at deployment. Schools
   never handle keys.
+- Keeps the Cloud project with every school's service account outside all school
+  domains, so no school controls the others' access.
+- Works in Ukrainian or English, whichever they choose.
 
 **Does not,** as Owner, look at any school's courses, grades or Meet statistics
 (a person who also works at a school may be that school's Admin, BR-013), and receives
@@ -77,7 +85,7 @@ their operations journal.
 
 **Has no access to** a school's Google Admin console, and does not need it: the
 school's own super-admin authorizes the service account once, using a client ID
-and scope list the Owner supplies.
+and scope list the Owner supplies, and creates the technical account.
 
 **What annoys them:** having to SSH into a school's server to change anything;
 a school able to quietly repoint the program at another domain; one person's
