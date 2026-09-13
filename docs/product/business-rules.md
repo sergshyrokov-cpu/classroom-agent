@@ -149,6 +149,10 @@ minors. Access is limited to the Admin and Dean roles. *(§5)*
 never appears in an HTTP error body. *(§5,
 `security-conventions.md` SC-10)*
 
+**BR-073** Every export of a journal or report is audited: who, when, which
+courses, which period, which template, how many rows. The exported content itself
+is never stored in the audit trail. *(§5, `security-conventions.md` SC-11)*
+
 **BR-072** A retention and deletion policy for student personal data is **not
 yet defined** (`trebovaniya.md` §7, item 5). A Story that needs one raises an
 Open Decision; nobody invents a period.

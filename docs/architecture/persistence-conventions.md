@@ -129,6 +129,9 @@ resulting migration must both match them.
 - Dean passwords are stored only as an ASP.NET Core Identity password hash.
   Admin has no local password column at all — Admin authenticates through Google
   OAuth (external login).
+- **`AuditEvent` is append-only**: no use case updates or deletes a row, and the
+  entity exposes no way to (SC-11). It carries internal identifiers only — a
+  migration adding a name, email or grade column to it is a Critical finding.
 - Journals, grades and attendance are personal data of students, potentially
   minors. `db-designer` marks such columns and states their handling rules.
   A retention policy is still an open question (`trebovaniya.md` section 7,

@@ -73,8 +73,12 @@ body. *(§5, `security-conventions.md` SC-10)*
 **NFR-024** Retention and deletion policy for student personal data is **not yet
 defined** and must be settled before production. *(§5, §7 item 5)*
 
-**NFR-025** Audit requirements — who synchronized, who exported personal data,
-who managed accounts — are **not yet defined**. *(§7 item 7)*
+**NFR-025** Audited actions are recorded in an append-only `AuditEvent` table —
+sign-ins and refusals, account management, connection changes, manual
+synchronization, and every export of a journal or report. A row identifies the
+actor, action, target and outcome by internal id only and never carries personal
+data. There is no audit screen in the first version, and retention follows §7
+item 5. *(§5, `security-conventions.md` SC-11)*
 
 ## Data storage
 

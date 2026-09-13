@@ -37,7 +37,7 @@ about courses, journals or students — only `Installation`, `AllowedAdmin`,
 
 | Namespace | Contains | Notes |
 |---|---|---|
-| `Entities` | `AppUser`, `Course`, `ClassroomParticipant`, `Group`, `CourseWork`, `Submission`, `MeetSession`, `SyncState`, `WorkspaceConnection`, `ReportTemplate` | persisted domain state; leaf |
+| `Entities` | `AppUser`, `Course`, `ClassroomParticipant`, `Group`, `CourseWork`, `Submission`, `MeetSession`, `SyncState`, `WorkspaceConnection`, `ReportTemplate`, `AuditEvent` | persisted domain state; leaf |
 | `Enums` | `AppRole` (Admin, Dean), `CourseState`, `ClassroomRole`, `SyncStatus`, `SubmissionState` | |
 | `Rules` | invariants that hold regardless of use case | no I/O |
 
@@ -89,7 +89,7 @@ dependencies. Both hosts reference it so the contract cannot drift.
 | Namespace | Contains | Notes |
 |---|---|---|
 | `Controllers` | Owner UI + the check endpoint called by installations | |
-| `Persistence` | its **own** `DbContext`: `Owner`, `Installation`, `AllowedAdmin`, `InstanceLicenseCheck` | separate database |
+| `Persistence` | its **own** `DbContext`: `Owner`, `Installation`, `AllowedAdmin`, `InstanceLicenseCheck`, `AuditEvent` | separate database |
 | `Security` | Owner authentication (Identity, first-run setup) | |
 | `Push` | outbound status-change notification to installations | `architecture.md` AD-1, `trebovaniya.md` section 9 |
 

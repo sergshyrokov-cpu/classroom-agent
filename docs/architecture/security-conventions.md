@@ -150,8 +150,33 @@ pages are disabled outside local development.
 
 ## SC-11 Audit
 
-Audit requirements are still open (`trebovaniya.md` section 7, item 7) — who
-started a synchronization, who exported a journal containing personal data, who
-created or removed a Dean account. Do not invent an audit scheme; if a Story
-needs one, record an Open Decision. Do not remove the question by ignoring it
-either: exporting personal data without a trace is the gap this item names.
+Decided in `trebovaniya.md` section 5 (v17). Audit answers "who did this, and
+when" — above all, who took personal data out of the system.
+
+- Audit lives in an **`AuditEvent` table**, in the installation database and,
+  for Owner actions, in the Control Plane database. Not in log files: logs rotate
+  after 30 days (DC-10) and are not queryable per school.
+- **Audited in an installation:** sign-in and refused sign-in (Dean by password,
+  Admin by OAuth, including a refusal because the email is not in
+  `AllowedAdmin`); creating, disabling or deleting a Dean account; saving or
+  changing `WorkspaceConnection`; running the "check access" diagnostic; starting
+  a synchronization by hand; **exporting a journal or report**.
+- **Audited in the Control Plane:** Owner sign-in, creating an `Installation`,
+  suspending and resuming one, adding and revoking an `AllowedAdmin`.
+- **A row carries:** UTC timestamp, actor (`AppUser` id and role, or `system` for
+  background work), action, target (entity type and internal id), outcome
+  (succeeded / refused), and the request identifier that links it to the logs.
+- **A row never carries personal data** — SC-10 binds it exactly as it binds
+  logs: no names, no email addresses, no grades. An export row records course
+  ids, the period, the template id and the row count, never the file's contents.
+- **Append-only.** The application never updates or deletes an audit row, and no
+  use case exposes a way to.
+- **There is no audit screen in the first version.** Adding one requires a new
+  cell in the permission matrix (`trebovaniya.md` section 2), which is a decision
+  nobody may invent (SC-1).
+- **Retention is not yet fixed**: audit rows are themselves personal data, so
+  their retention is part of section 7 item 5. Until it is settled they are kept
+  at least as long as the data they describe.
+- The table and its writing path are created by the first Story that introduces
+  an audited action; every later Story that introduces one writes its event and
+  proves it with a test.

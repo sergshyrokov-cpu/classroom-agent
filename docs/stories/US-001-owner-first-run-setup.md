@@ -149,5 +149,9 @@ Affects: AC-005, AC-006.
 - `trebovaniya.md` §7 item 6 leaves open whether the Control Plane may read Data
   Plane data at all; the assumed answer is no. This Story must not create any
   path that would allow it.
-- Audit of Owner actions is an open requirement (NFR-025, `trebovaniya.md` §7
-  item 7). Do not invent an audit scheme here.
+- Owner sign-in is an audited action (SC-11, NFR-025, decided in
+  `trebovaniya.md` v17). This Story is therefore the first to need the
+  `AuditEvent` table in the Control Plane database: sign-in and refused sign-in
+  are recorded with actor, outcome and request id, and no personal data. Creating
+  the Owner account at first run is not in the audited list — the Specification
+  should say explicitly whether it becomes one.
