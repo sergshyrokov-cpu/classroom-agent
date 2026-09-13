@@ -52,7 +52,8 @@ successful Google OAuth login by an email present in `AllowedAdmin` for this
 `Installation`. No manual seeding. *(§2)*
 
 **BR-012** `AllowedAdmin` is verified on **every** Admin login, not only the
-first. On revocation the `AppUser` row is kept for history but login is refused.
+first. On revocation the `AppUser` row is kept for history (until the retention purge,
+PC-11) but login is refused.
 The installation asks the Control Plane on each login and keeps no copy of the
 list; if the Control Plane does not answer, the Admin login is refused. Dean
 logins and synchronization are unaffected. *(§2, §9, v26)*
@@ -63,7 +64,8 @@ single point of failure. *(§2, §9)*
 **BR-014** A Dean account is created manually by an Admin. Owner approval is not
 involved. An Admin may disable, re-enable and reset the password of a Dean
 account, but never deletes it — like a revoked Admin's `AppUser`, it is kept for
-history and audit. A Dean may change their own password, and must do so at the
+history and audit, and removed only by the retention purge N years after its last
+successful sign-in (PC-11, v45). A Dean may change their own password, and must do so at the
 first login after an Admin reset. *(§2, v38)*
 
 ## Installation and the Owner's control

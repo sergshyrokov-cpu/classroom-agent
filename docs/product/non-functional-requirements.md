@@ -82,8 +82,10 @@ never updated and are deleted only by the retention purge —
 sign-ins and refusals, account management, connection changes, manual
 synchronization, and every export of a journal or report. A row identifies the
 actor, action, target and outcome by internal id only and never carries personal
-data. There is no audit screen in the first version, and rows are purged after
-the retention period counted from their own timestamp. *(§5,
+data. A refused sign-in with no account records an anonymous actor and the
+refusal category, never the login typed. There is no audit screen in the first
+version; installation rows are purged after the retention period counted from
+their own timestamp, Control Plane rows are kept indefinitely. *(§5,
 `security-conventions.md` SC-11)*
 
 **NFR-026** The Control Plane has no path to a school's teaching data and

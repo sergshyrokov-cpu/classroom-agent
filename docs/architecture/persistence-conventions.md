@@ -203,11 +203,18 @@ the product enforces the period the school agreed with the Owner.
 - `AuditEvent` rows are purged when their own timestamp is more than N years old,
   independently of the courses they mention (SC-11). This is the only deletion of
   audit rows, and a test proves it removes rows older than N and nothing newer.
+- **`AppUser` rows** (Admin and Dean) are deleted when their last successful
+  sign-in — or creation, if they never signed in — is more than N years ago,
+  whether or not disabled; the installation cannot know an Admin was revoked.
+  By then every audit row naming them is older than N and already purged. Other
+  rows that name an account (e.g. who confirmed a `MeetingCodeLink`) keep the
+  internal id without a foreign key, so the deletion never cascades or blocks
+  (`trebovaniya.md` section 5, v45).
 - A `MeetSession` whose meeting code is linked to no course is purged with its
   participations when its own date is more than N years old (`trebovaniya.md`
   section 5, v23).
 - Each purge run writes one `AuditEvent`: actor `system`, counts of courses,
-  participants and audit rows removed, no personal data.
+  participants, accounts and audit rows removed, no personal data.
 - **The purge runs in read-only mode** — one of the service writes permitted
   there (BR-026, BR-075). It runs in the Web host's background services; once a day is enough.
 

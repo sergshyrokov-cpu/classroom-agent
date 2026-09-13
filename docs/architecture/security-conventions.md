@@ -66,8 +66,8 @@ Admin's account (BR-015, SC-8).
   `Installation`.
 - **`AllowedAdmin` is checked on every login, not only the first.** Checking it
   once would make the Owner's revocation meaningless — the `AppUser` row already
-  exists. On revocation the row is kept (history and audit) but login is
-  refused. Implementing this as a first-login-only check is a Critical finding.
+  exists. On revocation the row is kept (history and audit; purged
+  later under PC-11) but login is refused. Implementing this as a first-login-only check is a Critical finding.
 - **The check is a call to the Control Plane on every Admin login.** The
   installation stores no copy of `AllowedAdmin` and caches no answer. If the
   Control Plane does not answer, the Admin login is refused with a plain message;
@@ -189,9 +189,16 @@ when" — above all, who took personal data out of the system.
   re-linking it; **exporting a journal or report**.
 - **Audited in the Control Plane:** Owner sign-in, creating an `Installation`,
   changing its service-account client ID, suspending and resuming one, adding and revoking an `AllowedAdmin`.
-- **A row carries:** UTC timestamp, actor (`AppUser` id and role, or `system` for
+- **A row carries:** UTC timestamp, actor (internal account id and role —
+  `AppUser` in an installation, `Owner` in the Control Plane — or `system` for
   background work), action, target (entity type and internal id), outcome
   (succeeded / refused), and the request identifier that links it to the logs.
+- **A refused sign-in** names the existing account's id as actor (wrong
+  password, disabled account, email no longer in `AllowedAdmin`); with no
+  account, the actor is "anonymous" with no identifier, and the login or email
+  typed is never recorded. Either way the row carries the refusal category:
+  unknown login, wrong password, account disabled, not in `AllowedAdmin`,
+  Control Plane unavailable (`trebovaniya.md` §5, v45).
 - **A row never carries personal data** — SC-10 binds it exactly as it binds
   logs: no names, no email addresses, no grades. An export row records course
   ids, the period, the template id and the row count, never the file's contents.
@@ -206,7 +213,9 @@ when" — above all, who took personal data out of the system.
 - **Retention**: audit rows are themselves personal data. They are purged after
   the installation's retention period N counted from each row's own timestamp —
   not together with the course they mention, so deleting a course never erases
-  the trace of who exported its journal (PC-11).
+  the trace of who exported its journal (PC-11). **Control Plane audit rows are
+  kept indefinitely**: they record only the Owner's own actions and internal
+  ids, with no third-party personal data (v45).
 - The table and its writing path are created by the first Story that introduces
   an audited action; every later Story that introduces one writes its event and
   proves it with a test.
