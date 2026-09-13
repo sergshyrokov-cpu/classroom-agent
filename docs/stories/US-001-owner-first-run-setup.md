@@ -56,14 +56,14 @@ a second Owner account.
 **Then**:
 
 - they are redirected to the first-run setup page;
-- the setup page asks for a login and a password;
+- the setup page asks for the one-time setup code, a login and a password;
 - no other Control Plane function is reachable until setup completes.
 
 ## AC-002 Owner account is created
 
 **Given** the first-run setup page is open and no Owner account exists
 
-**When** a valid login and password are submitted
+**When** the valid setup code, a valid login and a valid password are submitted
 
 **Then**:
 
@@ -127,6 +127,22 @@ a second Owner account.
 - the submitted password never appears in the response, in a log, or in an
   error body (SC-10).
 
+## AC-007 Setup requires the one-time code
+
+**Given** the Control Plane has started with no Owner account
+
+**When** it starts, and when a setup is submitted
+
+**Then**:
+
+- a random one-time setup code is printed to the server console and never
+  written to the log file (SC-2, SC-10);
+- a submission with a missing or wrong code creates no account, and the
+  response does not reveal the correct code;
+- once the account exists, the code no longer works (AC-003);
+- a restart while no Owner account exists generates a new code, and the
+  previous one stops working.
+
 ---
 
 # Open Decisions
@@ -144,6 +160,9 @@ Affects: AC-005, AC-006.
 
 # Notes
 
+- The whole Control Plane, the setup page included, is reachable only from the
+  Owner's private network (DC-6, SC-9, `trebovaniya.md` v35). The setup code of
+  AC-007 protects the account even if that network is misconfigured.
 - The Control Plane knows nothing about courses, participants or grades. It must
   not reference `ClassroomAgent.Domain` (`package-map.md`).
 - The Control Plane has no path to teaching data and receives no school

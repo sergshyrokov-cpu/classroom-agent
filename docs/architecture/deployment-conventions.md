@@ -16,7 +16,7 @@ into deployment order. Where a question is open it says so and names the item in
 
 | Unit | Instances | Owns | Reachability |
 |---|---|---|---|
-| Control Plane (`ClassroomAgent.ControlPlane`) | one for the whole service | its own database: `Owner`, `Installation`, `AllowedAdmin`, `InstanceLicenseCheck` | Owner UI; plus the service channel to every installation |
+| Control Plane (`ClassroomAgent.ControlPlane`) | one for the whole service | its own database: `Owner`, `Installation`, `AllowedAdmin`, `InstanceLicenseCheck` | private network only: the Owner UI and the service channel to every installation (DC-6) |
 | Installation (`ClassroomAgent.Web`) | one per school | its own database: all teaching data of that school | public HTTPS for school staff; private channel to the Control Plane |
 | PostgreSQL | one database per unit above | — | reachable only by its own application |
 
@@ -31,7 +31,8 @@ the previous one — the dependency is real, not stylistic
 (`docs/product/epic-map.md`).
 
 1. Deploy the Control Plane and its database; run its migrations (DC-4).
-2. Owner first-run setup: the single Owner account is claimed once
+2. Owner first-run setup: the Control Plane prints a one-time setup code to the
+   server console, and the single Owner account is claimed once with it
    (`docs/stories/US-001-owner-first-run-setup.md`). Until it exists nothing
    else is configurable.
 3. Owner registers the school as an `Installation`: name, Google Workspace
@@ -130,6 +131,9 @@ the previous one — the dependency is real, not stylistic
 - The school-facing UI is an ordinary public HTTPS application. Do not confuse
   the two: exposing the service endpoint publicly removes the only protection
   the channel has.
+- **The whole Control Plane is private**, the Owner UI included: the Owner
+  reaches it through a VPN or tunnel, never from the public internet
+  (`trebovaniya.md` §9, v35).
 - The channel is bidirectional by design: the installation calls the Control
   Plane every 6 hours for the legitimacy check, and the Control Plane pushes
   status changes to the installation's endpoint (HTTP POST, 3 retries with

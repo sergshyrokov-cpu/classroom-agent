@@ -41,6 +41,12 @@ area as production severity.
 - **Owner** — login and password via ASP.NET Core Identity in the Control Plane,
   set once at first-run setup. Stored in the Control Plane database only, never
   in an installation's `AppUser` table.
+- **First-run setup requires a one-time setup code.** While no Owner account
+  exists, the Control Plane generates a random code at startup and prints it to
+  the server console only — never to the log file (SC-10). Setup succeeds only
+  with that code; the code is void once the account exists, and a restart
+  without an Owner generates a new one. A setup path that works without the code
+  is a Critical finding (`trebovaniya.md` §9, v35).
 - Session state lives in an `httpOnly` cookie. No password and no Google
   credential is ever stored client-side (`trebovaniya.md` section 8).
 
@@ -142,7 +148,9 @@ pages are disabled outside local development.
   (`trebovaniya.md` section 9). This is a deliberate, recorded decision that
   holds only while the Owner hosts every installation.
 - The school-facing web UI is an ordinary public HTTPS application; the
-  isolation applies to the service channel only. Do not confuse the two.
+  isolation applies to the service channel and to the whole Control Plane,
+  including the Owner UI, which is never reachable from the public internet
+  (v35). Do not confuse the two.
 - The domain an installation may work with comes from the Control Plane. Saving
   a `WorkspaceConnection` whose domain, or whose impersonation user's email
   domain, differs from the `Installation` domain must be refused (BR-020) — this is the control that stops the program from being
