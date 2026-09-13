@@ -187,7 +187,8 @@ stories:
     title: Retention purge of expired courses, leavers, unlinked meetings, accounts and audit rows
     state: BACKLOG
     blocked_by: >
-      Depends on US-015 and US-031 (the teaching and Meet data it purges).
+      Depends on US-015 (the teaching data it purges). Purging Meet data is added
+      later by US-031, so this Story does not wait for EPIC-4.
 
   # --- EPIC-3: Gradebook and printable templates ---------------------------
   - id: US-025
@@ -235,7 +236,9 @@ stories:
     title: Pull Meet events and keep history beyond 180 days
     state: BACKLOG
     blocked_by: >
-      Depends on US-013 (the Meet pull is part of synchronization).
+      Depends on US-013 (the Meet pull is part of synchronization) and US-037
+      (it extends the retention purge to unlinked meetings and Meet
+      participation, PC-11).
   - id: US-032
     epic: EPIC-4
     title: Link meeting codes to courses

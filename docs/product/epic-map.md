@@ -115,8 +115,9 @@ Show the state of the local database and let it be refreshed.
 
 - US-024 Database statistics and last synchronization view
 - US-037 Retention purge: daily deletion of expired courses, leavers' memberships,
-  unlinked Meet meetings, unused accounts, orphaned participants and old audit
-  rows — the full list is `persistence-conventions.md` PC-11
+  unused accounts, orphaned participants and old audit rows — the full list is
+  `persistence-conventions.md` PC-11. Purging Meet data is added by US-031, so
+  this Story does not wait for EPIC-4
 
 ---
 
@@ -153,7 +154,8 @@ class leaves no Meet data (BR-060).
 ### Candidate User Stories
 
 - US-031 Pull Meet `call_ended` events regularly, keep only the fields reports need,
-  and keep history beyond Google's 180 days (PC-12)
+  and keep history beyond Google's 180 days (PC-12); extends the retention purge
+  (US-037) to unlinked meetings and Meet participation
 - US-032 Link meeting codes to courses: automatic suggestion by organizer and
   participant overlap, unassigned-meetings list, confirmation and re-linking by a
   Dean or Admin (BR-065)
