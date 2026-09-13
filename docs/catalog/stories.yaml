@@ -18,8 +18,10 @@
 #   COMPLETED   — delivered and committed
 #
 # Delivery order follows epic-map.md: EPIC-8 (bootstrap) → EPIC-6 → EPIC-1 →
-# EPIC-2/5 → EPIC-3 → EPIC-4. Stories marked `blocked_by` must not be activated
-# until the named open question in trebovaniya.md section 7 is resolved.
+# EPIC-2/5 → EPIC-3 → EPIC-4. EPIC-9 belongs to the next version and is listed
+# last. Stories marked `blocked_by` must not be activated until the named
+# decision is recorded — an open question in section 7, a missing cell in the
+# permission matrix of section 2, or another Story.
 # =============================================================================
 version: 1
 
@@ -188,3 +190,29 @@ stories:
     state: BACKLOG
     blocked_by: >
       Depends on US-032.
+
+  # --- EPIC-9 (next version): Audit log viewing ----------------------------
+  # Not part of the first version. AuditEvent rows are written from v1
+  # (security-conventions.md SC-11); these Stories add the screens that read
+  # them. All three are blocked until the permission-matrix cell exists.
+  - id: US-034
+    epic: EPIC-9
+    title: Audit log view in an installation
+    state: BACKLOG
+    blocked_by: >
+      trebovaniya.md section 2 — the permission matrix has no cell for who may
+      read the audit log. Section 4, Epic 9 lists what else must be decided
+      (whether a Dean sees their own actions; retention, tied to section 7
+      item 5).
+  - id: US-035
+    epic: EPIC-9
+    title: Audit log view in the Control Plane
+    state: BACKLOG
+    blocked_by: >
+      Same decision as US-034, for Owner actions.
+  - id: US-036
+    epic: EPIC-9
+    title: Export an audit extract for a period
+    state: BACKLOG
+    blocked_by: >
+      Depends on US-034. Exporting the audit log is itself an audited action.

@@ -157,11 +157,20 @@ Audit log viewing
 Out of scope for the first version. `AuditEvent` rows are written from v1
 (`security-conventions.md` SC-11); only the screen that reads them is deferred.
 
-### Deferred
+### Candidate User Stories
 
-- An audit viewing screen: filters by period, actor and action type, paged
-  output, internal ids resolved to readable names **in the view** without ever
-  writing names into the rows themselves, and no way to edit or delete a row.
+Next version, not the first. Registered in `docs/catalog/stories.yaml` so the
+work is queued rather than remembered.
+
+- US-034 Audit log view in an installation: list `AuditEvent` rows with filters
+  by period, actor and action type, paged per AC-8. Internal ids are resolved to
+  readable names **in the view only** — nothing is written back into the rows.
+  Read-only: no endpoint, control or query path may edit or delete a row.
+- US-035 Audit log view in the Control Plane: the same for Owner actions —
+  sign-in, `Installation` created, suspended or resumed, `AllowedAdmin` added or
+  revoked.
+- US-036 Export of an audit extract for a period. An export of the audit log is
+  itself an audited action, so this Story must not create a blind spot.
 
 ### Blocked until decided
 
