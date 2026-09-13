@@ -133,8 +133,8 @@ the previous one — the dependency is real, not stylistic
   `Installation` with a new database, not editing the domain of an existing one
   (BR-021, NFR-051). The previous installation's data stays in its own database.
 - **Decommissioning an installation:** the school receives a full export of its
-  journals, then the installation database is deleted. Once backups exist
-  (§7 item 8) the deletion covers them too (`trebovaniya.md` §5).
+  journals, then the installation database is deleted together with its
+  backups, immediately (DC-13).
 - **Erasing one person's data on the school's written request** is, in the first
   version, an operational procedure performed by the Owner — there is no function
   for it yet (EPIC-10). It is executed **only after the school has removed that
@@ -217,6 +217,33 @@ operating condition, not an incident (`trebovaniya.md` §8, decided in v16).
   waits for the periodic check, which is the designed guarantee; the push is the
   optimization (NFR-014).
 
+## DC-13 Backup and restore
+
+Decided in `trebovaniya.md` section 9 (v21). Most teaching data can be rebuilt
+by re-synchronizing from Google; Dean accounts, report templates, connection
+settings, the audit trail, history of courses already deleted in Google, and
+older Meet attendance cannot. The Control Plane database is the most critical
+one: losing it sends every school to read-only after 7 days.
+
+- **Every database is backed up** — each installation and the Control Plane.
+- **A nightly logical dump** (`pg_dump`). Worst-case loss is one day of local
+  changes; synchronization recovers teaching data.
+- **Backups are kept 30 days**, rolling. Data purged by retention (PC-11) or
+  erased on request (BR-076) therefore leaves the backups within 30 days.
+- **Backups live off the database server and are encrypted.** The encryption
+  key is held in the Owner's secret store, never next to the backups.
+- **A restore test every quarter**: one database, rotating, is restored into an
+  isolated environment and the application is started against it. An untested
+  backup is not counted as a backup.
+- **Restoring is operational access** and goes into the operations journal
+  (SC-12). After a restore: apply pending migrations (DC-4), let synchronization
+  catch up with Google, let the purge remove what has expired.
+- **Erasures must not come back.** After any restore, every erasure of a
+  person's data recorded in the operations journal after the backup's date is
+  re-applied before the installation is returned to the school.
+- **Decommissioning deletes that school's backups immediately**, without waiting
+  for the 30-day window to roll over (DC-8).
+
 ## DC-9 What is not decided yet
 
 A deployment or operations Story that needs one of these raises an Open Decision
@@ -224,11 +251,10 @@ and stops. It does not improvise.
 
 | Gap | Where it is tracked |
 |---|---|
-| Backup and restore of installation databases | §7 item 8 |
 | Service-account key rotation and compromise response | §7 item 9 |
 
-Neither blocks writing code today, but both block the first
-production deployment: a school hosted without a backup procedure or a key
-rotation procedure is an operational risk the Owner carries personally.
+It does not block writing code today, but it blocks the first production
+deployment: a school hosted without a key rotation and compromise procedure is
+an operational risk the Owner carries personally.
 Centralized log collection (DC-11) is a further decision, deliberately deferred
 rather than open by omission.

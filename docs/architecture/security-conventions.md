@@ -205,7 +205,7 @@ hosts and therefore can reach.
 
 - The Owner touches a school's database only to apply migrations (DC-4),
   decommission the school (DC-8), erase one person's data on the school's
-  written request (BR-076), and — once decided — back it up and restore it.
+  written request (BR-076), and back it up and restore it (DC-13).
   Never to look at teaching data for the Owner's own purposes.
 - The rules of that access are part of the written agreement with the school,
   the same one that fixes the retention period (PC-11).

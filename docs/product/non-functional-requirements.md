@@ -104,9 +104,10 @@ an explicit deployment step, never automatically at application startup.
 **NFR-033** Schema changes stay backward compatible across releases; dropping or
 renaming a column in use requires an approved decision. *(§5)*
 
-**NFR-034** Backup and restore of installation databases is **not yet
-specified**, although the Owner carries hosting responsibility for ~10 schools.
-*(§7 item 8)*
+**NFR-034** Every database — each installation and the Control Plane — is
+dumped nightly, kept 30 days off the database server and encrypted, and a restore
+is tested every quarter. Worst-case loss is one day of local changes. *(§9,
+`deployment-conventions.md` DC-13)*
 
 ## Export
 

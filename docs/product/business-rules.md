@@ -28,7 +28,7 @@ Plane receives only installation id, version and status — no statistics. *(§3
 
 **BR-006** The Owner's access to a school's database on the servers is
 operational only — migrations, decommissioning, erasure on the school's request,
-and backups once decided — governed by the written agreement with the school and
+and backup and restore — governed by the written agreement with the school and
 recorded in the Owner's operations journal. *(§9, SC-12)*
 
 ## Admin identity
@@ -179,6 +179,10 @@ data indefinitely. *(§5)*
 the Owner on the school's written request, and only after the school has removed
 that person from Google — otherwise synchronization re-imports them. *(§5,
 EPIC-10)*
+
+**BR-077** An erasure never comes back: after a database is restored from a
+backup, every erasure recorded in the operations journal after the backup's date
+is re-applied before the school gets the installation back. *(§9, DC-13)*
 
 ## Constraints from unresolved questions
 
