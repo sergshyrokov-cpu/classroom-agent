@@ -110,6 +110,8 @@ Show the state of the local database and let it be refreshed.
 ### Candidate User Stories
 
 - US-024 Database statistics and last synchronization view
+- US-037 Retention purge: daily deletion of expired courses, orphaned
+  participants and old audit rows (`persistence-conventions.md` PC-11)
 
 ---
 
@@ -179,7 +181,34 @@ work is queued rather than remembered.
   Owner seeing only Control Plane audit, but that is a decision, not a given.
 - Whether a Dean sees their own actions, given that Dean exports are the main
   content of the log.
-- Retention of audit rows, tied to `trebovaniya.md` §7 item 5.
+
+---
+
+## EPIC-10 (future)
+
+Erasing one person's data on request
+
+### Goal
+
+Out of scope for the first version, where the Owner performs erasure by hand on
+the school's written request (`trebovaniya.md` §5, BR-076). This epic turns the
+procedure into a function.
+
+### Candidate User Stories
+
+- US-038 Erase all data of one `ClassroomParticipant` — grades, submissions,
+  attendance, course membership — in one transaction, with an audit event that
+  carries no personal data of the erased person.
+
+### Blocked until decided
+
+- Who may trigger erasure — a new cell in the permission matrix
+  (`trebovaniya.md` §2): the Admin on the school's request, or the Owner only.
+- How to keep synchronization from re-importing a person who is still in Google.
+  That needs an exclusion list, and the list itself retains an identifier of the
+  erased person — a trade-off to accept explicitly, not by accident.
+- What the school is told about data already exported into reports: it is
+  outside the system and cannot be erased by it.
 
 ---
 

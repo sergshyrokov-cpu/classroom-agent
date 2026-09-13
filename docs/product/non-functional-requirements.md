@@ -70,15 +70,18 @@ minors; access is limited to the Admin and Dean roles. *(§5)*
 **NFR-023** Personal data never appears in application logs or in an HTTP error
 body. *(§5, `security-conventions.md` SC-10)*
 
-**NFR-024** Retention and deletion policy for student personal data is **not yet
-defined** and must be settled before production. *(§5, §7 item 5)*
+**NFR-024** Student personal data is kept for a retention period N set per
+installation by the Owner from the school's written agreement; an installation
+without it does not start. Expired data is physically deleted by a daily purge
+that also runs in read-only mode. *(§5, `persistence-conventions.md` PC-11)*
 
 **NFR-025** Audited actions are recorded in an append-only `AuditEvent` table —
 sign-ins and refusals, account management, connection changes, manual
 synchronization, and every export of a journal or report. A row identifies the
 actor, action, target and outcome by internal id only and never carries personal
-data. There is no audit screen in the first version, and retention follows §7
-item 5. *(§5, `security-conventions.md` SC-11)*
+data. There is no audit screen in the first version, and rows are purged after
+the retention period counted from their own timestamp. *(§5,
+`security-conventions.md` SC-11)*
 
 ## Data storage
 

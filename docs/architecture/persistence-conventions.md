@@ -134,8 +134,8 @@ resulting migration must both match them.
   migration adding a name, email or grade column to it is a Critical finding.
 - Journals, grades and attendance are personal data of students, potentially
   minors. `db-designer` marks such columns and states their handling rules.
-  A retention policy is still an open question (`trebovaniya.md` section 7,
-  item 5) — do not invent one; record it as an Open Decision if a Story needs it.
+  Retention is decided (`trebovaniya.md` section 5, v19) and enforced only by
+  the purge of PC-11.
 
 ## PC-10 Synchronization is idempotent
 
@@ -146,3 +146,32 @@ resulting migration must both match them.
 - `SyncState` records status, counters, the last error and the last successful
   run. It is the only place sync progress is reported from — a use case never
   infers progress by counting rows.
+
+## PC-11 Retention purge
+
+Decided in `trebovaniya.md` section 5 (v19). The school is the data controller;
+the product enforces the period the school agreed with the Owner.
+
+- **The retention period N (years) is a required installation setting** (DC-3),
+  set by the Owner at deployment from the written agreement with the school. An
+  installation without it refuses to start — there is no default and no
+  "keep forever".
+- **The unit is the course.** A `Course` and everything that depends on it —
+  roster membership, the `Course` ↔ `Group` link, `CourseWork`, `Submission`
+  with its grades, and linked `MeetSession` rows — are deleted when the course is
+  archived in Google or no longer returned by it, **and** its most recent
+  Google-side update time (of the course or anything under it) is more than N
+  years ago.
+- A `ClassroomParticipant` is deleted when no remaining course references it.
+- **Deletion is physical** and happens in one transaction per course, so a
+  course is never left half-deleted (AD-7). Rows are removed child-first by the
+  purge use case; foreign keys stay `Restrict` (PC-8) — the purge does not rely
+  on cascades.
+- **Synchronization never deletes teaching data.** A participant who disappears
+  from Google stays until their courses expire; only the purge deletes.
+- `AuditEvent` rows are purged when their own timestamp is more than N years old,
+  independently of the courses they mention (SC-11).
+- Each purge run writes one `AuditEvent`: actor `system`, counts of courses,
+  participants and audit rows removed, no personal data.
+- **The purge runs in read-only mode** — the single write permitted there
+  (BR-075). It runs in the Web host's background services; once a day is enough.

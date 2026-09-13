@@ -76,8 +76,8 @@ readers are the Dean and the Admin.
 - The Owner hosts and pays for every installation, which is why the stack is
   licence-free (PostgreSQL) and why key management stays on the Owner's side.
 - The system handles personal data of students who may be minors. Access is
-  limited to Admin and Dean, and a retention policy is an open requirement that
-  must be settled before production.
+  limited to Admin and Dean, and data is kept only for the retention period each
+  school agrees with the Owner.
 - Google's domain-wide delegation is authorized by the school's own super-admin.
   The Owner never has access to a school's Google console, and never needs it.
 

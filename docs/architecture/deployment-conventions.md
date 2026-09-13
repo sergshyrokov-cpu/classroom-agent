@@ -43,7 +43,8 @@ the previous one — the dependency is real, not stylistic
    `trebovaniya.md` §6. The super-admin authorizes domain-wide delegation in the
    school's own Google console — the Owner cannot do this step (BR-032).
 6. Deploy the installation: its database, its migrations, its configuration
-   (DC-3), and the service-account key placed in the secret store (DC-5).
+   (DC-3) including the retention period agreed with the school, and the
+   service-account key placed in the secret store (DC-5).
 7. The Admin signs in with Google OAuth, is matched against `AllowedAdmin`, and
    saves the `WorkspaceConnection` (domain + impersonation user). The domain
    must equal the one on the `Installation` or the save is refused (BR-020).
@@ -55,8 +56,9 @@ the previous one — the dependency is real, not stylistic
   environment variables — never compile-time constants (AD-10). The prototype's
   hard-coded `admin@dac.ukr.education` is the defect this rule exists to prevent.
 - Per-installation configuration is at minimum: its database connection string,
-  the Control Plane service endpoint, and the secret-store reference for its
-  service-account key.
+  the Control Plane service endpoint, the secret-store reference for its
+  service-account key, and the retention period N (PC-11). The retention period
+  is required: an installation without it refuses to start.
 - The Google Workspace domain and impersonation user are **not** deployment
   configuration: they are entered by the Admin and stored in
   `WorkspaceConnection`, constrained by the `Installation` record (BR-020).
@@ -130,10 +132,14 @@ the previous one — the dependency is real, not stylistic
 - Moving a school to another Workspace domain means creating a **new**
   `Installation` with a new database, not editing the domain of an existing one
   (BR-021, NFR-051). The previous installation's data stays in its own database.
-- Decommissioning an installation therefore means deciding what happens to that
-  database — which is exactly the retention question that is still open
-  (`trebovaniya.md` §7 item 5). Until it is settled, no Story may delete school
-  data as part of an operational procedure.
+- **Decommissioning an installation:** the school receives a full export of its
+  journals, then the installation database is deleted. Once backups exist
+  (§7 item 8) the deletion covers them too (`trebovaniya.md` §5).
+- **Erasing one person's data on the school's written request** is, in the first
+  version, an operational procedure performed by the Owner — there is no function
+  for it yet (EPIC-10). It is executed **only after the school has removed that
+  person from Google Workspace**: synchronization would otherwise re-import them
+  on its next run.
 
 ## DC-10 Logging
 
@@ -219,9 +225,8 @@ and stops. It does not improvise.
 |---|---|
 | Backup and restore of installation databases | §7 item 8 |
 | Service-account key rotation and compromise response | §7 item 9 |
-| Retention and deletion of student personal data | §7 item 5 |
 
-None of the three blocks writing code today, but items 8 and 9 block the first
+Neither blocks writing code today, but both block the first
 production deployment: a school hosted without a backup procedure or a key
 rotation procedure is an operational risk the Owner carries personally.
 Centralized log collection (DC-11) is a further decision, deliberately deferred

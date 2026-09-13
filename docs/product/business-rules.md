@@ -76,7 +76,8 @@ is surfaced to the Admin. *(§8, `deployment-conventions.md` DC-12)*
 
 **BR-026** In read-only mode, viewing and exporting already-synced data keep
 working; synchronization, account management, connection settings and report
-template edits are blocked. *(§2, §9)*
+template edits are blocked. The retention purge is the one write that still runs
+(BR-075). *(§2, §5, §9)*
 
 ## Google Workspace access
 
@@ -153,9 +154,24 @@ never appears in an HTTP error body. *(§5,
 courses, which period, which template, how many rows. The exported content itself
 is never stored in the audit trail. *(§5, `security-conventions.md` SC-11)*
 
-**BR-072** A retention and deletion policy for student personal data is **not
-yet defined** (`trebovaniya.md` §7, item 5). A Story that needs one raises an
-Open Decision; nobody invents a period.
+**BR-072** Student personal data is kept for a retention period N agreed
+between the school and the Owner and set at deployment. The unit is the course: a
+course and everything under it is deleted once it is archived or gone from Google
+and its last activity is more than N years ago; a participant is deleted once no
+remaining course references them. Deletion is physical. *(§5, PC-11)*
+
+**BR-074** A student who disappears from Google is not deleted by
+synchronization. Their grades stay in the journals of the period they studied
+until the course itself expires — a journal is a record, not a live view. *(§5)*
+
+**BR-075** The retention purge runs in read-only mode too — the only write that
+does. Retention is an obligation, not a feature: a suspended school must not keep
+data indefinitely. *(§5)*
+
+**BR-076** In the first version, erasing one person's data on request is done by
+the Owner on the school's written request, and only after the school has removed
+that person from Google — otherwise synchronization re-imports them. *(§5,
+EPIC-10)*
 
 ## Constraints from unresolved questions
 

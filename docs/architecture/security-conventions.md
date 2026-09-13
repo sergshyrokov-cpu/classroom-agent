@@ -175,9 +175,10 @@ when" — above all, who took personal data out of the system.
   shown. Viewing is deferred to EPIC-9 (`trebovaniya.md` section 4,
   `docs/product/epic-map.md`), because it requires a new cell in the permission
   matrix (section 2), which is a decision nobody may invent (SC-1).
-- **Retention is not yet fixed**: audit rows are themselves personal data, so
-  their retention is part of section 7 item 5. Until it is settled they are kept
-  at least as long as the data they describe.
+- **Retention**: audit rows are themselves personal data. They are purged after
+  the installation's retention period N counted from each row's own timestamp —
+  not together with the course they mention, so deleting a course never erases
+  the trace of who exported its journal (PC-11).
 - The table and its writing path are created by the first Story that introduces
   an audited action; every later Story that introduces one writes its event and
   proves it with a test.
