@@ -106,8 +106,8 @@ access". In read-only mode the system makes no call to Google at all; the
 connection instructions stay viewable (v39). The only
 writes permitted are a closed list of service writes: audit rows; sign-in
 bookkeeping (Identity failed-attempt counting and lockout, creating the
-`AppUser` of an approved Admin at their first login, and a Dean changing their
-own password); the legitimacy-check state
+`AppUser` of an approved Admin at their first login, a Dean changing their
+own password, and a user choosing their UI language); the legitimacy-check state
 (last successful check time and last known status); and the retention purge with
 its audit event (BR-075). Any other write is refused; a new service write is
 permitted only by extending this list in `trebovaniya.md` §2. *(§2, §5, §9, v28)*

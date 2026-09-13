@@ -63,7 +63,8 @@ the previous one — the dependency is real, not stylistic
   the Control Plane service endpoint, the secret-store reference for its
   service-account key, the retention period N (PC-11), and the school's time zone
   (an IANA id such as `Europe/Kyiv`, PC-6). The retention period and the time
-  zone are required: an installation without either refuses to start.
+  zone are required: an installation without either refuses to start. Optional:
+  the school's default UI language (`uk` or `en`, `uk` if unset — NFR-073).
 - The Google Workspace domain and impersonation user are **not** deployment
   configuration: they are entered by the Admin and stored in
   `WorkspaceConnection`, constrained by the `Installation` record (BR-020).

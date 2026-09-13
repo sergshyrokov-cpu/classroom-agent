@@ -161,3 +161,14 @@ application. *(§5)*
 
 **NFR-072** The session token lives in an `httpOnly` cookie. No password and no
 Google credential is stored client-side. *(§8)*
+
+**NFR-073** The installation UI is available in Ukrainian and English. The
+school's default language is an installation setting set by the Owner, Ukrainian
+if unset; each Admin and Dean may choose their own, stored on their account.
+Screens, error messages and hints, the super-admin connection instructions, and
+the labels the system writes into exports (in the exporting user's language) are
+translated; text a Dean wrote into a template and data from Google are shown as
+is. Date and number formats follow the language. The Control Plane UI is likewise in
+Ukrainian and English: Ukrainian by default, the Owner's choice stored on the
+Owner account. A new language is added through translation files without code changes.
+*(§5, v51)*

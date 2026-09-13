@@ -79,7 +79,8 @@ All error responses use exactly this JSON shape:
 }
 ```
 
-- `message` is safe to display to a Dean or Admin. It never contains stack
+- `message` is safe to display to a Dean or Admin, and is in the requesting
+  user's UI language (NFR-073). It never contains stack
   traces, SQL, class or namespace names, file paths, Google API raw errors,
   service-account identifiers, or secrets.
 - Validation failures may add a `fieldErrors` array of

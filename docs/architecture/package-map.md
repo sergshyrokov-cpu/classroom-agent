@@ -60,6 +60,7 @@ Epic 7 — do not add them speculatively.
 | `Validation` | custom `ValidationAttribute` / `IValidatableObject` | `Domain` (read-only) |
 | `Exceptions` | domain/application exceptions, no HTTP concepts | `Models.Dtos` |
 | `Authorization` | the permission matrix from `trebovaniya.md` section 2, as policy definitions | `Domain` |
+| `Localization` | translation files (Ukrainian, English) for screens, error messages, the super-admin instructions and export labels — shared by `Web` and `Infrastructure/Export` (NFR-073) | leaf |
 
 ### `ClassroomAgent.Infrastructure`
 
@@ -100,6 +101,7 @@ email checked at an Admin login (SC-12).
 | `Services` | business rules and transaction boundaries: Installation status, `AllowedAdmin`, legitimacy and compatibility checks; return DTOs | the only callers of `Persistence` |
 | `Persistence` | its **own** `DbContext`: `Owner`, `Installation`, `AllowedAdmin`, `InstanceLicenseCheck`, `AuditEvent` | separate database |
 | `Security` | Owner authentication (Identity, first-run setup) | |
+| `Localization` | its own translation files (Ukrainian, English) for the Owner UI — it cannot reference `Application.Localization` | NFR-073 |
 | `Push` | outbound status-change notification to installations | `architecture.md` AD-1, `trebovaniya.md` section 9 |
 
 ## Test namespace rule
