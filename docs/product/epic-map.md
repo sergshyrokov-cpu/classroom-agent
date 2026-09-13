@@ -53,7 +53,8 @@ and manage Dean accounts.
 ### Candidate User Stories
 
 - US-008 Admin sign-in via Google OAuth with AllowedAdmin verification
-- US-009 Configure WorkspaceConnection (domain, impersonation user)
+- US-009 Configure WorkspaceConnection (domain, technical account as impersonation
+  user, BR-015)
 - US-010 Connection instructions for the school's super-admin (client ID + scopes +
   technical-account requirements, BR-015)
 - US-011 "Check access" diagnostic against Classroom and Reports APIs
@@ -129,7 +130,8 @@ Produce the journal the school actually uses, on paper and in Excel/Word.
 
 ### Candidate User Stories
 
-- US-025 Journal view: student × coursework × grade for a period
+- US-025 Journal view: student × coursework × grade for a period — blocked by
+  `trebovaniya.md` §7 item 15 (journal cell rules)
 - US-026 Distinguish graded work, ungraded work and materials (BR-052)
 - US-027 Configurable report templates (full and short forms)
 - US-028 Export a journal to Excel using a school template
@@ -150,14 +152,15 @@ class leaves no Meet data (BR-060).
 
 ### Candidate User Stories
 
-- US-031 Pull Meet `call_ended` events daily, keep only the fields reports need,
+- US-031 Pull Meet `call_ended` events regularly, keep only the fields reports need,
   and keep history beyond Google's 180 days (PC-12)
 - US-032 Link meeting codes to courses: automatic suggestion by organizer and
   participant overlap, unassigned-meetings list, confirmation and re-linking by a
   Dean or Admin (BR-065)
 - US-033 Built-in Meet reports for a course and period: summary, meeting list,
   student participation, one meeting in detail, and their export (BR-062…BR-064;
-  `trebovaniya.md` §2 permission matrix)
+  `trebovaniya.md` §2 permission matrix) — blocked by `trebovaniya.md` §7 item 16
+  (Meet counting rules)
 
 ---
 
@@ -180,8 +183,8 @@ work is queued rather than remembered.
   readable names **in the view only** — nothing is written back into the rows.
   Read-only: no endpoint, control or query path may edit or delete a row.
 - US-035 Audit log view in the Control Plane: the same for Owner actions —
-  sign-in, `Installation` created, suspended or resumed, `AllowedAdmin` added or
-  revoked.
+  sign-in, `Installation` created, its service-account client ID changed,
+  suspended or resumed, `AllowedAdmin` added or revoked.
 - US-036 Export of an audit extract for a period. An export of the audit log is
   itself an audited action, so this Story must not create a blind spot.
 
