@@ -37,7 +37,8 @@ area as production severity.
   created manually by an Admin, who may also disable, re-enable and reset its
   password; the account is never deleted (BR-014). After an Admin reset the Dean
   must change the password at the next login, so only the Dean knows it. A reset
-  flow that lets the Admin keep a working password is a finding.
+  flow that lets the Admin keep a working password is a finding. A Dean may also
+  change their own password at any time (v38).
 - **Admin** — Google OAuth external login. **There is no local password for an
   Admin**, no password column, no password reset flow. A migration or entity
   adding one is a Critical finding.
@@ -66,15 +67,18 @@ Admin's account (BR-015, SC-8).
   `Installation`.
 - **`AllowedAdmin` is checked on every login, not only the first.** Checking it
   once would make the Owner's revocation meaningless — the `AppUser` row already
-  exists. On revocation the row is kept (history and audit; purged
-  later under PC-11) but login is refused. Implementing this as a first-login-only check is a Critical finding.
+  exists. On revocation the row is kept (history and audit; purged later under
+  PC-11) but login is refused. Implementing this as a first-login-only check is
+  a Critical finding.
 - **The check is a call to the Control Plane on every Admin login.** The
   installation stores no copy of `AllowedAdmin` and caches no answer. If the
   Control Plane does not answer, the Admin login is refused with a plain message;
   Dean logins and synchronization are unaffected (`trebovaniya.md` §2, v26).
   Falling back to a cached or earlier answer is a Critical finding.
-- Several Admins per installation are permitted and expected; one Admin must not
-  be a single point of failure.
+- **At least two Admins per school** are required at onboarding, so one person
+  is never a single point of failure. Admins are school staff on personal domain
+  administrator accounts — ideally a separate admin account, not the one used
+  for daily mail and teaching (BR-013, `trebovaniya.md` §9, v50).
 
 ## SC-4 Authorization
 
@@ -144,9 +148,11 @@ pages are disabled outside local development.
 
 ## SC-8 Google API access is read-only
 
-- Every requested OAuth scope is a `readonly` scope. The program never writes to
-  Google Workspace (`trebovaniya.md` section 1). A design requesting a write
-  scope is a Critical finding.
+- Every requested OAuth scope grants read access only — the list in
+  `trebovaniya.md` section 6 is the reference (e.g. `classroom.profile.emails` is
+  read-only although its name has no `readonly`). The program never writes to
+  Google Workspace (`trebovaniya.md` section 1). A design requesting a scope that
+  allows writing is a Critical finding.
 - The scope list is fixed in `trebovaniya.md` section 6 and is what a school's
   super-admin authorizes. Adding a scope is a requirements change, not an
   implementation detail: it forces every school to re-authorize.
@@ -174,8 +180,9 @@ pages are disabled outside local development.
   (v35). Do not confuse the two.
 - The domain an installation may work with comes from the Control Plane. Saving
   a `WorkspaceConnection` whose domain, or whose impersonation user's email
-  domain, differs from the `Installation` domain must be refused (BR-020) — this is the control that stops the program from being
-  pointed at a domain the Owner never approved.
+  domain, differs from the `Installation` domain must be refused (BR-020) —
+  this is the control that stops the program from being pointed at a domain the
+  Owner never approved.
 
 ## SC-10 Error and log hygiene
 
@@ -204,9 +211,11 @@ when" — above all, who took personal data out of the system.
   password of a Dean account, and a Dean changing their own password; saving or
   changing `WorkspaceConnection`; running the "check access" diagnostic; starting
   a synchronization by hand; linking a Meet meeting code to a course or
-  re-linking it; **exporting a journal or report**.
+  re-linking it; **exporting a journal or report**; each retention purge run
+  (actor `system`, counts only — PC-11).
 - **Audited in the Control Plane:** Owner sign-in, creating an `Installation`,
-  changing its service-account client ID, suspending and resuming one, adding and revoking an `AllowedAdmin`.
+  changing its service-account client ID, suspending and resuming one, adding
+  and revoking an `AllowedAdmin`.
 - **A row carries:** UTC timestamp, actor (internal account id and role —
   `AppUser` in an installation, `Owner` in the Control Plane — or `system` for
   background work), action, target (entity type and internal id), outcome
@@ -221,8 +230,9 @@ when" — above all, who took personal data out of the system.
   logs: no names, no email addresses, no grades. An export row records course
   ids, the period, the template id and the row count, never the file's contents.
 - **Never updated; deleted only by the retention purge.** An audit row is never
-  changed. The only path that deletes one is the retention purge (PC-11); no
-  user-facing use case, endpoint or screen can edit or delete a row. Any other
+  changed. An installation audit row is deleted only by the retention purge
+  (PC-11); a Control Plane audit row is never deleted. No user-facing use case,
+  endpoint or screen can edit or delete a row. Any other
   update or delete path is a Critical finding (`trebovaniya.md` §5, v27).
 - **There is no audit screen in the first version** — rows are written, not
   shown. Viewing is deferred to EPIC-9 (`trebovaniya.md` section 4,
