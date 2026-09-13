@@ -42,6 +42,8 @@ Derived from `trebovaniya.md` sections 5 and 9, and from the workflow order in
   namespace name, a file path or a service-account identifier (SC-10).
 - Pagination defaults and limits (AC-8: `page` 0, `size` 20, max 100) are
   covered for at least one paginated endpoint.
+- The `message` of an error body is asserted to be in the requesting user's UI
+  language, for both Ukrainian and English (AC-6, NFR-073).
 
 ## TC-4 No test touches a live Google API
 
@@ -54,6 +56,9 @@ Derived from `trebovaniya.md` sections 5 and 9, and from the workflow order in
   task for the Owner (`trebovaniya.md` section 6), not a test.
 - The same applies to the Control Plane channel: `IControlPlaneClient` is
   substituted; no test calls a deployed Control Plane.
+- More generally, no automated test reaches any external service at all — the
+  system's only external systems are Google and the Control Plane, both
+  substituted (SC-13).
 
 ## TC-5 Authorization and read-only mode are tested as behaviour
 
@@ -68,6 +73,9 @@ Derived from `trebovaniya.md` sections 5 and 9, and from the workflow order in
   called directly. Asserting that a Razor button is hidden is not a test of
   read-only mode. Each service write on the BR-026 list is asserted to still
   succeed in read-only mode — above all, an export still writes its audit row.
+- In read-only mode a test asserts that the substituted Google ports
+  (`IClassroomReader`, `IMeetReportsReader`) receive no call — synchronization,
+  the Meet pull and "check access" included (AD-6, v39).
 - `AllowedAdmin` is asserted to be checked on **every** login, not only the
   first (SC-3) — the first-login-only mistake must fail a test. An Admin login
   while the substituted `IControlPlaneClient` does not answer is asserted to be
@@ -91,3 +99,11 @@ Derived from `trebovaniya.md` sections 5 and 9, and from the workflow order in
   of the Definition of Done in `AGENTS.md`.
 - A test disabled to make a build pass is a defect, not a workaround: either the
   Specification is wrong (loop back to `SPECIFICATION`) or the implementation is.
+
+## TC-8 Translations and time zone
+
+- A test proves that every translation key exists in both Ukrainian and English,
+  in `Application.Localization` and in `ControlPlane.Localization` (NFR-073).
+- Tests of date display and of period day boundaries use a school time zone that
+  is not UTC (for example `Europe/Kyiv`), so a mix-up of local and UTC time fails
+  (NFR-074).
