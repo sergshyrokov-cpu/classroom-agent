@@ -130,7 +130,9 @@ the previous one — the dependency is real, not stylistic
 - The channel is bidirectional by design: the installation calls the Control
   Plane every 6 hours for the legitimacy check, and the Control Plane pushes
   status changes to the installation's endpoint (HTTP POST, 3 retries with
-  exponential backoff) (BR-024, NFR-014).
+  exponential backoff) (BR-024, NFR-014). On every Admin login the installation
+  also asks the Control Plane whether the email is in `AllowedAdmin`; while the
+  channel is down, Admin logins are refused (BR-012).
 
 ## DC-7 Suspending and resuming a school
 

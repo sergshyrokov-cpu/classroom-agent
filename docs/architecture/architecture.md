@@ -76,7 +76,7 @@ Each external dependency is reached through an interface declared in
 | `IClassroomReader` | `Infrastructure/Google` | Google Classroom API |
 | `IMeetReportsReader` | `Infrastructure/Google` | Admin Reports API (Meet `call_ended` audit events) |
 | `IWorkspaceCredentialProvider` | `Infrastructure/Secrets` | service-account key resolution (see SC-7) |
-| `IControlPlaneClient` | `Infrastructure/ControlPlane` | legitimacy check call to the Control Plane |
+| `IControlPlaneClient` | `Infrastructure/ControlPlane` | legitimacy check and Admin login `AllowedAdmin` check calls to the Control Plane (SC-3) |
 | `IReportRenderer` | `Infrastructure/Export` | Excel/Word generation |
 
 No Google SDK type crosses into `Application` or `Domain`. Sync code works with

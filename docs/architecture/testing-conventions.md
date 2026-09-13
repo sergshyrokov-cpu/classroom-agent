@@ -63,7 +63,9 @@ Derived from `trebovaniya.md` sections 5 and 9, and from the workflow order in
   called directly. Asserting that a Razor button is hidden is not a test of
   read-only mode.
 - `AllowedAdmin` is asserted to be checked on **every** login, not only the
-  first (SC-3) — the first-login-only mistake must fail a test.
+  first (SC-3) — the first-login-only mistake must fail a test. An Admin login
+  while the substituted `IControlPlaneClient` does not answer is asserted to be
+  refused.
 
 ## TC-6 Layout
 

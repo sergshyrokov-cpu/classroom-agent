@@ -57,6 +57,11 @@ the Control Plane, the `AppUser` with role Admin, and the impersonation user in
   once would make the Owner's revocation meaningless — the `AppUser` row already
   exists. On revocation the row is kept (history and audit) but login is
   refused. Implementing this as a first-login-only check is a Critical finding.
+- **The check is a call to the Control Plane on every Admin login.** The
+  installation stores no copy of `AllowedAdmin` and caches no answer. If the
+  Control Plane does not answer, the Admin login is refused with a plain message;
+  Dean logins and synchronization are unaffected (`trebovaniya.md` §2, v26).
+  Falling back to a cached or earlier answer is a Critical finding.
 - Several Admins per installation are permitted and expected; one Admin must not
   be a single point of failure.
 
@@ -193,7 +198,9 @@ hosts and therefore can reach.
 **Application — no path exists, and that is checkable:**
 
 - `ClassroomAgent.Contracts` carries no teaching-data type. The legitimacy check
-  and the status push carry the installation id, its version and its status —
+  and the status push carry the installation id, application and contract
+  versions, status and compatibility state (DC-12); the Admin login check carries
+  the installation id, the email being checked and a yes/no answer (SC-3) —
   nothing else.
 - **No school statistics reach the Control Plane**, not even anonymous counts of
   courses or participants. Adding any is a separate decision, not an

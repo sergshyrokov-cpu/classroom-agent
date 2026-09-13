@@ -22,9 +22,10 @@ layout change is not acceptable. *(§2)*
 **BR-004** Both Admin and Dean may start a synchronization. *(§2)*
 
 **BR-005** The Owner is never stored in an installation's `AppUser` table and
-has no access to a school's teaching data through the application: the Control
-Plane receives only installation id, version and status — no statistics. *(§3,
-§9, SC-12)*
+has no access to a school's teaching data through the application: the service
+channel carries no teaching data and no statistics — only installation id,
+versions, status and compatibility state, and, at an Admin login, the email being
+checked with a yes/no answer. *(§3, §9, SC-12)*
 
 **BR-006** The Owner's access to a school's database on the servers is
 operational only — migrations, decommissioning, erasure on the school's request,
@@ -43,7 +44,9 @@ successful Google OAuth login by an email present in `AllowedAdmin` for this
 
 **BR-012** `AllowedAdmin` is verified on **every** Admin login, not only the
 first. On revocation the `AppUser` row is kept for history but login is refused.
-*(§2)*
+The installation asks the Control Plane on each login and keeps no copy of the
+list; if the Control Plane does not answer, the Admin login is refused. Dean
+logins and synchronization are unaffected. *(§2, §9, v26)*
 
 **BR-013** An installation may have several Admins. One person must not be a
 single point of failure. *(§2, §9)*

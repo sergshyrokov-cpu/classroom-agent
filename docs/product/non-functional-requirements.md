@@ -85,7 +85,8 @@ the retention period counted from their own timestamp. *(§5,
 
 **NFR-026** The Control Plane has no path to a school's teaching data and
 receives no school statistics; the service channel carries installation id,
-version and status only. The Owner's server-level access is operational,
+versions, status and compatibility state, plus the email checked at an Admin
+login. The Owner's server-level access is operational,
 governed by the written agreement with the school and recorded in an operations
 journal. *(§9, `security-conventions.md` SC-12)*
 
