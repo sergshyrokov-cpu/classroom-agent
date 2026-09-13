@@ -42,7 +42,9 @@ The periodic check is the guarantee; the push is the optimization. *(§9)*
 
 **NFR-015** Each installation writes structured logs (Serilog, JSON, one file
 per day, retained 30 days) and exposes liveness and readiness endpoints reachable
-only from the Owner's private network. *(§8, `deployment-conventions.md` DC-10,
+only from the Owner's private network. Readiness distinguishes "cannot serve"
+(`Unhealthy`) from read-only or a failing legitimacy check within the grace
+period (`Degraded`, still HTTP 200). *(§8, `deployment-conventions.md` DC-10,
 DC-11)*
 
 **NFR-016** Metrics and centralized log collection are out of scope for the

@@ -193,10 +193,11 @@ without long-lived keys (DC-5).
   - `Information` — application start and stop; synchronization start and finish
     with counters; legitimacy check result changes.
   - `Warning` — retried transient Google failures (`429`, `5xx`), a push from
-    the Control Plane that had to be retried.
+    the Control Plane that had to be retried, an installation entering read-only
+    mode (with the reason).
   - `Error` — permission failures (`403 unauthorized_client`, `access_denied`,
     missing scope), unhandled exceptions, a legitimacy check that failed after
-    retries, an installation entering read-only mode.
+    retries.
   - `Debug` is disabled outside local development.
 - Every log line written inside a request carries the request identifier; every
   line written by a synchronization run carries that run's identifier, so one
@@ -212,16 +213,21 @@ without long-lived keys (DC-5).
 
 - Two endpoints, both answering with status only and no diagnostic detail:
   - **liveness** — the process is up. No dependency is touched.
-  - **readiness** — the database is reachable, the last successful legitimacy
-    check is within the grace period (BR-025), and the synchronization
-    background service is running.
+  - **readiness** — three states (`trebovaniya.md` §8, v34):
+    - `Unhealthy` — the database is unreachable or the synchronization
+      background service is not running;
+    - `Degraded` — the installation is in read-only mode for any reason, or the
+      last legitimacy check failed while the grace period still runs (BR-025) —
+      an early warning to the Owner;
+    - `Healthy` — otherwise.
 - Both are reachable **only from the Owner's private network**, like the service
   channel (DC-6, SC-9). A publicly reachable endpoint that reports internal
   state would contradict SC-6.
-- Readiness reports `Unhealthy` when the installation cannot serve its purpose.
-  Read-only mode is **not** unhealthy: it is a defined operating state (DC-7),
-  and reporting it as a failure would page the Owner for a school that is
-  working exactly as designed.
+- Readiness reports `Unhealthy` only when the installation cannot serve users.
+  Read-only mode is **not** unhealthy: it is a defined operating state (DC-7), so
+  it reports `Degraded`, which answers HTTP 200 and keeps users able to view and
+  export. Reporting it as a failure would cut viewing off and page the Owner for
+  a school that is working exactly as designed.
 - Metrics and centralized log collection are **out of scope for the first
   version**: for ~10 installations, readiness plus `SyncState` answer "is this
   school working". Shipping logs off a school's server is a privacy decision
