@@ -10,13 +10,13 @@
 ## What this is
 
 A system that lets school staff see what is actually happening in Google
-Classroom: which courses exist, who teaches and attends them, what work was set
-and graded, and who was present at the video lessons.
+Classroom: which courses exist, who teaches and studies in them, what work was
+set and graded, and how lessons actually run in Google Meet.
 
 The school runs its teaching through Google Workspace for Education. Google
 Classroom holds the data but does not answer the questions a head of studies
 asks — "show me the gradebook for this course for the term, in the format we
-print", "who was actually present in October", "which courses does this teacher
+print", "how many Meet lessons did this course hold in October, and who joined them", "which courses does this teacher
 run". This system reads that data into its own database and answers those
 questions.
 
