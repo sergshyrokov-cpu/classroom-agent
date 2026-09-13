@@ -21,8 +21,9 @@ layout change is not acceptable. *(§2)*
 
 **BR-004** Both Admin and Dean may start a synchronization. *(§2)*
 
-**BR-005** The Owner is never stored in an installation's `AppUser` table and
-has no access to a school's teaching data through the application: the service
+**BR-005** The Owner is never stored in an installation's `AppUser` table and,
+as Owner, has no access to a school's teaching data through the application (a
+person who also works at a school may be its Admin — BR-013): the service
 channel carries no teaching data and no statistics — only installation id,
 versions, status and compatibility state, and, at an Admin login, the email being
 checked with a yes/no answer. *(§3, §9, SC-12)*
@@ -38,14 +39,6 @@ recorded in the Owner's operations journal. *(§9, SC-12)*
 `AllowedAdmin` entry in the Control Plane, and `AppUser` with role Admin. It is a
 domain administrator account, never a super-admin. The impersonation user is
 **not** an Admin's account (BR-015). *(§1, §2, §9, v30)*
-
-**BR-015** Teaching data is read on behalf of a **technical account** of the
-school — the impersonation user in `WorkspaceConnection`. The school's
-super-admin creates it at onboarding; no person stands behind it, it is not a
-super-admin, and it holds read-only roles for Classroom and Admin Reports only.
-Nobody signs in to the program with it and it is not in `AllowedAdmin`. The Admin
-enters its email in the connection settings. Staff leaving or an Admin being
-revoked therefore never stops synchronization. *(§9, v30)*
 
 **BR-011** An `AppUser` with role Admin is created automatically on the first
 successful Google OAuth login by an email present in `AllowedAdmin` for this
@@ -71,6 +64,14 @@ account, but never deletes it — like a revoked Admin's `AppUser`, it is kept f
 history and audit, and removed only by the retention purge N years after its last
 successful sign-in (PC-11, v45). A Dean may change their own password, and must do so at the
 first login after an Admin reset. *(§2, v38)*
+
+**BR-015** Teaching data is read on behalf of a **technical account** of the
+school — the impersonation user in `WorkspaceConnection`. The school's
+super-admin creates it at onboarding; no person stands behind it, it is not a
+super-admin, and it holds read-only roles for Classroom and Admin Reports only.
+Nobody signs in to the program with it and it is not in `AllowedAdmin`. The Admin
+enters its email in the connection settings. Staff leaving or an Admin being
+revoked therefore never stops synchronization. *(§9, v30)*
 
 ## Installation and the Owner's control
 
@@ -108,7 +109,7 @@ writes permitted are a closed list of service writes: audit rows; sign-in
 bookkeeping (Identity failed-attempt counting and lockout, creating the
 `AppUser` of an approved Admin at their first login, a Dean changing their
 own password, and a user choosing their UI language); the legitimacy-check state
-(last successful check time and last known status); and the retention purge with
+(last successful check time, last known status and last compatibility state); and the retention purge with
 its audit event (BR-075). Any other write is refused; a new service write is
 permitted only by extending this list in `trebovaniya.md` §2. *(§2, §5, §9, v28)*
 
@@ -129,12 +130,15 @@ Google data API. Synchronization therefore works while no one is logged in.
 *(§9)*
 
 **BR-032** Domain-wide delegation is authorized by the school's own super-admin
-in the school's Google console. The Owner has no access to it. The Owner
-supplies only the client ID and the scope list. *(§1, §9)*
+in the school's Google console, who also creates the school's technical account
+(BR-015). The Owner has no access to it. The Owner supplies only the client ID
+and the scope list. *(§1, §9, v30)*
 
 **BR-033** The service account for a school lives in the Owner's Cloud project;
 each school has its own. Its key is placed by the Owner at deployment and never
-reaches the school, the UI, or the database. *(§5, §6)*
+reaches the school, the UI, or the database. The Owner's Cloud project lives
+outside every school's domain, so no school controls the others' access. *(§5, §6,
+v50)*
 
 **BR-034** A Google permission failure (`403 unauthorized_client`,
 `access_denied`, missing scope) means delegation is not configured and is never
@@ -143,8 +147,8 @@ retried. It is recorded and surfaced to the Admin with a diagnosable message.
 
 **BR-035** Replacing a service-account key never involves the school: delegation
 is authorized for the account's client ID, which a new key does not change. Only
-recreating the service account itself forces the school to authorize again.
-*(§9, DC-5)*
+recreating the service account itself forces the school to authorize again; the
+Owner then updates the client ID on the `Installation`. *(§9, DC-5, v43)*
 
 **BR-036** A suspected key leak is a personal-data incident: the key is deleted
 before anything else, and the school is informed without delay as the data
@@ -189,7 +193,9 @@ and a material (`material` — no submissions). Its date follows the cascade
 separate Classroom resource with their own read-only scope. *(§3, §6, Epic 3,
 v32)*
 
-**BR-053** All timestamps are stored in UTC. *(persistence-conventions.md PC-6)*
+**BR-053** All timestamps are stored in UTC; dates are shown, and period day
+boundaries set, in the school's time zone (NFR-074). *(§5, v40,
+persistence-conventions.md PC-6)*
 
 **BR-054** The subjects of the teaching process are teachers and students, each
 identified by a personal account in the school's domain. Group addresses and
@@ -309,3 +315,9 @@ EPIC-10)*
 **BR-077** An erasure never comes back: after a database is restored from a
 backup, every erasure recorded in the operations journal after the backup's date
 is re-applied before the school gets the installation back. *(§9, DC-13, v47)*
+
+**BR-078** School data leaves the installation only for two destinations: Google,
+read-only, and the Control Plane service channel, which carries no teaching data
+(BR-005). No AI, speech-recognition, analytics or other external service receives
+school data in the first version; an AI assistant is future Epic 13. *(§6, §4 Epic 13,
+v52, `security-conventions.md` SC-13)*
