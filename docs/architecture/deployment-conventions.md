@@ -242,7 +242,7 @@ operating condition, not an incident (`trebovaniya.md` §8, decided in v16).
 Decided in `trebovaniya.md` section 9 (v21). Most teaching data can be rebuilt
 by re-synchronizing from Google; Dean accounts, report templates, connection
 settings, the audit trail, history of courses already deleted in Google, and
-older Meet attendance cannot. The Control Plane database is the most critical
+Meet data older than Google's 180 days cannot. The Control Plane database is the most critical
 one: losing it sends every school to read-only after 7 days.
 
 - **Every database is backed up** — each installation and the Control Plane.

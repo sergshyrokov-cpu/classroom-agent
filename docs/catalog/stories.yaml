@@ -92,14 +92,6 @@ stories:
     epic: EPIC-1
     title: Sync coursework and submissions
     state: BACKLOG
-  - id: US-016
-    epic: EPIC-1
-    title: Sync Workspace groups and their membership
-    state: BACKLOG
-    blocked_by: >
-      trebovaniya.md section 7 item 3 — Group has no membership link in the
-      model. Also requires Admin SDK Directory API scopes no school has
-      authorized yet (section 6).
   - id: US-017
     epic: EPIC-1
     title: Retry, backoff and permission-error handling
@@ -113,7 +105,7 @@ stories:
     title: Trigger a synchronization from the UI
     state: BACKLOG
 
-  # --- EPIC-2: Courses, participants, groups -------------------------------
+  # --- EPIC-2: Courses and participants -----------------------------------
   - id: US-020
     epic: EPIC-2
     title: Course list with filters and search
@@ -126,15 +118,6 @@ stories:
     epic: EPIC-2
     title: Teachers and their courses
     state: BACKLOG
-    blocked_by: >
-      trebovaniya.md section 7 item 4 — the Classroom role is modelled on the
-      participant, but belongs on the course membership.
-  - id: US-023
-    epic: EPIC-2
-    title: Groups and their membership
-    state: BACKLOG
-    blocked_by: >
-      trebovaniya.md section 7 item 3 — same gap as US-016.
 
   # --- EPIC-5: Database management -----------------------------------------
   - id: US-024
@@ -176,21 +159,18 @@ stories:
     title: Assemble several templates into one printed journal
     state: BACKLOG
 
-  # --- EPIC-4: Attendance ---------------------------------------------------
+  # --- EPIC-4: Meet activity statistics -----------------------------------
   - id: US-031
     epic: EPIC-4
-    title: Sync Meet attendance from Admin Reports API
+    title: Pull Meet events and keep history beyond 180 days
     state: BACKLOG
   - id: US-032
     epic: EPIC-4
-    title: Link a Meet session to a course
+    title: Link meeting codes to courses
     state: BACKLOG
-    blocked_by: >
-      trebovaniya.md section 7 item 1 — MeetSession has no course link and the
-      derivation (calendar id, meeting code) is undecided.
   - id: US-033
     epic: EPIC-4
-    title: Attendance report for a period
+    title: Built-in Meet reports for a course and period
     state: BACKLOG
     blocked_by: >
       Depends on US-032.

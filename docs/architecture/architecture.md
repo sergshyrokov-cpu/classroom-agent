@@ -14,7 +14,7 @@ The system ships as **two independent applications**:
 
 | Deployable | Instances | Database | Purpose |
 |---|---|---|---|
-| **Data Plane** (`ClassroomAgent.Web`) | one per school | one per school | the application school staff use: courses, journals, attendance, sync |
+| **Data Plane** (`ClassroomAgent.Web`) | one per school | one per school | the application school staff use: courses, journals, Meet statistics, sync |
 | **Control Plane** (`ClassroomAgent.ControlPlane`) | one, shared | its own | Owner authentication, `Installation` registry, `AllowedAdmin` list, legitimacy checks and push |
 
 They never share a database and never reference each other's projects. The only
@@ -74,8 +74,7 @@ Each external dependency is reached through an interface declared in
 | Port | Implemented by | Wraps |
 |---|---|---|
 | `IClassroomReader` | `Infrastructure/Google` | Google Classroom API |
-| `IDirectoryReader` | `Infrastructure/Google` | Admin SDK Directory API (group membership) |
-| `IMeetReportsReader` | `Infrastructure/Google` | Admin Reports API (Meet attendance) |
+| `IMeetReportsReader` | `Infrastructure/Google` | Admin Reports API (Meet `call_ended` audit events) |
 | `IWorkspaceCredentialProvider` | `Infrastructure/Secrets` | service-account key resolution (see SC-7) |
 | `IControlPlaneClient` | `Infrastructure/ControlPlane` | legitimacy check call to the Control Plane |
 | `IReportRenderer` | `Infrastructure/Export` | Excel/Word generation |

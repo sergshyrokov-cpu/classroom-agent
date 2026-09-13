@@ -55,7 +55,7 @@ and manage Dean accounts.
 - US-008 Admin sign-in via Google OAuth with AllowedAdmin verification
 - US-009 Configure WorkspaceConnection (domain, impersonation user)
 - US-010 Connection instructions for the school's super-admin (client ID + scopes)
-- US-011 "Check access" diagnostic against Classroom, Directory and Reports APIs
+- US-011 "Check access" diagnostic against Classroom and Reports APIs
 - US-012 Create and manage Dean accounts
 
 ---
@@ -66,7 +66,7 @@ Synchronization with Google Classroom
 
 ### Goal
 
-Bring courses, participants, groups, coursework and grades into the local
+Bring courses, participants with their course roles, coursework and grades into the local
 database, in the background, repeatably.
 
 ### Candidate User Stories
@@ -74,7 +74,6 @@ database, in the background, repeatably.
 - US-013 Background synchronization service
 - US-014 Sync courses and rosters
 - US-015 Sync coursework and submissions
-- US-016 Sync Workspace groups and their membership
 - US-017 Retry, backoff and permission-error handling
 - US-018 Incremental synchronization
 - US-019 Trigger a synchronization from the UI
@@ -83,19 +82,18 @@ database, in the background, repeatably.
 
 ## EPIC-2
 
-Courses, participants, groups
+Courses and participants
 
 ### Goal
 
 Let the Dean see what exists: courses with filters, teachers and their courses,
-students including those enrolled through a group.
+the students of each course.
 
 ### Candidate User Stories
 
 - US-020 Course list with filters and search
 - US-021 Course detail with roster
 - US-022 Teachers and their courses
-- US-023 Groups and their membership
 
 ---
 
@@ -136,17 +134,23 @@ Produce the journal the school actually uses, on paper and in Excel/Word.
 
 ## EPIC-4
 
-Attendance (Google Meet)
+Meet activity statistics
 
 ### Goal
 
-Report who was actually present at video lessons, from Google's own records.
+Show the Dean how lessons actually run in Google Meet for a chosen Classroom
+course and period — facts only. Not an attendance register: a lesson held in
+class leaves no Meet data (BR-060).
 
 ### Candidate User Stories
 
-- US-031 Sync Meet attendance from Admin Reports API
-- US-032 Link a Meet session to a course
-- US-033 Attendance report for a period, by course and by student
+- US-031 Pull Meet `call_ended` events daily, keep only the fields reports need,
+  and keep history beyond Google's 180 days (PC-12)
+- US-032 Link meeting codes to courses: automatic suggestion by organizer and
+  participant overlap, unassigned-meetings list, confirmation and re-linking by a
+  Dean or Admin (BR-065)
+- US-033 Built-in Meet reports for a course and period: summary, meeting list,
+  student participation, one meeting in detail (BR-062…BR-064)
 
 ---
 
@@ -197,7 +201,7 @@ procedure into a function.
 ### Candidate User Stories
 
 - US-038 Erase all data of one `ClassroomParticipant` — grades, submissions,
-  attendance, course membership — in one transaction, with an audit event that
+  Meet participation, course membership — in one transaction, with an audit event that
   carries no personal data of the erased person.
 
 ### Blocked until decided
@@ -209,6 +213,31 @@ procedure into a function.
   erased person — a trade-off to accept explicitly, not by accident.
 - What the school is told about data already exported into reports: it is
   outside the system and cannot be erased by it.
+
+---
+
+## EPIC-11 (future)
+
+Meet statistics beyond facts
+
+### Goal
+
+Out of scope for the first version, which shows facts for one course. Recorded
+so nothing is lost (`trebovaniya.md` §4, Epic 11).
+
+### Deferred
+
+- Electronic timetable integration — schools have none in electronic form yet;
+  it brings lesson length and the lesson plan.
+- Share of lessons held in Meet against the plan; meeting length against lesson
+  length.
+- School norms (share of Meet lessons, duration, "stayed the whole lesson"
+  threshold) — possibly unregulated in a school and dependent on teaching style.
+- Merging meetings split by a dropped connection into one lesson.
+- Comparing teachers.
+- Dean-configurable Meet reports.
+- Views wider than one course: a teacher across courses, an academic group,
+  school averages.
 
 ---
 
@@ -238,13 +267,8 @@ accident.
   `AllowedAdmin` entry exists.
 - **EPIC-1 depends on EPIC-6.** No connection, no data.
 - **EPIC-2, 3, 5 depend on EPIC-1.** They read what synchronization produced.
-- **US-032 (link Meet session to course) is blocked** by an open question —
-  `trebovaniya.md` §7 item 1: `MeetSession` has no course link, and how it is
-  derived (calendar id, meeting code) is not yet decided. EPIC-4 cannot be
-  specified past US-031 until that is settled.
-- **US-016 (group membership)** requires Admin SDK Directory API scopes that the
-  prototype never used and no school has authorized yet
-  (`trebovaniya.md` §6). Adding them forces every school to re-authorize.
+- **EPIC-4 depends on course roles.** Suggesting a course for a meeting needs
+  each course's teachers and students (`CourseMembership`, US-014).
 - **US-025 onward** depend on `Submission` gaining state, submission date and
   late flag — `trebovaniya.md` §7 item 2. Without them a journal cannot tell
   "submitted, ungraded" from "not submitted".

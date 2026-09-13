@@ -24,7 +24,8 @@ questions.
 
 A working Python/Streamlit prototype already does a narrow version of this for
 one school (domain `dac.ukr.education`). It synchronizes Classroom into a local
-SQLite cache and produces attendance and gradebook reports. It is a prototype:
+SQLite cache and produces gradebook reports; its Meet report never went beyond
+a mock-up. It is a prototype:
 the domain is hard-coded, synchronization blocks the UI, report templates are
 baked into code, and there is no access control.
 
@@ -36,7 +37,7 @@ API calls work — not a design to preserve.
 
 | | |
 |---|---|
-| **Dean** (учебная часть) | the primary user. Looks at courses, gradebooks and attendance; exports reports; triggers a refresh when the data looks stale. Does this daily. |
+| **Dean** (учебная часть) | the primary user. Looks at courses, gradebooks and how Meet lessons actually run; exports reports; triggers a refresh when the data looks stale. Does this daily. |
 | **Admin** | a Google Workspace domain administrator at the school. Installs and configures: connects the installation to the school's Workspace, creates Dean accounts. Rarely present after setup, but sees the same data as the Dean. |
 | **Owner** | the person who builds, hosts and supports the system for ~10 schools. Decides which schools run it and with which domain. Never looks at a school's teaching data. |
 
@@ -50,8 +51,8 @@ readers are the Dean and the Admin.
 
 1. A Dean produces the printed academic journal the school actually uses,
    from real Classroom data, without retyping anything.
-2. Attendance for a period comes from real Google Meet records, not from someone
-   ticking boxes.
+2. A Dean sees how lessons actually run in Meet for any course and period, from
+   Google's own records.
 3. A new school is brought online by the Owner creating an `Installation` and
    the school's super-admin authorizing a service account once — no code
    changes, no hard-coded domain.
@@ -67,7 +68,7 @@ readers are the Dean and the Admin.
   deployment preference.
 - **Not a replacement for Classroom.** Teachers keep working in Classroom. This
   system is the reporting and oversight layer above it.
-- **Not a real-time dashboard.** Meet attendance data arrives from Google with
+- **Not a real-time dashboard.** Meet data arrives from Google with
   up to ~24 hours of delay; the product is honest about that rather than
   pretending to be live.
 

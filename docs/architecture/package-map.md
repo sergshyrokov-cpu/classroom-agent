@@ -37,8 +37,8 @@ about courses, journals or students — only `Installation`, `AllowedAdmin`,
 
 | Namespace | Contains | Notes |
 |---|---|---|
-| `Entities` | `AppUser`, `Course`, `ClassroomParticipant`, `Group`, `CourseWork`, `Submission`, `MeetSession`, `SyncState`, `WorkspaceConnection`, `ReportTemplate`, `AuditEvent` | persisted domain state; leaf |
-| `Enums` | `AppRole` (Admin, Dean), `CourseState`, `ClassroomRole`, `SyncStatus`, `SubmissionState` | |
+| `Entities` | `AppUser`, `Course`, `ClassroomParticipant`, `CourseMembership`, `CourseWork`, `Submission`, `MeetSession`, `MeetParticipation`, `MeetingCodeLink`, `SyncState`, `WorkspaceConnection`, `ReportTemplate`, `AuditEvent` | persisted domain state; leaf |
+| `Enums` | `AppRole` (Admin, Dean), `CourseState`, `ClassroomRole` (on `CourseMembership`), `SyncStatus`, `SubmissionState`, `MeetingCodeLinkStatus` | |
 | `Rules` | invariants that hold regardless of use case | no I/O |
 
 `AppRole` has exactly two members in the first version. Teacher and Student are
@@ -62,7 +62,7 @@ Epic 7 — do not add them speculatively.
 |---|---|---|
 | `Persistence` | `ClassroomAgentDbContext`, entity configurations, migrations | Npgsql; see `persistence-conventions.md` |
 | `Persistence.Repositories` | repository implementations | queries and staged writes only; no `SaveChangesAsync()` |
-| `Google` | `IClassroomReader`, `IDirectoryReader`, `IMeetReportsReader` implementations | the only place Google SDK types exist |
+| `Google` | `IClassroomReader`, `IMeetReportsReader` implementations | the only place Google SDK types exist |
 | `Secrets` | `IWorkspaceCredentialProvider` implementation | reads the service-account key from the configured secret store, never from the database |
 | `ControlPlane` | `IControlPlaneClient` implementation | uses `Contracts` types |
 | `Export` | `IReportRenderer` implementation | ClosedXML/EPPlus, OpenXML/DocX |

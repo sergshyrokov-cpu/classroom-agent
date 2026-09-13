@@ -42,7 +42,7 @@ Derived from `trebovaniya.md` sections 5 and 9, and from the workflow order in
 
 ## TC-4 No test touches a live Google API
 
-- The ports `IClassroomReader`, `IDirectoryReader`, `IMeetReportsReader` and
+- The ports `IClassroomReader`, `IMeetReportsReader` and
   `IWorkspaceCredentialProvider` (`architecture.md` AD-4) are substituted in
   every automated test.
 - Fixtures use **synthetic** data: never a real roster, never a real student

@@ -12,7 +12,7 @@ Teacher and Student are not accounts and cannot log in; they exist only as
 synced `ClassroomParticipant` data. *(§2, Epic 7)*
 
 **BR-002** Admin and Dean see exactly the same teaching data — all courses, all
-journals, all attendance of the installation. They differ only in the right to
+journals, all Meet statistics of the installation. They differ only in the right to
 configure the Workspace connection and to manage accounts. *(§2, permission
 matrix)*
 
@@ -138,9 +138,16 @@ last error and last successful run. *(§3, Epic 5)*
 
 ## Data model
 
-**BR-051** A `Group` is a Workspace group with its own email. Attaching that
-email to a course roster enrolls all of the group's current and future members.
-`Course` ↔ `Group` is many-to-many. *(§3)*
+**BR-050** A person's Classroom role (`teacher` / `student`) belongs to their
+membership of a course (`CourseMembership`), not to the person: the same person
+can teach one course and study on another. *(§3, v23 — was §7 item 4)*
+
+**BR-054** The subjects of the teaching process are teachers and students, each
+identified by a personal account in the school's domain. Group addresses and
+other accounts are conveniences, not subjects. *(§3)*
+
+**BR-055** A teacher can grade only a course participant with a personal domain
+account, so grades exist only for such participants. *(§4 Epic 3)*
 
 **BR-052** A `CourseWork` is either graded work (`courseWork`) or an ungraded
 material (`material`); journals must distinguish them. Its date follows the
@@ -149,17 +156,44 @@ Epic 3)*
 
 **BR-053** All timestamps are stored in UTC. *(persistence-conventions.md PC-6)*
 
-## Attendance
+## Meet activity statistics
 
-**BR-060** Attendance comes from Google Meet attendance records, not from manual
-marking. *(Epic 4)*
+**BR-060** Meet statistics serve the Dean's oversight of how teaching actually
+runs — they are not an attendance register. A lesson may be held in class or
+offline with materials in Classroom; missing Meet data never means an absence.
+*(§4 Epic 4)*
 
-**BR-061** Meet data arrives from Google with a delay of up to ~24 hours. The
-product states this rather than presenting attendance as live. *(§3, §6)*
+**BR-061** Meet data arrives from Google with a delay of up to ~24 hours and is
+kept by Google for 180 days, so the system pulls it regularly and keeps its own
+history. The product states the delay rather than presenting data as live. *(§3,
+§6)*
+
+**BR-062** In the first version Meet reports are built for one selected
+Classroom course and period and show facts only — no lesson plan, lesson length,
+norms or comparison of teachers (EPIC-11). *(§4 Epic 4)*
+
+**BR-063** Each Google meeting is its own row; a reconnect after a dropped call
+is not merged. *(§3, §4 Epic 4)*
+
+**BR-064** Only personal domain accounts are counted. An organizer who is not a
+teacher of the course is marked "not a teacher of this course"; a domain account
+not on the course list is shown apart, marked "not on the course list"; external
+guests and connections without an account are shown as "other participants".
+*(§4 Epic 4)*
+
+**BR-065** A meeting is linked to a course through its meeting code. The system
+links unambiguous matches itself and keeps them editable; ambiguous codes wait in
+the unassigned-meetings list, where a Dean or Admin picks the course. A code is
+linked once and covers every meeting of that course until the Classroom link is
+reset; re-linking moves all its meetings and is audited. Linking is blocked in
+read-only mode. *(§2, §4 Epic 4)*
+
+**BR-066** A meeting whose code is linked to no course is deleted N years after
+its own date, so it cannot outlive the retention period. *(§5)*
 
 ## Privacy
 
-**BR-070** Journals and attendance contain personal data of students who may be
+**BR-070** Journals and Meet statistics contain personal data of students who may be
 minors. Access is limited to the Admin and Dean roles. *(§5)*
 
 **BR-071** Personal data of students is never written to application logs, and
@@ -192,15 +226,3 @@ EPIC-10)*
 **BR-077** An erasure never comes back: after a database is restored from a
 backup, every erasure recorded in the operations journal after the backup's date
 is re-applied before the school gets the installation back. *(§9, DC-13)*
-
-## Constraints from unresolved questions
-
-These are **not rules**. They record the shape a future decision is expected to
-take. A Specification must not cite them as settled — it raises the Open
-Decision instead (`trebovaniya.md` §7).
-
-**C-050 (from §7 item 4)** A person's Classroom role (`teacher` / `student`)
-most likely belongs to their membership of a course, not to the person: the same
-person can be a teacher on one course and a student on another. A design
-touching rosters should avoid foreclosing this, but the model change itself is
-still open. Blocks US-022.

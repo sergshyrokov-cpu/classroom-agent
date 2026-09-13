@@ -14,21 +14,23 @@ Three people use the first version. Teachers and students are data, not users
 
 **The primary user.** Runs the teaching process at one school.
 
-- Opens the system most working days to check courses, gradebooks and
-  attendance.
+- Opens the system most working days to check courses, gradebooks and how
+  Meet lessons actually run in each course.
 - Exports reports: the full data dump, and the short form that matches the
   school's paper academic journal.
 - Triggers a synchronization when data looks stale — does not care how it works,
   only that the button returns quickly and tells the truth afterwards.
 - Creates and edits report templates. This is their working tool; needing an
   Admin for every layout tweak would make the Admin an operator.
+- Links a Meet meeting code to its course when the system cannot tell which
+  course a meeting belongs to.
 - Logs in with a login and password issued by the Admin.
 
 **Cannot:** configure the Google Workspace connection, create accounts.
 
 **What annoys them:** a synchronization that blocks the screen; a report that
-silently omits a student; attendance that disagrees with what they saw in the
-lesson; being told "ask the administrator" for a layout change.
+silently omits a student; Meet figures that disagree with what they know
+happened in the lesson; being told "ask the administrator" for a layout change.
 
 ## Admin — администратор программы
 
@@ -67,7 +69,7 @@ One Owner for the whole service, not per school.
 - Places the service-account key on each installation at deployment. Schools
   never handle keys.
 
-**Does not:** look at any school's courses, grades or attendance, and receives
+**Does not:** look at any school's courses, grades or Meet statistics, and receives
 no statistics about them. As the host they can reach a school's database, but
 only for operational work agreed with the school — each access written into
 their operations journal.
@@ -87,5 +89,5 @@ course roster. Named in course listings and gradebooks. No account, no login, no
 visibility scoping. Epic 7.
 
 **Student** — appears as a `ClassroomParticipant`, in rosters, gradebooks and
-attendance records. Personal data of a possibly-minor person, which is why
+Meet participation records. Personal data of a possibly-minor person, which is why
 access is limited to Admin and Dean. No account. Epic 7.

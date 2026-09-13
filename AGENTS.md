@@ -82,7 +82,7 @@ stage identifiers, or an alternative artifact-path convention.
 - Serilog — structured logging to a rolling file (DC-10, approved in v15)
 - ASP.NET Core Identity — local login/password for Dean, Google OAuth
   (external login) for Admin
-- Google APIs: Classroom API, Admin SDK Directory API, Admin Reports API —
+- Google APIs: Classroom API, Admin Reports API (Meet events) —
   all read-only, via a service account with domain-wide delegation
 
 Use only packages already referenced in the target `.csproj`. Adding a NuGet

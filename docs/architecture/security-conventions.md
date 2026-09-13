@@ -11,7 +11,7 @@ human-approved Open Decision.
 ## Why this is not a training-project policy
 
 This system stores **personal data of school students, potentially minors** —
-grades, attendance, group membership, email addresses. It authenticates against
+grades, participation in Meet meetings, email addresses. It authenticates against
 a school's Google Workspace using a service account with domain-wide delegation,
 and it is deployed across ~10 schools that the Owner hosts. A leaked key or a
 missing authorization check has a real-world victim. Treat every finding in this
@@ -160,7 +160,8 @@ when" — above all, who took personal data out of the system.
   Admin by OAuth, including a refusal because the email is not in
   `AllowedAdmin`); creating, disabling or deleting a Dean account; saving or
   changing `WorkspaceConnection`; running the "check access" diagnostic; starting
-  a synchronization by hand; **exporting a journal or report**.
+  a synchronization by hand; linking a Meet meeting code to a course or
+  re-linking it; **exporting a journal or report**.
 - **Audited in the Control Plane:** Owner sign-in, creating an `Installation`,
   suspending and resuming one, adding and revoking an `AllowedAdmin`.
 - **A row carries:** UTC timestamp, actor (`AppUser` id and role, or `system` for

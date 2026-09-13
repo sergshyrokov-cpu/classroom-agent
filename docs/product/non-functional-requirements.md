@@ -16,7 +16,7 @@ paginated from day one — default page size 20, maximum 100.
 *(`api-conventions.md` AC-8)*
 
 **NFR-003** The system is expected to hold several years of courses, grades and
-attendance per school. Queries backing the journal and attendance reports are
+Meet data per school. Queries backing the journal and Meet reports are
 supported by explicit indexes rather than left to a table scan.
 *(§5, `persistence-conventions.md` PC-7)*
 
@@ -69,7 +69,7 @@ downtime and without action from the school. On a suspected leak the key is
 deleted immediately, a new one issued, usage reviewed, and the school informed
 without delay. *(§9, `deployment-conventions.md` DC-5)*
 
-**NFR-022** Journals and attendance contain personal data of students who may be
+**NFR-022** Journals and Meet statistics contain personal data of students who may be
 minors; access is limited to the Admin and Dean roles. *(§5)*
 
 **NFR-023** Personal data never appears in application logs or in an HTTP error
