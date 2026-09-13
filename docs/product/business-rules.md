@@ -80,9 +80,15 @@ check is the fallback when a push does not arrive. *(§9)*
 `Installation` status is suspended. *(§9)*
 
 **BR-026** In read-only mode, viewing and exporting already-synced data keep
-working; synchronization, account management, connection settings and report
-template edits are blocked. The retention purge is the one write that still runs
-(BR-075). *(§2, §5, §9)*
+working and everything else is blocked for both roles — for example
+synchronization (including pulling Meet data), report template edits, linking
+Meet meeting codes, Dean account management and connection settings. The only
+writes permitted are a closed list of service writes: audit rows; sign-in
+bookkeeping (Identity failed-attempt counting and lockout, and creating the
+`AppUser` of an approved Admin at their first login); the legitimacy-check state
+(last successful check time and last known status); and the retention purge with
+its audit event (BR-075). Any other write is refused; a new service write is
+permitted only by extending this list in `trebovaniya.md` §2. *(§2, §5, §9, v28)*
 
 **BR-027** A check answered `upgrade_required` — the installation's version is
 no longer supported by the Control Plane — is an unsuccessful check. It therefore
@@ -234,8 +240,8 @@ is never stored in the audit trail. *(§5, `security-conventions.md` SC-11)*
 synchronization. Their grades stay in the journals of the period they studied
 until the course itself expires — a journal is a record, not a live view. *(§5)*
 
-**BR-075** The retention purge runs in read-only mode too — the only write that
-does. Retention is an obligation, not a feature: a suspended school must not keep
+**BR-075** The retention purge runs in read-only mode too — it is one of the
+service writes permitted there (BR-026). Retention is an obligation, not a feature: a suspended school must not keep
 data indefinitely. *(§5)*
 
 **BR-076** In the first version, erasing one person's data on request is done by

@@ -188,8 +188,8 @@ the product enforces the period the school agreed with the Owner.
   section 5, v23).
 - Each purge run writes one `AuditEvent`: actor `system`, counts of courses,
   participants and audit rows removed, no personal data.
-- **The purge runs in read-only mode** — the single write permitted there
-  (BR-075). It runs in the Web host's background services; once a day is enough.
+- **The purge runs in read-only mode** — one of the service writes permitted
+  there (BR-026, BR-075). It runs in the Web host's background services; once a day is enough.
 
 ## PC-12 Meet data
 

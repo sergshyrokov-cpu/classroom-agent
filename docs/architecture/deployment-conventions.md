@@ -141,8 +141,9 @@ the previous one — the dependency is real, not stylistic
   6-hourly check is the fallback if the push does not arrive.
 - An installation enters read-only mode when its `Installation` is suspended, or
   when more than 7 days have passed since the last successful check (BR-025,
-  NFR-013). Viewing and export keep working; synchronization, account
-  management, connection settings and template edits stop (BR-026).
+  NFR-013). Viewing and export keep working, and so do the service writes of
+  BR-026 (audit, sign-in bookkeeping, legitimacy-check state, retention purge);
+  everything else stops (BR-026).
 - Read-only mode is a normal operating state, not an outage: it needs no
   deployment action, and it ends by itself once checks succeed again.
 - Revoking an `AllowedAdmin` entry is a *different* lever: it removes a person's

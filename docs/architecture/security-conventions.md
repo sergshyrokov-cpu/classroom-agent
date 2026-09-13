@@ -81,7 +81,9 @@ the Control Plane, the `AppUser` with role Admin, and the impersonation user in
 When the grace period has expired or the Owner has suspended the `Installation`,
 every write use case refuses with `409` (`architecture.md` AD-6,
 `api-conventions.md` AC-5). Viewing and exporting already-synced data continue
-to work. A write path that bypasses the check is a Critical finding.
+to work, and only the closed list of service writes in BR-026 still runs. A write
+path that bypasses the check, or a service write not on that list, is a Critical
+finding.
 
 ## SC-6 No database admin or diagnostic UI
 

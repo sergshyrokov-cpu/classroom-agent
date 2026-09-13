@@ -165,7 +165,9 @@ corrected. Re-verify it whenever `trebovaniya.md` changes version.
   the key itself.
 - **Read-only mode** (grace period expired, or the Owner suspended the
   `Installation`) leaves viewing and export working and blocks everything else,
-  including synchronization.
+  including synchronization and Meet code linking. Only the closed list of
+  service writes in BR-026 still runs (audit, sign-in bookkeeping,
+  legitimacy-check state, retention purge).
 
 ---
 

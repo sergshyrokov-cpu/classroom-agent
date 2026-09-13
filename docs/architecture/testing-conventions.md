@@ -61,7 +61,8 @@ Derived from `trebovaniya.md` sections 5 and 9, and from the workflow order in
 - Read-only mode is tested in the Application layer: a blocked write must fail
   with the conflict behaviour of AD-6 / SC-5 even when the HTTP endpoint is
   called directly. Asserting that a Razor button is hidden is not a test of
-  read-only mode.
+  read-only mode. Each service write on the BR-026 list is asserted to still
+  succeed in read-only mode — above all, an export still writes its audit row.
 - `AllowedAdmin` is asserted to be checked on **every** login, not only the
   first (SC-3) — the first-login-only mistake must fail a test. An Admin login
   while the substituted `IControlPlaneClient` does not answer is asserted to be

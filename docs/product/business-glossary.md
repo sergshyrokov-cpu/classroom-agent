@@ -24,7 +24,7 @@ terms from `trebovaniya.md` are given so the two documents can be read together.
 | **Installation** | One school's deployment: its own backend process and its own database. Also the Control Plane entity recording that school — name, domain, status, assigned service-account client ID. |
 | **Data Plane** | The per-school application. One per installation. |
 | **Control Plane** | The single shared service holding Owner authentication, the `Installation` registry, the `AllowedAdmin` list and legitimacy checks. Separate database. |
-| **Read-only mode** | The state an installation enters when the grace period expires or the Owner suspends it: viewing and export keep working, everything else is blocked. |
+| **Read-only mode** | The state an installation enters when the grace period expires or the Owner suspends it: viewing and export keep working, everything else is blocked except a closed list of service writes (BR-026). |
 | **Grace period** | How long an installation keeps working without a successful legitimacy check — 7 days from the last success. |
 
 ## Google Workspace

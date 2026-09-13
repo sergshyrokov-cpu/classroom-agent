@@ -99,13 +99,17 @@ domain entities, not `Google.Apis.Classroom.v1.Data.*`.
 ## AD-6 Read-only mode is enforced in Application, not the UI
 
 When the installation is in read-only mode — grace period expired, or the Owner
-suspended the `Installation` — every write use case refuses. The check lives in
-the Application layer so it cannot be bypassed by calling an API endpoint
-directly; hiding a button in Razor is presentation polish, not enforcement.
+suspended the `Installation` — every write use case refuses except the service
+writes listed below. The check lives in the Application layer so it cannot be
+bypassed by calling an API endpoint directly; hiding a button in Razor is
+presentation polish, not enforcement.
 
-Permitted in read-only mode: viewing and exporting already-synced data.
-Blocked: synchronization, account management, connection settings, report
-template edits. See `trebovaniya.md` section 2 (permission matrix) and 9.
+Permitted in read-only mode: viewing and exporting already-synced data, plus the
+closed list of service writes in BR-026 — audit rows, sign-in bookkeeping
+(including creating an approved Admin's `AppUser`), the legitimacy-check state,
+and the retention purge. Everything else is blocked — for example
+synchronization, Meet meeting-code linking, account management, connection
+settings, report template edits. See `trebovaniya.md` section 2 and 9.
 
 ## AD-7 Transaction boundary policy
 
