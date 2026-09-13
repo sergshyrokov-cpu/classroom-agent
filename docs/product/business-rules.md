@@ -149,10 +149,27 @@ other accounts are conveniences, not subjects. *(§3)*
 **BR-055** A teacher can grade only a course participant with a personal domain
 account, so grades exist only for such participants. *(§4 Epic 3)*
 
+**BR-056** A journal cell shows exactly one state: a grade (raw points out of the
+coursework's maximum); "turned in, not graded"; "returned without a grade"; "not
+turned in" once the due date has passed; "not due yet"; or "not turned in, no due
+date". Any of them may carry a "late" mark, taken from Google's `late` flag as
+is. `TURNED_IN` and `STUDENT_EDITED_AFTER_TURN_IN` count as turned in; `CREATED`
+and `RECLAIMED_BY_STUDENT` count as not turned in. *(§4 Epic 3)*
+
+**BR-057** The short journal shows only assigned grades; the full journal also
+shows a draft grade, marked "draft". *(§4 Epic 3)*
+
+**BR-058** The submission date is the last turn-in: work turned in, reclaimed
+and turned in again shows the second date. *(§3, §4 Epic 3)*
+
+**BR-059** Only the fact of submission is kept — never its content, the history
+of grade changes, or rubric grades (Epic 12). *(§3)*
+
 **BR-052** A `CourseWork` is either graded work (`courseWork`) or an ungraded
 material (`material`); journals must distinguish them. Its date follows the
-cascade `scheduledTime` → `dueDate` → `updateTime` → `creationTime`. *(§3,
-Epic 3)*
+cascade `scheduledTime` → `dueDate` → `updateTime` → `creationTime`. Materials
+are a separate Classroom resource with their own read-only scope and have no
+submissions. *(§3, §6, Epic 3)*
 
 **BR-053** All timestamps are stored in UTC. *(persistence-conventions.md PC-6)*
 

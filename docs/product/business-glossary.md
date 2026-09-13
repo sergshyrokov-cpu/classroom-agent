@@ -45,8 +45,8 @@ terms from `trebovaniya.md` are given so the two documents can be read together.
 | **ClassroomParticipant** | участник Classroom | A person synced from Classroom — Google user id, personal email in the school domain, name. Teachers and students are both this; the Classroom role lives on `CourseMembership`, not on the person. Only personal domain accounts are subjects of the teaching process — group addresses and other accounts are not. |
 | **Course** | курс | **Always a Google Classroom course**, never a year of study: name, section, owner, state, calendar id. Schools use courses differently — one per class per year, one reused across years, one per specialty with students of all years — and the system assumes none of them. |
 | **CourseMembership** | участие в курсе | A person's membership of one course, with their Classroom role (`teacher` / `student`). The same person can teach one course and study on another. |
-| **CourseWork** | задание / материал | A course item: either graded work (`courseWork`) or an ungraded material (`material`). |
-| **Submission** | сдача задания | A student's submission of a `CourseWork`, with its grade if any. |
+| **CourseWork** | задание / материал | A course item: either graded work (`courseWork`) or an ungraded material (`material`). Each assignment has its own maximum points, or none — then it is not graded. Materials come from a separate Classroom resource. |
+| **Submission** | сдача задания | A student's submission of a `CourseWork`: Classroom state, assigned and draft grade in raw points, date of the last turn-in, Google's late flag. Its content is not stored. |
 | **MeetSession** | встреча Meet | One Google Meet meeting (conference): meeting code, organizer, start, end. A reconnect after a dropped call is a separate meeting. |
 | **MeetParticipation** | подключение к встрече | One participant's connection to a meeting: account (or external / no account), join time, duration in seconds. |
 | **MeetingCodeLink** | привязка кода встречи | Links a Meet meeting code to a course — suggested automatically or confirmed by a Dean or Admin. A course may have several codes, because a reset Classroom link gets a new one. |
@@ -63,6 +63,8 @@ terms from `trebovaniya.md` are given so the two documents can be read together.
 | **Journal / gradebook** | журнал успеваемости | Student × (work or material, with date) × grade, over a chosen period. |
 | **Full form** | полный объём | Every synchronized field. |
 | **Short form** | сокращённый | The layout approximating the school's paper academic journal. |
+| **Journal cell** | клетка журнала | One state per student × coursework: grade, turned in not graded, returned without a grade, not turned in, not due yet, or not turned in with no due date — plus an optional late mark. |
+| **Draft grade** | черновик оценки | A grade the teacher set but has not returned; the student cannot see it. Shown only in the full journal, marked "draft". |
 | **Meet activity statistics** | статистика Meet-занятий | Factual reports on meetings held in Meet for one course and period, for the Dean's oversight of teaching. Not an attendance register: a lesson held in class leaves no Meet data, and that is not an absence. |
 | **Unassigned meetings** | непривязанные встречи | Meetings whose code is not linked to a course yet; a Dean or Admin picks the course. |
 | **Not a teacher of this course** | не преподаватель этого курса | Mark on a meeting whose organizer is not among the course's teachers. |

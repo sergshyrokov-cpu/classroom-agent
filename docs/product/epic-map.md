@@ -241,6 +241,24 @@ so nothing is lost (`trebovaniya.md` §4, Epic 11).
 
 ---
 
+## EPIC-12 (future)
+
+Gradebook beyond the first version
+
+### Goal
+
+Out of scope for the first version. Recorded so nothing is lost
+(`trebovaniya.md` §4, Epic 12).
+
+### Deferred
+
+- History of grade changes — who changed a grade and when. Classroom provides it
+  (`submissionHistory`); the first version reads it only to find the last turn-in
+  date.
+- Rubric grades.
+
+---
+
 ## EPIC-7 (future)
 
 Teacher role and student access
@@ -269,6 +287,6 @@ accident.
 - **EPIC-2, 3, 5 depend on EPIC-1.** They read what synchronization produced.
 - **EPIC-4 depends on course roles.** Suggesting a course for a meeting needs
   each course's teachers and students (`CourseMembership`, US-014).
-- **US-025 onward** depend on `Submission` gaining state, submission date and
-  late flag — `trebovaniya.md` §7 item 2. Without them a journal cannot tell
-  "submitted, ungraded" from "not submitted".
+- **US-025 onward** read the submission data decided in `trebovaniya.md` v24
+  (BR-056…BR-059), including materials, which need the
+  `classroom.courseworkmaterials.readonly` scope (§6).

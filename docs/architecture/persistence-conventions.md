@@ -206,3 +206,19 @@ Decided in `trebovaniya.md` sections 3 and 4 (v23).
 - A `MeetSession` whose meeting code has no `MeetingCodeLink` is still stored and
   appears in the unassigned-meetings list; it is purged N years after its own
   date (PC-11).
+
+## PC-13 Coursework and submission data
+
+Decided in `trebovaniya.md` sections 3 and 4 (v24).
+
+- A `Submission` row stores only: the Classroom state, `assignedGrade`,
+  `draftGrade`, the date of the last turn-in, and Google's `late` flag.
+  `CourseWork` stores its due date and `maxPoints`, each only if set.
+- **Grades are stored as raw points** together with the coursework's maximum.
+  Conversion to a school scale belongs to report templates, never to stored data.
+- The last turn-in date is read from `submissionHistory` during synchronization;
+  **the history itself is not stored** (Epic 12).
+- **Submission content is never stored** — no files, answers or attachments. Only
+  the fact of submission reaches the database.
+- Rubric grades are not stored (Epic 12).
+- Materials are read through `courseWorkMaterials` and have no submissions.

@@ -134,10 +134,6 @@ stories:
     epic: EPIC-3
     title: Journal view for a period
     state: BACKLOG
-    blocked_by: >
-      trebovaniya.md section 7 item 2 — Submission lacks state, submission date
-      and late flag, so "submitted, ungraded" cannot be told from "not
-      submitted".
   - id: US-026
     epic: EPIC-3
     title: Distinguish graded coursework from ungraded material
