@@ -37,8 +37,8 @@ about courses, journals or students — only `Installation`, `AllowedAdmin`,
 
 | Namespace | Contains | Notes |
 |---|---|---|
-| `Entities` | `AppUser`, `Course`, `ClassroomParticipant`, `CourseMembership`, `CourseWork`, `Submission`, `MeetSession`, `MeetParticipation`, `MeetingCodeLink`, `SyncState`, `WorkspaceConnection`, `ReportTemplate`, `AuditEvent` | persisted domain state; leaf |
-| `Enums` | `AppRole` (Admin, Dean), `CourseState`, `ClassroomRole` (on `CourseMembership`), `SyncStatus`, `SubmissionState`, `MeetingCodeLinkStatus` | |
+| `Entities` | `AppUser`, `Course`, `ClassroomParticipant`, `CourseMembership`, `CourseWork`, `Submission`, `MeetSession`, `MeetParticipation`, `MeetingCodeLink`, `SyncState`, `WorkspaceConnection`, `ReportTemplate`, `AuditEvent`, `LegitimacyState` | persisted domain state; leaf |
+| `Enums` | `AppRole` (Admin, Dean), `CourseState`, `ClassroomRole` (on `CourseMembership`), `CourseWorkKind` (graded work, ungraded work, material — v32), `SyncStatus`, `SubmissionState`, `MeetingCodeLinkStatus` | |
 | `Rules` | invariants that hold regardless of use case | no I/O |
 
 `AppRole` has exactly two members in the first version. Teacher and Student are

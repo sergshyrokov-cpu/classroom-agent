@@ -16,7 +16,7 @@ into deployment order. Where a question is open it says so and names the item in
 
 | Unit | Instances | Owns | Reachability |
 |---|---|---|---|
-| Control Plane (`ClassroomAgent.ControlPlane`) | one for the whole service | its own database: `Owner`, `Installation`, `AllowedAdmin`, `InstanceLicenseCheck` | private network only: the Owner UI and the service channel to every installation (DC-6) |
+| Control Plane (`ClassroomAgent.ControlPlane`) | one for the whole service | its own database: `Owner`, `Installation`, `AllowedAdmin`, `InstanceLicenseCheck`, `AuditEvent` | private network only: the Owner UI and the service channel to every installation (DC-6) |
 | Installation (`ClassroomAgent.Web`) | one per school | its own database: all teaching data of that school | public HTTPS for school staff; private channel to the Control Plane |
 | PostgreSQL | one database per unit above | — | reachable only by its own application |
 

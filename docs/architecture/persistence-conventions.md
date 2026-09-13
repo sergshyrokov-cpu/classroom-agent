@@ -51,10 +51,13 @@ Derived from `trebovaniya.md` sections 3, 5 and 9.
 - Surrogate primary key named `Id`, type `long`, `ValueGeneratedOnAdd()`
   (PostgreSQL `bigint` identity).
 - Google-side identifiers (`Course.id`, `ClassroomParticipant.id` = Google
-  `userId`, `CourseWork.id`) are **natural keys from an external system**: they
+  `userId`, `CourseWork.id`, `Submission.id`) are **natural keys from an external system**: they
   are stored in their own column with a unique index and used as the upsert key
   during synchronization. They are never the primary key — Google ids are
   strings owned by someone else.
+- Coursework and materials are separate Classroom resources, so a `CourseWork`
+  row is unique on (kind, Google id) rather than on the Google id alone
+  (`trebovaniya.md` section 3, v32, v46).
 - Meet data is keyed the same way: `MeetSession` on Google's `conference_id`,
   `MeetParticipation` on (`conference_id`, `endpoint_id`), `MeetingCodeLink` on the
   meeting code.
@@ -131,7 +134,7 @@ resulting migration must both match them.
 - No lazy-loading proxies package. Navigation properties are loaded explicitly
   per query via `.Include()` / `.ThenInclude()` in the repository.
 - Cascade behavior is explicit and minimal: `.OnDelete(DeleteBehavior.Restrict)`
-  unless a stated reason justifies `Cascade`. Student grade history must not
+  unless a stated reason justifies `Cascade`. Student grades must not
   disappear because a parent row was removed.
 
 ## PC-9 Sensitive data
