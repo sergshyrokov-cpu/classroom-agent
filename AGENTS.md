@@ -201,11 +201,21 @@ maintain and not the source of requirements.
   `dac-classroom-agent-*.json` is a *live* service-account key. Remind the human
   to delete that key in Google Cloud Console first, and only then the file — a
   key copy outside the secret store is forbidden (DC-5). Never delete either
-  yourself: the key belongs to the Owner, and removing it stops the prototype.
-  In the same step, remind the human that the prototype domain's super-admin
-  must remove `drive.file` and `classroom.profile.photos` from its domain-wide
-  delegation — the prototype still requests them, the .NET system does not
-  (`trebovaniya.md` section 6, v25).
+  yourself: removing it stops the prototype, and it is not yours to remove.
+  The prototype's Cloud project `dac-classroom-agent` sits **inside the
+  dac.ukr.education organisation** (owner `admin@dac.ukr.education`; verified
+  2026-09-13) — it belongs to the school, not to the Owner, and is not the
+  Owner's project of the .NET system. Remind the human of the full retirement
+  order:
+  1. delete the key of `classroom-agent@dac-classroom-agent.iam.gserviceaccount.com`
+     in Google Cloud Console, then the local key file;
+  2. DAC's super-admin removes the domain-wide delegation for client ID
+     `110112929094683821680` in Google Admin console (Security → API controls →
+     Domain-wide delegation) — this also drops `drive.file` and
+     `classroom.profile.photos`, which only the prototype requested
+     (`trebovaniya.md` section 6, v25);
+  3. decide whether the project `dac-classroom-agent` is deleted or left to the
+     school.
 
 ---
 
