@@ -266,6 +266,44 @@ Out of scope for the first version. Recorded so nothing is lost
 
 ---
 
+## EPIC-13 (future)
+
+AI assistant
+
+### Goal
+
+Out of scope for the first version, which sends data nowhere but reads from
+Google. An AI assistant is a new data flow, so it is an epic of its own
+(`trebovaniya.md` §4, Epic 13, v52).
+
+### Deferred
+
+- Level 1, no teaching data: suggesting how a Dean's Excel template maps to the
+  system's fields; plain-language help for Admins on Google access errors and
+  setup steps.
+- Level 2, anonymised aggregates only (counts per course and period, no names,
+  emails or individual grades): short commentary on statistics; plain-language
+  questions turned into queries over the local database.
+- Voice input for level-2 questions.
+- Level 3 — sending students' personal data to an AI service — is for later
+  versions and needs each school's consent.
+
+### Blocked until decided
+
+- Who may use the assistant — a new cell in the permission matrix (§2).
+- AI and speech-recognition provider: where data is processed, no training on
+  requests, who pays.
+- Voice recordings are personal data of the Dean or Admin: who transcribes them,
+  and whether they are kept.
+- A question itself may contain a student's name: how it is kept from the provider.
+- Minimum group size, so an aggregate over two or three students does not point
+  at individuals.
+- Enabled per school by installation setting, off by default.
+- What is audited about AI use, without the question's content.
+- Whether the assistant works in read-only mode.
+
+---
+
 ## EPIC-7 (future)
 
 Teacher role and student access
