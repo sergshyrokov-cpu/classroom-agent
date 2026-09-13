@@ -32,7 +32,9 @@ exception by recording it as a resolved Open Decision:
 - start implementation without an approved Specification, or invent an endpoint,
   schema, security rule or business rule that no artifact defines;
 - write workflow state from a stage Skill, or disable a hook;
-- edit the Python prototype.
+- edit the Python prototype;
+- send school data to any service other than Google and the Control Plane — no
+  AI, speech-recognition, analytics, telemetry or error-tracking service (SC-13).
 
 ---
 
@@ -59,8 +61,9 @@ exception by recording it as a resolved Open Decision:
 Rule identifiers used throughout this file: **AD-** architecture decisions
 (`architecture.md`), **AC-** API conventions, **PC-** persistence conventions,
 **SC-** security conventions, **TC-** testing conventions,
-**DC-** deployment & operations — all in `docs/architecture/`; **NFR-**
-non-functional requirements in `docs/product/non-functional-requirements.md`.
+**DC-** deployment & operations — all in `docs/architecture/`; **BR-** business
+rules in `docs/product/business-rules.md`; **NFR-** non-functional requirements
+in `docs/product/non-functional-requirements.md`.
 
 `trebovaniya.md` outranks every document under `docs/`. The files in
 `docs/architecture/` and `docs/product/` are derived from it — if one of them
@@ -81,7 +84,7 @@ stage identifiers, or an alternative artifact-path convention.
 - xUnit, `Microsoft.AspNetCore.Mvc.Testing`
 - Serilog — structured logging to a rolling file (DC-10, approved in v15)
 - ASP.NET Core Identity — local login/password for Dean, Google OAuth
-  (external login) for Admin
+  (external login) for Admin, login/password for the Owner in the Control Plane
 - Google APIs: Classroom API, Admin Reports API (Meet events) —
   all read-only, via a service account with domain-wide delegation
 
