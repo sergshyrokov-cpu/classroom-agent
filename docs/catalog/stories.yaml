@@ -136,7 +136,7 @@ stories:
     state: BACKLOG
   - id: US-026
     epic: EPIC-3
-    title: Distinguish graded coursework from ungraded material
+    title: Distinguish graded work, ungraded work and materials
     state: BACKLOG
   - id: US-027
     epic: EPIC-3

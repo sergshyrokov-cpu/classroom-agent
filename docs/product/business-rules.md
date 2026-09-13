@@ -169,11 +169,13 @@ least part of the period plus anyone with submissions in it; in Meet reports, a
 course's students and teachers are those on the roster on the meeting's date.
 *(§3, §4 Epic 3, Epic 4, v31)*
 
-**BR-052** A `CourseWork` is either graded work (`courseWork`) or an ungraded
-material (`material`); journals must distinguish them. Its date follows the
-cascade `scheduledTime` → `dueDate` → `updateTime` → `creationTime`. Materials
-are a separate Classroom resource with their own read-only scope and have no
-submissions. *(§3, §6, Epic 3)*
+**BR-052** A course item is one of three kinds, and journals distinguish them:
+graded work (a `courseWork` with maximum points — submissions and grades),
+ungraded work (a `courseWork` without maximum points — submissions, no grades),
+and a material (`material` — no submissions). Its date follows the cascade
+`scheduledTime` → `dueDate` → `updateTime` → `creationTime`. Materials are a
+separate Classroom resource with their own read-only scope. *(§3, §6, Epic 3,
+v32)*
 
 **BR-053** All timestamps are stored in UTC. *(persistence-conventions.md PC-6)*
 
@@ -189,7 +191,10 @@ coursework's maximum); "turned in, not graded"; "returned without a grade"; "not
 turned in" once the due date has passed; "not due yet"; or "not turned in, no due
 date". Any of them may carry a "late" mark, taken from Google's `late` flag as
 is. `TURNED_IN` and `STUDENT_EDITED_AFTER_TURN_IN` count as turned in; `CREATED`
-and `RECLAIMED_BY_STUDENT` count as not turned in. *(§4 Epic 3)*
+and `RECLAIMED_BY_STUDENT` count as not turned in. A cell of ungraded work never
+shows a grade: "turned in", "returned", "not turned in" once due, "not due yet",
+or "not turned in, no due date", with the same optional "late" mark — it has no
+"grade" or "not graded" state (BR-052). *(§4 Epic 3, v32)*
 
 **BR-057** The short journal shows only assigned grades; the full journal also
 shows a draft grade, marked "draft". *(§4 Epic 3)*
