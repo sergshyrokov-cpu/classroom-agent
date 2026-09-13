@@ -35,19 +35,22 @@ the previous one — the dependency is real, not stylistic
    server console, and the single Owner account is claimed once with it
    (`docs/stories/US-001-owner-first-run-setup.md`). Until it exists nothing
    else is configurable.
-3. Owner creates the school's service account in the Owner's Cloud project.
+3. Owner creates the school's service account in the Owner's Cloud project, which
+   lives outside every school's domain (DC-5).
 4. Owner registers the school as an `Installation`: name, Google Workspace
    domain, status, and that service account's client ID — required
    (`trebovaniya.md` §3, v43).
 5. Owner adds the school's administrator email(s) to `AllowedAdmin` for that
    `Installation` — at least two Admins (BR-013), each ideally on a separate
-   admin account rather than the one used for daily mail and teaching — and gives the school's super-admin the client ID and the scope list from
+   admin account rather than the one used for daily mail and teaching — and
+   gives the school's super-admin the client ID and the scope list from
    `trebovaniya.md` §6. The super-admin authorizes domain-wide delegation in the
    school's own Google console and creates the technical account with read-only
    roles (BR-015) — the Owner cannot do either step (BR-032).
 6. Deploy the installation: its database, its migrations, its configuration
-   (DC-3) including the retention period agreed with the school, and the
-   service-account key placed in the secret store (DC-5).
+   (DC-3) — including the retention period agreed with the school and the
+   school's time zone, both required — and the service-account key placed in
+   the secret store (DC-5).
 7. The Admin signs in with Google OAuth, is matched against `AllowedAdmin`, and
    saves the `WorkspaceConnection` (domain + the technical account as
    impersonation user). The domain, and the domain of that account's email, must
@@ -98,6 +101,11 @@ the previous one — the dependency is real, not stylistic
   PC-9, NFR-020).
 - One Cloud project owned by the Owner, **a separate service account per
   school** (§6): a leaked key compromises one school, not all of them.
+- **The Owner's Cloud project lives outside every school's domain** — owned by
+  the Owner's own account or organisation, never created inside a school's
+  Workspace organisation — with a second owner or a recovery path and two-factor
+  authentication (SC-12, `trebovaniya.md` §6, v50). The prototype's project
+  `dac-classroom-agent` sits in DAC's organisation and is not this project.
 - The *reference* to the secret lives only in the installation's configuration
   (DC-3); `WorkspaceConnection` holds neither key nor reference. An entity or
   migration adding a key or reference column is a Critical finding (PC-9).
@@ -111,8 +119,8 @@ the previous one — the dependency is real, not stylistic
 - **Planned rotation every 90 days** per school — conveniently all at once each
   quarter, together with the restore test (DC-13). Steps: create a new key → put
   it in the secret store under the **same reference** → restart the installation
-  outside teaching hours → run "check access" → delete the old key in Google Cloud → record it in the
-  operations journal (SC-12). No code and no database change. If the
+  outside teaching hours → run "check access" → delete the old key in Google
+  Cloud → record it in the operations journal (SC-12). No code and no database change. If the
   installation is in read-only mode, "check access" is unavailable (BR-026): keep
   the old key until a successful check after the mode ends.
 - **Suspected leak:** (1) delete the key at once, before investigating —
@@ -194,6 +202,10 @@ decision:
 | Minimum Google Workspace roles the impersonation user needs | §7 item 10 |
 | Whether Classroom still returns submissions of a student removed from a course | §7 item 14 |
 
+`trebovaniya.md` §7 items 15 and 16 are open too, but they are product rules —
+journal cells for US-025 and Meet counting for US-033 — not deployment
+questions.
+
 A deployment or operations Story that finds a new gap raises an Open Decision
 and stops; it does not improvise. Two things are deliberately deferred rather
 than open: centralized log collection (DC-11) and keyless access to Google
@@ -245,7 +257,8 @@ without long-lived keys (DC-5).
   version**: for ~10 installations, readiness plus `SyncState` answer "is this
   school working". Shipping logs off a school's server is a privacy decision
   (`trebovaniya.md` section 5) that has not been taken — deliberately deferred,
-  not forgotten.
+  not forgotten. Until it is, such shipping is an outbound data flow forbidden by
+  SC-13.
 
 ## DC-12 Version compatibility between the two planes
 
@@ -283,8 +296,8 @@ operating condition, not an incident (`trebovaniya.md` §8, decided in v16).
 Decided in `trebovaniya.md` section 9 (v21). Most teaching data can be rebuilt
 by re-synchronizing from Google; Dean accounts, report templates, connection
 settings, the audit trail, history of courses already deleted in Google, and
-Meet data older than Google's 180 days cannot. The Control Plane database is the most critical
-one: losing it sends every school to read-only after 7 days.
+Meet data older than Google's 180 days cannot. The Control Plane database is the
+most critical one: losing it sends every school to read-only after 7 days.
 
 - **Every database is backed up** — each installation and the Control Plane.
 - **A nightly logical dump** (`pg_dump`). Worst-case loss is one day of local
