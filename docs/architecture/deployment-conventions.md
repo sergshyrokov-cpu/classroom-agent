@@ -95,8 +95,28 @@ the previous one — the dependency is real, not stylistic
 - `WorkspaceConnection` stores only a *reference* to the secret. An entity or
   migration adding a key column is a Critical finding (PC-9).
 - The school never receives a key. It receives a client ID, which is public.
-- Rotation and compromise response are **not defined** — `trebovaniya.md` §7
-  item 9. Do not invent a rotation procedure during a deployment Story.
+- **Delegation is bound to the service account's client ID, not to a key.**
+  Replacing a key is therefore entirely the Owner's work; the school's
+  super-admin does nothing. A service account can hold several keys at once, so
+  rotation causes no downtime (`trebovaniya.md` §9, v22).
+- **Planned rotation every 90 days** per school — conveniently all at once each
+  quarter, together with the restore test (DC-13). Steps: create a new key → put
+  it in the secret store under the **same reference** → restart the installation
+  → run "check access" → delete the old key in Google Cloud → record it in the
+  operations journal (SC-12). No code and no database change.
+- **Suspected leak:** (1) delete the key at once, before investigating —
+  access tokens already issued with it live at most an hour; (2) issue a new key
+  and check access; (3) review Google Cloud audit logs for what the key was used
+  for; (4) tell the school without delay — it is the data controller and decides
+  on further notification; (5) record all of it in the operations journal.
+- **Recreate the service account itself** only if the account, not just a key,
+  is compromised: a new account has a new client ID, and the school must
+  authorize delegation again.
+- **No copy of a key exists outside the secret store** — no downloaded files, no
+  "just in case" copies.
+- Keyless access (Workload Identity Federation) is Google's recommended path but
+  needs an identity provider of the Owner's own outside Google Cloud. Not used in
+  the first version; a possible later improvement.
 
 ## DC-6 Network
 
@@ -246,15 +266,15 @@ one: losing it sends every school to read-only after 7 days.
 
 ## DC-9 What is not decided yet
 
-A deployment or operations Story that needs one of these raises an Open Decision
-and stops. It does not improvise.
+Every policy and operations question from `trebovaniya.md` section 7 is now
+decided (v15–v22). What remains is **verification at onboarding**, not a
+decision:
 
-| Gap | Where it is tracked |
+| To verify | Where it is tracked |
 |---|---|
-| Service-account key rotation and compromise response | §7 item 9 |
+| Minimum Google Workspace roles the impersonation user needs | §7 item 10 |
 
-It does not block writing code today, but it blocks the first production
-deployment: a school hosted without a key rotation and compromise procedure is
-an operational risk the Owner carries personally.
-Centralized log collection (DC-11) is a further decision, deliberately deferred
-rather than open by omission.
+A deployment or operations Story that finds a new gap raises an Open Decision
+and stops; it does not improvise. Two things are deliberately deferred rather
+than open: centralized log collection (DC-11) and keyless access to Google
+without long-lived keys (DC-5).

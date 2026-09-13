@@ -100,8 +100,10 @@ pages are disabled outside local development.
   token. The prototype's committed-looking artifacts
   (`dac-classroom-agent-*.json`, `google_credentials.json`) are git-ignored and
   must stay so.
-- Key rotation is still an open question (`trebovaniya.md` section 7, item 9) —
-  do not invent a rotation mechanism; record an Open Decision.
+- **Keys are rotated every 90 days**, and a suspected leak is answered by deleting
+  the key first and investigating second. Rotation needs no action from the
+  school, because delegation is bound to the client ID, not the key. The full
+  procedure is `deployment-conventions.md` DC-5.
 
 ## SC-8 Google API access is read-only
 

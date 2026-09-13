@@ -105,6 +105,15 @@ supplies only the client ID and the scope list. *(§1, §9)*
 each school has its own. Its key is placed by the Owner at deployment and never
 reaches the school, the UI, or the database. *(§5, §6)*
 
+**BR-035** Replacing a service-account key never involves the school: delegation
+is authorized for the account's client ID, which a new key does not change. Only
+recreating the service account itself forces the school to authorize again.
+*(§9, DC-5)*
+
+**BR-036** A suspected key leak is a personal-data incident: the key is deleted
+before anything else, and the school is informed without delay as the data
+controller. *(§9, DC-5)*
+
 **BR-034** A Google permission failure (`403 unauthorized_client`,
 `access_denied`, missing scope) means delegation is not configured and is never
 retried. It is recorded and surfaced to the Admin with a diagnosable message.

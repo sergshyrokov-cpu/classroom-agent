@@ -64,6 +64,11 @@ Owner at deployment in a secret store. *(§5, `security-conventions.md` SC-7)*
 
 **NFR-021** Every Google OAuth scope is read-only. *(§1)*
 
+**NFR-027** Each school's service-account key is replaced every 90 days without
+downtime and without action from the school. On a suspected leak the key is
+deleted immediately, a new one issued, usage reviewed, and the school informed
+without delay. *(§9, `deployment-conventions.md` DC-5)*
+
 **NFR-022** Journals and attendance contain personal data of students who may be
 minors; access is limited to the Admin and Dean roles. *(§5)*
 
