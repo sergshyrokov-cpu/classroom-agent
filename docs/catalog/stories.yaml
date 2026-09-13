@@ -113,8 +113,9 @@ stories:
     title: Choose UI language (Admin, Dean and Owner)
     state: BACKLOG
     blocked_by: >
-      Depends on US-001 (Owner account) and US-008 / US-012 (Admin and Dean
-      accounts exist).
+      Depends on US-001 (Owner account), US-008 / US-012 (Admin and Dean
+      accounts exist) and US-007 (read-only enforcement — choosing a language
+      must be proven to work in read-only mode, BR-026).
 
   # --- EPIC-1: Synchronization ---------------------------------------------
   - id: US-013
