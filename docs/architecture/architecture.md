@@ -15,7 +15,7 @@ The system ships as **two independent applications**:
 | Deployable | Instances | Database | Purpose |
 |---|---|---|---|
 | **Data Plane** (`ClassroomAgent.Web`) | one per school | one per school | the application school staff use: courses, journals, Meet statistics, sync |
-| **Control Plane** (`ClassroomAgent.ControlPlane`) | one, shared | its own | Owner authentication, `Installation` registry, `AllowedAdmin` list, legitimacy checks and push |
+| **Control Plane** (`ClassroomAgent.ControlPlane`) | one, shared | its own | Owner authentication, `Installation` registry, `AllowedAdmin` list, Admin login check, legitimacy checks and push |
 
 They never share a database and never reference each other's projects. The only
 coupling is the wire contract in `ClassroomAgent.Contracts`, referenced by both.
@@ -118,9 +118,8 @@ bypassed by calling an API endpoint directly; hiding a button in Razor is
 presentation polish, not enforcement.
 
 Permitted in read-only mode: viewing and exporting already-synced data, plus the
-closed list of service writes in BR-026 — audit rows, sign-in bookkeeping
-(including creating an approved Admin's `AppUser`), the legitimacy-check state,
-and the retention purge. Everything else is blocked — for example
+closed list of service writes in BR-026 — that list is the only source; do not
+restate it here. Everything else is blocked — for example
 synchronization, Meet meeting-code linking, account management, connection
 settings, "check access", report template edits. No port that calls Google
 (`IClassroomReader`, `IMeetReportsReader`) is invoked in read-only mode. See `trebovaniya.md` section 2 and 9.

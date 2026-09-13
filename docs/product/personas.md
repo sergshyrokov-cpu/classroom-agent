@@ -61,7 +61,7 @@ One Owner for the whole service, not per school.
 
 - Works in the Control Plane, not in any school's installation.
 - Registers each school as an `Installation`: name, Google Workspace domain,
-  status.
+  status, and the client ID of the school's service account.
 - Maintains the list of emails allowed to be Admin at each school, and revokes
   them when someone leaves or a school stops cooperating.
 - Suspends a whole school when the relationship ends — without logging into that

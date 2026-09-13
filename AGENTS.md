@@ -171,8 +171,7 @@ version, re-verify this section and update the marker.
 - **Read-only mode** (grace period expired, or the Owner suspended the
   `Installation`) leaves viewing and export working and blocks everything else,
   including synchronization and Meet code linking. Only the closed list of
-  service writes in BR-026 still runs (audit, sign-in bookkeeping,
-  legitimacy-check state, retention purge).
+  service writes in BR-026 still runs — read it there, it is not restated here.
 - **The UI is Ukrainian and English — installation and Control Plane alike**
   (NFR-073). Ukrainian is the default; each user's choice is stored on their
   account. No user-visible string is hard-coded: screens, error messages, the

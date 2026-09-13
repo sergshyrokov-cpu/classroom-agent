@@ -168,7 +168,13 @@ if unset; each Admin and Dean may choose their own, stored on their account.
 Screens, error messages and hints, the super-admin connection instructions, and
 the labels the system writes into exports (in the exporting user's language) are
 translated; text a Dean wrote into a template and data from Google are shown as
-is. Date and number formats follow the language. The Control Plane UI is likewise in
+is. Date and number formats follow the language. (Time zone: NFR-074.) The Control Plane UI is likewise in
 Ukrainian and English: Ukrainian by default, the Owner's choice stored on the
 Owner account. A new language is added through translation files without code changes.
 *(§5, v51)*
+
+**NFR-074** The school's time zone is a required installation setting set by the
+Owner at deployment; an installation without it does not start. All time is
+stored in UTC; dates are shown, and the day boundaries of a selected period are
+set, in the school's time zone. Due dates are compared as exact UTC instants.
+*(§5, v40, `persistence-conventions.md` PC-6, `deployment-conventions.md` DC-3)*
