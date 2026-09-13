@@ -53,7 +53,7 @@ terms from `trebovaniya.md` are given so the two documents can be read together.
 | **MeetingCodeLink** | привязка кода встречи | Links a Meet meeting code to a course — suggested automatically or confirmed by a Dean or Admin. A course may have several codes, because a reset Classroom link gets a new one. |
 | **SyncState** | статус синхронизации | Status, counters, last error and last successful run of the background synchronization. |
 | **WorkspaceConnection** | подключение к Workspace | One installation's connection settings: domain and impersonation user (the technical account). The reference to the service-account secret is installation configuration, not part of it. |
-| **ReportTemplate** | шаблон отчёта | A configurable journal/report layout: full, short, or matching the school's paper academic journal. |
+| **ReportTemplate** | шаблон отчёта | A configurable journal/report layout of one of two kinds by data scope: full (every synchronized field, with draft grades) or short, matching the school's paper academic journal (assigned grades only). The template itself sets the layout. |
 | **AllowedAdmin** | разрешённый Админ | A Control Plane record: an email permitted to be Admin of one `Installation`. Several per installation are allowed. |
 | **InstanceLicenseCheck** | проверка легитимности | The Control Plane's record of checks from one `Installation`: last call, versions reported, answer given. Holds no grace period. |
 | **LegitimacyState** | состояние легитимности | The installation's own record: last successful check, last known status, last compatibility state. Drives read-only mode and readiness; survives restarts. |
