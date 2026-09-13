@@ -251,9 +251,13 @@ never appears in an HTTP error body. *(§5,
 `security-conventions.md` SC-10)*
 
 **BR-072** Student personal data is kept for a retention period N agreed
-between the school and the Owner and set at deployment. The unit is the course: a
-course and everything under it is deleted once it is archived or gone from Google
-and its last activity is more than N years ago. A person who has left a course's
+between the school and the Owner and set at deployment. Deletion is from the
+installation's own database only — nothing is ever deleted in Google. The unit is
+the course: a course and everything under it is deleted once its last activity is
+more than N years ago, whatever its state. Last activity is the latest of: a change
+to the course, any coursework or material created or changed, any submission
+changed, any Meet meeting linked to the course. Synchronization does not import a
+course whose last activity is already older than N (v36). A person who has left a course's
 roster loses that membership, with their submissions and Meet participation in
 that course, once they were last seen more than N years ago — even while the
 course is active. A participant is deleted once no remaining membership references

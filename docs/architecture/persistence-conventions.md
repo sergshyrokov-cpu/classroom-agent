@@ -159,6 +159,9 @@ resulting migration must both match them.
   (PC-3). Re-running a sync must not create duplicates
   (`trebovaniya.md` Epic 1).
 - Incremental behavior: already-known participants are not re-fetched.
+- A course whose last activity (PC-11) is already more than N years ago is not
+  imported, so the purge and the next sync never undo each other
+  (`trebovaniya.md` section 5, v36).
 - `SyncState` records status, counters, the last error and the last successful
   run. It is the only place sync progress is reported from — a use case never
   infers progress by counting rows.
@@ -175,10 +178,12 @@ the product enforces the period the school agreed with the Owner.
 - **The unit is the course.** A `Course` and everything that depends on it —
   `CourseMembership` rows, `MeetingCodeLink` rows, `CourseWork`, `Submission`
   with its grades, and the `MeetSession` / `MeetParticipation` rows reached through
-  its meeting codes — are deleted when the course is
-  archived in Google or no longer returned by it, **and** its most recent
-  Google-side update time (of the course or anything under it) is more than N
-  years ago.
+  its meeting codes — are deleted from the installation database when the
+  course's **last activity** is more than N years ago, whatever the course's
+  state (`trebovaniya.md` section 5, v36). Nothing is deleted in Google.
+- **Last activity** is the latest of: the course's own update time; creation or
+  update of any of its `CourseWork` rows; update of any of its `Submission` rows;
+  the start of any `MeetSession` reached through its meeting codes.
 - **A leaver has their own expiry.** A `CourseMembership` with `on_roster` false
   and `last_seen_at` more than N years ago is deleted together with that person's
   `Submission` rows in the course and their `MeetParticipation` rows in meetings
