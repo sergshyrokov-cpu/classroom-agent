@@ -196,6 +196,10 @@ maintain and not the source of requirements.
   to delete that key in Google Cloud Console first, and only then the file — a
   key copy outside the secret store is forbidden (DC-5). Never delete either
   yourself: the key belongs to the Owner, and removing it stops the prototype.
+  In the same step, remind the human that the prototype domain's super-admin
+  must remove `drive.file` and `classroom.profile.photos` from its domain-wide
+  delegation — the prototype still requests them, the .NET system does not
+  (`trebovaniya.md` section 6, v25).
 
 ---
 
