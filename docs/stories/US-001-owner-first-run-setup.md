@@ -7,7 +7,7 @@ priority: HIGH
 source:
   type: authored
 # Lifecycle status is owned by docs/catalog/stories.yaml (not this file).
-# Aligned with trebovaniya.md v51.
+# Aligned with trebovaniya.md v52.
 ---
 
 # User Story
@@ -227,6 +227,9 @@ ships translations and a Ukrainian default only (AC-009).
 - The Control Plane has no path to teaching data and receives no school
   statistics (SC-12, decided in `trebovaniya.md` v20). Nothing this Story adds —
   pages, endpoints, contract types — may create one.
+- The Control Plane sends data nowhere except the service channel to
+  installations: no external error tracker, analytics or telemetry service
+  (SC-13).
 - This Story is the first to need the Control Plane `AuditEvent` table (AC-008).
   Creating the Owner account at first run and submitting a wrong setup code are
   not in the audited list of `trebovaniya.md` §5 — the Specification should say
