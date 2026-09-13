@@ -19,9 +19,15 @@
 #
 # Delivery order follows epic-map.md: EPIC-8 (bootstrap) → EPIC-6 → EPIC-1 →
 # EPIC-2/5 → EPIC-3 → EPIC-4. EPIC-9 and EPIC-10 belong to the next version and
-# are listed last. Stories marked `blocked_by` must not be activated until the named
-# decision is recorded — an open question in section 7, a missing cell in the
-# permission matrix of section 2, or another Story.
+# are listed last. The other future epics — EPIC-7, EPIC-11, EPIC-12 and EPIC-13
+# (trebovaniya.md section 4) — have no Stories yet; epic-map.md keeps their
+# deferred scope.
+#
+# Stories marked `blocked_by` must not be activated until what is named there is
+# in place: a decision (an open question in section 7, a missing cell in the
+# permission matrix of section 2) or another Story being COMPLETED. Story
+# dependencies record the technical delivery order — what must already exist for
+# the Story to be built and tested — not business decisions.
 # =============================================================================
 version: 1
 
@@ -36,48 +42,72 @@ stories:
     epic: EPIC-8
     title: Register an Installation
     state: BACKLOG
+    blocked_by: >
+      Depends on US-001 (Owner account).
   - id: US-003
     epic: EPIC-8
     title: Manage AllowedAdmin entries
     state: BACKLOG
+    blocked_by: >
+      Depends on US-002 (an Installation to attach entries to).
   - id: US-004
     epic: EPIC-8
     title: Suspend and resume an Installation
     state: BACKLOG
+    blocked_by: >
+      Depends on US-002.
   - id: US-005
     epic: EPIC-8
     title: Installation legitimacy check and grace period
     state: BACKLOG
+    blocked_by: >
+      Depends on US-002 (an Installation to check).
   - id: US-006
     epic: EPIC-8
     title: Control Plane push on status change
     state: BACKLOG
+    blocked_by: >
+      Depends on US-004 (status changes to push) and US-005 (LegitimacyState on
+      the installation side).
   - id: US-007
     epic: EPIC-8
     title: Read-only mode enforcement
     state: BACKLOG
+    blocked_by: >
+      Depends on US-005 (LegitimacyState decides read-only mode).
 
   # --- EPIC-6: Program settings / Admin panel ------------------------------
   - id: US-008
     epic: EPIC-6
     title: Admin sign-in via Google OAuth with AllowedAdmin verification
     state: BACKLOG
+    blocked_by: >
+      Depends on US-003 (AllowedAdmin entries and the Admin login check).
   - id: US-009
     epic: EPIC-6
     title: Configure WorkspaceConnection
     state: BACKLOG
+    blocked_by: >
+      Depends on US-008 (a signed-in Admin) and US-002 (the Installation domain
+      the connection is checked against).
   - id: US-010
     epic: EPIC-6
     title: Connection instructions for the school super-admin
     state: BACKLOG
+    blocked_by: >
+      Depends on US-008 (admin panel) and US-002 (the Installation's client ID).
   - id: US-011
     epic: EPIC-6
     title: Check access diagnostic
     state: BACKLOG
+    blocked_by: >
+      Depends on US-009 (a saved connection to check).
   - id: US-012
     epic: EPIC-6
     title: Create and manage Dean accounts
     state: BACKLOG
+    blocked_by: >
+      Depends on US-008 (a signed-in Admin).
   - id: US-039
     epic: EPIC-6
     title: Choose UI language (Admin, Dean and Owner)
@@ -91,50 +121,72 @@ stories:
     epic: EPIC-1
     title: Background synchronization service
     state: BACKLOG
+    blocked_by: >
+      Depends on US-009 (a connection to synchronize through).
   - id: US-014
     epic: EPIC-1
     title: Sync courses and rosters
     state: BACKLOG
+    blocked_by: >
+      Depends on US-013.
   - id: US-015
     epic: EPIC-1
     title: Sync coursework and submissions
     state: BACKLOG
+    blocked_by: >
+      Depends on US-014 (courses and memberships the submissions belong to).
   - id: US-017
     epic: EPIC-1
     title: Retry, backoff and permission-error handling
     state: BACKLOG
+    blocked_by: >
+      Depends on US-013.
   - id: US-018
     epic: EPIC-1
     title: Incremental synchronization
     state: BACKLOG
+    blocked_by: >
+      Depends on US-014.
   - id: US-019
     epic: EPIC-1
     title: Trigger a synchronization from the UI
     state: BACKLOG
+    blocked_by: >
+      Depends on US-013.
 
   # --- EPIC-2: Courses and participants -----------------------------------
   - id: US-020
     epic: EPIC-2
     title: Course list with filters and search
     state: BACKLOG
+    blocked_by: >
+      Depends on US-014.
   - id: US-021
     epic: EPIC-2
     title: Course detail with roster
     state: BACKLOG
+    blocked_by: >
+      Depends on US-014.
   - id: US-022
     epic: EPIC-2
     title: Teachers and their courses
     state: BACKLOG
+    blocked_by: >
+      Depends on US-014.
 
   # --- EPIC-5: Database management -----------------------------------------
   - id: US-024
     epic: EPIC-5
     title: Database statistics and last synchronization view
     state: BACKLOG
+    blocked_by: >
+      Depends on US-013 (SyncState).
   - id: US-037
     epic: EPIC-5
     title: Retention purge of expired courses, leavers, unlinked meetings, accounts and audit rows
     state: BACKLOG
+    blocked_by: >
+      Depends on US-015 and US-031 (the teaching and Meet data it purges).
 
   # --- EPIC-3: Gradebook and printable templates ---------------------------
   - id: US-025
@@ -142,38 +194,54 @@ stories:
     title: Journal view for a period
     state: BACKLOG
     blocked_by: >
-      trebovaniya.md section 7 item 15 — journal cell rules (reference moment for
-      "due", the cell of a material, precedence of states).
+      Depends on US-015, and on trebovaniya.md section 7 item 15 — journal cell
+      rules (reference moment for "due", the cell of a material, precedence of
+      states).
   - id: US-026
     epic: EPIC-3
     title: Distinguish graded work, ungraded work and materials
     state: BACKLOG
+    blocked_by: >
+      Depends on US-025.
   - id: US-027
     epic: EPIC-3
     title: Configurable report templates
     state: BACKLOG
+    blocked_by: >
+      Depends on US-025.
   - id: US-028
     epic: EPIC-3
     title: Export a journal to Excel using a school template
     state: BACKLOG
+    blocked_by: >
+      Depends on US-027.
   - id: US-029
     epic: EPIC-3
     title: Export a journal to Word
     state: BACKLOG
+    blocked_by: >
+      Depends on US-027.
   - id: US-030
     epic: EPIC-3
     title: Assemble several templates into one printed journal
     state: BACKLOG
+    blocked_by: >
+      Depends on US-027.
 
   # --- EPIC-4: Meet activity statistics -----------------------------------
   - id: US-031
     epic: EPIC-4
     title: Pull Meet events and keep history beyond 180 days
     state: BACKLOG
+    blocked_by: >
+      Depends on US-013 (the Meet pull is part of synchronization).
   - id: US-032
     epic: EPIC-4
     title: Link meeting codes to courses
     state: BACKLOG
+    blocked_by: >
+      Depends on US-014 (course rosters for matching) and US-031 (meetings to
+      link).
   - id: US-033
     epic: EPIC-4
     title: Built-in Meet reports for a course and period, with export
