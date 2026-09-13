@@ -56,14 +56,15 @@ contract.
 | `401 Unauthorized` | authentication required or failed |
 | `403 Forbidden` | authenticated but not permitted by the role matrix |
 | `404 Not Found` | resource does not exist (or is not visible to the caller) |
-| `409 Conflict` | uniqueness or state conflict — **including a write attempted while the installation is in read-only mode** (AD-6) |
+| `409 Conflict` | uniqueness or state conflict — **including any action blocked in read-only mode** (BR-026, AD-6): writes and "check access" |
 | `415 Unsupported Media Type` | missing/wrong `Content-Type` |
 | `429 Too Many Requests` | only if this API ever rate-limits its own clients; Google's `429` is handled internally (AD-5) and never forwarded |
 | `500 Internal Server Error` | unmapped exception (must not leak internals) |
 
 Read-only mode returns `409`, not `403`: the caller has the right, the
-installation is temporarily refusing writes. The error `message` says so
-plainly and names the reason (grace period expired / suspended by the Owner).
+installation is temporarily refusing the action — a write, or a call to Google
+such as "check access" (v39). The error `message` says so plainly and names the
+reason (grace period expired / suspended by the Owner).
 
 ## AC-6 Error body
 
@@ -80,9 +81,9 @@ All error responses use exactly this JSON shape:
 ```
 
 - `message` is safe to display to a Dean or Admin, and is in the requesting
-  user's UI language (NFR-073). It never contains stack
-  traces, SQL, class or namespace names, file paths, Google API raw errors,
-  service-account identifiers, or secrets.
+  user's UI language (NFR-073). Any date inside it is shown in the school's time
+  zone (NFR-074). It never contains stack traces, SQL, class or namespace names,
+  file paths, Google API raw errors, service-account identifiers, or secrets.
 - Validation failures may add a `fieldErrors` array of
   `{ "field": "...", "message": "..." }`.
 - A Google permission failure surfaced to the Admin (AD-5) carries a message
@@ -91,8 +92,9 @@ All error responses use exactly this JSON shape:
 
 ## AC-7 Authentication
 
-- Cookie-based authentication for both roles. The session cookie is `httpOnly`;
-  no `Authorization` header is expected (`trebovaniya.md` section 8).
+- Cookie-based authentication for Admin and Dean in the installation, and for
+  the Owner in the Control Plane. The session cookie is `httpOnly`; no
+  `Authorization` header is expected (`trebovaniya.md` section 8, NFR-072).
 - Admin authenticates through Google OAuth (external login); Dean through local
   login/password. Both end in the same cookie.
 - The Control Plane ↔ Data Plane channel is **not** part of this API and does
