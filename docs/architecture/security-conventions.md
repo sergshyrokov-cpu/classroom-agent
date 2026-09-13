@@ -279,3 +279,17 @@ hosts and therefore can reach.
   date, school, task, and a reference to the school's request where there is
   one. The journal is kept outside the application — an organizational control,
   not a feature — and is shown to the school on request.
+
+## SC-13 Outbound data flows
+
+Decided in `trebovaniya.md` section 6 (v52). The system sends data to exactly two
+places:
+
+- **Google**, read-only, through the service account (SC-8);
+- **the Control Plane service channel**, carrying only what SC-12 lists.
+
+Any other outbound flow of school data — an AI or speech-recognition service
+(future Epic 13), an analytics or telemetry service, an error tracker that
+receives request data, a third-party export target — is a Critical finding until
+a separate, human-approved decision adds it here. Application logs stay on the
+installation's own server (DC-10) and are not an outbound flow.
