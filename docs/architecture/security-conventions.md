@@ -34,7 +34,10 @@ area as production severity.
 ## SC-2 Authentication
 
 - **Dean** — local login and password via ASP.NET Core Identity. The account is
-  created manually by an Admin.
+  created manually by an Admin, who may also disable, re-enable and reset its
+  password; the account is never deleted (BR-014). After an Admin reset the Dean
+  must change the password at the next login, so only the Dean knows it. A reset
+  flow that lets the Admin keep a working password is a finding.
 - **Admin** — Google OAuth external login. **There is no local password for an
   Admin**, no password column, no password reset flow. A migration or entity
   adding one is a Critical finding.
@@ -179,7 +182,8 @@ when" — above all, who took personal data out of the system.
   after 30 days (DC-10) and are not queryable per school.
 - **Audited in an installation:** sign-in and refused sign-in (Dean by password,
   Admin by OAuth, including a refusal because the email is not in
-  `AllowedAdmin`); creating, disabling or deleting a Dean account; saving or
+  `AllowedAdmin`); an Admin creating, disabling, re-enabling or resetting the
+  password of a Dean account, and a Dean changing their own password; saving or
   changing `WorkspaceConnection`; running the "check access" diagnostic; starting
   a synchronization by hand; linking a Meet meeting code to a course or
   re-linking it; **exporting a journal or report**.

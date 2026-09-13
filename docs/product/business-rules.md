@@ -61,7 +61,10 @@ logins and synchronization are unaffected. *(§2, §9, v26)*
 single point of failure. *(§2, §9)*
 
 **BR-014** A Dean account is created manually by an Admin. Owner approval is not
-involved. *(§2)*
+involved. An Admin may disable, re-enable and reset the password of a Dean
+account, but never deletes it — like a revoked Admin's `AppUser`, it is kept for
+history and audit. A Dean may change their own password, and must do so at the
+first login after an Admin reset. *(§2, v38)*
 
 ## Installation and the Owner's control
 
@@ -94,8 +97,9 @@ working and everything else is blocked for both roles — for example
 synchronization (including pulling Meet data), report template edits, linking
 Meet meeting codes, Dean account management and connection settings. The only
 writes permitted are a closed list of service writes: audit rows; sign-in
-bookkeeping (Identity failed-attempt counting and lockout, and creating the
-`AppUser` of an approved Admin at their first login); the legitimacy-check state
+bookkeeping (Identity failed-attempt counting and lockout, creating the
+`AppUser` of an approved Admin at their first login, and a Dean changing their
+own password); the legitimacy-check state
 (last successful check time and last known status); and the retention purge with
 its audit event (BR-075). Any other write is refused; a new service write is
 permitted only by extending this list in `trebovaniya.md` §2. *(§2, §5, §9, v28)*
