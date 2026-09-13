@@ -40,13 +40,6 @@ take a school down. *(§9)*
 pushed immediately by the Control Plane, with 3 retries and exponential backoff.
 The periodic check is the guarantee; the push is the optimization. *(§9)*
 
-**NFR-017** An installation reports its application and contract version on
-every legitimacy check. A Control Plane answer of `upgrade_required` counts as an
-unsuccessful check, so the 7-day grace period applies before read-only — a
-version gap never stops a school immediately. The Control Plane is always
-upgraded first and supports older installations. *(§8,
-`deployment-conventions.md` DC-12)*
-
 **NFR-015** Each installation writes structured logs (Serilog, JSON, one file
 per day, retained 30 days) and exposes liveness and readiness endpoints reachable
 only from the Owner's private network. *(§8, `deployment-conventions.md` DC-10,
@@ -56,6 +49,13 @@ DC-11)*
 first version. Readiness plus `SyncState` are how the Owner sees that a school is
 working. *(§8, DC-11)*
 
+**NFR-017** An installation reports its application and contract version on
+every legitimacy check. A Control Plane answer of `upgrade_required` counts as an
+unsuccessful check, so the 7-day grace period applies before read-only — a
+version gap never stops a school immediately. The Control Plane is always
+upgraded first and supports older installations. *(§8,
+`deployment-conventions.md` DC-12)*
+
 ## Security and privacy
 
 **NFR-020** The service-account key is never in the repository, never in the
@@ -63,11 +63,6 @@ installation database, and never uploadable through the UI. It is placed by the
 Owner at deployment in a secret store. *(§5, `security-conventions.md` SC-7)*
 
 **NFR-021** Every Google OAuth scope is read-only. *(§1)*
-
-**NFR-027** Each school's service-account key is replaced every 90 days without
-downtime and without action from the school. On a suspected leak the key is
-deleted immediately, a new one issued, usage reviewed, and the school informed
-without delay. *(§9, `deployment-conventions.md` DC-5)*
 
 **NFR-022** Journals and Meet statistics contain personal data of students who may be
 minors; access is limited to the Admin and Dean roles. *(§5)*
@@ -93,6 +88,11 @@ receives no school statistics; the service channel carries installation id,
 version and status only. The Owner's server-level access is operational,
 governed by the written agreement with the school and recorded in an operations
 journal. *(§9, `security-conventions.md` SC-12)*
+
+**NFR-027** Each school's service-account key is replaced every 90 days without
+downtime and without action from the school. On a suspected leak the key is
+deleted immediately, a new one issued, usage reviewed, and the school informed
+without delay. *(§9, `deployment-conventions.md` DC-5)*
 
 ## Data storage
 

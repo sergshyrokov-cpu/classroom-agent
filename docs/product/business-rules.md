@@ -76,15 +76,15 @@ check is the fallback when a push does not arrive. *(§9)*
 (the grace period) have passed since the last successful check, or when its
 `Installation` status is suspended. *(§9)*
 
-**BR-027** A check answered `upgrade_required` — the installation's version is
-no longer supported by the Control Plane — is an unsuccessful check. It therefore
-consumes the grace period instead of stopping the school at once, and the reason
-is surfaced to the Admin. *(§8, `deployment-conventions.md` DC-12)*
-
 **BR-026** In read-only mode, viewing and exporting already-synced data keep
 working; synchronization, account management, connection settings and report
 template edits are blocked. The retention purge is the one write that still runs
 (BR-075). *(§2, §5, §9)*
+
+**BR-027** A check answered `upgrade_required` — the installation's version is
+no longer supported by the Control Plane — is an unsuccessful check. It therefore
+consumes the grace period instead of stopping the school at once, and the reason
+is surfaced to the Admin. *(§8, `deployment-conventions.md` DC-12)*
 
 ## Google Workspace access
 
@@ -105,6 +105,11 @@ supplies only the client ID and the scope list. *(§1, §9)*
 each school has its own. Its key is placed by the Owner at deployment and never
 reaches the school, the UI, or the database. *(§5, §6)*
 
+**BR-034** A Google permission failure (`403 unauthorized_client`,
+`access_denied`, missing scope) means delegation is not configured and is never
+retried. It is recorded and surfaced to the Admin with a diagnosable message.
+*(Epic 1, Epic 6)*
+
 **BR-035** Replacing a service-account key never involves the school: delegation
 is authorized for the account's client ID, which a new key does not change. Only
 recreating the service account itself forces the school to authorize again.
@@ -113,11 +118,6 @@ recreating the service account itself forces the school to authorize again.
 **BR-036** A suspected key leak is a personal-data incident: the key is deleted
 before anything else, and the school is informed without delay as the data
 controller. *(§9, DC-5)*
-
-**BR-034** A Google permission failure (`403 unauthorized_client`,
-`access_denied`, missing scope) means delegation is not configured and is never
-retried. It is recorded and surfaced to the Admin with a diagnosable message.
-*(Epic 1, Epic 6)*
 
 ## Synchronization
 
@@ -142,6 +142,14 @@ last error and last successful run. *(§3, Epic 5)*
 membership of a course (`CourseMembership`), not to the person: the same person
 can teach one course and study on another. *(§3, v23 — was §7 item 4)*
 
+**BR-052** A `CourseWork` is either graded work (`courseWork`) or an ungraded
+material (`material`); journals must distinguish them. Its date follows the
+cascade `scheduledTime` → `dueDate` → `updateTime` → `creationTime`. Materials
+are a separate Classroom resource with their own read-only scope and have no
+submissions. *(§3, §6, Epic 3)*
+
+**BR-053** All timestamps are stored in UTC. *(persistence-conventions.md PC-6)*
+
 **BR-054** The subjects of the teaching process are teachers and students, each
 identified by a personal account in the school's domain. Group addresses and
 other accounts are conveniences, not subjects. *(§3)*
@@ -164,14 +172,6 @@ and turned in again shows the second date. *(§3, §4 Epic 3)*
 
 **BR-059** Only the fact of submission is kept — never its content, the history
 of grade changes, or rubric grades (Epic 12). *(§3)*
-
-**BR-052** A `CourseWork` is either graded work (`courseWork`) or an ungraded
-material (`material`); journals must distinguish them. Its date follows the
-cascade `scheduledTime` → `dueDate` → `updateTime` → `creationTime`. Materials
-are a separate Classroom resource with their own read-only scope and have no
-submissions. *(§3, §6, Epic 3)*
-
-**BR-053** All timestamps are stored in UTC. *(persistence-conventions.md PC-6)*
 
 ## Meet activity statistics
 
@@ -217,15 +217,15 @@ minors. Access is limited to the Admin and Dean roles. *(§5)*
 never appears in an HTTP error body. *(§5,
 `security-conventions.md` SC-10)*
 
-**BR-073** Every export of a journal or report is audited: who, when, which
-courses, which period, which template, how many rows. The exported content itself
-is never stored in the audit trail. *(§5, `security-conventions.md` SC-11)*
-
 **BR-072** Student personal data is kept for a retention period N agreed
 between the school and the Owner and set at deployment. The unit is the course: a
 course and everything under it is deleted once it is archived or gone from Google
 and its last activity is more than N years ago; a participant is deleted once no
 remaining course references them. Deletion is physical. *(§5, PC-11)*
+
+**BR-073** Every export of a journal or report is audited: who, when, which
+courses, which period, which template, how many rows. The exported content itself
+is never stored in the audit trail. *(§5, `security-conventions.md` SC-11)*
 
 **BR-074** A student who disappears from Google is not deleted by
 synchronization. Their grades stay in the journals of the period they studied

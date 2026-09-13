@@ -162,6 +162,21 @@ the previous one — the dependency is real, not stylistic
   on its next run. Like every operational access to a school database, it is
   recorded in the Owner's operations journal (SC-12).
 
+## DC-9 What is not decided yet
+
+Every policy and operations question from `trebovaniya.md` section 7 is now
+decided (v15–v22). What remains is **verification at onboarding**, not a
+decision:
+
+| To verify | Where it is tracked |
+|---|---|
+| Minimum Google Workspace roles the impersonation user needs | §7 item 10 |
+
+A deployment or operations Story that finds a new gap raises an Open Decision
+and stops; it does not improvise. Two things are deliberately deferred rather
+than open: centralized log collection (DC-11) and keyless access to Google
+without long-lived keys (DC-5).
+
 ## DC-10 Logging
 
 - **Serilog**, structured, written to a rolling file on the installation: one
@@ -263,18 +278,3 @@ one: losing it sends every school to read-only after 7 days.
   re-applied before the installation is returned to the school.
 - **Decommissioning deletes that school's backups immediately**, without waiting
   for the 30-day window to roll over (DC-8).
-
-## DC-9 What is not decided yet
-
-Every policy and operations question from `trebovaniya.md` section 7 is now
-decided (v15–v22). What remains is **verification at onboarding**, not a
-decision:
-
-| To verify | Where it is tracked |
-|---|---|
-| Minimum Google Workspace roles the impersonation user needs | §7 item 10 |
-
-A deployment or operations Story that finds a new gap raises an Open Decision
-and stops; it does not improvise. Two things are deliberately deferred rather
-than open: centralized log collection (DC-11) and keyless access to Google
-without long-lived keys (DC-5).
