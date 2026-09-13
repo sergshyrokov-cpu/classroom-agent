@@ -69,7 +69,8 @@ One Owner for the whole service, not per school.
 - Places the service-account key on each installation at deployment. Schools
   never handle keys.
 
-**Does not:** look at any school's courses, grades or Meet statistics, and receives
+**Does not,** as Owner, look at any school's courses, grades or Meet statistics
+(a person who also works at a school may be that school's Admin, BR-013), and receives
 no statistics about them. As the host they can reach a school's database, but
 only for operational work agreed with the school — each access written into
 their operations journal.

@@ -10,7 +10,7 @@ terms from `trebovaniya.md` are given so the two documents can be read together.
 
 | Term | Русский | Meaning |
 |---|---|---|
-| **Owner** | Владелец | The one person who owns, hosts and supports the service for all schools. Lives in the Control Plane; has no account in any installation. |
+| **Owner** | Владелец | The one person who owns, hosts and supports the service for all schools. Lives in the Control Plane; has no account in any installation as Owner (a person who is also a school's employee may be that school's Admin, BR-013). |
 | **Admin** | Админ | A Google Workspace domain administrator at one school, who is also the administrator of that school's installation. Not a super-admin. One email serves as OAuth login, `AllowedAdmin` entry and `AppUser`; the impersonation user is a separate technical account. |
 | **Dean** | Декан, учебная часть | The primary user: views courses, gradebooks and Meet activity statistics, exports reports, triggers synchronization. |
 | **Teacher** | Преподаватель | A person teaching a course. **Data only in the first version** — not an account (Epic 7). |

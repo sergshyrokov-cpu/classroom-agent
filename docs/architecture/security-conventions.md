@@ -257,8 +257,15 @@ hosts and therefore can reach.
 - `ClassroomAgent.ControlPlane` never references `ClassroomAgent.Domain`
   (`package-map.md`). A Control Plane endpoint, query or contract field that
   exposes Data Plane content is a Critical finding.
-- The Owner has no account in any installation (BR-005), and readiness reports
-  state only (DC-11).
+- The Owner has no account in any installation *as Owner* (BR-005), and
+  readiness reports state only (DC-11). A person who is also the Owner may be a
+  school's Admin only as that school's employee, through `AllowedAdmin`, recorded
+  in the agreement with that school (BR-013, v50).
+- **The Owner's Cloud project lives outside every school's domain**: owned by the
+  Owner's own account or organisation, with a second owner or recovery path and
+  two-factor authentication. A project inside a school's Workspace organisation
+  would let that school control the service accounts of all others — a Critical
+  finding (`trebovaniya.md` §6, v50).
 
 **Servers — operational access only:**
 

@@ -40,7 +40,8 @@ the previous one — the dependency is real, not stylistic
    domain, status, and that service account's client ID — required
    (`trebovaniya.md` §3, v43).
 5. Owner adds the school's administrator email(s) to `AllowedAdmin` for that
-   `Installation`, and gives the school's super-admin the client ID and the scope list from
+   `Installation` — at least two Admins (BR-013), each ideally on a separate
+   admin account rather than the one used for daily mail and teaching — and gives the school's super-admin the client ID and the scope list from
    `trebovaniya.md` §6. The super-admin authorizes domain-wide delegation in the
    school's own Google console and creates the technical account with read-only
    roles (BR-015) — the Owner cannot do either step (BR-032).
@@ -171,6 +172,10 @@ the previous one — the dependency is real, not stylistic
 - **Decommissioning an installation:** the school receives a full export of its
   journals, then the installation database is deleted together with its
   backups, immediately (DC-13).
+- **When a person leaves a school**, the Owner revokes their `AllowedAdmin`
+  entry and the school disables their Google account. Nothing else is needed:
+  data is read by the technical account (BR-015), and every school has at least
+  two Admins (BR-013). Their `AppUser` is purged later under PC-11.
 - **Erasing one person's data on the school's written request** is, in the first
   version, an operational procedure performed by the Owner — there is no function
   for it yet (EPIC-10). It is executed **only after the school has removed that

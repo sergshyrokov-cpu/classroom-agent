@@ -39,7 +39,7 @@ API calls work — not a design to preserve.
 |---|---|
 | **Dean** (учебная часть) | the primary user. Looks at courses, gradebooks and how Meet lessons actually run; exports reports; triggers a refresh when the data looks stale. Does this daily. |
 | **Admin** | a Google Workspace domain administrator at the school. Installs and configures: connects the installation to the school's Workspace, creates Dean accounts. Rarely present after setup, but sees the same data as the Dean. |
-| **Owner** | the person who builds, hosts and supports the system for ~10 schools. Decides which schools run it and with which domain. Never looks at a school's teaching data. |
+| **Owner** | the person who builds, hosts and supports the system for ~10 schools. Decides which schools run it and with which domain. Never looks at a school's teaching data as Owner. |
 
 Teachers and students are **not users of the first version**. They appear as
 data — names on a roster, grades in a journal — but have no accounts. Giving

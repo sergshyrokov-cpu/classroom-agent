@@ -58,8 +58,12 @@ The installation asks the Control Plane on each login and keeps no copy of the
 list; if the Control Plane does not answer, the Admin login is refused. Dean
 logins and synchronization are unaffected. *(§2, §9, v26)*
 
-**BR-013** An installation may have several Admins. One person must not be a
-single point of failure. *(§2, §9)*
+**BR-013** An installation may have several Admins, and onboarding requires at
+least two, so one person is never a single point of failure. Admins are school
+staff on personal domain administrator accounts. A person who is also the Owner
+may be one of a school's Admins only as that school's employee, through
+`AllowedAdmin` like anyone else and recorded in the agreement with that school;
+the Owner role itself still grants no access to teaching data. *(§2, §9, v50)*
 
 **BR-014** A Dean account is created manually by an Admin. Owner approval is not
 involved. An Admin may disable, re-enable and reset the password of a Dean
