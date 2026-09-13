@@ -192,7 +192,9 @@ other accounts are conveniences, not subjects. *(§3)*
 **BR-055** A teacher can grade only a course participant with a personal domain
 account, so grades exist only for such participants. *(§4 Epic 3)*
 
-**BR-056** A journal cell shows exactly one state: a grade (raw points out of the
+**BR-056** *(The reference moment for "due", the cell of a material and the
+precedence of states are open — `trebovaniya.md` §7 item 15, to decide before
+US-025.)* A journal cell shows exactly one state: a grade (raw points out of the
 coursework's maximum); "turned in, not graded"; "returned without a grade"; "not
 turned in" once the due date has passed; "not due yet"; or "not turned in, no due
 date". Any of them may carry a "late" mark, taken from Google's `late` flag as

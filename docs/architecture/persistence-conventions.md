@@ -92,7 +92,9 @@ resulting migration must both match them.
   stamps entities in `Added`/`Modified` state — never by hand in a use case.
 - `created_at` is non-null and never updated after insert; `updated_at` is
   non-null.
-- **All time is stored in UTC.** Presentation converts for display. Journals and
+- **All time is stored in UTC.** Presentation converts for display into the
+  school's time zone — a required installation setting (DC-3), which also sets
+  the day boundaries of a selected period (`trebovaniya.md` section 5, v40). Journals and
   Meet statistics span academic periods and Meet events come from Google in UTC;
   mixing local time in storage would corrupt the reports.
 

@@ -134,6 +134,9 @@ stories:
     epic: EPIC-3
     title: Journal view for a period
     state: BACKLOG
+    blocked_by: >
+      trebovaniya.md section 7 item 15 — journal cell rules (reference moment for
+      "due", the cell of a material, precedence of states).
   - id: US-026
     epic: EPIC-3
     title: Distinguish graded work, ungraded work and materials

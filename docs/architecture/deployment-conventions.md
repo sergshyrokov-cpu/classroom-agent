@@ -60,8 +60,9 @@ the previous one — the dependency is real, not stylistic
   hard-coded `admin@dac.ukr.education` is the defect this rule exists to prevent.
 - Per-installation configuration is at minimum: its database connection string,
   the Control Plane service endpoint, the secret-store reference for its
-  service-account key, and the retention period N (PC-11). The retention period
-  is required: an installation without it refuses to start.
+  service-account key, the retention period N (PC-11), and the school's time zone
+  (an IANA id such as `Europe/Kyiv`, PC-6). The retention period and the time
+  zone are required: an installation without either refuses to start.
 - The Google Workspace domain and impersonation user are **not** deployment
   configuration: they are entered by the Admin and stored in
   `WorkspaceConnection`, constrained by the `Installation` record (BR-020).
