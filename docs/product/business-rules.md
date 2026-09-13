@@ -232,7 +232,10 @@ norms or comparison of teachers (EPIC-11). *(§4 Epic 4)*
 **BR-063** Each Google meeting is its own row; a reconnect after a dropped call
 is not merged. *(§3, §4 Epic 4)*
 
-**BR-064** Only personal domain accounts are counted. An organizer who is not a
+**BR-064** *(How to tell a personal domain account from a shared one, and where
+co-teachers and the organizer count in the meeting list, are open —
+`trebovaniya.md` §7 item 16, to decide before US-033.)* Only personal domain
+accounts are counted. An organizer who is not a
 teacher of the course on the meeting's date is marked "not a teacher of this
 course"; a domain account not on the course roster on that date is shown apart,
 marked "not on the course list" (BR-051); external
@@ -240,11 +243,19 @@ guests and connections without an account are shown as "other participants".
 *(§4 Epic 4)*
 
 **BR-065** A meeting is linked to a course through its meeting code. The system
-links unambiguous matches itself and keeps them editable; ambiguous codes wait in
+links unambiguous matches itself and keeps them editable. A match is scored per
+candidate course as the share of distinct domain accounts across all meetings of
+the code (organizer excluded) who were students of the course on their meeting's
+date; the organizer must be a teacher of the course. It links when the best share
+is at least 60% and the next is at least 30 points lower, is recomputed on each
+Meet ingestion while the code is unlinked, and an automatic link is never revised
+by the system (v41); ambiguous codes wait in
 the unassigned-meetings list, where a Dean or Admin picks the course. A code is
 linked once and covers every meeting of that course until the Classroom link is
 reset; re-linking moves all its meetings and is audited. Linking is blocked in
-read-only mode. *(§2, §4 Epic 4)*
+read-only mode. Known limitation: a non-Classroom link reused in several courses
+is linked to one course only, and meetings of the other courses under that code
+count there. *(§2, §4 Epic 4, v41)*
 
 **BR-066** A meeting whose code is linked to no course is deleted N years after
 its own date, so it cannot outlive the retention period. *(§5)*
