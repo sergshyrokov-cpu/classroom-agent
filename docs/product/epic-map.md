@@ -169,8 +169,7 @@ class leaves no Meet data (BR-060).
   start counts toward the course's last activity (PC-11)
 - US-033 Built-in Meet reports for a course and period: summary, meeting list,
   student participation, one meeting in detail, and their export (BR-062…BR-064;
-  `trebovaniya.md` §2 permission matrix) — blocked by `trebovaniya.md` §7 item 16
-  (Meet counting rules)
+  `trebovaniya.md` §2 permission matrix)
 
 ---
 

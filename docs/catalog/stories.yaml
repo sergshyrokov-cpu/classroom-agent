@@ -258,8 +258,7 @@ stories:
     title: Built-in Meet reports for a course and period, with export
     state: BACKLOG
     blocked_by: >
-      Depends on US-032, and on trebovaniya.md section 7 item 16 — counting rules
-      of the Meet reports (personal vs shared accounts, co-teachers and organizer).
+      Depends on US-032.
 
   # --- EPIC-9 (next version): Audit log viewing ----------------------------
   # Not part of the first version. AuditEvent rows are written from v1

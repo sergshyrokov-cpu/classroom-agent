@@ -77,7 +77,7 @@ terms from `trebovaniya.md` are given so the two documents can be read together.
 | **Unassigned meetings** | непривязанные встречи | Meetings whose code is not linked to a course yet; a Dean or Admin picks the course. |
 | **Not a teacher of this course** | не преподаватель этого курса | Mark on a meeting whose organizer is not among the course's teachers on the meeting's date. |
 | **Not on the course list** | не в списке курса | Mark on a domain account that joined a course meeting without being on the course roster on the meeting's date. |
-| **Other participants** | прочие участники | External guests and connections without a school account, shown apart from students. |
+| **Other participants** | прочие участники | External guests, connections without a school account, and domain accounts not on any course roster of the installation (class accounts, group addresses, staff without courses), shown apart from students (BR-064). |
 
 ## Terms to avoid
 

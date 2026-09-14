@@ -230,9 +230,6 @@ remains is **verification at onboarding**, not a decision:
 | Minimum Google Workspace roles the impersonation user needs | §7 item 10 |
 | Whether Classroom still returns submissions of a student removed from a course | §7 item 14 |
 
-`trebovaniya.md` §7 item 16 is open too, but it is a product rule — Meet
-counting for US-033 — not a deployment question.
-
 A deployment or operations Story that finds a new gap raises an Open Decision
 and stops; it does not improvise. Two things are deliberately deferred rather
 than open: centralized log collection (DC-11) and keyless access to Google

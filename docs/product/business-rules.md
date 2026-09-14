@@ -262,15 +262,21 @@ norms or comparison of teachers (EPIC-11). *(§4 Epic 4)*
 **BR-063** Each Google meeting is its own row; a reconnect after a dropped call
 is not merged. *(§3, §4 Epic 4)*
 
-**BR-064** *(How to tell a personal domain account from a shared one, and where
-co-teachers and the organizer count in the meeting list, are open —
-`trebovaniya.md` §7 item 16, to decide before US-033.)* Only personal domain
-accounts are counted. An organizer who is not a
-teacher of the course on the meeting's date is marked "not a teacher of this
-course"; a domain account not on the course roster on that date is shown apart,
-marked "not on the course list" (BR-051); external
-guests and connections without an account are shown as "other participants".
-*(§4 Epic 4)*
+**BR-064** Only personal domain accounts are counted. A personal account is a
+domain account the installation knows as a Classroom participant — on the roster
+of any of its courses, in any role; every other domain account (class accounts,
+group addresses, staff without courses) counts as an "other participant". Known
+limitations: a shared account enrolled in a course counts as a person; staff
+without Classroom courses fall into "other participants" (v58). An organizer who
+is not a teacher of the course on the meeting's date is marked "not a teacher of
+this course"; a domain account not on the course roster on that date is shown
+apart, marked "not on the course list" (BR-051); external guests and connections
+without an account are shown as "other participants". The organizer is named in
+their own column and never counted in the numbers; other teachers of the course on
+the meeting's date are counted in a separate "course teachers" column of the
+meeting list, never as students or "not on the course list". The one-meeting
+report marks everyone the same way: organizer, course teacher, course student, not
+on the course list, other participant (v58). *(§4 Epic 4)*
 
 **BR-065** A meeting is linked to a course through its meeting code. The system
 links unambiguous matches itself and keeps them editable. A match is scored per
