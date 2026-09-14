@@ -129,7 +129,7 @@ a second Owner account; the Owner switching their own UI language (US-039).
 
 - the account is not created;
 - the response names which field failed and why, in terms safe to display
-  (`api-conventions.md` AC-6);
+  (`api-conventions.md` API-6);
 - the submitted password never appears in the response, in a log, or in an
   error body (SC-10).
 

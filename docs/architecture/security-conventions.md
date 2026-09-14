@@ -86,7 +86,7 @@ Admin's account (BR-015, SC-8).
 
 - Every API endpoint and every Razor page declares its required role as an
   authorization policy. There is no default-allow: an endpoint reachable without
-  a declared policy is a Critical finding (`api-conventions.md` AC-9).
+  a declared policy is a Critical finding (`api-conventions.md` API-9).
 - **Deny by default.** Both hosts set a fallback policy requiring an
   authenticated user, so a forgotten attribute closes an endpoint rather than
   opening it.
@@ -115,14 +115,14 @@ Admin's account (BR-015, SC-8).
 
 When the grace period has expired or the Owner has suspended the `Installation`,
 every write use case refuses with `409` (`architecture.md` AD-6,
-`api-conventions.md` AC-5). Viewing and exporting already-synced data continue
+`api-conventions.md` API-5). Viewing and exporting already-synced data continue
 to work, and only the closed list of service writes in BR-026 still runs. A write
 path that bypasses the check, or a service write not on that list, is a Critical
 finding.
 
 In read-only mode no call to Google is made at all — synchronization, the Meet
 pull, "check access" and the startup access self-check included — and "check access" also refuses with `409`
-(AD-6, AC-5, v39). A Google call in read-only mode is a Critical finding.
+(AD-6, API-5, v39). A Google call in read-only mode is a Critical finding.
 
 ## SC-6 No database admin or diagnostic UI
 
@@ -196,7 +196,7 @@ pages are disabled outside local development.
 
 - No stack trace, SQL, entity or namespace name, file path, connection string,
   service-account identifier, or raw Google API error reaches an HTTP response
-  (`api-conventions.md` AC-6).
+  (`api-conventions.md` API-6).
 - Personal data of students is never written to application logs. A log line may
   reference a course or a participant by internal id, never by name, email or
   grade.

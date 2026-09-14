@@ -13,7 +13,7 @@ A Specification cites these by id.
 
 **NFR-002** Any endpoint returning a collection that can grow unbounded is
 paginated from day one — default page size 20, maximum 100.
-*(`api-conventions.md` AC-8)*
+*(`api-conventions.md` API-8)*
 
 **NFR-003** The system is expected to hold several years of courses, grades and
 Meet data per school. Queries backing the journal and Meet reports are

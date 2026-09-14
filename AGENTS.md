@@ -60,7 +60,7 @@ exception by recording it as a resolved Open Decision:
 | Product context | `docs/product/` (vision, epic-map, business-glossary, business-rules, personas, non-functional-requirements) |
 
 Rule identifiers used throughout this file: **AD-** architecture decisions
-(`architecture.md`), **AC-** API conventions, **PC-** persistence conventions,
+(`architecture.md`), **API-** API conventions, **PC-** persistence conventions,
 **SC-** security conventions, **TC-** testing conventions,
 **DC-** deployment & operations — all in `docs/architecture/`; **BR-** business
 rules in `docs/product/business-rules.md`; **NFR-** non-functional requirements
@@ -110,7 +110,7 @@ Integration tests need a running Docker daemon (Testcontainers, PC-1).
 
 # Architecture Invariants
 
-The full rules live in `docs/architecture/` (AD-*, AC-*, PC-*, SC-*). These six
+The full rules live in `docs/architecture/` (AD-*, API-*, PC-*, SC-*). These six
 are non-negotiable — violating one is a defect, not a style preference:
 
 1. `Domain` depends on nothing; `Application` depends on `Domain` only. An
@@ -151,7 +151,7 @@ and `Directory.Build.props` when the solution is created.
 **Non-normative summary** of `trebovaniya.md` sections 2, 5, 6 and 9 — a cheap
 cache so routine decisions do not require opening a ~140 KB Russian document.
 `trebovaniya.md` always wins; on conflict this section is the one that gets
-corrected. **Verified against v58.** When `trebovaniya.md` moves past that
+corrected. **Verified against v59.** When `trebovaniya.md` moves past that
 version, re-verify this section and update the marker.
 
 - **Roles in the first version are Owner, Admin and Dean only.** Teacher and

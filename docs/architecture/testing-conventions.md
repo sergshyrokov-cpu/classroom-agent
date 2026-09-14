@@ -35,15 +35,15 @@ Derived from `trebovaniya.md` sections 5 and 9, and from the workflow order in
 
 - Every endpoint in the approved OpenAPI contract has at least one test
   asserting its status codes and error-body shape
-  (`api-conventions.md` AC-5, AC-6).
-- Error responses are asserted against AC-6 explicitly: `timestamp`, `status`,
+  (`api-conventions.md` API-5, API-6).
+- Error responses are asserted against API-6 explicitly: `timestamp`, `status`,
   `error`, `message`, `path`, and `fieldErrors` where validation applies.
 - A test asserts that an error body never carries a stack trace, SQL, a class or
   namespace name, a file path or a service-account identifier (SC-10).
-- Pagination defaults and limits (AC-8: `page` 0, `size` 20, max 100) are
+- Pagination defaults and limits (API-8: `page` 0, `size` 20, max 100) are
   covered for at least one paginated endpoint.
 - The `message` of an error body is asserted to be in the requesting user's UI
-  language, for both Ukrainian and English (AC-6, NFR-073).
+  language, for both Ukrainian and English (API-6, NFR-073).
 
 ## TC-4 No test touches a live Google API
 
@@ -64,7 +64,7 @@ Derived from `trebovaniya.md` sections 5 and 9, and from the workflow order in
 
 - For each protected endpoint, one test proves an allowed role succeeds and one
   proves a forbidden role is refused (`security-conventions.md` SC-4,
-  `api-conventions.md` AC-9). An endpoint with no authorization test is treated
+  `api-conventions.md` API-9). An endpoint with no authorization test is treated
   as an endpoint with no policy.
 - A test enumerates every endpoint of each host and fails if one allows
   anonymous access without being on the SC-4 list.

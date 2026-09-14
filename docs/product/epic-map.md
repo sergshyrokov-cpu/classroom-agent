@@ -188,7 +188,7 @@ Next version, not the first. Registered in `docs/catalog/stories.yaml` so the
 work is queued rather than remembered.
 
 - US-034 Audit log view in an installation: list `AuditEvent` rows with filters
-  by period, actor and action type, paged per AC-8. Internal ids are resolved to
+  by period, actor and action type, paged per API-8. Internal ids are resolved to
   readable names **in the view only** — nothing is written back into the rows.
   Read-only: no endpoint, control or query path may edit or delete a row.
 - US-035 Audit log view in the Control Plane: the same for Owner actions —

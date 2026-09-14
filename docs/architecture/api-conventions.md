@@ -9,13 +9,13 @@ Razor**, and the REST API serves that UI. These conventions govern the REST API.
 Razor page routes are not `/api/v1/…` and are not part of the versioned
 contract.
 
-## AC-1 Versioning
+## API-1 Versioning
 
 - URI-path versioning: every API endpoint is under `/api/v1/…`.
 - A breaking change to an existing contract requires a new version prefix and an
   approved decision; it is never made in place.
 
-## AC-2 Media type
+## API-2 Media type
 
 - Request and response bodies are `application/json` (UTF-8).
 - `Content-Type: application/json` is required on requests with a body;
@@ -24,9 +24,9 @@ contract.
   (`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` for
   Excel, `…wordprocessingml.document` for Word) plus
   `Content-Disposition: attachment`. Errors from those endpoints are still JSON
-  per AC-6.
+  per API-6.
 
-## AC-3 Resource naming
+## API-3 Resource naming
 
 - Plural nouns: `/api/v1/courses`, `/api/v1/courses/{id}`.
 - Kebab-case for multi-word path segments; `camelCase` for JSON field names.
@@ -36,7 +36,7 @@ contract.
   - `POST /api/v1/workspace-connection/test` — the "Проверить доступ" check from
     Epic 6
 
-## AC-4 HTTP methods & success codes
+## API-4 HTTP methods & success codes
 
 | Method | Use | Success |
 |---|---|---|
@@ -48,7 +48,7 @@ contract.
 | `DELETE /collection/{id}` | delete | `204 No Content` |
 | `POST /api/v1/sync` | enqueue background work | `202 Accepted` with the `SyncState` id |
 
-## AC-5 Error codes
+## API-5 Error codes
 
 | Status | When |
 |---|---|
@@ -66,7 +66,7 @@ installation is temporarily refusing the action — a write, or a call to Google
 such as "check access" (v39). The error `message` says so plainly and names the
 reason (grace period expired / suspended by the Owner).
 
-## AC-6 Error body
+## API-6 Error body
 
 All error responses use exactly this JSON shape:
 
@@ -90,7 +90,7 @@ All error responses use exactly this JSON shape:
   naming the missing capability in plain terms — "the service account is not
   authorized to read Admin Reports for this domain" — never the raw exception.
 
-## AC-7 Authentication
+## API-7 Authentication
 
 - Cookie-based authentication for Admin and Dean in the installation, and for
   the Owner in the Control Plane. The session cookie is `httpOnly`; no
@@ -102,7 +102,7 @@ All error responses use exactly this JSON shape:
   (`trebovaniya.md` section 9) and speaks the types in
   `ClassroomAgent.Contracts`.
 
-## AC-8 Pagination
+## API-8 Pagination
 
 - Any endpoint returning a collection that can grow unbounded — courses,
   participants, submissions, Meet sessions — is paginated from day one.
@@ -123,7 +123,7 @@ All error responses use exactly this JSON shape:
 - Report exports are **not** paginated — they render the full selected period by
   design.
 
-## AC-9 Authorization is declared, not improvised
+## API-9 Authorization is declared, not improvised
 
 Every endpoint declares the roles allowed to reach it, matching the permission
 matrix in `trebovaniya.md` section 2. `openapi-designer` records the required
@@ -132,7 +132,7 @@ policy (`security-conventions.md` SC-4). An endpoint with no declared policy is
 a Critical finding, not a default-allow. Anonymous access is allowed only for
 the closed list of endpoints in SC-4.
 
-## AC-10 Exception-handler location
+## API-10 Exception-handler location
 
 Exception → HTTP mapping happens in the single `IExceptionHandler` per host
 (`architecture.md` AD-9). Controllers do not `try/catch` to build error

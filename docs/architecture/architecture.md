@@ -167,7 +167,7 @@ settings, "check access", report template edits. No port that calls Google
   no HTTP concepts.
 - Mapping: validation → 400, authn → 401, authz → 403, not found → 404,
   conflict → 409, read-only mode → 409, unmapped → 500.
-- Error bodies follow `api-conventions.md` AC-6. Stack traces, SQL, entity
+- Error bodies follow `api-conventions.md` API-6. Stack traces, SQL, entity
   names, file paths and secrets never appear in a response.
 
 ## AD-10 Configuration boundaries

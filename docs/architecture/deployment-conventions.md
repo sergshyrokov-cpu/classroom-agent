@@ -313,8 +313,8 @@ operating condition, not an incident (`trebovaniya.md` §8, decided in v16).
 - **`ClassroomAgent.Contracts` evolves additively**: new optional fields are
   allowed; removing a field, renaming it or changing its meaning is not. Both
   sides ignore unknown fields. A breaking change requires a new Control Plane
-  endpoint version and a window during which it serves both. `AC-1` governs the
-  public REST API, not this channel (AC-7) — this rule is the channel's own.
+  endpoint version and a window during which it serves both. `API-1` governs the
+  public REST API, not this channel (API-7) — this rule is the channel's own.
 - **An unparseable push breaks nothing**: the installation logs at `Error` and
   waits for the periodic check, which is the designed guarantee; the push is the
   optimization (NFR-014).
