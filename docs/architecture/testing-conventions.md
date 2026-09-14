@@ -75,7 +75,8 @@ Derived from `trebovaniya.md` sections 5 and 9, and from the workflow order in
   succeed in read-only mode — above all, an export still writes its audit row.
 - In read-only mode a test asserts that the substituted Google ports
   (`IClassroomReader`, `IMeetReportsReader`) receive no call — synchronization,
-  the Meet pull and "check access" included (AD-6, v39).
+  the Meet pull, "check access" and the startup access self-check included
+  (AD-6, v39, v54).
 - `AllowedAdmin` is asserted to be checked on **every** login, not only the
   first (SC-3) — the first-login-only mistake must fail a test. An Admin login
   while the substituted `IControlPlaneClient` does not answer is asserted to be

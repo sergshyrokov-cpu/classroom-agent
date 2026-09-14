@@ -91,17 +91,16 @@ stories:
     title: Configure WorkspaceConnection
     state: BACKLOG
     blocked_by: >
-      Depends on US-008 (a signed-in Admin) and US-002 (the Installation domain
-      the connection is checked against), and on trebovaniya.md section 7 item
-      18 — how the installation gets the Installation domain.
+      Depends on US-008 (a signed-in Admin) and US-005 (the Installation domain,
+      delivered by the legitimacy check and kept in LegitimacyState, that the
+      connection is checked against).
   - id: US-010
     epic: EPIC-6
     title: Connection instructions for the school super-admin
     state: BACKLOG
     blocked_by: >
-      Depends on US-008 (admin panel) and US-002 (the Installation's client ID),
-      and on trebovaniya.md section 7 item 18 — how the installation gets that
-      client ID, and whether the instructions open in read-only mode.
+      Depends on US-008 (admin panel) and US-005 (the Installation's client ID,
+      delivered by the legitimacy check and kept in LegitimacyState).
   - id: US-011
     epic: EPIC-6
     title: Check access diagnostic

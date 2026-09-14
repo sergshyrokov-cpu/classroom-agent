@@ -25,9 +25,9 @@ layout change is not acceptable. *(§2)*
 as Owner, has no access to a school's teaching data through the application (a
 person who also works at a school may be its Admin — BR-013): the service
 channel carries no teaching data and no statistics — only installation id,
-versions, status and compatibility state, and, at an Admin login, the email being
-checked with a yes/no answer. *(How the installation gets the `Installation`
-domain and client ID is open — `trebovaniya.md` §7 item 18.)* *(§3, §9, SC-12)*
+versions, status and compatibility state, the `Installation`'s domain and client
+ID in the legitimacy check response (v54), and, at an Admin login, the email being
+checked with a yes/no answer. *(§3, §9, SC-12)*
 
 **BR-006** The Owner's access to a school's database on the servers is
 operational only — migrations, decommissioning, erasure on the school's request,
@@ -112,7 +112,8 @@ the last successful sign-in, which the retention period of an account counts
 from (PC-11), creating the
 `AppUser` of an approved Admin at their first login, a Dean changing their
 own password, and a user choosing their UI language); the legitimacy-check state
-(last successful check time, last known status and last compatibility state); and the retention purge with
+(last successful check time, last known status, last compatibility state, and the
+`Installation`'s domain and client ID); and the retention purge with
 its audit event (BR-075). Any other write is refused; a new service write is
 permitted only by extending this list in `trebovaniya.md` §2. *(§2, §5, §9, v28)*
 
@@ -151,8 +152,8 @@ retried. It is recorded and surfaced to the Admin with a diagnosable message.
 
 **BR-035** Replacing a service-account key never involves the school's
 super-admin: delegation is authorized for the account's client ID, which a new
-key does not change. Until `trebovaniya.md` §7 item 17 is decided, an Admin of the
-school runs "check access" on the new key (DC-5). Only
+key does not change. The new key is confirmed by the installation's startup access
+self-check in its log, so the school takes no part (DC-5, v54). Only
 recreating the service account itself forces the school to authorize again; the
 Owner then updates the client ID on the `Installation`. *(§9, DC-5, v43)*
 
@@ -331,7 +332,8 @@ is re-applied before the school gets the installation back. *(§9, DC-13, v47)*
 
 **BR-078** School data leaves the installation only for two destinations: Google,
 read-only (plus Google OAuth for Admin sign-in, authentication only), and the
-Control Plane service channel, which carries no teaching data (BR-005). Where
-encrypted backups may be stored is open (`trebovaniya.md` §7 item 19). No AI, speech-recognition, analytics or other external service receives
+Control Plane service channel, which carries no teaching data (BR-005). Encrypted
+backups stay on the Owner's own infrastructure, never with an external storage
+provider (v54). No AI, speech-recognition, analytics or other external service receives
 school data in the first version; an AI assistant is future Epic 13. *(§6, §4 Epic 13,
 v52, `security-conventions.md` SC-13)*

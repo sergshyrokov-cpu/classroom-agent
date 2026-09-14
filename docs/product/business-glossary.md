@@ -61,7 +61,7 @@ terms from `trebovaniya.md` are given so the two documents can be read together.
 | **ReportTemplate** | шаблон отчёта | A configurable journal/report layout of one of two kinds by data scope: full (every synchronized field, with draft grades) or short, matching the school's paper academic journal (assigned grades only). The template itself sets the layout. |
 | **AllowedAdmin** | разрешённый Админ | A Control Plane record: an email permitted to be Admin of one `Installation`. Several per installation are allowed. |
 | **InstanceLicenseCheck** | проверка легитимности | The Control Plane's record of checks from one `Installation`: last call, versions reported, answer given. Holds no grace period. |
-| **LegitimacyState** | состояние легитимности | The installation's own record: last successful check, last known status, last compatibility state. Drives read-only mode and readiness; survives restarts. |
+| **LegitimacyState** | состояние легитимности | The installation's own record: last successful check, last known status, last compatibility state, the `Installation`'s domain and client ID. Drives read-only mode and readiness, the `WorkspaceConnection` domain check and the super-admin instructions; survives restarts. |
 | **AuditEvent** | событие аудита | An audit row, in both the installation and the Control Plane database: time, actor, action, target, outcome, request id — no personal data. Never updated; installation rows are purged after N years, Control Plane rows are kept (SC-11). |
 
 ## Reporting

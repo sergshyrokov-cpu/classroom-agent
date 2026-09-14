@@ -119,7 +119,7 @@ path that bypasses the check, or a service write not on that list, is a Critical
 finding.
 
 In read-only mode no call to Google is made at all — synchronization, the Meet
-pull and "check access" included — and "check access" also refuses with `409`
+pull, "check access" and the startup access self-check included — and "check access" also refuses with `409`
 (AD-6, AC-5, v39). A Google call in read-only mode is a Critical finding.
 
 ## SC-6 No database admin or diagnostic UI
@@ -148,8 +148,8 @@ pages are disabled outside local development.
 - **Keys are rotated every 90 days**, and a suspected leak is answered by deleting
   the key first and investigating second. Rotation needs no action from the
   school's super-admin, because delegation is bound to the client ID, not the
-  key; until `trebovaniya.md` §7 item 17 is decided, an Admin of the school runs
-  "check access" on the new key. The full
+  key; the new key is confirmed by the installation's startup access self-check
+  in its log (v54). The full
   procedure is `deployment-conventions.md` DC-5.
 
 ## SC-8 Google API access is read-only
@@ -265,10 +265,11 @@ hosts and therefore can reach.
 
 - `ClassroomAgent.Contracts` carries no teaching-data type. The legitimacy check
   and the status push carry the installation id, application and contract
-  versions, status and compatibility state (DC-12); the Admin login check carries
-  the installation id, the email being checked and a yes/no answer (SC-3) —
-  nothing else. *(How the installation gets the `Installation` domain and client
-  ID is open — `trebovaniya.md` §7 item 18.)*
+  versions, status and compatibility state (DC-12), and the legitimacy check
+  response also carries the `Installation`'s domain and service-account client
+  ID, kept in `LegitimacyState` (v54); the Admin login check carries the
+  installation id, the email being checked and a yes/no answer (SC-3) — nothing
+  else.
 - **No school statistics reach the Control Plane**, not even anonymous counts of
   courses or participants. Adding any is a separate decision, not an
   implementation detail.
@@ -308,9 +309,9 @@ places:
   (SC-2);
 - **the Control Plane service channel**, carrying only what SC-12 lists.
 
-Where the encrypted backups are stored (DC-13) — only on the Owner's
-infrastructure or also with an external storage provider — is open
-(`trebovaniya.md` §7 item 19).
+Encrypted backups (DC-13) stay on the Owner's own infrastructure and are never
+placed with an external storage provider, so they are not an outbound flow
+(`trebovaniya.md` §9, v54).
 
 Any other outbound flow of school data — an AI or speech-recognition service
 (future Epic 13), an analytics or telemetry service, an error tracker that

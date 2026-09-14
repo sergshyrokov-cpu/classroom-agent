@@ -90,9 +90,9 @@ Wire types for the Control Plane ↔ Data Plane channel only: the legitimacy
 check request/response, the status-change push payload, and the Admin login
 check request/response. No behaviour, no dependencies. Both hosts reference it
 so the contract cannot drift. It never carries teaching data or school
-statistics — only installation id, versions, status, compatibility state and the
-email checked at an Admin login (SC-12). How the installation gets the
-`Installation` domain and client ID is open (`trebovaniya.md` §7 item 18).
+statistics — only installation id, versions, status, compatibility state, the
+`Installation`'s domain and client ID (in the legitimacy check response, v54) and
+the email checked at an Admin login (SC-12).
 
 ### `ClassroomAgent.ControlPlane`
 

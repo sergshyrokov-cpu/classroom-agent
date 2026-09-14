@@ -118,17 +118,17 @@ the previous one — the dependency is real, not stylistic
 - **Planned rotation every 90 days** per school — conveniently all at once each
   quarter, together with the restore test (DC-13). Steps: create a new key → put
   it in the secret store under the **same reference** → restart the installation
-  outside teaching hours → an Admin of the school runs "check access" at the
-  Owner's request → delete the old key in Google Cloud → record it in the
-  operations journal (SC-12). The Admin runs the check because the Owner has no
-  account in the installation and "check access" is Admin-only (§2); this is an
-  interim rule until `trebovaniya.md` §7 item 17 is decided. No code and no
-  database change. If the
-  installation is in read-only mode, "check access" is unavailable (BR-026): keep
-  the old key until a successful check after the mode ends.
+  outside teaching hours → confirm in the installation log that the startup
+  access self-check succeeded → delete the old key in Google Cloud → record it in
+  the operations journal (SC-12). The school takes no part: the self-check runs
+  the same test calls as "check access" on every start and logs the result
+  (DC-10, `trebovaniya.md` Epic 6, v54). No code and no database change. If the
+  installation is in read-only mode, the self-check does not run (BR-026): after
+  the mode ends, restart the installation again outside teaching hours and keep
+  the old key until the self-check succeeds.
 - **Suspected leak:** (1) delete the key at once, before investigating —
-  access tokens already issued with it live at most an hour; (2) issue a new key
-  and have an Admin run "check access", as above; (3) review Google Cloud audit logs for what the key was used
+  access tokens already issued with it live at most an hour; (2) issue a new key,
+  restart the installation and confirm the startup self-check in the log; (3) review Google Cloud audit logs for what the key was used
   for; (4) tell the school without delay — it is the data controller and decides
   on further notification; (5) record all of it in the operations journal.
 - **Recreate the service account itself** only if the account, not just a key,
@@ -221,11 +221,9 @@ the previous one — the dependency is real, not stylistic
 
 ## DC-9 What is not decided yet
 
-Two operations questions are open: who checks a new service-account key after
-rotation (`trebovaniya.md` §7 item 17; until it is decided, an Admin of the
-school runs "check access", DC-5), and where encrypted backups are stored
-(§7 item 19, DC-13). Otherwise what remains is **verification at
-onboarding**, not a decision:
+Every policy and operations question from `trebovaniya.md` section 7 is decided
+(the last two, key checks after rotation and where backups live, in v54). What
+remains is **verification at onboarding**, not a decision:
 
 | To verify | Where it is tracked |
 |---|---|
@@ -248,11 +246,13 @@ without long-lived keys (DC-5).
   The console sink is for local development only.
 - Levels:
   - `Information` — application start and stop; synchronization start and finish
-    with counters; legitimacy check result changes.
+    with counters; legitimacy check result changes; a successful startup access
+    self-check (DC-5).
   - `Warning` — retried transient Google failures (`429`, `5xx`), an
     installation entering read-only mode (with the reason).
   - `Error` — permission failures (`403 unauthorized_client`, `access_denied`,
-    missing scope), unhandled exceptions, every unsuccessful legitimacy check.
+    missing scope), unhandled exceptions, every unsuccessful legitimacy check, a
+    failed startup access self-check.
   - `Debug` is disabled outside local development.
 - Every log line written inside a request carries the request identifier; every
   line written by a synchronization run carries that run's identifier, so one
@@ -300,7 +300,9 @@ operating condition, not an incident (`trebovaniya.md` §8, decided in v16).
   versioning, NFR-061) and its contract version. There is no separate
   version-polling mechanism.
 - **The Control Plane answers with a compatibility state**: `supported`,
-  `upgrade_recommended` or `upgrade_required`, alongside the legitimacy verdict.
+  `upgrade_recommended` or `upgrade_required`, alongside the legitimacy verdict
+  and the `Installation`'s domain and client ID, which the installation keeps in
+  `LegitimacyState` (SC-12, v54).
 - **`upgrade_required` counts as an unsuccessful check.** It does not switch the
   school off: the existing grace period applies, so the installation keeps
   working for 7 days and only then enters read-only (BR-025, DC-7). The Owner
@@ -335,9 +337,9 @@ most critical one: losing it sends every school to read-only after 7 days.
 - **Backups are kept 30 days**, rolling. Data purged by retention (PC-11) or
   erased on request (BR-076) therefore leaves the backups within 30 days.
 - **Backups live off the database server and are encrypted.** The encryption
-  key is held in the Owner's secret store, never next to the backups. Where they
-  live — only on the Owner's infrastructure or also with an external storage
-  provider — is open (`trebovaniya.md` §7 item 19, SC-13).
+  key is held in the Owner's secret store, never next to the backups. They live
+  only on the Owner's own infrastructure — never with an external storage
+  provider (`trebovaniya.md` §9, v54, SC-13).
 - **A restore test every quarter**: one database, rotating, is restored into an
   isolated environment and the application is started against it. An untested
   backup is not counted as a backup.

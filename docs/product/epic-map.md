@@ -54,12 +54,13 @@ and manage Dean accounts.
 
 - US-008 Admin sign-in via Google OAuth with AllowedAdmin verification
 - US-009 Configure WorkspaceConnection (domain, technical account as impersonation
-  user, BR-015) — blocked by `trebovaniya.md` §7 item 18 (how the installation
-  gets the `Installation` domain)
+  user, BR-015); the `Installation` domain comes from `LegitimacyState` (v54)
 - US-010 Connection instructions for the school's super-admin (client ID + scopes +
-  technical-account requirements, BR-015) — blocked by `trebovaniya.md` §7 item 18
-  (how the installation gets the client ID)
-- US-011 "Check access" diagnostic against Classroom and Reports APIs
+  technical-account requirements, BR-015); the client ID comes from
+  `LegitimacyState`, so the instructions open in read-only mode too (v54)
+- US-011 "Check access" diagnostic against Classroom and Reports APIs, plus the
+  same check run automatically at every start with the result logged, so the
+  Owner confirms a rotated key without the school (DC-5, v54)
 - US-012 Create and manage Dean accounts — blocked by `trebovaniya.md` §7 item 24
   (what a Dean's login is)
 - US-039 Choose UI language — Ukrainian or English, stored on the user's account,
