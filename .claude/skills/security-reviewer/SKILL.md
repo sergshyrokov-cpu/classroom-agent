@@ -2,12 +2,12 @@
 name: security-reviewer
 description: >
   Performs an independent security review of the active User Story
-  implementation in the Customer Portal ASP.NET Core application. Reviews
-  authentication, authorization, sensitive data handling, input validation,
-  API exposure, persistence, configuration, dependencies, logging, tests,
-  and security-relevant deviations from approved artifacts. Use after
-  Implementation Verification and before Reconciliation or Pull Request
-  creation.
+  implementation in the classroom-agent .NET solution. Reviews the change
+  against security-conventions.md (SC-1…SC-13): roles and authentication,
+  authorization, read-only mode, the service-account key, Google access,
+  sensitive data, validation, persistence, configuration, dependencies,
+  logging, audit and outbound data flows. Use at the SECURITY_REVIEW stage,
+  after IMPLEMENTATION and before HUMAN_PR_APPROVAL.
 ---
 
 # Purpose
@@ -21,13 +21,18 @@ security risks or violates approved security requirements.
 The Skill focuses on security properties rather than general functional
 correctness.
 
-The Skill does not assume that successful compilation, passing tests, or an
-approved Implementation Verification automatically imply secure behavior.
+The Skill does not assume that successful compilation or passing tests
+automatically imply secure behavior.
 
 The Skill produces a Security Review artifact.
 
 The Skill does not modify production code, rewrite tests, accept security
-risk, create a Pull Request, approve merge, or mark the Story complete.
+risk, commit, or mark the Story complete.
+
+This system stores personal data of school students, potentially minors, and
+reads a school's Google Workspace through a service account with domain-wide
+delegation. Treat every finding as production severity
+(`security-conventions.md`, "Why this is not a training-project policy").
 
 ---
 
@@ -42,8 +47,8 @@ Canonical workflow: `docs/workflow/stage-map.yaml`. Relevant slice:
 
 This is the lightweight workflow variant: SECURITY_REVIEW is the **only**
 automated reviewer, and it runs directly after IMPLEMENTATION. There is no
-IMPLEMENTATION_VERIFICATION stage ahead of it and no RECONCILIATION after it,
-so this review is the last automated check before a human commits.
+verification stage ahead of it and no reconciliation after it, so this review
+is the last automated check before a human commits.
 
 This Skill owns only the `SECURITY_REVIEW` stage. Loop-back
 (`stage-map.yaml`): `changes_required` → `IMPLEMENTATION`,
@@ -58,19 +63,19 @@ active User Story.
 
 Review areas include:
 
-- authentication;
-- authorization;
+- roles and authentication;
+- authorization and anonymous access;
+- read-only mode;
 - password and credential handling;
+- the service-account key and Google API access;
 - sensitive data exposure;
 - request validation;
-- output encoding and serialization;
 - exception and error handling;
 - persistence constraints;
 - configuration;
-- logging;
+- logging and audit;
+- the Control Plane channel and outbound data flows;
 - dependency changes;
-- database exposure;
-- insecure defaults;
 - security test coverage;
 - abuse and misuse scenarios;
 - deviations from approved security requirements.
@@ -88,13 +93,8 @@ requested.
 Use this Skill when:
 
 - an active User Story is configured;
-- implementation has completed;
-- an Implementation Report exists;
-- Implementation Verification has completed;
+- implementation has completed and an `implementation_report` exists;
 - security review is the current workflow stage;
-- the Story affects user input, credentials, authentication, authorization,
-  personal data, persistence, API exposure, configuration, or external
-  integrations;
 - a previous Security Review rejected the implementation and security fixes
   have been applied.
 
@@ -104,7 +104,6 @@ Typical requests:
 - Review US-001 implementation for security issues.
 - Check whether the implementation is safe to commit.
 - Re-run Security Review after security fixes.
-- Review authentication, password handling, and data exposure for this Story.
 
 ---
 
@@ -113,18 +112,15 @@ Typical requests:
 Do not use this Skill:
 
 - before implementation exists;
-- before Implementation Verification;
 - to define product security policy;
 - to invent missing security requirements;
 - to implement security fixes;
 - to generate the initial test suite;
 - to perform general code style review;
-- to perform final Reconciliation;
 - to accept security risk on behalf of a human;
-- to create, approve, or merge a Pull Request;
+- to commit, push or approve the Story;
 - to change workflow state automatically;
-- as a substitute for professional penetration testing or organization-specific
-  security assessment when such assessment is required.
+- as a substitute for professional penetration testing.
 
 ---
 
@@ -141,8 +137,8 @@ The Security Reviewer answers:
     Which security properties can be independently verified, and which risks
     remain?
 
-Do not trust the Implementation Report or Implementation Verification Report
-without checking the underlying implementation and available evidence.
+Do not trust the Implementation Report without checking the underlying
+implementation and available evidence.
 
 Do not treat the presence of ASP.NET Core authentication/authorization
 middleware as proof that the application is secure.
@@ -166,7 +162,6 @@ Determine:
 - current workflow stage;
 - current artifact versions;
 - implementation attempt;
-- verification attempt;
 - security review attempt;
 - expected next stage.
 
@@ -206,7 +201,7 @@ Read (registry keys, resolved via `artifact-paths.yaml`):
 - `story`
 - `specification`
 - `implementation_report`  ← its build/test evidence is the only such evidence
-  available in this variant; there is no `implementation_verification`
+  available in this variant
 - `api_design`, `openapi`, `database_design`, `entity_model`
   (or their `NOT_APPLICABLE` record)
 - `test_strategy`, `ac_test_matrix`  (+ executable tests under
@@ -220,25 +215,25 @@ Read (registry keys, resolved via `artifact-paths.yaml`):
 
 Read relevant project configuration: `ClassroomAgent.sln`, `*.csproj` files,
 `appsettings.json` / `appsettings.{Environment}.json`, EF Core migrations,
-security configuration, Git ignore rules, environment templates.
+security configuration, `.gitignore`.
 
 Read telemetry only when needed: `docs/hooks/tool-usage.jsonl`, `docs/evidence/`.
 
 Read architecture references:
 
+- docs/architecture/security-conventions.md  ← the checklist source
 - docs/architecture/architecture.md
 - docs/architecture/package-map.md
 - docs/architecture/api-conventions.md
 - docs/architecture/persistence-conventions.md
-- docs/architecture/security-conventions.md
+- docs/architecture/testing-conventions.md
+- docs/architecture/deployment-conventions.md
 
 Read product context:
 
 - docs/product/business-rules.md
 - docs/product/business-glossary.md
 - docs/product/non-functional-requirements.md
-
-(`open_decisions` is listed in Required Context above.)
 
 Do not load unrelated Story artifacts unless a concrete security dependency
 requires them.
@@ -247,18 +242,16 @@ requires them.
 
 # Artifact Authority
 
-Use the following authority order:
+Use the order of authority from `AGENTS.md`:
 
-1. Active User Story and Acceptance Criteria
-2. Approved Specification
-3. Resolved Story decisions
-4. Approved security requirements and conventions
+1. `trebovaniya.md`
+2. Active User Story and Acceptance Criteria
+3. Approved Specification
+4. Resolved Open Decisions
 5. Approved API and database designs
-6. Approved Implementation Plan
-7. Product-wide business rules and NFRs
-8. Implementation Verification evidence
-9. Current code and configuration
-10. Implementation Report claims
+
+Below them: `security-conventions.md` and the other conventions, then current
+code and configuration, then Implementation Report claims.
 
 Current code cannot redefine security requirements.
 
@@ -293,17 +286,16 @@ in this review's `inputs`; any `SUPERSEDED` mandatory input →
 
 ## Security Requirements
 
-The Specification or resolved Story decisions must define security-relevant
+The Specification or resolved Open Decisions must define security-relevant
 behavior when the Story handles:
 
-- passwords;
-- credentials;
+- passwords or credentials;
 - authentication;
-- authorization;
-- roles;
-- personal data;
+- authorization or roles;
 - account state;
-- tokens;
+- personal data of students or staff;
+- the service-account key or Google access;
+- the Control Plane channel;
 - external input;
 - externally accessible endpoints.
 
@@ -314,12 +306,9 @@ route to `IMPLEMENTATION`).
 
 ## Architecture Documentation
 
-The following file must exist and contain meaningful guidance:
-
-- docs/architecture/security-conventions.md
-
-Relevant architecture, API, and persistence convention files must also be
-available.
+`docs/architecture/security-conventions.md` must exist and contain meaningful
+guidance. Relevant architecture, API, and persistence convention files must
+also be available.
 
 An empty security conventions file is a blocker for approval.
 
@@ -336,22 +325,17 @@ Search required artifacts for unresolved markers:
 - unresolved
 - to be decided
 
-Security-sensitive Open Decisions are blockers.
+Security-sensitive Open Decisions are blockers when they affect the Story.
 
 Examples include:
 
-- password policy;
-- password hashing algorithm;
-- account activation behavior;
-- email uniqueness behavior;
-- authentication requirements;
-- authorization rules;
+- password or lockout policy (for example US-001 OD-001);
+- authorization rules or a permission-matrix cell not in `trebovaniya.md` §2;
+- an anonymous endpoint not on the SC-4 list;
+- a new Google scope or a new outbound data flow;
 - sensitive data retention;
-- database admin/diagnostic UI exposure;
-- database file location;
-- schema initialization strategy;
 - error response information;
-- audit logging requirements.
+- audit requirements for a new action.
 
 ## Working Tree
 
@@ -362,7 +346,7 @@ Identify:
 - modified files;
 - untracked files;
 - deleted files;
-- generated SQLite database files;
+- generated database files or `.xlsx` exports;
 - configuration files;
 - secret-like files;
 - unrelated changes.
@@ -378,19 +362,18 @@ Do not modify or remove existing changes.
 Security behavior must come from approved artifacts.
 
 Do not invent password complexity, account lockout, token expiration, or other
-business policies during review.
+policies during review.
 
 If a necessary security decision is missing, report it as a blocker.
 
 ## Deny by Default
 
-Externally accessible functionality should not become publicly available
-unless the approved requirements explicitly allow it.
+Nothing is anonymous unless it is on the SC-4 closed list.
 
 ## Least Privilege
 
-Accounts, endpoints, tools, database access, and configuration should receive
-only the permissions required by the current Story.
+Accounts, endpoints, Google scopes, database access, and configuration should
+receive only the permissions required by the current Story.
 
 ## Defense in Depth
 
@@ -399,25 +382,26 @@ Do not rely on a single control when multiple layers are appropriate.
 Examples:
 
 - request validation and database constraints;
-- authorization rules and service-level ownership checks;
+- authorization policy on the endpoint and the read-only check in the use case;
 - password hashing and response DTO isolation;
-- secret scanning and Git ignore rules.
+- secret store and Git ignore rules.
 
 ## No Sensitive Data Exposure
 
-Credentials and internal security data must not be exposed through:
+Credentials, the service-account key and personal data must not be exposed
+through:
 
-- API responses;
+- API responses or Razor views;
 - logs;
+- audit rows;
 - exceptions;
-- generated reports;
+- exports beyond what the Story approves;
 - telemetry;
-- database consoles;
 - committed files.
 
 ## Verify Runtime Effect
 
-The presence of an annotation or configuration class does not prove that the
+The presence of an attribute or configuration class does not prove that the
 control is active.
 
 Prefer runtime, test, configuration, or framework-wiring evidence.
@@ -436,7 +420,8 @@ is not sufficient evidence.
 
 For each externally observable capability, consider:
 
-- who can invoke it;
+- who can invoke it (Owner, Admin, Dean, anonymous, background service,
+  installation, Control Plane);
 - what input is accepted;
 - what data is read;
 - what data is written;
@@ -445,6 +430,7 @@ For each externally observable capability, consider:
 - what happens on invalid input;
 - what happens on repeated input;
 - what happens on unauthorized input;
+- what happens in read-only mode;
 - what information is revealed by errors;
 - what state can be changed;
 - what abuse is possible.
@@ -456,102 +442,28 @@ Story.
 
 ---
 
-# IDEA MCP Tooling Strategy
+# Tooling
 
-Prefer JetBrains Rider (IntelliJ-platform) MCP capabilities when available.
+Use the built-in file reading and search tools, Git, and the `dotnet` CLI.
+Text search gives no semantic certainty: when a conclusion depends on call
+paths (for example whether a use case can reach a Google port in read-only
+mode), confirm it with a test or the compiler, or record the limitation.
 
-## Project Inspection
+Commands (from the repository root, see `AGENTS.md`):
 
-Use when appropriate:
+    dotnet build ClassroomAgent.sln
+    dotnet test ClassroomAgent.sln
+    dotnet list package --vulnerable
 
-- mcp__idea__get_project_modules
-- mcp__idea__get_project_dependencies
-- mcp__idea__list_directory_tree
-- mcp__idea__git_status
-- mcp__idea__get_repositories
-
-## Semantic Analysis
-
-Use when appropriate:
-
-- mcp__idea__search_symbol
-- mcp__idea__get_symbol_info
-- mcp__idea__analyze_calls
-- mcp__idea__generate_psi_tree
-
-Use semantic evidence to inspect:
-
-- security configuration usage;
-- password hasher injection;
-- service call paths;
-- repository access paths;
-- endpoint-to-service relationships;
-- sensitive field propagation;
-- direct repository access;
-- authorization-related call paths.
-
-## Build and Diagnostics
-
-Use when appropriate:
-
-- mcp__idea__build_project
-- mcp__idea__get_file_problems
-- mcp__idea__lint_files
-- mcp__ide__getDiagnostics
-
-## Runtime and Test Execution
-
-Use when appropriate:
-
-- mcp__idea__get_run_configurations
-- mcp__idea__execute_run_configuration
-- mcp__idea__execute_terminal_command
-
-Do not start or expose the application on an externally accessible interface
-unless explicitly approved.
-
-## Database Inspection
-
-When an approved IDEA database connection already exists, use read-only
-capabilities when relevant:
-
-- mcp__idea__list_database_connections
-- mcp__idea__test_database_connection
-- mcp__idea__list_database_schemas
-- mcp__idea__list_schema_objects
-- mcp__idea__get_database_object_description
-- mcp__idea__introspect_schema
-- mcp__idea__execute_sql_query
-- mcp__idea__preview_table_data
-
-Do not create a database connection automatically.
-
-Do not execute destructive SQL.
-
-Do not retrieve or copy sensitive data unnecessarily.
-
----
-
-# Built-In Tool Fallback
-
-If the Rider MCP is unavailable:
-
-1. Use built-in file inspection and search.
-2. Use approved `dotnet` CLI commands.
-3. Inspect configuration and Git state through approved shell operations.
-4. Record unavailable semantic and runtime checks.
-5. Avoid unsupported security claims.
-
-Suggested project commands may include:
-
-    dotnet clean
-    dotnet test
-    dotnet build
-    dotnet format --verify-no-changes
-
-Use only commands supported by the repository.
+Integration tests need a running Docker daemon (Testcontainers, TC-2).
 
 Record actual results.
+
+Do not start or expose the application on an externally accessible interface.
+
+Do not connect to any database other than the Testcontainers instances the
+tests start. Do not execute destructive SQL. Do not retrieve or copy personal
+data.
 
 ---
 
@@ -566,7 +478,6 @@ Record:
 - Story ID;
 - current stage;
 - implementation attempt;
-- Implementation Verification version;
 - Security Review attempt;
 - relevant artifact versions.
 
@@ -580,14 +491,11 @@ Verify that the Security Review uses current versions of:
 
 - User Story;
 - Specification;
-- Specification Review;
+- Open Decisions;
 - API Design;
 - Database Design;
-- Impact Analysis;
-- Implementation Plan;
-- Plan Review;
-- Implementation Report;
-- Implementation Verification.
+- test artifacts;
+- Implementation Report.
 
 If a material input is stale or superseded:
 
@@ -600,23 +508,25 @@ If a material input is stale or superseded:
 
 ## Step 3: Determine Security-Relevant Scope
 
-From the Story, Specification, designs, Impact Analysis, Implementation Plan,
-and changed files, identify:
+From the Story, Specification, designs, the Implementation Report change set,
+and the actual changed files, identify:
 
-- exposed endpoints;
+- exposed endpoints and Razor pages, per host;
 - authentication changes;
-- authorization changes;
-- password or token handling;
-- personal data;
+- authorization changes and anonymous endpoints;
+- password or credential handling;
+- personal data read, stored, shown or exported;
+- write use cases (subject to read-only mode);
+- Google port usage;
+- Control Plane channel or `Contracts` changes;
 - persistence changes;
 - validation changes;
 - error handling changes;
 - configuration changes;
 - dependency changes;
-- logging changes;
-- external integrations.
+- logging and audit changes.
 
-Create a Story-specific security checklist.
+Select the SC-1…SC-13 items this scope touches (Step 6).
 
 ---
 
@@ -624,24 +534,24 @@ Create a Story-specific security checklist.
 
 List relevant assets:
 
-- user credentials;
-- password hashes;
-- email addresses;
-- account identifiers;
-- role information;
-- database content;
-- configuration;
-- session or authentication state.
+- personal data of students and staff (names, emails, grades, Meet
+  participation);
+- Dean and Owner password hashes;
+- the service-account key and the reference to it;
+- session cookies and the OAuth sign-in result;
+- `AllowedAdmin` entries and `Installation` state;
+- `WorkspaceConnection` (domain, impersonation user);
+- audit rows.
 
 Identify relevant trust boundaries:
 
-- external client to Controller;
-- Controller to Service;
-- Service to Repository;
-- application to database;
-- application to external system;
-- developer environment to repository;
-- MCP tool to external service.
+- browser to the installation host (public HTTPS);
+- the Owner's browser to the Control Plane (private network only);
+- Controller or Razor page to Application use case;
+- Application to ports: Google, Control Plane, secret store, report renderer;
+- installation to Control Plane service channel (private network, SC-9);
+- application to PostgreSQL;
+- developer environment to repository.
 
 Do not invent boundaries that are unrelated to the Story.
 
@@ -649,72 +559,69 @@ Do not invent boundaries that are unrelated to the Story.
 
 ## Step 5: Inspect Dependency Changes
 
-Compare current dependencies with the approved plan.
+Compare referenced packages before and after the change.
 
 Check for:
 
-- newly added dependencies;
-- unexpected transitive capabilities;
-- unnecessary security libraries;
-- obsolete or duplicate components;
-- development-only dependencies used at runtime;
-- test dependencies leaking into production configuration.
+- newly added packages without an approved Open Decision;
+- development-only packages used at runtime;
+- test packages leaking into production projects;
+- a new project reference that breaks `package-map.md` (for example
+  `Application → Infrastructure` or `ControlPlane → Domain`).
 
-New dependencies without explicit approval are findings.
-
-If dependency vulnerability tooling is unavailable, record that vulnerability
-database checking was not performed.
+Run `dotnet list package --vulnerable` when available; otherwise record that
+vulnerability database checking was not performed.
 
 Do not claim that dependencies are vulnerability-free without evidence.
 
 ---
 
-## Step 6: Review ASP.NET Core Security Configuration
+## Step 6: Project Security Checklist
 
-Inspect relevant `Security` namespace and authentication/authorization
-configuration.
+For every SC item the scope touches, verify the implementation against
+`security-conventions.md` and record evidence (file + symbol, test, or
+configuration). The file is the rule; the lines below are only what to look for.
 
-Verify:
+| SC | Verify |
+|---|---|
+| SC-1 Roles | No Teacher or Student in `AppRole`, a policy or a seed; no permission cell beyond `trebovaniya.md` §2. |
+| SC-2 Authentication | Identity hashes Dean and Owner passwords; an Admin has no local password, column or reset flow; a Dean login is a domain email; an Admin reset forces a change at next login; first-run setup requires the one-time code, printed to the console only. |
+| SC-3 AllowedAdmin | Checked by a Control Plane call on **every** Admin login; no local copy or cached answer; login refused when the Control Plane does not answer. |
+| SC-4 Authorization | Every endpoint and page declares a policy; a fallback policy requires an authenticated user; anonymous access only for the closed list. |
+| SC-5 Read-only mode | Every write use case refuses with `409` in Application; only BR-026 service writes run; no Google port is called. |
+| SC-6 No DB UI | No database browser, SQL console or diagnostic endpoint; developer exception page only in local development. |
+| SC-7 Key | The key is never in a database, a UI, a request or the repository; only its reference sits in configuration. |
+| SC-8 Google | Only read-only scopes from `trebovaniya.md` §6; impersonates the technical account; the Admin's OAuth session never calls a data API; permission failures are neither retried nor swallowed. |
+| SC-9 Channel | A `WorkspaceConnection` whose domain differs from the `Installation` domain is refused; the service channel and Control Plane are not publicly reachable. |
+| SC-10 Hygiene | No internals in responses; no personal data in logs; rejected payloads not logged. |
+| SC-11 Audit | Every audited action the Story introduces writes an `AuditEvent` with the required fields and no personal data; no update or delete path outside the retention purge. |
+| SC-12 Owner | `Contracts` carries no teaching data; `ControlPlane` does not reference `Domain`; no school statistics reach the Control Plane. |
+| SC-13 Outbound | School data goes only to Google and the Control Plane channel. |
 
-- endpoint access rules;
-- authentication requirements;
-- authorization requirements (fallback policy / `[Authorize]`);
-- default deny behavior where required;
-- explicit `[AllowAnonymous]` endpoints;
-- CSRF/antiforgery handling;
-- cookie session behavior when relevant;
-- password hasher configuration;
-- authentication/authorization middleware ordering;
-- development-only exceptions;
-- error handling.
-
-Flag broad rules such as unrestricted access when not explicitly approved.
-
-Do not assume an endpoint is protected because authentication middleware is
-present.
+A finding `security-conventions.md` labels Critical is Critical here.
 
 ---
 
-## Step 7: Review Password Handling
+## Step 7: Review ASP.NET Core Security Configuration
 
-When the Story handles passwords, verify:
+Inspect each host's `Security` namespace and authentication/authorization
+wiring.
 
-- plaintext password is accepted only in the request boundary;
-- plaintext password is not persisted;
-- plaintext password is not logged;
-- plaintext password is not returned;
-- password hash is not returned;
-- approved `IPasswordHasher` (BCrypt.Net-Next) is used;
-- hasher configuration is not a no-op;
-- password policy matches approved requirements;
-- invalid password is rejected before persistence;
-- DTO and entity serialization cannot expose credential fields;
-- test fixtures do not introduce committed real credentials.
+Verify:
 
-For Customer Portal, use the password mechanism defined by approved security
-conventions.
+- fallback policy and declared policies;
+- explicit `[AllowAnonymous]` endpoints match the SC-4 list;
+- CSRF/antiforgery handling — not yet defined in `security-conventions.md`;
+  record what the implementation does, and an Open Decision if a
+  state-changing form has no protection;
+- session cookie is `httpOnly` (SC-2);
+- Identity lockout where SC-4 requires it;
+- authentication/authorization middleware ordering;
+- development-only exceptions;
+- error handling (the single `IExceptionHandler`, AD-9).
 
-Do not invent a policy if the policy is absent.
+Do not assume an endpoint is protected because authentication middleware is
+present.
 
 ---
 
@@ -722,27 +629,18 @@ Do not invent a policy if the policy is absent.
 
 Inspect:
 
-- response DTOs;
+- response DTOs and Razor view models (AD-8);
 - entity serialization;
 - exception responses;
 - log statements;
-- debug output;
+- audit rows;
+- exports;
 - implementation reports;
 - telemetry;
-- database previews;
-- test output.
+- test fixtures (synthetic data only, TC-4).
 
-Verify that sensitive data is not exposed.
-
-Sensitive fields may include:
-
-- password;
-- password hash;
-- token;
-- authorization header;
-- database credential;
-- secret key;
-- internal security state.
+Verify that credentials, the service-account key and personal data are not
+exposed beyond what the Story approves.
 
 Flag broad serialization of persistence entities.
 
@@ -752,14 +650,15 @@ Flag broad serialization of persistence entities.
 
 Verify:
 
-- validation is defined for external input;
-- validation is active at runtime;
+- validation is defined for external input — request bodies, query and route
+  parameters, uploaded files, and data returned by Google APIs;
+- validation is active at runtime (`[ApiController]`, Data Annotations);
 - validation is server-side;
-- malformed input is rejected;
+- malformed input is rejected with `400` and `fieldErrors` (API-6);
 - length constraints are explicit;
 - required fields are enforced;
-- email validation follows approved behavior;
-- unexpected fields do not create unsafe state;
+- unexpected fields do not create unsafe state (for example a role or an
+  account state in a request body);
 - validation errors do not reveal internal details.
 
 Validation annotations alone are not sufficient if framework validation is not
@@ -767,44 +666,23 @@ activated.
 
 ---
 
-## Step 10: Review Account and Identity Rules
-
-When the Story creates or modifies user accounts, verify:
-
-- email uniqueness;
-- case-sensitivity behavior;
-- default role;
-- default account state;
-- disabled account behavior;
-- duplicate registration behavior;
-- ownership boundaries;
-- identifier exposure.
-
-Confirm that implementation follows approved business rules.
-
-Do not infer identity policy from framework defaults.
-
----
-
-## Step 11: Review Authorization
+## Step 10: Review Authorization
 
 For every affected operation, determine:
 
-- whether the operation is public;
-- whether authentication is required;
-- which role or principal may invoke it;
-- whether ownership checks are required;
-- whether administrative operations are isolated;
-- whether service methods can bypass endpoint authorization.
-
-Look for insecure direct object access risks where identifiers are accepted.
+- whether the operation is anonymous, and if so whether SC-4 lists it;
+- which role may invoke it, per `trebovaniya.md` §2;
+- whether a service method or background path can bypass endpoint
+  authorization;
+- whether identifiers accepted from the request allow access to data of another
+  installation, course or account.
 
 Authorization findings are Critical when unauthorized users can access or
 modify protected data.
 
 ---
 
-## Step 12: Review API Security
+## Step 11: Review API Security
 
 Compare implementation with approved API design.
 
@@ -815,7 +693,6 @@ Verify:
 - request fields are restricted;
 - response fields are minimized;
 - error responses do not leak internal information;
-- duplicate and validation behavior does not reveal unnecessary data;
 - authentication and authorization declarations match implementation;
 - content types are constrained when required.
 
@@ -823,111 +700,71 @@ Undocumented endpoints or response fields are findings.
 
 ---
 
-## Step 13: Review Error Handling
+## Step 12: Review Error Handling
 
-Verify that error responses do not expose:
-
-- stack traces;
-- SQL statements;
-- database paths;
-- entity internals;
-- package or class names;
-- password hashes;
-- tokens;
-- filesystem paths;
-- secret configuration.
+Verify that error responses do not expose anything SC-10 forbids: stack traces,
+SQL, entity or namespace names, file paths, connection strings,
+service-account identifiers, raw Google API errors.
 
 Check whether different error responses unintentionally reveal account
-existence when product requirements prohibit that behavior.
-
-Do not redefine the approved duplicate-email response during review.
+existence when the approved requirements prohibit that behavior.
 
 If account enumeration policy is not defined and materially relevant, create
 an Open Decision.
 
 ---
 
-## Step 14: Review Persistence Security
+## Step 13: Review Persistence and Configuration
 
-Compare implementation and schema evidence with approved DB design.
+Compare implementation and schema evidence with the approved database design
+and `persistence-conventions.md`.
 
 Verify:
 
-- password fields cannot contain plaintext by design and behavior;
+- no password, key or key reference is stored where PC-9 / SC-7 forbid it;
 - sensitive columns have appropriate length and nullability;
-- email uniqueness is enforced at the appropriate layer;
 - constraints are explicit;
-- database files are stored in the approved location;
-- generated SQLite files are excluded from Git;
-- database path/connection string is not exposed in responses or logs;
-- schema behavior is documented;
-- destructive schema recreation (`EnsureCreated`/`EnsureDeleted` against the
-  file database) is not enabled without approval.
-
-For the training repository, verify that SQLite is file-based when required.
-
-Do not accept an `EnsureCreated()`/`EnsureDeleted()` shortcut against the file
-database as a substitute for explicit EF Core migrations merely because the
-application starts successfully.
-
----
-
-## Step 15: Review Database Configuration
-
-Inspect all active configuration profiles.
-
-Verify:
-
-- no database admin/diagnostic UI is exposed, in any profile;
-- no such UI is exposed through broad authorization rules;
-- the connection string uses the approved file-based SQLite location;
-- credentials are not committed when they should be environment-specific;
-- generated database files are ignored by Git;
-- schema initialization behavior is explicit (EF Core Migrations only);
+- schema changes come only from EF Core migrations — no `EnsureCreated()` /
+  `EnsureDeleted()` (PC-2);
+- the Control Plane and an installation use separate databases (AD-1);
+- connection strings with passwords are not committed;
+- generated database files and `.xlsx` exports are ignored by Git;
 - development settings cannot accidentally become default runtime settings.
 
-Treat an externally reachable database admin/diagnostic UI as a Critical
-finding.
+---
+
+## Step 14: Review Logging, Audit and Telemetry
+
+Verify that application logs (DC-10) and audit rows (SC-11) contain no:
+
+- passwords or password hashes;
+- tokens or cookies;
+- the service-account key;
+- full request bodies;
+- names, emails or grades.
+
+Verify that every audited action the Story introduces is written and tested.
+
+Hook telemetry (`docs/hooks/tool-usage.jsonl`) must record metadata only and
+stay git-ignored (SC-10). If it stores full tool input or response, flag it.
 
 ---
 
-## Step 16: Review Logging and Telemetry
-
-Inspect application logs and configured observability hooks.
-
-Verify that logs and telemetry do not contain:
-
-- passwords;
-- password hashes;
-- authorization headers;
-- tokens;
-- full request bodies containing credentials;
-- database credentials;
-- unnecessary personal information.
-
-Tool usage logs should record metadata such as tool name, timestamp, status,
-input size, and response size rather than full sensitive payloads.
-
-If current PostToolUse telemetry stores full tool input or response, flag the
-risk and recommend redaction or metadata-only logging.
-
----
-
-## Step 17: Review Secrets and Repository Hygiene
+## Step 15: Review Secrets and Repository Hygiene
 
 Inspect relevant tracked and untracked files.
 
 Look for:
 
-- tokens;
-- authorization headers;
+- service-account keys, client secrets, tokens;
 - hardcoded passwords;
-- private keys;
+- connection strings with passwords;
 - `.env` files;
-- local database credentials;
-- generated SQLite database files;
-- copied MCP configuration containing secrets;
+- generated database files or `.xlsx` exports;
 - logs containing credentials.
+
+Never open, print or quote `google_credentials.json` or
+`dac-classroom-agent-*.json` (AGENTS.md); only confirm they remain git-ignored.
 
 Do not copy suspected secret values into the Security Review.
 
@@ -941,21 +778,21 @@ Potential live secrets are Critical findings and require human action.
 
 ---
 
-## Step 18: Review Security Tests
+## Step 16: Review Security Tests
 
-Verify that tests cover relevant security behavior.
+Verify that tests cover the security behavior `testing-conventions.md` requires,
+where the Story touches it:
 
-For registration, expected tests may include:
-
-- password is hashed before persistence;
-- plaintext password is not stored;
-- password hash is not included in response;
-- invalid password is rejected;
-- invalid email is rejected;
-- duplicate email behavior is enforced;
-- unapproved fields are not returned;
-- database admin/diagnostic UI is not publicly accessible when applicable;
-- endpoint access matches approved public or protected status.
+- each protected endpoint has an allowed-role and a forbidden-role test (TC-5);
+- a test enumerates endpoints and fails on unlisted anonymous access (TC-5);
+- read-only mode is tested in Application, and Google ports receive no call
+  (TC-5);
+- `AllowedAdmin` is asserted on every login, and a silent Control Plane refuses
+  the login (TC-5);
+- error bodies carry no internals (TC-3);
+- no test reaches a live Google API or Control Plane; fixtures are synthetic
+  (TC-4);
+- audited actions are proven by a test (SC-11).
 
 Assess test quality.
 
@@ -964,20 +801,17 @@ property.
 
 ---
 
-## Step 19: Review Abuse Cases
+## Step 17: Review Abuse Cases
 
-For the active Story, identify a small set of realistic misuse cases.
+For the active Story, identify a small set of realistic misuse cases, such as:
 
-For registration, consider:
-
-- repeated duplicate registrations;
-- malformed email input;
-- oversized input;
-- weak or invalid password;
-- unexpected request fields;
-- attempts to submit role or account-state fields;
-- response inspection for sensitive fields;
-- unauthorized access to administrative behavior.
+- calling a write endpoint directly while the installation is read-only;
+- an Admin whose `AllowedAdmin` entry was revoked signing in again;
+- submitting a role, account state or foreign identifier in a request body;
+- saving a `WorkspaceConnection` for a domain the Owner never approved;
+- repeated failed sign-ins;
+- oversized or malformed input;
+- inspecting responses, exports or logs for personal data.
 
 Only include abuse cases relevant to approved scope.
 
@@ -988,17 +822,15 @@ If materially needed but undefined, record an Open Decision or recommendation.
 
 ---
 
-## Step 20: Review Plan and Implementation Deviations
+## Step 18: Review Deviations
 
 Compare actual security behavior with:
 
 - Specification;
-- security conventions;
+- `security-conventions.md`;
 - API design;
 - DB design;
-- Implementation Plan;
-- Implementation Report;
-- Implementation Verification.
+- Implementation Report.
 
 Identify:
 
@@ -1011,7 +843,7 @@ Identify:
 
 ---
 
-## Step 21: Classify Findings
+## Step 19: Classify Findings
 
 Classify each finding as:
 
@@ -1019,29 +851,26 @@ Classify each finding as:
 
 Blocks progression.
 
-Examples:
+Every case `security-conventions.md` labels Critical, and in addition:
 
-- plaintext password persistence;
-- password or hash exposure;
-- exposed database admin/diagnostic UI without approval;
+- plaintext password persistence, or a password, hash or key exposed;
 - unrestricted access to protected functionality;
-- committed token or credential;
-- missing required authorization;
-- security-sensitive Open Decision implemented as an assumption;
-- active test bypass hiding insecure behavior.
+- committed key, token or credential;
+- a security-sensitive Open Decision implemented as an assumption;
+- an active test bypass hiding insecure behavior.
 
 ### Major
 
-Requires correction before Reconciliation or Pull Request.
+Requires correction before `HUMAN_PR_APPROVAL`.
 
 Examples:
 
-- missing security test;
+- a missing security test that `testing-conventions.md` requires;
+- an audited action with no `AuditEvent`;
+- personal data in a log line;
 - weak input validation;
-- undocumented security configuration;
 - incomplete error sanitization;
 - missing persistence constraint;
-- unnecessary sensitive logging;
 - unapproved dependency;
 - generated database files tracked by Git.
 
@@ -1065,13 +894,16 @@ Informational observations must not inflate severity.
 
 ---
 
-## Step 22: Assign Security Category
+## Step 20: Assign Security Category
 
 For every finding assign one category:
 
 - AUTHENTICATION;
 - AUTHORIZATION;
+- READ_ONLY_MODE;
 - PASSWORD_HANDLING;
+- SERVICE_ACCOUNT_KEY;
+- GOOGLE_ACCESS;
 - DATA_EXPOSURE;
 - INPUT_VALIDATION;
 - API_SECURITY;
@@ -1080,6 +912,8 @@ For every finding assign one category:
 - CONFIGURATION;
 - DEPENDENCY;
 - LOGGING;
+- AUDIT;
+- OUTBOUND_DATA;
 - SECRET_MANAGEMENT;
 - TEST_COVERAGE;
 - REPOSITORY_HYGIENE;
@@ -1087,7 +921,7 @@ For every finding assign one category:
 
 ---
 
-## Step 23: Determine Loop-Back Target
+## Step 21: Determine Loop-Back Target
 
 `stage-map.yaml` defines two loop-backs for `SECURITY_REVIEW`:
 
@@ -1098,21 +932,20 @@ For every finding assign one category:
 
 For any other upstream root cause (missing password policy / authorization
 requirement → `SPECIFICATION`; missing security test → `TEST_WRITING`; omitted
-security component → `DB_DESIGN`; missing security step → `SPECIFICATION`; a
-change since verification → `IMPLEMENTATION_VERIFICATION`), return
-`verdict: BLOCKED` and name the responsible stage in `blocking_issues` for the
-orchestrator / a human to route. Do not route every finding to `IMPLEMENTATION`.
+security component in the schema → `DB_DESIGN`), return `verdict: BLOCKED` and
+name the responsible stage in `blocking_issues` for the orchestrator / a human
+to route. Do not route every finding to `IMPLEMENTATION`.
 
 ---
 
-## Step 24: Create Security Review Report
+## Step 22: Create Security Review Report
 
 Create the `security_review` artifact at its registry path
 (`docs/reviews/security/{story_id}-security-review.md`), front matter per
 `docs/workflow/artifact-schema.md` (`artifact_type: security_review`).
 
 Do not modify source code, tests, or approved artifacts. Do not update workflow
-state. Do not create a commit or Pull Request.
+state. Do not commit.
 
 ---
 
@@ -1123,11 +956,10 @@ state. Do not create a commit or Pull Request.
 Shared block from `docs/workflow/artifact-schema.md`
 (`artifact_type: security_review`), plus: `critical_findings`,
 `major_findings`, `minor_findings`, `informational_findings`,
-`security_sensitive` (bool), `runtime_checks` (`FULL` / `PARTIAL` / `NONE`),
-`semantic_analysis` (`IDEA_MCP` / `TEXT_FALLBACK` / `UNAVAILABLE`).
+`security_sensitive` (bool), `runtime_checks` (`FULL` / `PARTIAL` / `NONE`).
 `created_at` / `updated_at` are runtime timestamps.
 
-Illustrative (dates are examples only):
+Illustrative:
 
     ---
     artifact_type: security_review
@@ -1140,9 +972,9 @@ Illustrative (dates are examples only):
     inputs:
       - path: docs/evidence/US-001-implementation-report.md
         version: 1
-      - path: docs/verification/US-001-implementation-verification.md
-        version: 1
       - path: docs/specifications/US-001-spec.md
+        version: 1
+      - path: docs/tests/US-001-ac-test-matrix.md
         version: 1
     supersedes: null
     critical_findings: 1
@@ -1151,7 +983,6 @@ Illustrative (dates are examples only):
     informational_findings: 0
     security_sensitive: true
     runtime_checks: PARTIAL
-    semantic_analysis: IDEA_MCP
     ---
 
 ## 1. Executive Summary
@@ -1172,7 +1003,7 @@ List exact artifact paths and versions.
 
 Describe:
 
-- exposed functionality;
+- exposed functionality per host;
 - protected assets;
 - trust boundaries;
 - affected security components.
@@ -1181,46 +1012,37 @@ Describe:
 
 Record:
 
-- .NET version;
-- ASP.NET Core version;
-- active profile;
-- database mode;
-- review tools;
-- semantic capabilities;
-- runtime capabilities;
+- .NET SDK version;
+- test environment (Docker / Testcontainers available or not);
+- commands run;
 - unavailable checks.
 
 Do not record secrets.
 
-## 5. Authentication Review
+## 5. Project Security Checklist
+
+The SC items the scope touches, each with status (`PASS` / `FINDING` /
+`NOT_VERIFIED`) and evidence. Items the Story does not touch are listed as
+`NOT_APPLICABLE` with one line of reason.
+
+## 6. Authentication and Authorization
 
 Record:
 
 - applicable requirements;
+- endpoint and page access per role;
+- anonymous endpoints against the SC-4 list;
 - implementation evidence;
 - tests;
 - findings.
 
-## 6. Authorization Review
+## 7. Credentials, Key and Google Access
 
 Record:
 
-- endpoint access;
-- role checks;
-- ownership checks;
-- service-level boundaries;
-- findings.
-
-## 7. Password and Credential Handling
-
-Record:
-
-- request handling;
-- policy enforcement;
-- hashing;
-- persistence;
-- serialization;
-- logging;
+- password handling;
+- service-account key handling;
+- scopes and impersonation;
 - tests;
 - findings.
 
@@ -1228,12 +1050,12 @@ Record:
 
 Record review results for:
 
-- responses;
-- entities;
+- responses and views;
 - DTOs;
 - logs;
+- audit rows;
 - exceptions;
-- reports;
+- exports;
 - telemetry.
 
 ## 9. Input Validation
@@ -1251,64 +1073,50 @@ Record:
 Record:
 
 - exposed endpoints;
-- approved public access;
+- approved anonymous access;
 - protected operations;
 - request and response restrictions;
 - error behavior;
 - findings.
 
-## 11. Persistence Security
+## 11. Persistence and Configuration
 
 Record:
 
 - sensitive fields;
 - schema constraints;
-- uniqueness;
-- nullability;
-- database location;
+- migrations;
+- database separation;
+- configuration profiles;
 - generated files;
 - findings.
 
-## 12. Database and Application Configuration
-
-Record:
-
-- SQLite mode (file vs. in-memory);
-- database admin/diagnostic UI state;
-- schema behavior;
-- profiles;
-- secrets;
-- unsafe defaults;
-- findings.
-
-## 13. Logging and Telemetry
+## 12. Logging, Audit and Telemetry
 
 Record:
 
 - sensitive logging review;
+- audit coverage;
 - hook telemetry review;
-- payload retention;
-- redaction controls;
 - findings.
 
-## 14. Dependencies
+## 13. Dependencies
 
 Record:
 
-- added dependencies;
+- added packages and project references;
 - approval status;
-- review limitations;
 - vulnerability scanning evidence when available;
 - findings.
 
 Do not state that dependencies are secure when vulnerability scanning was not
 performed.
 
-## 15. Security Test Coverage
+## 14. Security Test Coverage
 
 Map security requirements and abuse cases to tests.
 
-## 16. Abuse Case Review
+## 15. Abuse Case Review
 
 For every reviewed abuse case record:
 
@@ -1318,28 +1126,29 @@ For every reviewed abuse case record:
 - status;
 - finding.
 
-## 17. Repository Hygiene
+## 16. Repository Hygiene
 
 Record:
 
 - secret-like files;
-- generated SQLite files;
+- generated database files and exports;
 - ignored files;
 - unsafe local configuration;
 - findings.
 
-## 18. Deviations
+## 17. Deviations
 
 List deviations between approved security requirements and actual
 implementation.
 
-## 19. Findings
+## 18. Findings
 
 For each finding provide:
 
 - ID;
 - severity;
 - category;
+- SC reference when one applies;
 - affected file or artifact;
 - observed evidence;
 - expected security behavior;
@@ -1350,11 +1159,11 @@ For each finding provide:
 
 Do not include actual secret values.
 
-## 20. Positive Controls
+## 19. Positive Controls
 
 List security controls that were independently observed and verified.
 
-## 21. Open Decisions
+## 20. Open Decisions
 
 List unresolved security decisions.
 
@@ -1362,14 +1171,13 @@ If none exist, state:
 
     No blocking security Open Decisions were identified.
 
-## 22. Review Limitations
+## 21. Review Limitations
 
 List checks that were not performed and explain why.
 
-## 23. Verdict Rationale
+## 22. Verdict Rationale
 
-Explain the verdict (see Result Envelope). Do not use `PROCEED_TO_*` /
-`RETURN_TO_*` labels — they are retired. When a human security decision is
+Explain the verdict (see Result Envelope). When a human security decision is
 needed (risk acceptance, exception, suspected credential compromise), return
 `verdict: BLOCKED` and say so explicitly in `blocking_issues`.
 
@@ -1397,10 +1205,10 @@ result:
 ## PASS
 
 Use only when: `implementation_report` records a green build and green tests; no
-Critical or Major findings; required security tests pass; security-sensitive
-Acceptance Criteria are verified; no blocking security Open Decision. Minor /
-Informational findings go in `non_blocking_findings`. The orchestrator advances
-to `HUMAN_PR_APPROVAL`.
+Critical or Major findings; every touched SC item is `PASS`; required security
+tests pass; security-sensitive Acceptance Criteria are verified; no blocking
+security Open Decision. Minor / Informational findings go in
+`non_blocking_findings`. The orchestrator advances to `HUMAN_PR_APPROVAL`.
 
 ## CHANGES_REQUIRED
 
@@ -1430,20 +1238,19 @@ This Skill must not:
 - alter User Story or Acceptance Criteria;
 - alter Specification;
 - alter API or database design;
-- alter Implementation Plan;
 - resolve security decisions;
 - accept security risk;
-- expose secret values in reports;
+- expose secret values or personal data in reports;
+- open, print or quote live credential files;
 - execute destructive database operations;
-- create database connections without approval;
-- expose a database admin/diagnostic UI;
+- connect to a non-test database;
+- call a live Google API or Control Plane;
 - weaken ASP.NET Core security configuration;
-- disable CSRF/antiforgery or authentication without approved requirements;
+- disable CSRF/antiforgery or authentication;
 - disable or weaken security tests;
 - suppress security findings;
 - update workflow state automatically;
 - commit or push files;
-- create or merge a Pull Request;
 - mark the Story `COMPLETED`;
 - claim penetration testing was performed when the Skill only conducted code,
   configuration, and test review.
@@ -1465,10 +1272,12 @@ If a potential live secret is found:
 2. Record the affected file and secret category.
 3. Create a Critical finding.
 4. Recommend immediate human intervention.
-5. Recommend credential rotation without claiming it has occurred.
+5. Recommend key deletion and rotation per DC-5 without claiming it has
+   occurred.
 6. Stop actions that could further expose the value.
 
-If required runtime verification cannot be performed:
+If required runtime verification cannot be performed (for example Docker is
+unavailable):
 
 1. record the limitation;
 2. continue static and configuration review where safe;
@@ -1476,55 +1285,11 @@ If required runtime verification cannot be performed:
 4. return `verdict: BLOCKED` (cannot evaluate) or `CHANGES_REQUIRED` (a concrete
    correctable insecurity was still found) according to impact.
 
-If IDEA MCP is unavailable:
-
-1. use built-in tools and `dotnet` CLI evidence;
-2. record unavailable semantic checks;
-3. lower confidence where necessary;
-4. avoid unsupported conclusions.
-
 If vulnerability scanning is unavailable:
 
 1. inspect dependency changes;
 2. record that vulnerability database analysis was not performed;
-3. do not claim dependency safety;
-4. recommend an approved scanner when organizational policy requires one.
-
----
-
-# Observability
-
-Do not disable or bypass configured telemetry hooks.
-
-Use telemetry to understand which tools and external capabilities participated
-in implementation and verification.
-
-Review telemetry for potential sensitive payload capture.
-
-Preferred telemetry fields include:
-
-- timestamp;
-- session identifier;
-- tool name;
-- success or failure;
-- input byte size;
-- response byte size;
-- duration when available.
-
-Avoid logging full tool inputs and responses for security-sensitive tools.
-
-Never store:
-
-- passwords;
-- password hashes;
-- authorization tokens;
-- authorization headers;
-- database credentials;
-- secret environment values;
-- private keys;
-- full credential-bearing request payloads.
-
-If existing telemetry stores sensitive payloads, create a finding.
+3. do not claim dependency safety.
 
 ---
 
@@ -1535,11 +1300,11 @@ This Skill provides an engineering security review.
 It cannot:
 
 - accept business risk;
-- approve exceptions to organizational policy;
+- approve exceptions to `security-conventions.md`;
 - replace human code review;
 - replace specialized security assessment;
-- approve production deployment;
-- approve merge;
+- approve deployment;
+- approve the commit at `HUMAN_PR_APPROVAL`;
 - waive Critical or Major findings.
 
 Return `verdict: BLOCKED` with an explicit "human security decision required"
@@ -1549,8 +1314,7 @@ note in `blocking_issues` when:
 - risk acceptance is needed;
 - a sensitive architectural decision remains open;
 - available tooling cannot provide sufficient evidence;
-- suspected credential compromise exists;
-- organizational security policy requires specialist review.
+- suspected credential compromise exists.
 
 The orchestrator surfaces this to a human; it is not a stage transition the
 Skill routes.
@@ -1565,15 +1329,13 @@ Security Review is complete only when:
 - artifact versions are validated;
 - security-relevant scope is identified;
 - assets and trust boundaries are documented;
-- authentication is reviewed when relevant;
-- authorization is reviewed when relevant;
-- password handling is reviewed when relevant;
+- every touched SC item has a status and evidence;
+- authentication and authorization are reviewed when relevant;
 - sensitive data exposure is reviewed;
 - input validation is reviewed;
 - API security is reviewed;
-- persistence security is reviewed;
-- database and application configuration are reviewed;
-- logging and telemetry are reviewed;
+- persistence and configuration are reviewed;
+- logging, audit and telemetry are reviewed;
 - dependencies are reviewed within available capabilities;
 - security tests are evaluated;
 - relevant abuse cases are evaluated;
