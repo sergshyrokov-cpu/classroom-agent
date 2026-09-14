@@ -33,8 +33,10 @@ area as production severity.
 
 ## SC-2 Authentication
 
-- **Dean** — local login and password via ASP.NET Core Identity. The account is
-  created manually by an Admin, who may also disable, re-enable and reset its
+- **Dean** — local login and password via ASP.NET Core Identity. The login is the
+  Dean's work email in the school's domain; creating an account with any other
+  address or a free-form string is refused, and `AppUser` has no separate login
+  field (v55). The account is created manually by an Admin, who may also disable, re-enable and reset its
   password; the account is never deleted (BR-014). After an Admin reset the Dean
   must change the password at the next login, so only the Dean knows it. A reset
   flow that lets the Admin keep a working password is a finding. A Dean may also
@@ -216,8 +218,9 @@ when" — above all, who took personal data out of the system.
   `AllowedAdmin`); an Admin creating, disabling, re-enabling or resetting the
   password of a Dean account, and a Dean changing their own password; saving or
   changing `WorkspaceConnection`; running the "check access" diagnostic; starting
-  a synchronization by hand; linking a Meet meeting code to a course or
-  re-linking it; **exporting a journal or report**; each retention purge run
+  a synchronization by hand; every change to a Meet meeting code link — the
+  automatic link (actor `system`), picking a course for an unassigned code,
+  confirming and re-linking (v55); **exporting a journal or report**; each retention purge run
   (actor `system`, counts only — PC-11).
 - **Audited in the Control Plane:** Owner sign-in and refused sign-in, creating an `Installation`,
   changing its service-account client ID, suspending and resuming one, adding

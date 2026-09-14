@@ -151,7 +151,7 @@ and `Directory.Build.props` when the solution is created.
 **Non-normative summary** of `trebovaniya.md` sections 2, 5, 6 and 9 — a cheap
 cache so routine decisions do not require opening a ~140 KB Russian document.
 `trebovaniya.md` always wins; on conflict this section is the one that gets
-corrected. **Verified against v54.** When `trebovaniya.md` moves past that
+corrected. **Verified against v55.** When `trebovaniya.md` moves past that
 version, re-verify this section and update the marker.
 
 - **Roles in the first version are Owner, Admin and Dean only.** Teacher and

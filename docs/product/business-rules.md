@@ -60,7 +60,8 @@ may be one of a school's Admins only as that school's employee, through
 the Owner role itself still grants no access to teaching data. *(§2, §9, v50)*
 
 **BR-014** A Dean account is created manually by an Admin. Owner approval is not
-involved. An Admin may disable, re-enable and reset the password of a Dean
+involved. A Dean's login is their work email in the school's domain — a personal
+address or a free-form string is not accepted (v55). An Admin may disable, re-enable and reset the password of a Dean
 account, but never deletes it — like a revoked Admin's `AppUser`, it is kept for
 history and audit, and removed only by the retention purge N years after its last
 successful sign-in, or creation if never signed in (PC-11, v45). A Dean may change their own password, and must do so at the
@@ -264,25 +265,28 @@ guests and connections without an account are shown as "other participants".
 **BR-065** A meeting is linked to a course through its meeting code. The system
 links unambiguous matches itself and keeps them editable. A match is scored per
 candidate course as the share of distinct domain accounts across all meetings of
-the code (organizer excluded) who were students of the course on their meeting's
-date; the organizer must be a teacher of the course. *(Which organizer counts when
-a code's meetings have different organizers, and how an account that was a student
-on only some of its meeting dates counts, are open — `trebovaniya.md` §7 item 22,
-to decide before US-032.)* *(Whether an automatic link takes effect before a Dean
-or Admin confirms it, and whether the system's link and the confirmation are
-audited, are open — `trebovaniya.md` §7 item 23.)* It links when the best share
+the code (organizers excluded) who were students of the course on the date of at
+least one of their meetings of that code; at least one organizer of the code's
+meetings must be a teacher of the course on the date of their meeting (v55).
+An automatic link takes effect at once — its meetings count in the course's
+reports and last activity, and the code leaves the unassigned-meetings list;
+confirming it is optional and only marks that a person checked it, and the UI
+shows which links are automatic and which confirmed (v55). It links when the best share
 is at least 60% and the next is at least 30 points lower, is recomputed on each
 Meet ingestion while the code is unlinked, and an automatic link is never revised
 by the system (v41); ambiguous codes wait in
 the unassigned-meetings list, where a Dean or Admin picks the course. A code is
 linked once and covers every meeting of that course until the Classroom link is
-reset; re-linking moves all its meetings and is audited. Linking is blocked in
+reset; re-linking moves all its meetings. Every change to a link is audited: the
+automatic link (actor `system`), picking a course for an unassigned code,
+confirmation and re-linking (v55). Linking is blocked in
 read-only mode. Known limitation: a non-Classroom link reused in several courses
 is linked to one course only, and meetings of the other courses under that code
 count there. *(§2, §4 Epic 4, v41)*
 
-**BR-066** A meeting whose code is linked to no course is deleted N years after
-its own date, so it cannot outlive the retention period. *(§5)*
+**BR-066** Every meeting, whether its code is linked to a course or not, is
+deleted with its participations N years after its own date, so it cannot outlive
+the retention period — even in a course that is still kept. *(§5, v55)*
 
 ## Privacy
 
@@ -300,12 +304,18 @@ the course: a course and everything under it is deleted once its last activity i
 more than N years ago, whatever its state. Last activity is the latest of: a change
 to the course, any coursework or material created or changed, any submission
 changed, any Meet meeting linked to the course. Synchronization does not import a
-course whose last activity is already older than N (v36); whether it counts
-locally linked Meet meetings for that is open (`trebovaniya.md` §7 item 21). A person who has left a course's
+new course whose last activity in Google (course, coursework and materials,
+submissions) is already older than N; a course already imported is always updated
+until the purge deletes it (v36, v55). Known limitation: a course with no Classroom
+activity for N years but live Meet lessons is not imported by a new installation
+(v55). A person who has left a course's
 roster loses that membership, with their submissions and Meet participation in
 that course, once they were last seen more than N years ago — even while the
-course is active. What this leaves in a long-lived course is open
-(`trebovaniya.md` §7 item 20). A participant is deleted once no remaining
+course is active. Every Meet meeting, linked to a course or not, is deleted with
+all its participations once its own date is more than N years ago, even while the
+course is active (v55). Known limitation: submissions of people still on the roster
+are not deleted by their own date — they stay with the course's journal until the
+course or the person as a leaver expires (v55). A participant is deleted once no remaining
 membership references them. Deletion is physical. *(§5, PC-11, v31)*
 
 **BR-073** Every export of a journal or report is audited: who, when, which

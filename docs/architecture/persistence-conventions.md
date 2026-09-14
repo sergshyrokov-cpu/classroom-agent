@@ -170,11 +170,11 @@ resulting migration must both match them.
   (PC-3). Re-running a sync must not create duplicates
   (`trebovaniya.md` Epic 1).
 - Incremental behavior: already-known participants are not re-fetched.
-- A course whose last activity (PC-11) is already more than N years ago is not
-  imported, so the purge and the next sync never undo each other
-  (`trebovaniya.md` section 5, v36). Whether synchronization counts locally
-  linked Meet meetings toward that last activity is open (`trebovaniya.md` §7
-  item 21).
+- A course not yet in the database whose last activity in Google — the course,
+  its `CourseWork`, its `Submission` rows — is already more than N years ago is
+  not imported, so the purge and the next sync never undo each other. A course
+  already in the database is always updated until the purge deletes it
+  (`trebovaniya.md` section 5, v36, v55).
 - `SyncState` records status, counters, the last error and the last successful
   run. It is the only place sync progress is reported from — a use case never
   infers progress by counting rows.
@@ -201,10 +201,10 @@ the product enforces the period the school agreed with the Owner.
   and `last_seen_at` more than N years ago is deleted together with that person's
   `Submission` rows in the course and their `MeetParticipation` rows (matched by
   email, PC-12) in meetings reached through the course's meeting codes — even if
-  the course itself is still kept (`trebovaniya.md` section 5, v31). What this
-  rule leaves in a long-lived course — participations of domain accounts not on
-  the roster, organizer emails of old meetings, old data of people still on the
-  roster — is open (`trebovaniya.md` §7 item 20).
+  the course itself is still kept (`trebovaniya.md` section 5, v31).
+- **Known limitation (v55):** `Submission` rows of people still on the roster
+  have no expiry of their own; they stay until the course or the person as a
+  leaver expires.
 - A `ClassroomParticipant` is deleted when no remaining `CourseMembership`
   references it. Submissions of a student already off the roster at the first
   synchronization, who therefore has no membership, are open
@@ -228,11 +228,12 @@ the product enforces the period the school agreed with the Owner.
   never cascades or blocks. Audit rows naming the account may be newer than its
   last sign-in — refused sign-ins, an Admin disabling it — and stay until their
   own expiry (`trebovaniya.md` section 5, v45, v53).
-- A `MeetSession` whose meeting code is linked to no course is purged with its
-  participations when its own date is more than N years old (`trebovaniya.md`
-  section 5, v23).
+- **Every `MeetSession`** — whether its meeting code is linked to a course or
+  not — is purged with its `MeetParticipation` rows when its own date is more
+  than N years old, even if the course is still kept (`trebovaniya.md` section 5,
+  v23, v55).
 - Each purge run writes one `AuditEvent`: actor `system`, counts of courses,
-  leavers' memberships, unlinked Meet meetings, participants, accounts and audit
+  leavers' memberships, Meet meetings, participants, accounts and audit
   rows removed, no personal data.
 - **The purge runs in read-only mode** — one of the service writes permitted
   there (BR-026, BR-075). It runs in the Web host's background services, once a
@@ -263,8 +264,8 @@ Decided in `trebovaniya.md` sections 3 and 4 (v23).
   call is a new conference in Google and a new row here; nothing is merged.
 - Meet data is pulled regularly and kept locally beyond Google's 180-day window.
 - A `MeetSession` whose meeting code has no `MeetingCodeLink` is still stored and
-  appears in the unassigned-meetings list; it is purged N years after its own
-  date (PC-11).
+  appears in the unassigned-meetings list. Every `MeetSession`, linked or not,
+  is purged N years after its own date (PC-11, v55).
 
 ## PC-13 Coursework and submission data
 

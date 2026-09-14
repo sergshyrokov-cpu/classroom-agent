@@ -112,9 +112,7 @@ stories:
     title: Create and manage Dean accounts
     state: BACKLOG
     blocked_by: >
-      Depends on US-008 (a signed-in Admin), and on trebovaniya.md section 7
-      item 24 — whether a Dean's login is an email in the school domain, any
-      email or a free-form string.
+      Depends on US-008 (a signed-in Admin).
   - id: US-039
     epic: EPIC-6
     title: Choose UI language (Admin, Dean and Owner)
@@ -136,9 +134,7 @@ stories:
     title: Sync courses and rosters
     state: BACKLOG
     blocked_by: >
-      Depends on US-013, and on trebovaniya.md section 7 item 21 — which data
-      synchronization counts as a course's last activity when deciding whether
-      to import it.
+      Depends on US-013.
   - id: US-015
     epic: EPIC-1
     title: Sync coursework and submissions
@@ -192,17 +188,14 @@ stories:
     blocked_by: >
       Depends on US-013 (SyncState).
   # US-037 purges teaching data only; purging Meet data is added later by US-031
-  # (unlinked meetings) and US-032 (linked meetings), so this Story does not wait
-  # for EPIC-4.
+  # (meetings by their own date) and US-032 (code links and linked meetings), so
+  # this Story does not wait for EPIC-4.
   - id: US-037
     epic: EPIC-5
     title: Retention purge of expired courses, leavers, accounts and audit rows
     state: BACKLOG
     blocked_by: >
-      Depends on US-015 (the teaching data it purges), and on trebovaniya.md
-      section 7 items 20 — data of a long-lived course that the retention period
-      does not cover — and 21 — which data synchronization counts as a course's
-      last activity.
+      Depends on US-015 (the teaching data it purges).
 
   # --- EPIC-3: Gradebook and printable templates ---------------------------
   - id: US-025
@@ -251,8 +244,8 @@ stories:
     state: BACKLOG
     blocked_by: >
       Depends on US-013 (the Meet pull is part of synchronization) and US-037
-      (it extends the retention purge to unlinked meetings and Meet
-      participation, PC-11).
+      (it extends the retention purge to every Meet meeting and its
+      participations by the meeting's own date, PC-11).
   - id: US-032
     epic: EPIC-4
     title: Link meeting codes to courses
@@ -261,12 +254,7 @@ stories:
       Depends on US-014 (course rosters for matching), US-031 (meetings to
       link) and US-037 (it extends the retention purge to linked meetings:
       MeetingCodeLink rows and their meetings with the course, leavers'
-      participations, meetings in the course's last activity, PC-11), and on
-      trebovaniya.md section 7 items 20 — old meetings and participations of a
-      long-lived course —, 22 — how the share for automatic code linking is
-      computed (organizers, accounts that were students on only some dates) —
-      and 23 — whether an automatic link takes effect before confirmation, and
-      what of it is audited.
+      participations, meetings in the course's last activity, PC-11).
   - id: US-033
     epic: EPIC-4
     title: Built-in Meet reports for a course and period, with export
