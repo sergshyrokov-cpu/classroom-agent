@@ -166,7 +166,8 @@ class leaves no Meet data (BR-060).
   Dean or Admin (BR-065); extends the retention purge (US-037, US-031) to linked
   meetings: `MeetingCodeLink` rows and the meetings reached through them are
   deleted with the course, leavers' participations in them are deleted, and their
-  start counts toward the course's last activity (PC-11)- US-033 Built-in Meet reports for a course and period: summary, meeting list,
+  start counts toward the course's last activity (PC-11)
+- US-033 Built-in Meet reports for a course and period: summary, meeting list,
   student participation, one meeting in detail, and their export (BR-062…BR-064;
   `trebovaniya.md` §2 permission matrix) — blocked by `trebovaniya.md` §7 item 16
   (Meet counting rules)
