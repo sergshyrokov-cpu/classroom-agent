@@ -71,7 +71,7 @@ terms from `trebovaniya.md` are given so the two documents can be read together.
 | **Journal / gradebook** | журнал успеваемости | Student × (work or material, with date) × grade, over a chosen period. |
 | **Full form** | полный объём | Every synchronized field. |
 | **Short form** | сокращённый | The layout approximating the school's paper academic journal; assigned grades only. |
-| **Journal cell** | клетка журнала | One state per student × coursework: grade, turned in not graded, returned without a grade, not turned in, not due yet, or not turned in with no due date — plus an optional late mark. Ungraded work has no grade or "not graded" state (BR-056). |
+| **Journal cell** | клетка журнала | One state per student × coursework: grade, turned in not graded, returned without a grade, not turned in, not due yet, or not turned in with no due date — plus an optional late mark; "not assigned" when the student has no submission for it. An assigned grade wins over the state; a material's cell is empty. Ungraded work has no grade or "not graded" state (BR-056). |
 | **Draft grade** | черновик оценки | A grade the teacher set but has not returned; the student cannot see it. Shown only in the full journal, marked "draft". |
 | **Meet activity statistics** | статистика Meet-занятий | Factual reports on meetings held in Meet for one course and period, for the Dean's oversight of teaching. Not an attendance register: a lesson held in class leaves no Meet data, and that is not an absence. |
 | **Unassigned meetings** | непривязанные встречи | Meetings whose code is not linked to a course yet; a Dean or Admin picks the course. |

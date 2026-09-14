@@ -215,9 +215,7 @@ other accounts are conveniences, not subjects. *(§3)*
 **BR-055** A teacher can grade only a course participant with a personal domain
 account, so grades exist only for such participants. *(§4 Epic 3)*
 
-**BR-056** *(The reference moment for "due", the cell of a material and the
-precedence of states are open — `trebovaniya.md` §7 item 15, to decide before
-US-025.)* A journal cell shows exactly one state: a grade (raw points out of the
+**BR-056** A journal cell shows exactly one state: a grade (raw points out of the
 coursework's maximum); "turned in, not graded"; "returned without a grade"; "not
 turned in" once the due date has passed; "not due yet"; or "not turned in, no due
 date". Any of them may carry a "late" mark, taken from Google's `late` flag as
@@ -226,6 +224,15 @@ and `RECLAIMED_BY_STUDENT` count as not turned in. A cell of ungraded work never
 shows a grade: "turned in", "returned", "not turned in" once due, "not due yet",
 or "not turned in, no due date", with the same optional "late" mark — it has no
 "grade" or "not graded" state (BR-052). *(§4 Epic 3, v32)*
+How a cell is computed (v57): "due" is judged against the moment the journal is
+built, not the end of the period, because the stored submission state is current.
+An assigned grade wins over the work's state — the cell shows it even if the work
+was later reclaimed or turned in again; without one, the state decides. A draft
+grade never replaces the state: the full journal shows it next to the state, the
+short journal omits it. A material has its own column, marked as a material, with
+empty cells; a template may hide materials. Coursework with no submission for a
+student (assigned to some students only) shows "not assigned", printed as a dash —
+never "not turned in".
 
 **BR-057** The short journal shows only assigned grades; the full journal also
 shows a draft grade, marked "draft". *(§4 Epic 3)*

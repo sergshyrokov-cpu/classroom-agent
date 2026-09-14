@@ -137,8 +137,7 @@ Produce the journal the school actually uses, on paper and in Excel/Word.
 
 ### Candidate User Stories
 
-- US-025 Journal view: student × coursework × grade for a period — blocked by
-  `trebovaniya.md` §7 item 15 (journal cell rules)
+- US-025 Journal view: student × coursework × grade for a period (cell rules BR-056)
 - US-026 Distinguish graded work, ungraded work and materials (BR-052)
 - US-027 Configurable report templates (full and short forms)
 - US-028 Export a journal to Excel using a school template
