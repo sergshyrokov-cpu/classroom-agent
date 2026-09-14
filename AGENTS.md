@@ -276,9 +276,8 @@ Open Decisions are blockers. If an approved artifact contains `TODO`, `TBD`,
 not proceed. Instead: document the gap, request clarification, update the
 Specification. Clarification is always preferred over guessing.
 
-Before writing a Specification, check `trebovaniya.md` section 7
-("Открытые вопросы"). If the Story depends on something still listed there, that
-is an Open Decision — raise it, do not resolve it yourself.
+A Story that depends on an item still open in `trebovaniya.md` section 7
+("Открытые вопросы") has an Open Decision — raise it, do not resolve it yourself.
 
 Where an Open Decision is recorded:
 

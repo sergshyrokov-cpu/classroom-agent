@@ -5,6 +5,9 @@ dac-classroom-agent-*.json
 *.json.key
 OAuth client created.txt
 
+# Local review prompt for AGENTS.md (personal tooling, not project content)
+/Validator for your AGENTS.md
+
 # Data / cache (may contain personal data)
 classroom_cache.db
 *.xlsx
