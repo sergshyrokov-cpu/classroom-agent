@@ -1,10 +1,10 @@
 ---
 name: test-writer
 description: >
-   Designs and implements story-level automated tests from an approved User
-   Story, Acceptance Criteria, Specification, API design, database design,
-   Impact Analysis, and Implementation Plan. Use after Human Plan Approval
-   and before production implementation.
+   Designs and implements story-level automated tests for the classroom-agent
+   .NET solution from an approved User Story, Acceptance Criteria,
+   Specification, API design and database design. Use at the TEST_WRITING
+   stage, after HUMAN_SPEC_APPROVAL and before production implementation.
 ---
 
 # Test Writer
@@ -163,14 +163,21 @@ Use integration tests for:
 - serialization and deserialization;
 - application configuration relevant to the story.
 
-For the training project, integration tests may use an isolated in-memory
-SQLite database.
+Integration tests run against real PostgreSQL via Testcontainers, each test
+class with an isolated database; schema comes from the EF Core migrations. The
+EF Core InMemory provider and SQLite are forbidden, and a container that fails
+to start is an environment failure, never a reason to fall back (TC-2).
+
+No test calls a live Google API or Control Plane: the ports
+`IClassroomReader`, `IMeetReportsReader`, `IWorkspaceCredentialProvider` and
+`IControlPlaneClient` are substituted, and fixtures are synthetic (TC-4).
 
 Tests must not depend on data from previous test runs.
 
 ### Unit Tests
 
-Use unit tests for:
+Use unit tests for (use cases are the unit under test, ports are substituted —
+TC-1):
 
 - isolated business rules;
 - validation logic;
@@ -185,15 +192,22 @@ more maintainable evidence.
 
 ### Security Tests
 
-Create security-focused tests for applicable behavior, including:
+Create security-focused tests for applicable behavior, as
+`testing-conventions.md` requires:
 
-- unauthenticated access;
-- unauthorized access;
-- sensitive data exposure;
-- password handling;
-- invalid credentials;
-- role restrictions;
-- unsafe error responses.
+- an allowed-role and a forbidden-role test for each protected endpoint (TC-5);
+- a test that enumerates endpoints and fails on anonymous access not on the
+  SC-4 list (TC-5);
+- read-only mode tested in the Application layer, with substituted Google ports
+  receiving no call (TC-5);
+- `AllowedAdmin` asserted on every Admin login, and a login refused when the
+  substituted `IControlPlaneClient` does not answer (TC-5);
+- error bodies asserted against API-6 and free of internals (TC-3);
+- sensitive data exposure and password handling;
+- an `AuditEvent` for every audited action the Story introduces (SC-11).
+
+Also cover, where the Story touches them: translation keys in both Ukrainian and
+English, and date or period boundaries in a non-UTC school time zone (TC-8).
 
 ## Workflow
 
@@ -230,7 +244,8 @@ Create security-focused tests for applicable behavior, including:
 
 10. If a test cannot be defined because of missing requirements:
 
-   - create or update an Open Decision under `docs/decisions/`;
+   - record an Open Decision in the `open_decisions` artifact (registry key in
+     `artifact-paths.yaml`);
    - do not invent the expected behavior;
    - return `BLOCKED` if the missing decision affects mandatory coverage.
 
@@ -355,9 +370,9 @@ Prefer descriptive test names that express behavior and expected outcome.
 
 Examples of naming intent:
 
-- valid registration creates a customer account;
-- duplicate email returns conflict;
-- invalid email returns bad request;
+- Dean with a valid password signs in;
+- write use case in read-only mode returns conflict;
+- Dean is forbidden from managing accounts;
 - response does not expose password data.
 
 Do not rely on comments to explain unclear test names.
@@ -369,28 +384,29 @@ Each test must control its own initial state.
 Where database cleanup is required, use a deterministic mechanism supported by
 the test environment.
 
-Do not assume that the embedded database is empty unless the test setup
-guarantees it.
+Do not assume that a test database is empty unless the test setup guarantees
+it.
 
 Do not depend on test execution order.
 
-Do not use the file-backed development database as test data storage.
+Never use a development or production database, or real school data, as test
+data storage.
 
 Use an isolated test configuration.
 
-## Customer Portal Security Constraints
+## Credential Tests
 
-For user-registration functionality, tests must verify all approved security
-requirements.
+For functionality that handles Dean or Owner passwords, tests must verify all
+approved security requirements (`security-conventions.md` SC-2).
 
 When applicable, verify that:
 
 - plaintext passwords are never persisted;
-- password hashes are never returned by the API;
+- password hashes are never returned by the API or shown in a view;
 - password fields are never included in response DTOs;
 - invalid passwords are rejected according to the approved password policy;
-- unauthenticated access is permitted or denied exactly as specified;
-- unrelated protected endpoints remain protected;
+- an Admin has no local password path at all;
+- anonymous access is permitted or denied exactly as SC-4 lists;
 - error responses do not expose internal implementation details.
 
 Do not invent a password policy.
@@ -453,24 +469,14 @@ The test-generation report must include:
 - Open Decisions;
 - overall result.
 
-## Preferred Tools
+## Tools
 
-Use JetBrains Rider (IntelliJ-platform) MCP capabilities when available for:
-
-- reading project modules;
-- inspecting dependencies;
-- locating existing test patterns;
-- inspecting symbols;
-- building the project;
-- collecting diagnostics;
-- executing approved test run configurations.
-
-Use Claude Code built-in file tools for local artifact creation and targeted
-file updates.
+Use the built-in file tools for artifacts and test sources, and the `dotnet`
+CLI to build and run tests (`dotnet build ClassroomAgent.sln`,
+`dotnet test --filter FullyQualifiedName~<ClassName>`). Integration tests need
+a running Docker daemon (TC-2).
 
 Do not use GitHub MCP for local test implementation.
-
-Do not modify GitHub Issues or Pull Requests from this Skill.
 
 ## Constraints
 
@@ -486,7 +492,7 @@ Do not modify GitHub Issues or Pull Requests from this Skill.
 - Do not use sleeps or timing-dependent behavior unless explicitly required.
 - Do not hide unexpected failures.
 - Do not claim implementation completion.
-- Do not create or merge a Pull Request.
+- Do not commit, push or create a branch.
 
 ## Completion Criteria
 
@@ -540,7 +546,7 @@ result:
   within test writing; `loop_back_stage: TEST_WRITING` (key
   `changes_required_tests`).
 - `BLOCKED` — test creation cannot continue: unresolved blocking Open Decision,
-  a missing/stale required design or plan, conflicting approved artifacts,
+  a missing/stale required design, conflicting approved artifacts,
   missing test infrastructure, or an unapproved dependency requirement. When the
   block is caused by an invalid upstream artifact, set `loop_back_stage` using a
   key from `stage-map.yaml` `TEST_WRITING.loop_back`:

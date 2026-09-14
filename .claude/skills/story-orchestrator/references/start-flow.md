@@ -49,9 +49,9 @@ Initial stage is always `SPECIFICATION`. Never initialize at `IMPLEMENTATION`.
 
 ## Branch policy
 
-Follow `AGENTS.md` Git policy. If a Story branch is required but missing, report
-it; do not create or switch branches unless permissions and an explicit request
-allow it.
+Follow `AGENTS.md` Git policy: there are no Story branches — work happens on
+`master`. Do not create or switch branches. If the current branch is not
+`master`, report it as a blocker.
 
 ## Start Result
 

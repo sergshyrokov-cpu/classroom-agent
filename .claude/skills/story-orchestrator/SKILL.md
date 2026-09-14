@@ -281,8 +281,8 @@ approved implementation changes via the routed Skill; invoke configured Skills;
 collect diagnostics; write `workflow-state.yaml` and append `history.jsonl`.
 
 Auto Mode must NOT: pass a human gate; resolve an Open Decision; accept security
-risk; modify requirements; push to a protected branch; merge or create a Pull
-Request; delete historical artifacts; expose secrets;
+risk; modify requirements; commit, push or create a branch; delete historical
+artifacts; expose secrets;
 run destructive database operations.
 
 Deny-and-ask rules and hooks remain authoritative. The Orchestrator must not
@@ -294,12 +294,10 @@ disable, bypass, or reconfigure hooks.
 
 Use built-in tools for local file and repo operations.
 
-Use IDEA MCP for project structure, semantic analysis, diagnostics, build, test
-execution, and schema inspection when a stage needs them.
+Use the `dotnet` CLI for build and test execution when a stage needs them.
 
-Use GitHub MCP only for reading source Issues, backlog synchronization, and
-branch/PR metadata. Never use write-capable remote tools before the current
-stage allows it.
+Stories are authored in `docs/stories/`; there is no GitHub Issue backlog and no
+pull request. Do not use write-capable remote tools.
 
 ---
 
@@ -369,7 +367,7 @@ overwrite a `CHANGES_REQUIRED`/`BLOCKED` artifact; skip a mandatory stage
 silently; pass a human gate; invoke multiple stage Skills per call; recurse to
 completion; delete historical
 artifacts; bypass hooks; weaken permissions; expose secrets; stage or commit
-unrelated files; create or merge a Pull Request; mark a Story `COMPLETED`
+unrelated files; commit or push before `HUMAN_PR_APPROVAL`; mark a Story `COMPLETED`
 without recorded human confirmation; treat chat history as workflow state;
 embed its own stage list or artifact paths.
 
