@@ -320,15 +320,17 @@ A Story is Done only when all of the following hold:
    (`TreatWarningsAsErrors` makes this one check).
 2. `dotnet test` is green — no skipped, ignored or commented-out tests.
 3. Every Acceptance Criterion of the Story maps to at least one passing test.
-4. Every entity change ships with its EF Core migration in the same Story
+4. Every endpoint in the Story's approved OpenAPI contract has a test asserting
+   its status codes and error-body shape (TC-3).
+5. Every entity change ships with its EF Core migration in the same Story
    (PC-2); no `EnsureCreated()`, no schema change outside a migration.
-5. No `TODO`, `TBD`, `FIXME` or unresolved Open Decision remains in the changed
+6. No `TODO`, `TBD`, `FIXME` or unresolved Open Decision remains in the changed
    code or in the Story's artifacts.
-6. `SECURITY_REVIEW` returned PASS.
-7. No secret, generated database file or IDE-local config is staged for commit.
-8. Every changed file is in the active Story's scope and traced in the
+7. `SECURITY_REVIEW` returned PASS.
+8. No secret, generated database file or IDE-local config is staged for commit.
+9. Every changed file is in the active Story's scope and traced in the
    `implementation_report` (see Git Policy).
-9. `HUMAN_PR_APPROVAL` is recorded via `/so:approve` and the Story is committed
+10. `HUMAN_PR_APPROVAL` is recorded via `/so:approve` and the Story is committed
    to `master`. Until then the Story is finished, not Done — `stage-map.yaml`
    reaches `COMPLETED` only after the gate.
 
