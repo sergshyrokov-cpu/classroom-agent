@@ -326,7 +326,8 @@ A Story is Done only when all of the following hold:
    code or in the Story's artifacts.
 6. `SECURITY_REVIEW` returned PASS.
 7. No secret, generated database file or IDE-local config is staged for commit.
-8. Changed files stay within the active Story's scope.
+8. Every changed file is in the active Story's scope and traced in the
+   `implementation_report` (see Git Policy).
 9. `HUMAN_PR_APPROVAL` is recorded via `/so:approve` and the Story is committed
    to `master`. Until then the Story is finished, not Done — `stage-map.yaml`
    reaches `COMPLETED` only after the gate.
@@ -360,8 +361,13 @@ Non-negotiable:
 
 # Git Policy
 
-- Modify only files required by the active Story's approved artifacts;
-  touching anything else requires an Open Decision. No opportunistic
+- A change is in the active Story's scope only if it traces to at least one of:
+  a requirement or Acceptance Criterion in the approved Specification, an
+  element of the approved API or database design, a test in the
+  `ac_test_matrix`, or a supporting change the Story cannot work without
+  (project scaffolding, DI registration, migration, translation entries). The
+  `implementation_report` lists every changed file with its trace; a file with
+  no trace is out of scope and requires an Open Decision. No opportunistic
   refactoring.
 - **Commits go directly to `master`** — this is a solo project with no PR flow.
   Do not create feature branches.
