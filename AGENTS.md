@@ -156,8 +156,7 @@ version, re-verify this section and update the marker.
 
 - **Roles in the first version are Owner, Admin and Dean only.** Teacher and
   Student are deferred to Epic 7. Teachers and students exist as *synced data*
-  (`ClassroomParticipant`), never as accounts — nothing in v1 may grant them a
-  login or scope visibility by Classroom roster.
+  (`ClassroomParticipant`), never as accounts.
 - **Owner** lives in the Control Plane (separate service, separate database),
   never in an installation's `AppUser` table.
 - **Admin is a Google Workspace domain administrator of that school, never a
@@ -331,8 +330,8 @@ A Story is Done only when all of the following hold:
 9. Every changed file is in the active Story's scope and traced in the
    `implementation_report` (see Git Policy).
 10. `HUMAN_PR_APPROVAL` is recorded via `/so:approve` and the Story is committed
-   to `master`. Until then the Story is finished, not Done — `stage-map.yaml`
-   reaches `COMPLETED` only after the gate.
+    to `master`. Until then the Story is finished, not Done — `stage-map.yaml`
+    reaches `COMPLETED` only after the gate.
 
 ---
 
@@ -342,17 +341,12 @@ The full policy lives in
 `docs/architecture/security-conventions.md`, derived from `trebovaniya.md`
 sections 5, 6 and 9. Do not weaken it without a human-approved Open Decision.
 
-Non-negotiable:
+Non-negotiable — the Hard Stops above apply in full, and in addition:
 
 - The system stores personal data of students, potentially minors. Access is
   limited to the Admin and Dean roles.
-- Never commit secrets. The service-account key lives in
-  secrets/Key Vault/environment variables — never in the repository, never in
-  the installation database, never uploaded through the UI.
 - Dean passwords are stored only as a hash and never returned by any API.
   Admin has no local password at all.
-- All Google API scopes are read-only. The program never writes to Google
-  Workspace.
 - Deny by default: every endpoint and Razor page declares an authorization
   policy, and anonymous access is limited to the closed list in SC-4.
 - Every action listed in SC-11 writes an audit event with no personal data;
@@ -382,7 +376,6 @@ Non-negotiable:
   `git push`. A commit happens only after `HUMAN_PR_APPROVAL`, made by the human
   or by an agent acting on an explicit request from the human in that
   conversation.
-- Generated database files, IDE-local config, and secrets never enter a commit.
 
 ---
 
@@ -397,16 +390,11 @@ This section is about the **harness**. Application logging and health checks are
   It records tool names, artifact keys and stage identifiers — never file
   contents, student names or emails, tokens, or secret values.
 
-Telemetry is execution evidence, never requirement authority. Do not disable or
-bypass configured hooks.
+Telemetry is execution evidence, never requirement authority.
 
 ---
 
 # Agent Behavior
-
-When information is missing: do not assume, do not invent requirements,
-security rules, or business rules. Record an Open Decision, explain the
-uncertainty, and request clarification.
 
 `trebovaniya.md` is written in Russian and is the authority. Workflow artifacts
 and code comments are written in English.
