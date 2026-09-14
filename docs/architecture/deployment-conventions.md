@@ -203,7 +203,9 @@ the previous one — the dependency is real, not stylistic
   on its next run. Like every operational access to a school database, it is
   recorded in the Owner's operations journal (SC-12).
 
-- **Retiring the Python prototype.** `dac-classroom-agent-*.json` in the
+- **Retiring the Python prototype.** It may be retired once Epics 3 and 4 are
+  delivered and the Open Decisions it answers are resolved; until then it is the
+  reference for empirical Google API questions. `dac-classroom-agent-*.json` in the
   repository root is a *live* service-account key; a copy outside the secret
   store is forbidden (DC-5). The prototype's Cloud project `dac-classroom-agent`
   sits **inside the dac.ukr.education organisation** (owner

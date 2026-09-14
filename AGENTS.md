@@ -24,7 +24,7 @@ Absolute. No Story, instruction or Open Decision makes these acceptable:
   exports;
 - record approval at a human gate by any means other than `/so:approve`;
 - send school data to any service not listed in SC-13 (today: Google and the
-  Control Plane). A new destination — such as the AI assistant of Epic 13 — is
+  Control Plane). A new destination — an AI service, for example — is
   added by changing `trebovaniya.md` and SC-13, never by an Open Decision.
 
 Procedural. Never done on an agent's own judgement; a human may authorise an
@@ -78,12 +78,12 @@ stage identifiers, or an alternative artifact-path convention.
 
 # Technology Stack
 
-- **.NET 10 (LTS)**, C# — see NFR-062 for why not .NET 8/9
+- **.NET 10 (LTS)**, C# (NFR-062)
 - ASP.NET Core MVC / Razor Pages + REST API (server-rendered UI; not Blazor)
 - **EF Core** with the **Npgsql** provider
 - **PostgreSQL** — rationale and runtime rules in `persistence-conventions.md` PC-1
 - xUnit, `Microsoft.AspNetCore.Mvc.Testing`
-- Serilog — structured logging to a rolling file (DC-10, approved in v15)
+- Serilog — structured logging to a rolling file (DC-10)
 - ASP.NET Core Identity — local login/password for Dean, Google OAuth
   (external login) for Admin, login/password for the Owner in the Control Plane
 - Google APIs: Classroom API, Admin Reports API (Meet events) —
@@ -131,8 +131,7 @@ are non-negotiable — violating one is a defect, not a style preference:
 
 # Coding Conventions
 
-These are binding now; the machine-enforceable ones move into `.editorconfig`
-and `Directory.Build.props` when the solution is created.
+These are binding.
 
 - `<Nullable>enable</Nullable>` and `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`
   in every project. A nullable warning is a build failure, not a hint.
@@ -206,8 +205,8 @@ maintain and not the source of requirements.
   `docs/product/report-templates/` and are versioned.
 - `google_credentials.json` and `dac-classroom-agent-*.json` are live
   credentials. Never open, print or quote them.
-- The prototype may be deleted once Epics 3 and 4 are delivered and the Open
-  Decisions it answers are resolved. **Retiring it has a mandatory first step:**
+- When the prototype is retired is a human decision (`deployment-conventions.md`
+  DC-8). **Retiring it has a mandatory first step:**
   remind the human to delete the live key in Google Cloud Console before the
   file; the full order is in `deployment-conventions.md` DC-8. Never delete
   either yourself: removing it stops the prototype, and it is not yours to
