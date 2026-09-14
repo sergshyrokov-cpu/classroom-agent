@@ -111,21 +111,24 @@ the previous one — the dependency is real, not stylistic
   migration adding a key or reference column is a Critical finding (PC-9).
 - The school never receives a key. It receives a client ID, which is public.
 - **Delegation is bound to the service account's client ID, not to a key.**
-  Replacing a key is therefore entirely the Owner's work; the school's
-  super-admin does nothing. A service account can hold several keys at once, so
+  Replacing a key therefore needs nothing from the school's super-admin. A service account can hold several keys at once, so
   Google access is never interrupted: the old key stays valid until the new one
   is checked. The installation itself restarts for a few seconds, outside
   teaching hours (`trebovaniya.md` §9, v22, v44).
 - **Planned rotation every 90 days** per school — conveniently all at once each
   quarter, together with the restore test (DC-13). Steps: create a new key → put
   it in the secret store under the **same reference** → restart the installation
-  outside teaching hours → run "check access" → delete the old key in Google
-  Cloud → record it in the operations journal (SC-12). No code and no database change. If the
+  outside teaching hours → an Admin of the school runs "check access" at the
+  Owner's request → delete the old key in Google Cloud → record it in the
+  operations journal (SC-12). The Admin runs the check because the Owner has no
+  account in the installation and "check access" is Admin-only (§2); this is an
+  interim rule until `trebovaniya.md` §7 item 17 is decided. No code and no
+  database change. If the
   installation is in read-only mode, "check access" is unavailable (BR-026): keep
   the old key until a successful check after the mode ends.
 - **Suspected leak:** (1) delete the key at once, before investigating —
   access tokens already issued with it live at most an hour; (2) issue a new key
-  and check access; (3) review Google Cloud audit logs for what the key was used
+  and have an Admin run "check access", as above; (3) review Google Cloud audit logs for what the key was used
   for; (4) tell the school without delay — it is the data controller and decides
   on further notification; (5) record all of it in the operations journal.
 - **Recreate the service account itself** only if the account, not just a key,
@@ -147,6 +150,13 @@ the previous one — the dependency is real, not stylistic
 - The school-facing UI is an ordinary public HTTPS application. Do not confuse
   the two: exposing the service endpoint publicly removes the only protection
   the channel has.
+- **The installation's private endpoints listen on a separate port.** The
+  status-change push receiver, liveness and readiness are served by
+  `ClassroomAgent.Web` on a second Kestrel endpoint bound only to the private
+  network interface. The public port, and any reverse proxy in front of it, does
+  not serve those paths; a test asserts that on the public port they answer
+  `404`. Otherwise anyone on the internet could post a status to the push
+  receiver — lifting a suspension or forcing read-only mode.
 - **The whole Control Plane is private**, the Owner UI included: the Owner
   reaches it through a VPN or tunnel, never from the public internet
   (`trebovaniya.md` §9, v35).
@@ -177,9 +187,11 @@ the previous one — the dependency is real, not stylistic
 - Moving a school to another Workspace domain means creating a **new**
   `Installation` with a new database, not editing the domain of an existing one
   (BR-021, NFR-051). The previous installation's data stays in its own database.
-- **Decommissioning an installation:** the school receives a full export of its
-  journals, then the installation database is deleted together with its
-  backups, immediately (DC-13).
+- **Decommissioning an installation:** the school itself takes the full export
+  of its journals — a Dean or Admin through the ordinary export, which works in
+  read-only mode too; the Owner does not open the data for it. Only after the
+  school confirms it has the export is the installation database deleted,
+  together with its backups, immediately (DC-13; `trebovaniya.md` §5, v53).
 - **When a person leaves a school**, the Owner revokes their `AllowedAdmin`
   entry and the school disables their Google account. Nothing else is needed:
   data is read by the technical account (BR-015), and every school has at least
@@ -191,11 +203,29 @@ the previous one — the dependency is real, not stylistic
   on its next run. Like every operational access to a school database, it is
   recorded in the Owner's operations journal (SC-12).
 
+- **Retiring the Python prototype.** `dac-classroom-agent-*.json` in the
+  repository root is a *live* service-account key; a copy outside the secret
+  store is forbidden (DC-5). The prototype's Cloud project `dac-classroom-agent`
+  sits **inside the dac.ukr.education organisation** (owner
+  `admin@dac.ukr.education`; verified 2026-09-13) — it belongs to the school and
+  is not the Owner's project of the .NET system. The order, performed by a human:
+  1. delete the key of `classroom-agent@dac-classroom-agent.iam.gserviceaccount.com`
+     in Google Cloud Console, then the local key file;
+  2. DAC's super-admin removes the domain-wide delegation for client ID
+     `110112929094683821680` in Google Admin console (Security → API controls →
+     Domain-wide delegation) — this also drops `drive.file` and
+     `classroom.profile.photos`, which only the prototype requested
+     (`trebovaniya.md` section 6, v25);
+  3. decide whether the project `dac-classroom-agent` is deleted or left to the
+     school.
+
 ## DC-9 What is not decided yet
 
-Every policy and operations question from `trebovaniya.md` section 7 is now
-decided (v15–v22). What remains is **verification at onboarding**, not a
-decision:
+Two operations questions are open: who checks a new service-account key after
+rotation (`trebovaniya.md` §7 item 17; until it is decided, an Admin of the
+school runs "check access", DC-5), and where encrypted backups are stored
+(§7 item 19, DC-13). Otherwise what remains is **verification at
+onboarding**, not a decision:
 
 | To verify | Where it is tracked |
 |---|---|
@@ -305,7 +335,9 @@ most critical one: losing it sends every school to read-only after 7 days.
 - **Backups are kept 30 days**, rolling. Data purged by retention (PC-11) or
   erased on request (BR-076) therefore leaves the backups within 30 days.
 - **Backups live off the database server and are encrypted.** The encryption
-  key is held in the Owner's secret store, never next to the backups.
+  key is held in the Owner's secret store, never next to the backups. Where they
+  live — only on the Owner's infrastructure or also with an external storage
+  provider — is open (`trebovaniya.md` §7 item 19, SC-13).
 - **A restore test every quarter**: one database, rotating, is restored into an
   isolated environment and the application is started against it. An untested
   backup is not counted as a backup.

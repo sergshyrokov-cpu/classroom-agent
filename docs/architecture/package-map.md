@@ -43,7 +43,7 @@ about courses, journals or students — only `Installation`, `AllowedAdmin`,
 | Namespace | Contains | Notes |
 |---|---|---|
 | `Entities` | `AppUser`, `Course`, `ClassroomParticipant`, `CourseMembership`, `CourseWork`, `Submission`, `MeetSession`, `MeetParticipation`, `MeetingCodeLink`, `SyncState`, `WorkspaceConnection`, `ReportTemplate`, `AuditEvent`, `LegitimacyState` | persisted domain state; leaf |
-| `Enums` | `AppRole` (Admin, Dean), `CourseState`, `ClassroomRole` (on `CourseMembership`), `CourseWorkKind` (graded work, ungraded work, material — v32), `SyncStatus`, `SubmissionState`, `MeetingCodeLinkStatus` | |
+| `Enums` | `AppRole` (Admin, Dean), `CourseState`, `ClassroomRole` (on `CourseMembership`), `CourseWorkKind` (graded work, ungraded work, material — v32; computed from the Classroom resource and maximum points, never stored, PC-3), `SyncStatus`, `SubmissionState`, `MeetingCodeLinkStatus` | |
 | `Rules` | invariants that hold regardless of use case | no I/O |
 
 `AppRole` has exactly two members in the first version. Teacher and Student are
@@ -91,7 +91,8 @@ check request/response, the status-change push payload, and the Admin login
 check request/response. No behaviour, no dependencies. Both hosts reference it
 so the contract cannot drift. It never carries teaching data or school
 statistics — only installation id, versions, status, compatibility state and the
-email checked at an Admin login (SC-12).
+email checked at an Admin login (SC-12). How the installation gets the
+`Installation` domain and client ID is open (`trebovaniya.md` §7 item 18).
 
 ### `ClassroomAgent.ControlPlane`
 

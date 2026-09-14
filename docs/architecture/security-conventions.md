@@ -95,9 +95,9 @@ Admin's account (BR-015, SC-8).
   |---|---|---|
   | Dean sign-in page | installation | Identity lockout after failed attempts |
   | Google OAuth start and callback | installation | Google OAuth, then the `AllowedAdmin` check (SC-3) |
-  | Status-change push receiver | installation | private network (SC-9) |
-  | Liveness and readiness | installation | private network (DC-11) |
-  | Owner sign-in | Control Plane | private network, Identity lockout |
+  | Status-change push receiver | installation | private network, separate port (SC-9, DC-6) |
+  | Liveness and readiness | installation | private network, separate port (DC-6, DC-11) |
+  | Owner sign-in | Control Plane | private network; lockout policy open (US-001 OD-001) |
   | First-run setup | Control Plane | private network and the one-time setup code (SC-2) |
   | Legitimacy check and Admin login check | Control Plane | private network (SC-9) |
 
@@ -117,6 +117,10 @@ every write use case refuses with `409` (`architecture.md` AD-6,
 to work, and only the closed list of service writes in BR-026 still runs. A write
 path that bypasses the check, or a service write not on that list, is a Critical
 finding.
+
+In read-only mode no call to Google is made at all — synchronization, the Meet
+pull and "check access" included — and "check access" also refuses with `409`
+(AD-6, AC-5, v39). A Google call in read-only mode is a Critical finding.
 
 ## SC-6 No database admin or diagnostic UI
 
@@ -143,7 +147,9 @@ pages are disabled outside local development.
   must stay so.
 - **Keys are rotated every 90 days**, and a suspected leak is answered by deleting
   the key first and investigating second. Rotation needs no action from the
-  school, because delegation is bound to the client ID, not the key. The full
+  school's super-admin, because delegation is bound to the client ID, not the
+  key; until `trebovaniya.md` §7 item 17 is decided, an Admin of the school runs
+  "check access" on the new key. The full
   procedure is `deployment-conventions.md` DC-5.
 
 ## SC-8 Google API access is read-only
@@ -213,7 +219,7 @@ when" — above all, who took personal data out of the system.
   a synchronization by hand; linking a Meet meeting code to a course or
   re-linking it; **exporting a journal or report**; each retention purge run
   (actor `system`, counts only — PC-11).
-- **Audited in the Control Plane:** Owner sign-in, creating an `Installation`,
+- **Audited in the Control Plane:** Owner sign-in and refused sign-in, creating an `Installation`,
   changing its service-account client ID, suspending and resuming one, adding
   and revoking an `AllowedAdmin`.
 - **A row carries:** UTC timestamp, actor (internal account id and role —
@@ -242,8 +248,9 @@ when" — above all, who took personal data out of the system.
   the installation's retention period N counted from each row's own timestamp —
   not together with the course they mention, so deleting a course never erases
   the trace of who exported its journal (PC-11). **Control Plane audit rows are
-  kept indefinitely**: they record only the Owner's own actions and internal
-  ids, with no third-party personal data (v45).
+  kept indefinitely**: they record only the Owner's own actions, sign-in
+  attempts to the Control Plane without the login typed, and internal ids, with
+  no third-party personal data (v45, v53).
 - The table and its writing path are created by the first Story that introduces
   an audited action; every later Story that introduces one writes its event and
   proves it with a test.
@@ -260,7 +267,8 @@ hosts and therefore can reach.
   and the status push carry the installation id, application and contract
   versions, status and compatibility state (DC-12); the Admin login check carries
   the installation id, the email being checked and a yes/no answer (SC-3) —
-  nothing else.
+  nothing else. *(How the installation gets the `Installation` domain and client
+  ID is open — `trebovaniya.md` §7 item 18.)*
 - **No school statistics reach the Control Plane**, not even anonymous counts of
   courses or participants. Adding any is a separate decision, not an
   implementation detail.
@@ -295,8 +303,14 @@ hosts and therefore can reach.
 Decided in `trebovaniya.md` section 6 (v52). The system sends data to exactly two
 places:
 
-- **Google**, read-only, through the service account (SC-8);
+- **Google**, read-only, through the service account (SC-8) — and Google OAuth
+  for Admin sign-in, which authenticates the human and carries no teaching data
+  (SC-2);
 - **the Control Plane service channel**, carrying only what SC-12 lists.
+
+Where the encrypted backups are stored (DC-13) — only on the Owner's
+infrastructure or also with an external storage provider — is open
+(`trebovaniya.md` §7 item 19).
 
 Any other outbound flow of school data — an AI or speech-recognition service
 (future Epic 13), an analytics or telemetry service, an error tracker that

@@ -22,7 +22,10 @@ Absolute. No Story, instruction or Open Decision makes these acceptable:
   (v1 roles are Owner, Admin, Dean);
 - read student data out of `classroom_cache.db` or the generated `.xlsx`
   exports;
-- record approval at a human gate by any means other than `/so:approve`.
+- record approval at a human gate by any means other than `/so:approve`;
+- send school data to any service not listed in SC-13 (today: Google and the
+  Control Plane). A new destination — such as the AI assistant of Epic 13 — is
+  added by changing `trebovaniya.md` and SC-13, never by an Open Decision.
 
 Procedural. Never done on an agent's own judgement; a human may authorise an
 exception by recording it as a resolved Open Decision:
@@ -32,9 +35,7 @@ exception by recording it as a resolved Open Decision:
 - start implementation without an approved Specification, or invent an endpoint,
   schema, security rule or business rule that no artifact defines;
 - write workflow state from a stage Skill, or disable a hook;
-- edit the Python prototype;
-- send school data to any service other than Google and the Control Plane — no
-  AI, speech-recognition, analytics, telemetry or error-tracking service (SC-13).
+- edit the Python prototype.
 
 ---
 
@@ -150,7 +151,7 @@ and `Directory.Build.props` when the solution is created.
 **Non-normative summary** of `trebovaniya.md` sections 2, 5, 6 and 9 — a cheap
 cache so routine decisions do not require opening a ~140 KB Russian document.
 `trebovaniya.md` always wins; on conflict this section is the one that gets
-corrected. **Verified against v52.** When `trebovaniya.md` moves past that
+corrected. **Verified against v53.** When `trebovaniya.md` moves past that
 version, re-verify this section and update the marker.
 
 - **Roles in the first version are Owner, Admin and Dean only.** Teacher and
@@ -176,8 +177,9 @@ version, re-verify this section and update the marker.
   including synchronization and Meet code linking. Only the closed list of
   service writes in BR-026 still runs — read it there, it is not restated here.
 - **The UI is Ukrainian and English — installation and Control Plane alike**
-  (NFR-073). Ukrainian is the default; each user's choice is stored on their
-  account. No user-visible string is hard-coded: screens, error messages, the
+  (NFR-073). The school's default language comes from installation
+  configuration (Ukrainian if unset); the Control Plane defaults to Ukrainian.
+  Each user's choice is stored on their account. No user-visible string is hard-coded: screens, error messages, the
   super-admin instructions and the labels written into exports come from
   translation files (`Application.Localization`, `ControlPlane.Localization`).
   Data from Google and text a Dean wrote into a template are never translated.
@@ -207,24 +209,10 @@ maintain and not the source of requirements.
   credentials. Never open, print or quote them.
 - The prototype may be deleted once Epics 3 and 4 are delivered and the Open
   Decisions it answers are resolved. **Retiring it has a mandatory first step:**
-  `dac-classroom-agent-*.json` is a *live* service-account key. Remind the human
-  to delete that key in Google Cloud Console first, and only then the file — a
-  key copy outside the secret store is forbidden (DC-5). Never delete either
-  yourself: removing it stops the prototype, and it is not yours to remove.
-  The prototype's Cloud project `dac-classroom-agent` sits **inside the
-  dac.ukr.education organisation** (owner `admin@dac.ukr.education`; verified
-  2026-09-13) — it belongs to the school, not to the Owner, and is not the
-  Owner's project of the .NET system. Remind the human of the full retirement
-  order:
-  1. delete the key of `classroom-agent@dac-classroom-agent.iam.gserviceaccount.com`
-     in Google Cloud Console, then the local key file;
-  2. DAC's super-admin removes the domain-wide delegation for client ID
-     `110112929094683821680` in Google Admin console (Security → API controls →
-     Domain-wide delegation) — this also drops `drive.file` and
-     `classroom.profile.photos`, which only the prototype requested
-     (`trebovaniya.md` section 6, v25);
-  3. decide whether the project `dac-classroom-agent` is deleted or left to the
-     school.
+  remind the human to delete the live key in Google Cloud Console before the
+  file; the full order is in `deployment-conventions.md` DC-8. Never delete
+  either yourself: removing it stops the prototype, and it is not yours to
+  remove.
 
 ---
 
@@ -351,15 +339,11 @@ Non-negotiable:
   Admin has no local password at all.
 - All Google API scopes are read-only. The program never writes to Google
   Workspace.
-- All external input is validated before it reaches business logic: request
+- All external input is validated before it reaches business logic — request
   bodies, query and route parameters, uploaded files, and data returned by
-  Google APIs. Shape rules (required, length, format, range) are declared for
-  the request types in `Application/Models/Requests`; the controller only turns
-  a failed check into `400` with the `fieldErrors` body of AC-6. Rules that
-  need domain state — "does this Dean belong to this installation?" — are
-  enforced in the Application use case, never in the controller and never in a
-  Domain entity's constructor. The rejected payload is never written to a log
-  (SC-10).
+  Google APIs. The mechanism is `trebovaniya.md` section 8 (DataAnnotations) and
+  `package-map.md` (`Application/Models/Requests`, `Validation`); the rejected
+  payload is never written to a log (SC-10).
 
 ---
 

@@ -83,7 +83,8 @@ readers are the Dean and the Admin.
   limited to Admin and Dean, and data is kept only for the retention period each
   school agrees with the Owner.
 - Google's domain-wide delegation is authorized by the school's own super-admin.
-  The Owner never has access to a school's Google console, and never needs it.
+  The Owner, as Owner, has no access to a school's Google console and never
+  needs it.
 - Staff work in Ukrainian or English, whichever each person chooses.
 
 ## Source of truth

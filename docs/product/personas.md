@@ -83,7 +83,9 @@ no statistics about them. As the host they can reach a school's database, but
 only for operational work agreed with the school — each access written into
 their operations journal.
 
-**Has no access to** a school's Google Admin console, and does not need it: the
+**Has no access, as Owner, to** a school's Google Admin console, and does not
+need it (a person who is also a school's Admin has it as that school's
+employee): the
 school's own super-admin authorizes the service account once, using a client ID
 and scope list the Owner supplies, and creates the technical account.
 

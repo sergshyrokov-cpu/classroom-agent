@@ -93,7 +93,8 @@ their own timestamp, Control Plane rows are kept indefinitely. *(§5,
 **NFR-026** The Control Plane has no path to a school's teaching data and
 receives no school statistics; the service channel carries installation id,
 versions, status and compatibility state, plus the email checked at an Admin
-login. The whole Control Plane, the Owner UI included, is reachable only from
+login (how the installation gets the `Installation` domain and client ID is open —
+`trebovaniya.md` §7 item 18). The whole Control Plane, the Owner UI included, is reachable only from
 the Owner's private network, and the Owner account is created only with a
 one-time setup code printed to the server console (v35). The Owner's
 server-level access is operational, governed by the written agreement with the
@@ -101,13 +102,17 @@ school and recorded in an operations journal. *(§9, `security-conventions.md`
 SC-2, SC-9, SC-12)*
 
 **NFR-027** Each school's service-account key is replaced every 90 days without
-interrupting Google access and without action from the school; the installation
-restarts briefly, outside teaching hours. On a suspected leak the key is
+interrupting Google access and without action from the school's super-admin; the
+installation restarts briefly, outside teaching hours. Until `trebovaniya.md` §7
+item 17 is decided, an Admin of the school runs "check access" on the new key
+(DC-5). On a suspected leak the key is
 deleted immediately, a new one issued, usage reviewed, and the school informed
 without delay. *(§9, `deployment-conventions.md` DC-5)*
 
-**NFR-028** School data leaves the installation only for Google (read-only) and
-the Control Plane service channel. No AI, speech-recognition, analytics,
+**NFR-028** School data leaves the installation only for Google (read-only, plus
+Google OAuth for Admin sign-in, authentication only) and the Control Plane
+service channel. Where encrypted backups may be stored is open (`trebovaniya.md`
+§7 item 19). No AI, speech-recognition, analytics,
 telemetry or other external service receives school data in the first version.
 *(§6, v52, `business-rules.md` BR-078, `security-conventions.md` SC-13)*
 

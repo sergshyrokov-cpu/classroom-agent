@@ -54,11 +54,14 @@ and manage Dean accounts.
 
 - US-008 Admin sign-in via Google OAuth with AllowedAdmin verification
 - US-009 Configure WorkspaceConnection (domain, technical account as impersonation
-  user, BR-015)
+  user, BR-015) — blocked by `trebovaniya.md` §7 item 18 (how the installation
+  gets the `Installation` domain)
 - US-010 Connection instructions for the school's super-admin (client ID + scopes +
-  technical-account requirements, BR-015)
+  technical-account requirements, BR-015) — blocked by `trebovaniya.md` §7 item 18
+  (how the installation gets the client ID)
 - US-011 "Check access" diagnostic against Classroom and Reports APIs
-- US-012 Create and manage Dean accounts
+- US-012 Create and manage Dean accounts — blocked by `trebovaniya.md` §7 item 24
+  (what a Dean's login is)
 - US-039 Choose UI language — Ukrainian or English, stored on the user's account,
   for Admins and Deans in the installation and for the Owner in the Control Plane;
   the school's default comes from installation configuration (NFR-073). Also allowed
@@ -78,7 +81,8 @@ database, in the background, repeatably.
 ### Candidate User Stories
 
 - US-013 Background synchronization service
-- US-014 Sync courses and rosters
+- US-014 Sync courses and rosters — blocked by `trebovaniya.md` §7 item 21 (which
+  data counts as a course's last activity when deciding whether to import it)
 - US-015 Sync coursework and submissions
 - US-017 Retry, backoff and permission-error handling
 - US-018 Incremental synchronization
@@ -109,15 +113,19 @@ Database management
 
 ### Goal
 
-Show the state of the local database and let it be refreshed.
+Show the state of the local database, let it be refreshed, and enforce the
+retention period by the daily purge (PC-11).
 
 ### Candidate User Stories
 
 - US-024 Database statistics and last synchronization view
 - US-037 Retention purge: daily deletion of expired courses, leavers' memberships,
   unused accounts, orphaned participants and old audit rows — the full list is
-  `persistence-conventions.md` PC-11. Purging Meet data is added by US-031, so
-  this Story does not wait for EPIC-4
+  `persistence-conventions.md` PC-11. Purging Meet data is added by US-031
+  (unlinked meetings) and US-032 (linked meetings), so this Story does not wait
+  for EPIC-4. Blocked by `trebovaniya.md` §7 items 20 (data of a long-lived
+  course the retention period does not cover) and 21 (which data synchronization
+  counts as a course's last activity)
 
 ---
 
@@ -158,7 +166,13 @@ class leaves no Meet data (BR-060).
   (US-037) to unlinked meetings and Meet participation
 - US-032 Link meeting codes to courses: automatic suggestion by organizer and
   participant overlap, unassigned-meetings list, confirmation and re-linking by a
-  Dean or Admin (BR-065)
+  Dean or Admin (BR-065); extends the retention purge (US-037, US-031) to linked
+  meetings: `MeetingCodeLink` rows and the meetings reached through them are
+  deleted with the course, leavers' participations in them are deleted, and their
+  start counts toward the course's last activity (PC-11) — blocked by
+  `trebovaniya.md` §7 items 20 (old meetings and participations of a long-lived
+  course), 22 (how the share for automatic linking is computed) and 23 (whether
+  an automatic link takes effect before confirmation, and what is audited)
 - US-033 Built-in Meet reports for a course and period: summary, meeting list,
   student participation, one meeting in detail, and their export (BR-062…BR-064;
   `trebovaniya.md` §2 permission matrix) — blocked by `trebovaniya.md` §7 item 16

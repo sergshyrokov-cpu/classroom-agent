@@ -56,8 +56,11 @@ Derived from `trebovaniya.md` sections 3, 5 and 9.
   during synchronization. They are never the primary key — Google ids are
   strings owned by someone else.
 - Coursework and materials are separate Classroom resources, so a `CourseWork`
-  row is unique on (kind, Google id) rather than on the Google id alone
-  (`trebovaniya.md` section 3, v32, v46).
+  row is unique on (Classroom resource — `courseWork` or `courseWorkMaterials` —,
+  Google id) rather than on the Google id alone. Graded versus ungraded work is
+  **not** part of the key and is not stored: it follows from whether maximum
+  points are set, so a teacher adding or removing points updates the same row
+  (`trebovaniya.md` section 3, v32).
 - Meet data is keyed the same way: `MeetSession` on Google's `conference_id`,
   `MeetParticipation` on (`conference_id`, `endpoint_id`), `MeetingCodeLink` on the
   meeting code.
@@ -153,7 +156,9 @@ resulting migration must both match them.
 - **`AuditEvent` is never updated and is deleted only by the retention purge**
   (PC-11): no other use case updates or deletes a row, and the entity exposes no
   way to (SC-11). It carries internal identifiers only — a
-  migration adding a name, email or grade column to it is a Critical finding.
+  migration adding a name, email or grade column to it is a Critical finding. Its
+  actor and target ids have **no foreign key** to `AppUser` or any other entity:
+  the rows outlive what they name (PC-11).
 - Journals, grades and Meet participation are personal data of students, potentially
   minors. `db-designer` marks such columns and states their handling rules.
   Retention is decided (`trebovaniya.md` section 5, v19) and enforced only by
@@ -167,7 +172,9 @@ resulting migration must both match them.
 - Incremental behavior: already-known participants are not re-fetched.
 - A course whose last activity (PC-11) is already more than N years ago is not
   imported, so the purge and the next sync never undo each other
-  (`trebovaniya.md` section 5, v36).
+  (`trebovaniya.md` section 5, v36). Whether synchronization counts locally
+  linked Meet meetings toward that last activity is open (`trebovaniya.md` §7
+  item 21).
 - `SyncState` records status, counters, the last error and the last successful
   run. It is the only place sync progress is reported from — a use case never
   infers progress by counting rows.
@@ -194,9 +201,14 @@ the product enforces the period the school agreed with the Owner.
   and `last_seen_at` more than N years ago is deleted together with that person's
   `Submission` rows in the course and their `MeetParticipation` rows (matched by
   email, PC-12) in meetings reached through the course's meeting codes — even if
-  the course itself is still kept (`trebovaniya.md` section 5, v31).
+  the course itself is still kept (`trebovaniya.md` section 5, v31). What this
+  rule leaves in a long-lived course — participations of domain accounts not on
+  the roster, organizer emails of old meetings, old data of people still on the
+  roster — is open (`trebovaniya.md` §7 item 20).
 - A `ClassroomParticipant` is deleted when no remaining `CourseMembership`
-  references it.
+  references it. Submissions of a student already off the roster at the first
+  synchronization, who therefore has no membership, are open
+  (`trebovaniya.md` §7 item 14).
 - **Deletion is physical** and happens in one transaction per course, so a
   course is never left half-deleted (AD-7). Rows are removed child-first by the
   purge use case; foreign keys stay `Restrict` (PC-8) — the purge does not rely
@@ -211,10 +223,11 @@ the product enforces the period the school agreed with the Owner.
 - **`AppUser` rows** (Admin and Dean) are deleted when their last successful
   sign-in — or creation, if they never signed in — is more than N years ago,
   whether or not disabled; the installation cannot know an Admin was revoked.
-  By then every audit row naming them is older than N and already purged. Other
-  rows that name an account (e.g. who confirmed a `MeetingCodeLink`) keep the
-  internal id without a foreign key, so the deletion never cascades or blocks
-  (`trebovaniya.md` section 5, v45).
+  Audit rows and other rows that name an account (e.g. who confirmed a
+  `MeetingCodeLink`) keep the internal id without a foreign key, so the deletion
+  never cascades or blocks. Audit rows naming the account may be newer than its
+  last sign-in — refused sign-ins, an Admin disabling it — and stay until their
+  own expiry (`trebovaniya.md` section 5, v45, v53).
 - A `MeetSession` whose meeting code is linked to no course is purged with its
   participations when its own date is more than N years old (`trebovaniya.md`
   section 5, v23).

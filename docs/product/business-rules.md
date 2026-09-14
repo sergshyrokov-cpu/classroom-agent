@@ -26,7 +26,8 @@ as Owner, has no access to a school's teaching data through the application (a
 person who also works at a school may be its Admin — BR-013): the service
 channel carries no teaching data and no statistics — only installation id,
 versions, status and compatibility state, and, at an Admin login, the email being
-checked with a yes/no answer. *(§3, §9, SC-12)*
+checked with a yes/no answer. *(How the installation gets the `Installation`
+domain and client ID is open — `trebovaniya.md` §7 item 18.)* *(§3, §9, SC-12)*
 
 **BR-006** The Owner's access to a school's database on the servers is
 operational only — migrations, decommissioning, erasure on the school's request,
@@ -62,7 +63,7 @@ the Owner role itself still grants no access to teaching data. *(§2, §9, v50)*
 involved. An Admin may disable, re-enable and reset the password of a Dean
 account, but never deletes it — like a revoked Admin's `AppUser`, it is kept for
 history and audit, and removed only by the retention purge N years after its last
-successful sign-in (PC-11, v45). A Dean may change their own password, and must do so at the
+successful sign-in, or creation if never signed in (PC-11, v45). A Dean may change their own password, and must do so at the
 first login after an Admin reset. *(§2, v38)*
 
 **BR-015** Teaching data is read on behalf of a **technical account** of the
@@ -106,7 +107,9 @@ Meet meeting codes, Dean account management, connection settings and "check
 access". In read-only mode the system makes no call to Google at all; the
 connection instructions stay viewable (v39). The only
 writes permitted are a closed list of service writes: audit rows; sign-in
-bookkeeping (Identity failed-attempt counting and lockout, creating the
+bookkeeping (Identity failed-attempt counting and lockout, recording the time of
+the last successful sign-in, which the retention period of an account counts
+from (PC-11), creating the
 `AppUser` of an approved Admin at their first login, a Dean changing their
 own password, and a user choosing their UI language); the legitimacy-check state
 (last successful check time, last known status and last compatibility state); and the retention purge with
@@ -131,8 +134,9 @@ Google data API. Synchronization therefore works while no one is logged in.
 
 **BR-032** Domain-wide delegation is authorized by the school's own super-admin
 in the school's Google console, who also creates the school's technical account
-(BR-015). The Owner has no access to it. The Owner supplies only the client ID
-and the scope list. *(§1, §9, v30)*
+(BR-015). The Owner, as Owner, has no access to that console — a person who is
+also the school's Admin has it as the school's employee (BR-013). The Owner
+supplies only the client ID and the scope list. *(§1, §9, v30)*
 
 **BR-033** The service account for a school lives in the Owner's Cloud project;
 each school has its own. Its key is placed by the Owner at deployment and never
@@ -145,8 +149,10 @@ v50)*
 retried. It is recorded and surfaced to the Admin with a diagnosable message.
 *(Epic 1, Epic 6)*
 
-**BR-035** Replacing a service-account key never involves the school: delegation
-is authorized for the account's client ID, which a new key does not change. Only
+**BR-035** Replacing a service-account key never involves the school's
+super-admin: delegation is authorized for the account's client ID, which a new
+key does not change. Until `trebovaniya.md` §7 item 17 is decided, an Admin of the
+school runs "check access" on the new key (DC-5). Only
 recreating the service account itself forces the school to authorize again; the
 Owner then updates the client ID on the `Installation`. *(§9, DC-5, v43)*
 
@@ -258,7 +264,12 @@ guests and connections without an account are shown as "other participants".
 links unambiguous matches itself and keeps them editable. A match is scored per
 candidate course as the share of distinct domain accounts across all meetings of
 the code (organizer excluded) who were students of the course on their meeting's
-date; the organizer must be a teacher of the course. It links when the best share
+date; the organizer must be a teacher of the course. *(Which organizer counts when
+a code's meetings have different organizers, and how an account that was a student
+on only some of its meeting dates counts, are open — `trebovaniya.md` §7 item 22,
+to decide before US-032.)* *(Whether an automatic link takes effect before a Dean
+or Admin confirms it, and whether the system's link and the confirmation are
+audited, are open — `trebovaniya.md` §7 item 23.)* It links when the best share
 is at least 60% and the next is at least 30 points lower, is recomputed on each
 Meet ingestion while the code is unlinked, and an automatic link is never revised
 by the system (v41); ambiguous codes wait in
@@ -288,11 +299,13 @@ the course: a course and everything under it is deleted once its last activity i
 more than N years ago, whatever its state. Last activity is the latest of: a change
 to the course, any coursework or material created or changed, any submission
 changed, any Meet meeting linked to the course. Synchronization does not import a
-course whose last activity is already older than N (v36). A person who has left a course's
+course whose last activity is already older than N (v36); whether it counts
+locally linked Meet meetings for that is open (`trebovaniya.md` §7 item 21). A person who has left a course's
 roster loses that membership, with their submissions and Meet participation in
 that course, once they were last seen more than N years ago — even while the
-course is active. A participant is deleted once no remaining membership references
-them. Deletion is physical. *(§5, PC-11, v31)*
+course is active. What this leaves in a long-lived course is open
+(`trebovaniya.md` §7 item 20). A participant is deleted once no remaining
+membership references them. Deletion is physical. *(§5, PC-11, v31)*
 
 **BR-073** Every export of a journal or report is audited: who, when, which
 courses, which period, which template, how many rows. The exported content itself
@@ -317,7 +330,8 @@ backup, every erasure recorded in the operations journal after the backup's date
 is re-applied before the school gets the installation back. *(§9, DC-13, v47)*
 
 **BR-078** School data leaves the installation only for two destinations: Google,
-read-only, and the Control Plane service channel, which carries no teaching data
-(BR-005). No AI, speech-recognition, analytics or other external service receives
+read-only (plus Google OAuth for Admin sign-in, authentication only), and the
+Control Plane service channel, which carries no teaching data (BR-005). Where
+encrypted backups may be stored is open (`trebovaniya.md` §7 item 19). No AI, speech-recognition, analytics or other external service receives
 school data in the first version; an AI assistant is future Epic 13. *(§6, §4 Epic 13,
 v52, `security-conventions.md` SC-13)*
