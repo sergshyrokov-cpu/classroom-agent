@@ -129,7 +129,11 @@ resulting migration must both match them.
   v23). Unique on (course, participant). It also carries `first_seen_at`,
   `last_seen_at` and `on_roster` — what synchronization observed, since Classroom
   gives no join or leave dates (BR-051). Leaving the roster clears `on_roster`;
-  the row is never deleted by synchronization. Journal and Meet queries filter by
+  the row is never deleted by synchronization. When synchronization finds
+  submissions of a person it never saw on the course's roster (they left before
+  the first synchronization), it creates a `student` membership with `on_roster`
+  false and `first_seen_at` = `last_seen_at` = that run's date, so the leaver
+  expiry (PC-11) covers them (`trebovaniya.md` section 3, v56). Journal and Meet queries filter by
   these dates, so they are indexed with the course (PC-7).
 - `MeetingCodeLink` maps a meeting code to one `Course`: unique on the code,
   several codes per course (a reset Classroom link gets a new code). `MeetSession`
@@ -206,9 +210,9 @@ the product enforces the period the school agreed with the Owner.
   have no expiry of their own; they stay until the course or the person as a
   leaver expires.
 - A `ClassroomParticipant` is deleted when no remaining `CourseMembership`
-  references it. Submissions of a student already off the roster at the first
-  synchronization, who therefore has no membership, are open
-  (`trebovaniya.md` §7 item 14).
+  references it. A student already off the roster at the first synchronization
+  gets a membership dated that run (PC-8), so their N years count from it — a
+  known limitation (v56).
 - **Deletion is physical** and happens in one transaction per course, so a
   course is never left half-deleted (AD-7). Rows are removed child-first by the
   purge use case; foreign keys stay `Restrict` (PC-8) — the purge does not rely

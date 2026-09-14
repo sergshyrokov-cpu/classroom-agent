@@ -188,7 +188,10 @@ can teach one course and study on another. *(§3, v23 — was §7 item 4)*
 **BR-051** Classroom gives no join or leave dates, so a `CourseMembership` records
 what synchronization observed: when the person was first and last seen on the
 roster, and whether they are on it now. A membership is never deleted when the
-person leaves the roster. A period's journal lists students on the roster for at
+person leaves the roster. Someone with submissions who was never seen on the
+roster (they left before the first synchronization) gets a student membership
+marked off the roster, first and last seen on that run's date, so the leaver
+expiry applies from that date (v56). A period's journal lists students on the roster for at
 least part of the period plus anyone with submissions in it; in Meet reports, a
 course's students and teachers are those on the roster on the meeting's date.
 *(§3, §4 Epic 3, Epic 4, v31)*
