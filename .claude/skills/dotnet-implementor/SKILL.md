@@ -1,21 +1,24 @@
 ---
 name: dotnet-implementor
 description: >
-  Implements an approved User Story in the Customer Portal ASP.NET Core
-  application by following the approved Specification, API and database
-  designs, Impact Analysis, Implementation Plan, tests, architecture rules,
-  and security constraints. Use only after the plan is approved and required
-  tests or test specifications are available.
+  Implements the active User Story in the classroom-agent .NET solution by
+  following the approved Specification, API and database designs, the
+  story-level tests, the architecture rules and the security constraints.
+  Use only at the IMPLEMENTATION stage, after HUMAN_SPEC_APPROVAL and
+  TEST_WRITING.
 ---
 
 # Purpose
 
-Implement the active User Story in the Customer Portal ASP.NET Core project.
+Implement the active User Story in the classroom-agent solution
+(`ClassroomAgent.sln`).
 
 The Skill converts approved delivery artifacts into a minimal, scoped, and
 reviewable set of code and configuration changes.
 
-The Skill must follow the approved Implementation Plan.
+In this workflow variant there is no implementation plan: **the approved
+Specification plus the approved designs are the plan**, and `trebovaniya.md` is
+the authority behind them.
 
 The Skill must not redesign the Story, silently resolve Open Decisions,
 introduce unrelated improvements, or reinterpret Acceptance Criteria.
@@ -29,21 +32,20 @@ complete.
 
 # Technology Context
 
-The project uses:
+The stack is defined in `AGENTS.md` (Technology Stack) and
+`docs/architecture/`. In short:
 
-- .NET 8 (LTS), C#
-- ASP.NET Core Web API (MVC controllers)
-- EF Core 8, SQLite provider
-- `EFCore.NamingConventions` (snake_case column mapping)
-- ASP.NET Core Cookie Authentication + custom authorization policies
-- `BCrypt.Net-Next` for password hashing
-- xUnit, `Microsoft.AspNetCore.Mvc.Testing`
+- .NET 10 (LTS), C# (NFR-062)
+- ASP.NET Core MVC / Razor Pages + REST API
+- EF Core with the Npgsql provider, PostgreSQL (PC-1);
+  `EFCore.NamingConventions` for snake_case mapping (PC-5)
+- ASP.NET Core Identity — local login for Dean and Owner, Google OAuth external
+  login for Admin (SC-2)
+- xUnit, `Microsoft.AspNetCore.Mvc.Testing`, Testcontainers (TC-2, TC-6)
 
-Always verify the actual project dependencies and configuration before
-implementation.
-
-Do not assume that a library is available only because it is common in
-ASP.NET Core projects.
+Always verify the packages actually referenced in the target `.csproj` before
+implementation. A package that is not referenced requires an approved Open
+Decision — do not add it because it is common in ASP.NET Core projects.
 
 ---
 
@@ -52,21 +54,17 @@ ASP.NET Core projects.
 Use this Skill when:
 
 - an active User Story is configured;
-- the User Story has an approved Specification;
-- relevant API and persistence designs exist;
-- Impact Analysis is ready for planning;
-- the Implementation Plan is approved;
-- required test artifacts or failing tests are available;
+- `HUMAN_SPEC_APPROVAL` is recorded;
+- relevant API and database designs exist or are recorded `NOT_APPLICABLE`;
+- `TEST_WRITING` has completed and the story-level tests exist;
 - implementation work has not yet been completed;
 - the workflow state allows implementation.
 
 Typical requests:
 
-- Implement the approved plan for the active User Story.
+- Implement the active User Story.
 - Execute the implementation for US-001.
-- Implement the current Story using the approved artifacts.
 - Continue implementation from the current workflow state.
-- Apply the approved ASP.NET Core implementation plan.
 
 ---
 
@@ -74,19 +72,17 @@ Typical requests:
 
 Do not use this Skill:
 
-- directly from an unclarified User Story;
+- directly from a User Story without an approved Specification;
 - when the Specification is missing or rejected;
-- when Open Decisions remain unresolved;
+- when blocking Open Decisions remain unresolved;
 - before API or database design is completed when relevant;
-- before Impact Analysis;
-- before Plan Review approval;
+- before `TEST_WRITING` has completed;
 - to create or revise product requirements;
 - to create system-level architecture;
 - to create speculative abstractions;
 - to perform unrelated refactoring;
 - to approve implementation;
-- to create or merge a Pull Request;
-- to change GitHub Issue status automatically;
+- to commit, push or create branches;
 - to bypass failing tests or validation gates.
 
 ---
@@ -104,7 +100,6 @@ Determine:
 - current workflow stage;
 - approved artifact versions;
 - current implementation attempt;
-- current branch when recorded;
 - expected next workflow stage.
 
 Work only on the active User Story.
@@ -125,7 +120,9 @@ Do not select another Story automatically.
 
 - Workflow / stage / loop-back keys: `docs/workflow/stage-map.yaml`
   (`IMPLEMENTATION`; loop_back keys `partial` → `IMPLEMENTATION`,
-  `blocked_by_plan` → `IMPLEMENTATION_PLANNING`).
+  `blocked_by_specification` → `SPECIFICATION`,
+  `blocked_by_api_design` → `API_DESIGN`,
+  `blocked_by_database_design` → `DB_DESIGN`).
 - Artifact paths: `docs/workflow/artifact-paths.yaml` — **authoritative**.
   Resolve every path from its registry key. Paths shown are illustrative.
 - Status vocabulary: `docs/workflow/artifact-lifecycle.md`.
@@ -142,9 +139,7 @@ Read (registry keys, resolved via `artifact-paths.yaml`):
 - `specification`
 - `api_design`, `openapi`  (or their `NOT_APPLICABLE` record)
 - `database_design`, `entity_model`  (or their `NOT_APPLICABLE` record)
-- `requirements` — `trebovaniya.md`. In this workflow variant there is no
-  implementation plan: **the Specification plus the approved designs are the
-  plan**, and `trebovaniya.md` is the authority behind them.
+- `requirements` — `trebovaniya.md`
 - `test_strategy`, `ac_test_matrix`  (+ the executable tests under
   `tests/ClassroomAgent.Tests/`)
 - `open_decisions`
@@ -156,16 +151,13 @@ Read architecture references:
 - docs/architecture/api-conventions.md
 - docs/architecture/persistence-conventions.md
 - docs/architecture/security-conventions.md
+- docs/architecture/testing-conventions.md
 
 Read product constraints:
 
 - docs/product/business-rules.md
 - docs/product/business-glossary.md
 - docs/product/non-functional-requirements.md
-
-Read Story decisions when present:
-
-- docs/decisions/<StoryId>*.md
 
 Do not load unrelated product or historical artifacts unless needed to resolve
 a concrete dependency.
@@ -174,20 +166,18 @@ a concrete dependency.
 
 # Artifact Authority
 
-Use the following authority order:
+Use the order of authority from `AGENTS.md`:
 
-1. Active User Story and Acceptance Criteria
-2. Approved Specification
-3. Approved API and persistence designs
-4. Resolved Story decisions
-5. Approved Impact Analysis
-6. Approved Implementation Plan
-7. Architecture and project conventions
-8. Existing implementation patterns
+1. `trebovaniya.md`
+2. Active User Story and Acceptance Criteria
+3. Approved Specification
+4. Resolved Open Decisions
+5. Approved API and database designs
+
+Below them: architecture and project conventions (`docs/architecture/`), then
+existing implementation patterns.
 
 Existing code does not override approved requirements.
-
-The Implementation Plan does not override the Specification.
 
 The Specification does not override the original Acceptance Criteria unless
 the change was explicitly approved and traceable.
@@ -204,7 +194,7 @@ Do not choose one interpretation silently.
 
 The active User Story must exist.
 
-Acceptance Criteria must be present and identifiable.
+Acceptance Criteria must be present and identifiable (`AC-001`, …).
 
 ## Specification
 
@@ -218,9 +208,9 @@ Do not proceed when the gate is not recorded.
 
 Relevant design artifacts (`api_design` / `openapi` / `database_design` /
 `entity_model`) must exist or be recorded `NOT_APPLICABLE`. There is no
-automated design reviewer in this variant. Explicit security requirements are required when the
-Story changes authentication, authorization, credentials, roles, account state,
-or sensitive data.
+automated design reviewer in this variant. Explicit security requirements are
+required when the Story changes authentication, authorization, credentials,
+roles, account state, or sensitive data.
 
 ## Plan
 
@@ -228,8 +218,9 @@ There is no `implementation_plan` artifact and no `HUMAN_PLAN_APPROVAL` gate in
 this workflow variant. The approved `specification` and the design artifacts
 are the plan; follow them in the order the Specification's Acceptance Criteria
 imply. If they are not specific enough to implement without guessing, that is a
-gap in the Specification — return `CHANGES_REQUIRED` with
-`loop_back_stage: SPECIFICATION`, do not invent behaviour.
+gap upstream — return `CHANGES_REQUIRED` with `loop_back_stage: SPECIFICATION`
+(key `blocked_by_specification`), or `API_DESIGN` / `DB_DESIGN` when the gap is
+in a design. Do not invent behaviour.
 
 ## Tests
 
@@ -282,22 +273,27 @@ If unrelated uncommitted changes exist:
 
 # Implementation Principles
 
-## Plan-Guided Implementation
+## Artifact-Guided Implementation
 
-Follow the approved Implementation Plan in its defined order.
+Implement the Specification and designs in the order their Acceptance Criteria
+imply.
 
 Do not improvise alternative architecture without approval.
 
-If the plan becomes infeasible because of repository reality:
+If the approved artifacts become infeasible because of repository reality:
 
-1. Stop the affected step.
+1. Stop the affected work.
 2. Record the discovered conflict.
 3. Recommend returning to SPECIFICATION, API_DESIGN or DB_DESIGN.
 4. Do not silently redesign the implementation.
 
 ## Minimal Change
 
-Implement only what is required by the active Story.
+Implement only what is in the active Story's scope as defined in `AGENTS.md`
+(Git Policy): every change traces to a Specification requirement or Acceptance
+Criterion, an element of the approved API or database design, a test in the
+`ac_test_matrix`, or a supporting change the Story cannot work without (project
+scaffolding, DI registration, migration, translation entries).
 
 Avoid:
 
@@ -307,7 +303,7 @@ Avoid:
 - dependency upgrades;
 - new frameworks;
 - generic abstractions without immediate need;
-- changes outside the identified impact surface.
+- new namespaces or folders not listed in `package-map.md` (AD-11).
 
 ## Existing Patterns First
 
@@ -315,7 +311,7 @@ Inspect existing project patterns before creating new components.
 
 Reuse established:
 
-- namespace/folder structure;
+- namespace/folder structure (`package-map.md`);
 - naming conventions;
 - DTO patterns;
 - validation patterns;
@@ -339,7 +335,7 @@ When API behavior is defined by OpenAPI:
 
 ## Explicit Persistence Design
 
-Do not rely on EF Core convention defaults for important constraints.
+Do not rely on EF Core convention defaults for important constraints (PC-4).
 
 Define explicitly when required by design:
 
@@ -361,106 +357,31 @@ Security-sensitive ambiguity must become an Open Decision.
 
 ---
 
-# IDEA MCP Tooling Strategy
+# Tooling
 
-Prefer JetBrains Rider (IntelliJ-platform) MCP capabilities when they are
-available and appropriate.
+Use the built-in file reading, search and edit tools, and the `dotnet` CLI.
+Text search gives no semantic certainty: when a conclusion depends on symbol
+usage or call paths, confirm it with the compiler or a test rather than a grep.
 
-## Repository and Project Inspection
+Commands (from the repository root, see `AGENTS.md`):
 
-Preferred capabilities:
-
-- mcp__idea__get_project_modules
-- mcp__idea__get_project_dependencies
-- mcp__idea__list_directory_tree
-- mcp__idea__git_status
-
-## Semantic Analysis
-
-Preferred capabilities:
-
-- mcp__idea__search_symbol
-- mcp__idea__get_symbol_info
-- mcp__idea__analyze_calls
-- mcp__idea__generate_psi_tree
-
-Use semantic tools before plain-text search when investigating symbols,
-dependencies, calls, or namespace ownership.
-
-## File Changes
-
-Preferred capabilities:
-
-- mcp__idea__apply_patch
-- mcp__idea__create_new_file
-- mcp__idea__reformat_file
-- mcp__idea__rename_refactoring
-
-Use semantic rename refactoring instead of global text replacement when
-renaming C# symbols.
-
-## Validation
-
-Preferred capabilities:
-
-- mcp__idea__build_project
-- mcp__idea__get_file_problems
-- mcp__idea__lint_files
-- mcp__ide__getDiagnostics
-
-## Execution
-
-Use run configurations when an approved validation step requires application
-execution:
-
-- mcp__idea__get_run_configurations
-- mcp__idea__execute_run_configuration
-
-Do not start long-lived application processes unless required by the approved
-test or validation plan.
-
-## Database Inspection
-
-When a Rider database connection is already configured and inspection is
-required, available capabilities may include:
-
-- mcp__idea__list_database_connections
-- mcp__idea__test_database_connection
-- mcp__idea__list_database_schemas
-- mcp__idea__list_schema_objects
-- mcp__idea__get_database_object_description
-- mcp__idea__introspect_schema
-- mcp__idea__execute_sql_query
-
-Database access must remain read-only unless the approved plan explicitly
-requires a controlled write operation.
-
-Do not create database connections automatically without human approval.
-
----
-
-# Built-In Tool Fallback
-
-If the Rider MCP is unavailable:
-
-1. Use built-in file reading and search.
-2. Use built-in edit or write operations.
-3. Use `dotnet` CLI commands through an approved shell capability.
-4. Record that Rider semantic analysis and diagnostics were unavailable.
-5. Do not claim semantic certainty based only on text search.
-
-Suggested `dotnet` CLI commands for this project include:
-
-- `dotnet build`
-- `dotnet test`
+- `dotnet build ClassroomAgent.sln`
+- `dotnet test ClassroomAgent.sln` — integration tests need a running Docker
+  daemon (Testcontainers, TC-2)
+- `dotnet test --filter FullyQualifiedName~<ClassName>`
 - `dotnet format --verify-no-changes`
-- `dotnet ef migrations add <Name>` / `dotnet ef database update` (when a
-  migration is required by the approved plan)
-
-Use the command appropriate to the current environment.
+- `dotnet ef migrations add <Name> --project src/ClassroomAgent.Infrastructure --startup-project src/ClassroomAgent.Web`
+  (when the database design requires a migration; the Control Plane uses its
+  own context and startup project)
 
 Do not assume that a command passed unless its actual exit status and output
 were observed.
+
+Do not start long-lived application processes unless a validation step
+requires it.
+
+Do not connect to any database other than the Testcontainers instances the
+tests start.
 
 ---
 
@@ -475,7 +396,6 @@ Record:
 - Story ID;
 - workflow stage;
 - artifact versions;
-- plan version;
 - implementation attempt number.
 
 Confirm that implementation is the currently permitted stage.
@@ -487,11 +407,9 @@ Confirm that implementation is the currently permitted stage.
 Check:
 
 - Story exists;
-- Specification is approved;
-- required designs exist;
-- Impact Analysis is ready;
-- Plan Review is approved;
-- required tests or test specifications exist;
+- `HUMAN_SPEC_APPROVAL` is recorded;
+- required designs exist or are `NOT_APPLICABLE`;
+- `test_strategy`, `ac_test_matrix` and the executable tests exist;
 - no blocking Open Decisions remain;
 - architecture documents are populated;
 - working tree is safe.
@@ -511,61 +429,39 @@ Before editing code, map:
 
 - Acceptance Criterion;
 - Specification requirement;
-- design artifact;
-- approved plan step;
-- expected production component;
-- expected test.
+- design artifact element;
+- expected production component (project, namespace, type);
+- expected test from the `ac_test_matrix`.
 
 Keep this map available throughout implementation.
 
-Do not implement a plan step that cannot be traced to an approved requirement
-or necessary supporting infrastructure.
+Do not implement anything that cannot be traced to an approved requirement or a
+necessary supporting change.
 
 ---
 
 ## Step 4: Inspect Current Repository
 
-Inspect only the bounded change surface identified by Impact Analysis and the
-Implementation Plan.
+Inspect the components the traceability map names, and their direct
+dependencies.
 
 Confirm:
 
-- existing namespaces/folders;
+- existing projects, namespaces and folders;
 - relevant symbols;
 - extension points;
 - current security configuration;
-- current persistence configuration;
+- current persistence configuration and migrations;
 - existing tests;
-- existing error handling;
-- current SQLite and EF Core settings.
+- existing error handling.
 
-Compare repository reality with predicted Impact Analysis.
-
-If material differences exist, stop and recommend re-running Impact Analysis
-or Planning.
+If repository reality contradicts the approved designs (a type, table or
+endpoint the design assumes is missing or different), stop and recommend the
+matching loop-back stage.
 
 ---
 
-## Step 5: Confirm Execution Sequence
-
-Read the approved plan steps.
-
-For every step identify:
-
-- required input;
-- intended file or symbol;
-- expected output;
-- validation method;
-- dependencies on earlier steps.
-
-Do not reorder steps without recording why.
-
-If a different order is necessary for technical correctness, stop and request
-plan revision or human approval.
-
----
-
-## Step 6: Establish Test Baseline
+## Step 5: Establish Test Baseline
 
 Run the existing relevant tests before production changes.
 
@@ -584,62 +480,68 @@ If the baseline already fails:
 3. Do not attribute pre-existing failures to the new implementation.
 4. Ask for a human decision when the failure prevents reliable validation.
 
-When test-first artifacts exist, run the new tests and confirm that expected
-tests fail for the expected reason before implementation.
+Run the new story-level tests and confirm that they fail for the expected
+reason before implementation.
 
-Do not modify tests merely to make an unjustified implementation pass.
+Do not modify tests merely to make an unjustified implementation pass. If a test
+itself contradicts the approved artifacts, stop and return `BLOCKED` naming
+`TEST_WRITING` in `blocking_issues`.
 
 ---
 
-## Step 7: Implement Persistence Changes
+## Step 6: Implement Persistence Changes
 
-When required by the approved plan:
+When required by the approved database design:
 
-- create or update entities;
-- define explicit Fluent API constraints in `OnModelCreating`;
-- create or update repositories;
-- add or update the corresponding EF Core migration;
-- add persistence validation;
+- create or update entities in `Domain.Entities`;
+- define explicit entity configurations in `Infrastructure.Persistence`
+  (PC-4, PC-5, PC-7, PC-8);
+- create or update repositories in `Infrastructure.Persistence.Repositories` —
+  they stage changes and never call `SaveChangesAsync()` (AD-7);
+- add the corresponding EF Core migration in the same Story (PC-2);
 - add persistence tests.
-
-For the training project, SQLite is configured as a file-based database.
 
 The implementation must not:
 
-- silently change the SQLite connection string to `:memory:` outside tests;
-- call `Database.EnsureCreated()` / `EnsureDeleted()` against the file
-  database;
-- apply schema changes outside a committed EF Core migration;
-- expose a database browser/admin UI without an approved development-only
-  decision;
+- call `Database.EnsureCreated()` / `EnsureDeleted()`, or apply schema changes
+  outside a committed EF Core migration (PC-2);
+- fall back to the EF Core InMemory provider or SQLite anywhere (TC-2);
+- let one database serve several schools, or share a database between the
+  Control Plane and an installation (AD-1);
+- expose a database admin or diagnostic UI (SC-6);
 - commit generated database files;
 - weaken uniqueness, nullability, or length constraints.
 
-Follow persistence conventions and the approved DB design.
+Follow `persistence-conventions.md` and the approved database design.
 
 Run the relevant persistence tests after this step.
 
 ---
 
-## Step 8: Implement Domain and Service Behavior
+## Step 7: Implement Application Behavior
 
-Implement approved business behavior in the Service layer.
+Implement approved business behavior in `Application.UseCases` (in the Control
+Plane: `ControlPlane.Services`).
 
 Requirements:
 
-- keep business logic out of Controllers;
-- keep persistence logic behind Repositories;
-- preserve transaction boundaries defined by project conventions;
-- map persistence results to business outcomes;
-- avoid coupling service behavior to HTTP-specific (`HttpContext`) types;
-- keep methods focused;
+- keep business logic out of Controllers and Razor (AD-3);
+- reach every external system only through a port in `Application.Ports`
+  (AD-4); no Google SDK type crosses into `Application` or `Domain`;
+- open and commit transactions in the use case (AD-7);
+- enforce read-only mode in the use case, never by hiding UI (AD-6); only the
+  service writes listed in BR-026 run in read-only mode;
+- map entities to DTOs in the Application layer (AD-8);
+- avoid coupling use cases to `HttpContext` or EF Core types;
+- keep asynchronous methods `…Async` with a `CancellationToken` (AGENTS.md
+  Coding Conventions);
 - avoid duplicated business logic.
 
-Run relevant unit and service tests after this step.
+Run relevant unit tests after this step.
 
 ---
 
-## Step 9: Implement Validation
+## Step 8: Implement Validation
 
 Implement validation defined by:
 
@@ -649,119 +551,108 @@ Implement validation defined by:
 - business rules;
 - security conventions.
 
+Validation uses Data Annotations on request types in
+`Application.Models.Requests`; custom rules go in `Application.Validation`
+(`trebovaniya.md` §8). Rules that need domain state are checked in the use case.
+
 Validation must not depend solely on UI clients.
 
-When Data Annotation attributes are used, confirm that `[ApiController]` is
-applied to the Controller so `ModelState` validation runs automatically.
+Confirm that `[ApiController]` is applied so `ModelState` validation runs
+automatically, and that a rejection becomes a `400` with `fieldErrors` (API-6).
+
+The rejected payload is never written to a log (SC-10).
 
 Do not add a new dependency without explicit approval.
 
-Validation messages and error representation must follow API conventions.
-
 ---
 
-## Step 10: Implement API Layer
+## Step 9: Implement API and Presentation Layer
 
 When required:
 
-- create or modify request DTOs;
-- create or modify response DTOs;
-- implement Controller actions;
-- map service outcomes to approved HTTP responses;
+- create or modify request types (`Application.Models.Requests`);
+- create or modify response DTOs (`Application.Models.Dtos`);
+- implement Controller actions and Razor pages — HTTP mapping only, no
+  `DbContext` (AD-3);
+- declare authorization with a named policy (API-9, SC-4); anonymous access only
+  for endpoints on the SC-4 list;
+- map use case outcomes to approved HTTP responses;
 - preserve the OpenAPI contract;
-- avoid exposing persistence entities;
-- avoid exposing password hashes or sensitive internal fields.
+- never expose domain entities (AD-8);
+- never expose password hashes, credentials or service-account material.
 
-Do not return sensitive values merely because the entity contains them.
+Every user-visible string — screens, error messages, export labels — comes from
+translation files in both Ukrainian and English (`Application.Localization`,
+`ControlPlane.Localization`; NFR-073). Add every new key to both languages.
 
 Run web-layer and contract tests after this step.
 
 ---
 
-## Step 11: Implement Exception Handling
+## Step 10: Implement Exception Handling
 
-Use the project-wide exception handling strategy (`IExceptionHandler`).
+Use the single `IExceptionHandler` of the host project (AD-9, API-10).
 
-Map errors consistently.
-
-When applicable, distinguish:
-
-- invalid request;
-- authentication failure;
-- authorization failure;
-- missing resource;
-- duplicate or conflicting resource;
-- internal failure.
+Map errors as AD-9 defines: validation → 400, authn → 401, authz → 403,
+not found → 404, conflict → 409, read-only mode → 409, unmapped → 500.
 
 Do not leak:
 
 - stack traces;
 - SQL details;
-- database paths / connection strings;
-- internal class names;
-- credentials;
+- connection strings or file paths;
+- internal class or namespace names;
+- credentials or service-account identifiers;
 - password hashes.
 
 ---
 
-## Step 12: Implement Security Behavior
+## Step 11: Implement Security Behavior
 
-When the Story handles registration, credentials, user identity, roles, or
-account state:
+When the Story handles credentials, identity, roles, account state, Google
+access or school data, follow `security-conventions.md`, in particular:
 
-- hash passwords using the approved `IPasswordHasher` (BCrypt.Net-Next);
-- never store plaintext passwords;
-- never return password or password hash;
-- avoid logging credentials;
-- enforce documented authorization boundaries;
-- avoid exposing a database admin/diagnostic UI;
-- preserve secure default behavior.
+- passwords are hashed by ASP.NET Core Identity; never store or return
+  plaintext passwords or hashes, never log credentials (SC-2);
+- an Admin has no local password — no password column, no reset flow (SC-2);
+- `AllowedAdmin` is checked on every Admin login (SC-3);
+- authorization is deny-by-default with declared policies (SC-4);
+- the service-account key is never stored in a database, accepted through a UI,
+  or committed (SC-7);
+- every Google scope is read-only; the program never writes to Google
+  Workspace (SC-8);
+- logs carry internal identifiers only — no names, emails, grades, keys or raw
+  Google errors (SC-10);
+- actions SC-11 lists write an audit event;
+- school data goes only to Google and the Control Plane (SC-13).
 
-For password registration:
+If a required policy (for example a password policy) is not approved, stop and
+create an Open Decision.
 
-- apply the approved password policy;
-- validate before persistence;
-- hash before persistence;
-- ensure response DTOs exclude credential fields.
-
-If no approved password policy exists, stop and create an Open Decision.
-
-Do not invent password complexity requirements during implementation.
+Do not invent password complexity or lockout requirements during
+implementation.
 
 ---
 
-## Step 13: Update Configuration
+## Step 12: Update Configuration
 
-Change application configuration only when listed in the approved plan.
+Change application configuration only when the approved artifacts require it.
 
-For SQLite file persistence:
-
-- use the approved project-relative database location;
-- keep generated data files outside version control;
-- separate environment-specific settings via `appsettings.{Environment}.json`
-  where project conventions require it;
-- do not expose a database admin/diagnostic UI by default;
-- do not enable unsafe schema behavior (`EnsureCreated`/`EnsureDeleted`
-  against the file database) without explicit approval.
+- Deployment configuration lives in `appsettings.json` /
+  `appsettings.{Environment}.json` / environment variables (AD-10, DC-3).
+- Startup wiring lives in `Program.cs` and `Configuration` extension methods,
+  with no business logic (AD-10).
+- Nothing school-specific is hard-coded (AD-10).
+- Do not embed secrets or the service-account key in repository configuration
+  (SC-7).
 
 Document every configuration change in the Implementation Report.
 
-Do not embed secrets in repository configuration.
-
 ---
 
-## Step 14: Update Documentation
+## Step 13: Update Documentation
 
 Update only documentation required by approved artifacts and actual changes.
-
-Possible updates include:
-
-- OpenAPI contract;
-- architecture references;
-- persistence documentation;
-- configuration documentation;
-- README instructions;
-- Story traceability.
 
 Do not rewrite approved source requirements to match implementation behavior.
 
@@ -770,26 +661,22 @@ appropriate earlier stage.
 
 ---
 
-## Step 15: Reformat Changed Files
+## Step 14: Reformat Changed Files
 
-Use Rider reformatting capability when available, or `dotnet format` on the
-changed files.
-
-Reformat only changed files.
+Run `dotnet format` on the changed files only.
 
 Avoid repository-wide formatting changes.
 
 ---
 
-## Step 16: Run Incremental Validation
+## Step 15: Run Incremental Validation
 
 After every meaningful implementation group:
 
-1. build or compile;
-2. collect diagnostics;
-3. run relevant tests;
-4. address failures caused by current changes;
-5. record evidence.
+1. build;
+2. run relevant tests;
+3. address failures caused by current changes;
+4. record evidence.
 
 Do not postpone all validation until the end.
 
@@ -803,63 +690,45 @@ If three consecutive correction attempts fail for the same issue:
 
 ---
 
-## Step 17: Run Full Required Validation
+## Step 16: Run Full Required Validation
 
-Run all validation commands required by:
+Run all validation required by `AGENTS.md` (Definition of Done) and
+`testing-conventions.md`:
 
-- AGENTS.md;
-- Implementation Plan;
-- project conventions;
-- test plan.
+- `dotnet build ClassroomAgent.sln` — no errors, no warnings
+  (`TreatWarningsAsErrors`);
+- `dotnet test ClassroomAgent.sln` — green, with no skipped, ignored or
+  commented-out tests;
+- `dotnet format --verify-no-changes`.
 
-At minimum, when available:
-
-- build (`dotnet build`);
-- unit tests;
-- relevant web-layer tests;
-- persistence tests;
-- security tests;
-- contract tests;
-- Rider diagnostics;
-- lint / analyzers (`dotnet format --verify-no-changes`).
-
-Record actual commands, tools, exit codes, and results.
+Record actual commands, exit codes, and results.
 
 Do not claim PASS for any check that was not executed.
 
 ---
 
-## Step 18: Inspect Git Change Set
+## Step 17: Inspect Git Change Set
 
 Inspect the working tree.
 
-Classify changed files as:
+For every created, modified or deleted file record its trace per the scope rule
+in `AGENTS.md`: the Acceptance Criterion, Specification requirement, design
+element or `ac_test_matrix` test it serves, or the supporting change it is.
 
-- Planned;
-- Required Supporting Change;
-- Unexpected;
-- Unrelated.
+A file with no trace is out of scope: do not include it in the work; record an
+Open Decision if the Story seems to need it.
 
-Unexpected changes require explanation.
-
-Unrelated changes must not be silently included.
-
-Compare the change set with:
-
-- Impact Analysis;
-- Implementation Plan.
-
-Do not perform final Reconciliation in this Skill, but identify differences for
-the later Reconciliation stage.
+Confirm that no secret, generated database file or IDE-local config is in the
+change set.
 
 ---
 
-## Step 19: Create Implementation Report
+## Step 18: Create Implementation Report
 
 Create the `implementation_report` artifact at its registry path
 (`docs/evidence/{story_id}-implementation-report.md`).
 
-Do not update workflow state. Do not create a commit or Pull Request.
+Do not update workflow state. Do not commit, push or create a branch.
 
 ---
 
@@ -869,11 +738,11 @@ Do not update workflow state. Do not create a commit or Pull Request.
 
 Shared block from `docs/workflow/artifact-schema.md`
 (`artifact_type: implementation_report`), plus:
-`tests_status`, `build_status`, `diagnostics_status` (each `PASS` / `FAIL` /
+`tests_status`, `build_status`, `format_status` (each `PASS` / `FAIL` /
 `NOT_RUN`), `security_sensitive` (bool). `created_at` / `updated_at` are runtime
 timestamps. `attempt` mirrors `workflow-state.yaml.attempt`.
 
-Illustrative (dates are examples only):
+Illustrative:
 
     ---
     artifact_type: implementation_report
@@ -884,16 +753,16 @@ Illustrative (dates are examples only):
     updated_at: <runtime>
     produced_by: dotnet-implementor
     inputs:
-      - path: docs/plans/US-001-implementation-plan.md
+      - path: docs/specifications/US-001-spec.md
         version: 1
-      - path: docs/reviews/plans/US-001-plan-review.md
+      - path: docs/designs/database/US-001-db-design.md
         version: 1
       - path: docs/tests/US-001-ac-test-matrix.md
         version: 1
     supersedes: null
     tests_status: PASS
     build_status: PASS
-    diagnostics_status: PASS
+    format_status: PASS
     security_sensitive: true
     ---
 
@@ -912,10 +781,8 @@ List the exact paths and versions of:
 
 - User Story;
 - Specification;
+- Open Decisions;
 - designs;
-- Impact Analysis;
-- Implementation Plan;
-- Plan Review;
 - test artifacts.
 
 ## 3. Implemented Acceptance Criteria
@@ -929,23 +796,23 @@ For each Acceptance Criterion provide:
 
 ## 4. Change Set
 
-Every created / modified file, each classified `Planned` /
-`Required Supporting Change` / `Unexpected` / `Unrelated`, with the plan step or
-justification. Unrelated changes must not be included in the work.
+Every created / modified / deleted file with its trace (Acceptance Criterion,
+Specification requirement, design element, `ac_test_matrix` test, or the named
+supporting change). No file without a trace.
 
 ## 5. Validation Evidence
 
-Actual commands / Rider operations run, exit status, and results for: build,
-unit tests, web-layer tests, persistence tests, security tests, contract tests,
-diagnostics, lint. Do not claim `PASS` for a check that was not executed.
+Actual commands run, exit status, and results for: build, tests (unit,
+integration, contract, security), format check. Do not claim `PASS` for a check
+that was not executed.
 
 ## 6. Configuration Changes
 
-Every configuration change, with the approving plan step.
+Every configuration change, with the artifact that requires it.
 
 ## 7. Deviations and Discovered Problems
 
-Anything where repository reality diverged from the plan / impact analysis, and
+Anything where repository reality diverged from the approved artifacts, and
 what was done about it.
 
 ## 8. Open Decisions
@@ -958,7 +825,7 @@ missing, the implementation must stop and this report returns `BLOCKED`.
 # Result Envelope
 
 Return exactly this; the story-orchestrator records the transition — this Skill
-does not update `workflow-state.yaml`, create commits, or open a Pull Request:
+does not update `workflow-state.yaml` and does not commit:
 
 ```yaml
 result:
@@ -968,24 +835,27 @@ result:
   artifact_status: DRAFT
   artifacts:
     - docs/evidence/<StoryId>-implementation-report.md
-  next_stage: IMPLEMENTATION_VERIFICATION
+  next_stage: SECURITY_REVIEW
   loop_back_stage: null
   blocking_issues: []
   non_blocking_findings: []
 ```
 
-- `PASS` — the plan is fully implemented; build, required tests, and diagnostics
-  pass with recorded evidence; the change set is scoped; no undisclosed
-  security-sensitive change. The orchestrator advances to
-  `IMPLEMENTATION_VERIFICATION` (independent verification still happens there).
-- `CHANGES_REQUIRED` — implementation is incomplete but progressing and no
-  upstream artifact is at fault → `loop_back_stage: IMPLEMENTATION`
-  (key `partial`); or the plan itself is infeasible as written →
-  `loop_back_stage: IMPLEMENTATION_PLANNING` (key `blocked_by_plan`).
+- `PASS` — every Acceptance Criterion is implemented; build, tests and the format
+  check pass with recorded evidence; every changed file is traced; no
+  undisclosed security-sensitive change. The orchestrator advances to
+  `SECURITY_REVIEW`.
+- `CHANGES_REQUIRED` — either implementation is incomplete but progressing and
+  no upstream artifact is at fault → `loop_back_stage: IMPLEMENTATION`
+  (key `partial`); or an upstream artifact cannot be implemented as written →
+  `SPECIFICATION` (key `blocked_by_specification`), `API_DESIGN`
+  (key `blocked_by_api_design`) or `DB_DESIGN`
+  (key `blocked_by_database_design`).
 - `BLOCKED` — a precondition failed, an authoritative artifact conflict exists,
-  a security-sensitive Open Decision is unresolved, or three correction attempts
-  failed on the same issue. Record the likely root cause and recommend a human
-  review.
+  a story-level test contradicts the approved artifacts (name `TEST_WRITING` in
+  `blocking_issues`), a security-sensitive Open Decision is unresolved, or three
+  correction attempts failed on the same issue. Record the likely root cause and
+  recommend a human review.
 
 ---
 
@@ -995,14 +865,14 @@ result:
 - Do not resolve Open Decisions or invent business / security policy.
 - Do not perform unrelated refactoring, renames, dependency upgrades, or
   formatting outside changed files.
-- Do not add a dependency without explicit human approval.
+- Do not add a dependency without an approved Open Decision.
 - Do not weaken, disable, or delete tests; do not weaken assertions.
 - Do not expose a database admin/diagnostic UI or call
-  `EnsureCreated()`/`EnsureDeleted()` against the file database without an
-  approved decision.
-- Do not commit generated database files.
-- Do not update workflow state, create a branch/commit, or open/merge a Pull
-  Request.
+  `EnsureCreated()`/`EnsureDeleted()`.
+- Do not write to Google Workspace or call a live Google API.
+- Do not commit generated database files, secrets or the service-account key.
+- Do not edit the Python prototype.
+- Do not update workflow state, commit, push or create a branch.
 - Do not mark the Story complete.
 
 ---
@@ -1011,8 +881,7 @@ result:
 
 Complete only when: the active Story and stage are resolved; preconditions
 validated; a traceability map was established; the Specification's Acceptance
-Criteria were implemented in order (or a deviation recorded); incremental and
-full validation
-were run with recorded evidence; the change set was inspected and classified;
-the `implementation_report` was written with real evidence; and the result
-envelope was returned with an explicit `verdict`.
+Criteria were implemented (or a deviation recorded); incremental and full
+validation were run with recorded evidence; every changed file was traced; the
+`implementation_report` was written with real evidence; and the result envelope
+was returned with an explicit `verdict`.
