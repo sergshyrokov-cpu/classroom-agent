@@ -351,6 +351,11 @@ Non-negotiable:
   Admin has no local password at all.
 - All Google API scopes are read-only. The program never writes to Google
   Workspace.
+- Deny by default: every endpoint and Razor page declares an authorization
+  policy, and anonymous access is limited to the closed list in SC-4.
+- Every action listed in SC-11 writes an audit event with no personal data;
+  audit rows are never updated; an installation's rows are deleted only by the
+  retention purge, the Control Plane's never.
 - All external input is validated before it reaches business logic — request
   bodies, query and route parameters, uploaded files, and data returned by
   Google APIs. The mechanism is `trebovaniya.md` section 8 (DataAnnotations) and
