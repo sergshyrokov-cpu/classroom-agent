@@ -282,6 +282,17 @@ Before writing a Specification, check `trebovaniya.md` section 7
 ("Открытые вопросы"). If the Story depends on something still listed there, that
 is an Open Decision — raise it, do not resolve it yourself.
 
+Where an Open Decision is recorded:
+
+- Story-level — the `open_decisions` artifact in `docs/workflow/artifact-paths.yaml`
+  (owner `spec-writer`). Open Decisions a human wrote into the Story's own
+  "Open Decisions" section are carried into that artifact, keeping their `OD-` ids.
+- Project-level, or with no active Story — a new numbered item in
+  `trebovaniya.md` section 7; it is resolved by a new version of that document.
+
+An Open Decision is resolved only by a human; the resolution is written next to
+it, never deleted.
+
 ---
 
 # Testing Strategy

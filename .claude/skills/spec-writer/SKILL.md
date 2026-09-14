@@ -32,6 +32,9 @@ primary source of truth for design, planning, testing, and implementation.
 - `story` exists in `docs/stories/` and `trebovaniya.md` is readable.
 - Check `trebovaniya.md` section 7 ("Открытые вопросы") before writing: if the
   Story depends on a question still open there, that is an Open Decision.
+- Carry every Open Decision from the Story's own "Open Decisions" section into
+  the `open_decisions` artifact, keeping its `OD-` id and any recorded
+  resolution. A Story Open Decision missing from the artifact is a defect.
 - If unresolved Open Decisions exist: do **not** guess answers. Represent each in
   the Specification's "Open Decisions" section, write them to the
   `open_decisions` artifact (this Skill owns it in this variant), and describe
