@@ -374,6 +374,11 @@ Non-negotiable — the Hard Stops above apply in full, and in addition:
   `git push`. A commit happens only after `HUMAN_PR_APPROVAL`, made by the human
   or by an agent acting on an explicit request from the human in that
   conversation.
+- **Workflow commits are offered, never made unasked.** After `/so:start` and after
+  each document stage (SPECIFICATION, HUMAN_SPEC_APPROVAL, API_DESIGN, DB_DESIGN)
+  the agent offers a commit of the workflow state and that stage's artifacts, and
+  makes it only on the human's explicit "коммить" in that conversation. Story code
+  is still committed only after `HUMAN_PR_APPROVAL`.
 
 ---
 
