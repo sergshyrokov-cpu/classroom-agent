@@ -639,7 +639,7 @@ If a required policy (for example a password policy) is not approved, stop and
 create an Open Decision.
 
 Do not invent password complexity or lockout requirements during
-implementation.
+implementation (for the Owner and the Dean — SC-2).
 
 ---
 

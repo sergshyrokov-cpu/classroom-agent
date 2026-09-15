@@ -7,7 +7,7 @@ priority: HIGH
 source:
   type: authored
 # Lifecycle status is owned by docs/catalog/stories.yaml (not this file).
-# Aligned with trebovaniya.md v61.
+# Aligned with trebovaniya.md v62.
 ---
 
 # User Story
@@ -117,17 +117,26 @@ a second Owner account; the Owner switching their own UI language (US-039).
   (NFR-072);
 - on an incorrect login or password, authentication fails with a message that
   does not reveal which of the two was wrong, and does not reveal whether the
-  login exists.
+  login exists;
+- after 5 consecutive failed attempts sign-in is locked for 15 minutes, even with
+  the correct password; after 15 minutes the correct password signs in again, and
+  a successful sign-in resets the counter; there is no permanent lockout (SC-2);
+- a refusal during a lockout shows the same message as any other refusal
+  (SC-2, `trebovaniya.md` §9, v62).
 
 ## AC-006 Weak input is rejected
 
 **Given** the first-run setup page is open
 
-**When** a login or password failing the configured policy is submitted
+**When** a login or password failing the policy is submitted — a password
+shorter than 15 characters, or one equal to or containing the login (SC-2,
+`trebovaniya.md` §9, v62)
 
 **Then**:
 
 - the account is not created;
+- a password of 15 or more characters with no digit, upper-case letter or symbol,
+  spaces included, is accepted, and one of 64 characters is accepted;
 - the response names which field failed and why, in terms safe to display
   (`api-conventions.md` API-6);
 - the submitted password never appears in the response, in a log, or in an
@@ -160,7 +169,8 @@ a second Owner account; the Owner switching their own UI language (US-039).
 - a successful sign-in writes a row with the Owner account's internal id and
   role as actor, outcome, UTC time and request id;
 - a refused sign-in writes a row with outcome "refused" and the refusal
-  category — unknown login or wrong password (or locked out, per OD-001); the
+  category — unknown login, wrong password, or locked out after failed attempts
+  (SC-11, v62); the
   actor is the Owner account's id when the login exists, otherwise "anonymous";
 - no row carries the login or password typed, or any other personal data
   (`trebovaniya.md` §5, v45);
@@ -223,6 +233,14 @@ protecting the entire service, and ASP.NET Core Identity's defaults are a
 starting point, not an approved decision.
 
 Affects: AC-005, AC-006, AC-008.
+
+*Resolved (`trebovaniya.md` v62, `security-conventions.md` SC-2):* the password
+is at least 15 characters, at least 64 are accepted, spaces are allowed, there
+are no composition rules, and it may not equal or contain the login; 5
+consecutive failed attempts lock sign-in for 15 minutes, a successful sign-in
+resets the counter, and there is no permanent lockout; every refused sign-in
+shows the same message; the audit refusal category "locked out" is added. No
+external breached-password check (SC-13).
 
 *Resolved:* **where the Owner switches UI language** — in the separate
 cross-cutting Story US-039, which covers the Owner, Admins and Deans. This Story

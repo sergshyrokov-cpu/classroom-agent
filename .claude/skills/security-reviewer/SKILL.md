@@ -329,7 +329,7 @@ Security-sensitive Open Decisions are blockers when they affect the Story.
 
 Examples include:
 
-- password or lockout policy (for example US-001 OD-001);
+- password or lockout policy;
 - authorization rules or a permission-matrix cell not in `trebovaniya.md` §2;
 - an anonymous endpoint not on the SC-4 list;
 - a new Google scope or a new outbound data flow;
@@ -362,7 +362,7 @@ Do not modify or remove existing changes.
 Security behavior must come from approved artifacts.
 
 Do not invent password complexity, account lockout, token expiration, or other
-policies during review.
+policies during review (for the Owner and the Dean — SC-2).
 
 If a necessary security decision is missing, report it as a blocker.
 
@@ -585,7 +585,7 @@ configuration). The file is the rule; the lines below are only what to look for.
 | SC | Verify |
 |---|---|
 | SC-1 Roles | No Teacher or Student in `AppRole`, a policy or a seed; no permission cell beyond `trebovaniya.md` §2. |
-| SC-2 Authentication | Identity hashes Dean and Owner passwords; an Admin has no local password, column or reset flow; a Dean login is a domain email; an Admin reset forces a change at next login; first-run setup requires the one-time code, printed to the console only; session and antiforgery cookies carry `httpOnly`, `Secure` and the per-host `SameSite`; the installation sends HSTS. |
+| SC-2 Authentication | Identity hashes Dean and Owner passwords; an Admin has no local password, column or reset flow; a Dean login is a domain email; an Admin reset forces a change at next login; first-run setup requires the one-time code, printed to the console only; Owner and Dean passwords are at least 15 characters with no composition rules and do not contain the login, 5 failed attempts lock sign-in for 15 minutes with no permanent lockout, and every refusal shows the same message; a Dean's temporary password obeys the same policy and a reset clears a lockout; session and antiforgery cookies carry `httpOnly`, `Secure` and the per-host `SameSite`; the installation sends HSTS. |
 | SC-3 AllowedAdmin | Checked by a Control Plane call on **every** Admin login; no local copy or cached answer; login refused when the Control Plane does not answer. |
 | SC-4 Authorization | Every endpoint and page declares a policy; a fallback policy requires an authenticated user; anonymous access only for the closed list; antiforgery validation is global for POST, PUT, PATCH and DELETE, and exemptions match the closed exemption list; no state-changing action on GET other than the Google OAuth callback. |
 | SC-5 Read-only mode | Every write use case refuses with `409` in Application; only BR-026 service writes run; no Google port is called. |
@@ -624,7 +624,8 @@ Verify:
   HSTS (SC-2);
 - no state-changing action is reachable by GET other than the Google OAuth
   callback, and export is POST (API-4);
-- Identity lockout where SC-4 requires it;
+- Identity password and lockout options match SC-2 for the Owner and the Dean
+  (15 characters, no composition rules, 5 attempts → 15 minutes);
 - authentication/authorization middleware ordering;
 - development-only exceptions;
 - error handling (the single `IExceptionHandler`, AD-9).

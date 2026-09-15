@@ -40,13 +40,32 @@ area as production severity.
   password; the account is never deleted (BR-014). After an Admin reset the Dean
   must change the password at the next login, so only the Dean knows it. A reset
   flow that lets the Admin keep a working password is a finding. A Dean may also
-  change their own password at any time (v38).
+  change their own password at any time (v38). The Dean's password and lockout
+  policy is the Owner's (below), plus: the temporary password an Admin sets on
+  reset obeys the same policy, the Dean's new password after a reset may not equal
+  the temporary one, and an Admin reset also clears a lockout. The Dean sign-in is
+  public and the login is guessable, which is why there is no permanent lockout —
+  anyone could otherwise lock a Dean out for good (`trebovaniya.md` §2, v62).
 - **Admin** — Google OAuth external login. **There is no local password for an
   Admin**, no password column, no password reset flow. A migration or entity
   adding one is a Critical finding.
 - **Owner** — login and password via ASP.NET Core Identity in the Control Plane,
   set once at first-run setup. Stored in the Control Plane database only, never
   in an installation's `AppUser` table.
+- **Password and lockout policy — Owner and Dean** (`trebovaniya.md` §2, §9,
+  v62):
+  - length: at least **15** characters; at least 64 accepted; spaces allowed;
+  - complexity: **no composition rules** — no required digit, upper case or
+    symbol; the password may not equal or contain the login;
+  - lockout: **5** consecutive failed attempts lock sign-in for **15 minutes**;
+    a successful sign-in resets the counter; there is no permanent lockout;
+  - every refused sign-in shows the same message — wrong login or password, or
+    sign-in temporarily locked after several failed attempts — so the response
+    never reveals whether the login exists or is locked;
+  - no check against an external breached-password service (SC-13).
+
+  A weaker length, an added composition rule, a permanent lockout or a message
+  that distinguishes a locked account is a finding.
 - **First-run setup requires a one-time setup code.** While no Owner account
   exists, the Control Plane generates a random code at startup and prints it to
   the server console only — never to the log file (SC-10). Setup succeeds only
@@ -107,11 +126,11 @@ Admin's account (BR-015, SC-8).
 
   | Endpoint | Host | Protected by |
   |---|---|---|
-  | Dean sign-in page | installation | Identity lockout after failed attempts |
+  | Dean sign-in page | installation | Identity lockout: 5 failed attempts → 15 minutes (SC-2) |
   | Google OAuth start and callback | installation | Google OAuth, then the `AllowedAdmin` check (SC-3) |
   | Status-change push receiver | installation | private network, separate port (SC-9, DC-6) |
   | Liveness and readiness | installation | private network, separate port (DC-6, DC-11) |
-  | Owner sign-in | Control Plane | private network; lockout policy open (US-001 OD-001) |
+  | Owner sign-in | Control Plane | private network; Identity lockout: 5 failed attempts → 15 minutes (SC-2) |
   | First-run setup | Control Plane | private network and the one-time setup code (SC-2) |
   | Legitimacy check and Admin login check | Control Plane | private network (SC-9) |
 
@@ -269,7 +288,8 @@ when" — above all, who took personal data out of the system.
   password, disabled account, email no longer in `AllowedAdmin`); with no
   account, the actor is "anonymous" with no identifier, and the login or email
   typed is never recorded. Either way the row carries the refusal category:
-  unknown login, wrong password, account disabled, not in `AllowedAdmin`,
+  unknown login, wrong password, account disabled, locked out after failed
+  attempts (v62), not in `AllowedAdmin`,
   Control Plane unavailable (`trebovaniya.md` §5, v45).
 - **A row never carries personal data** — SC-10 binds it exactly as it binds
   logs: no names, no email addresses, no grades. An export row records course

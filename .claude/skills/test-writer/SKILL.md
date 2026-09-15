@@ -411,12 +411,15 @@ When applicable, verify that:
 - plaintext passwords are never persisted;
 - password hashes are never returned by the API or shown in a view;
 - password fields are never included in response DTOs;
-- invalid passwords are rejected according to the approved password policy;
+- invalid passwords are rejected according to the approved password policy
+  (for the Owner and the Dean — SC-2);
+- sign-in locks after the SC-2 number of failed attempts, unlocks after the SC-2
+  duration, and the refusal message does not reveal the lockout;
 - an Admin has no local password path at all;
 - anonymous access is permitted or denied exactly as SC-4 lists;
 - error responses do not expose internal implementation details.
 
-Do not invent a password policy.
+Do not invent a password policy (for the Owner and the Dean — SC-2).
 
 If password requirements are absent or unresolved, return `BLOCKED`.
 

@@ -65,7 +65,11 @@ address or a free-form string is not accepted (v55). An Admin may disable, re-en
 account, but never deletes it — like a revoked Admin's `AppUser`, it is kept for
 history and audit, and removed only by the retention purge N years after its last
 successful sign-in, or creation if never signed in (PC-11, v45). A Dean may change their own password, and must do so at the
-first login after an Admin reset. *(§2, v38)*
+first login after an Admin reset. A Dean's password is at least 15 characters
+with no composition rules and may not contain the login; 5 consecutive failed
+sign-ins lock sign-in for 15 minutes, never permanently. The temporary password
+an Admin sets obeys the same policy, the new password may not equal it, and an
+Admin reset also clears a lockout (`security-conventions.md` SC-2). *(§2, v38, v62)*
 
 **BR-015** Teaching data is read on behalf of a **technical account** of the
 school — the impersonation user in `WorkspaceConnection`. The school's
