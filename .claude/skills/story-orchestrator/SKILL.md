@@ -343,13 +343,15 @@ commit and never runs `git commit` itself.
 - After `start` mode, after a transition out of `SPECIFICATION`, `API_DESIGN` or
   `DB_DESIGN`, and after an approval recorded at `HUMAN_SPEC_APPROVAL`: offer a
   commit of the workflow state (`workflow-state.yaml`, `active-story.yaml`,
-  `history.jsonl`, the Story's catalog entry) and the artifacts of that stage.
+  `history.jsonl`, the Story's catalog entry — the closed list in the `AGENTS.md`
+  Git Policy) and the artifacts of that stage.
 - After an approval recorded at `HUMAN_PR_APPROVAL`: offer the final commit —
   the Story code, its artifacts and the workflow state already at `COMPLETED`.
 - No other commit is offered.
 
-The commit is made by the agent in the conversation, after the Orchestrator has
-finished, and only on the human's explicit "коммить" — directly on `master`.
+The commit is made by the human, or by the agent in the conversation after the
+Orchestrator has finished and only on the human's explicit "коммить" — directly
+on `master`.
 Until the final commit lands the Story is approved but not Done (`AGENTS.md`
 Definition of Done, item 10).
 
@@ -391,8 +393,8 @@ overwrite a `CHANGES_REQUIRED`/`BLOCKED` artifact; skip a mandatory stage
 silently; pass a human gate; invoke multiple stage Skills per call; recurse to
 completion; delete historical
 artifacts; bypass hooks; weaken permissions; expose secrets; stage or commit
-unrelated files; run `git commit` or `git push` (the agent commits on the
-human's "коммить", see Commit Offer); mark a Story `COMPLETED`
+unrelated files; run `git commit` or `git push` (the human commits, or the
+agent on the human's "коммить", see Commit Offer); mark a Story `COMPLETED`
 without recorded human confirmation; treat chat history as workflow state;
 embed its own stage list or artifact paths.
 

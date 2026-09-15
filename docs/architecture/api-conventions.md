@@ -83,7 +83,8 @@ reason (grace period expired / suspended by the Owner).
 
 ## API-6 Error body
 
-All error responses use exactly this JSON shape:
+All error responses under `/api/v1` use exactly this JSON shape. Any other
+request gets the host's translated error page instead (SC-4, v66):
 
 ```json
 {
@@ -162,4 +163,5 @@ the closed list of endpoints in SC-4.
 Exception → HTTP mapping happens in the single `IExceptionHandler` per host
 (`architecture.md` AD-9). Controllers do not `try/catch` to build error
 responses. The one error that is not an exception — an antiforgery refusal — is
-mapped by a result filter (API-7).
+mapped by a result filter (API-7). The choice between the API-6 body and the
+error page is made by path, `/api/v1` or not (AD-9, SC-4, v66).

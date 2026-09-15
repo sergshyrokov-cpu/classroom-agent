@@ -415,8 +415,9 @@ When applicable, verify that:
 - sign-in locks after the SC-2 number of failed attempts, unlocks after the SC-2
   duration, and the refusal message is identical whether the login exists, the
   password is wrong or sign-in is locked — apart from the SC-2 exception for a
-  disabled Dean account with the correct password, which during a lockout still
-  gets the common message and never changes the failed-attempt counter;
+  disabled Dean account;
+- every step of the SC-2 Dean sign-in check sequence is proved by its own test:
+  the message shown, the failed-attempt counter and the SC-11 audit category;
 - an Admin has no local password path at all;
 - anonymous access is permitted or denied exactly as SC-4 lists;
 - error responses do not expose internal implementation details.

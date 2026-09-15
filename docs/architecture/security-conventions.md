@@ -57,6 +57,24 @@ area as production severity.
   password: a disabled Dean with the correct temporary password sees the
   disabled message, not the change form (v65). Showing that message without the
   correct password, or during a lockout, is a finding.
+- **The Dean sign-in check sequence** (v66) — each step runs only if the previous
+  one passed:
+  1. login not found — common message; audit category "unknown login";
+  2. sign-in lockout in force — common message; "locked out"; the password is not
+     checked;
+  3. wrong password — common message; the failed-attempt counter +1; "wrong
+     password";
+  4. account disabled — the "account disabled" message; the counter unchanged;
+     "account disabled";
+  5. temporary password — the forced password change form;
+  6. success — the counter is reset and the Dean is signed in.
+
+  The Owner has no disabled or temporary state, so steps 4 and 5 do not apply.
+  This sequence is not built on `SignInManager.PasswordSignInAsync` or
+  `CheckPasswordSignInAsync`: they check `CanSignInAsync` before the lockout and
+  the password, and reset the counter on a correct password. The disabled state
+  is never expressed through `CanSignInAsync` or Identity lockout. Building it on
+  either is a finding.
 - **Admin** — Google OAuth external login. **There is no local password for an
   Admin**, no password column, no password reset flow. A migration or entity
   adding one is a Critical finding.
@@ -164,23 +182,34 @@ Admin's account (BR-015, SC-8).
   | Owner sign-in | Control Plane | private network; Identity lockout (SC-2) |
   | First-run setup | Control Plane | private network and the one-time setup code (SC-2) |
   | Legitimacy check and Admin login check | Control Plane | private network (SC-9) |
-  | Error page | both | shows only translated text, no data (`trebovaniya.md` §8, v64) |
+  | Error page, and the fallback catch-all that answers `404` for any unmatched request | both | shows only translated text, no data; reads and writes nothing (`trebovaniya.md` §8, v64, v66) |
 
   An anonymous endpoint not on this list is a Critical finding; adding one
   requires extending the list.
-- **One error page per host** (`trebovaniya.md` §8, v64, v65) serves every form
-  and every error: an antiforgery refusal (`400`), not found (`404`) and an
-  internal error (`500`), each with its own translated text and nothing else — no
-  detail, no data. A signed-in user sees it in their own language, an anonymous
-  one in the default language (the school's in the installation, Ukrainian in the
-  Control Plane, NFR-073). Text and behaviour are the same on both hosts.
+- **One error page per host** (`trebovaniya.md` §8, v64, v65, v66) serves every
+  form and every error: an antiforgery refusal (`400`), not permitted (`403`), not
+  found (`404`) and an internal error (`500`), each with its own translated text
+  and nothing else — no detail, no data. A signed-in user sees it in their own
+  language, an anonymous one in the default language (the school's in the
+  installation, Ukrainian in the Control Plane, NFR-073). Text and behaviour are
+  the same on both hosts.
+  - **Page or body is chosen by path** (v66): a request under `/api/v1` gets the
+    API-6 body, every other request gets the error page — for an antiforgery
+    refusal, `403`, `404` and `500` alike (`architecture.md` AD-9, API-10).
+  - The cookie authentication `AccessDenied` path of each host leads to the error
+    page with status `403` (v66).
+  - **An unmatched request answers `404` to anyone** (v66). Without a matched
+    endpoint the fallback policy would challenge an anonymous request and send it
+    to sign-in, so each host maps an anonymous catch-all (`MapFallback` with
+    `AllowAnonymous`) that returns `404` — the error page, or the API-6 body under
+    `/api/v1`. It is part of the "Error page" entry of the anonymous list above.
 - **Every state-changing request carries an antiforgery token**
   (`trebovaniya.md` §8, v61). Both hosts apply ASP.NET Core antiforgery
   validation globally to every POST, PUT, PATCH and DELETE — Razor pages and REST
   controllers alike — never per action. A Razor form sends the token as a hidden
   field; a REST call from the same UI sends it in the `RequestVerificationToken`
   header (`api-conventions.md` API-7). A request without a valid token is refused
-  with `400`: a Razor form gets the host's error page (below) with the translated
+  with `400`: a Razor form gets the host's error page (above) with the translated
   "page expired — reload it and try again" text, and a REST call gets the API-6
   body (API-7, `trebovaniya.md` §8, v64). Anonymous forms are not exempt:
   Dean sign-in, Owner sign-in, first-run setup and the "Sign in with Google" button

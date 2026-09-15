@@ -169,6 +169,12 @@ settings, "check access", report template edits. No port that calls Google
   conflict → 409, read-only mode → 409, unmapped → 500.
 - Error bodies follow `api-conventions.md` API-6. Stack traces, SQL, entity
   names, file paths and secrets never appear in a response.
+- **Body or page by path** (v66): the handler writes the API-6 body only for a
+  request under `/api/v1`. For any other request it writes nothing and returns
+  `false`, so `UseExceptionHandler` re-executes the host's error page
+  (`security-conventions.md` SC-4). A `404` or `403` set without an exception is
+  shown through `UseStatusCodePagesWithReExecute`, also only outside `/api/v1`.
+  This is one mechanism, not two.
 
 ## AD-10 Configuration boundaries
 

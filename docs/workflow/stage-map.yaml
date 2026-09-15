@@ -209,8 +209,8 @@ stages:
     meaning: >
       The human reviews the implementation report and the security review and
       approves. The final commit — Story code, its artifacts and the workflow
-      state at COMPLETED — follows at once, made by the human or by an agent on
-      the human's explicit request. There is no PR flow in this project —
+      state at COMPLETED — follows at once, made by the human, or by an agent
+      only on the human's explicit "коммить". There is no PR flow in this project —
       commits land on master.
 
   COMPLETED:

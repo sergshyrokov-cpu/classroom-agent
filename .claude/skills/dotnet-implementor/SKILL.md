@@ -596,6 +596,9 @@ Use the single `IExceptionHandler` of the host project (AD-9, API-10).
 Map errors as AD-9 defines: validation → 400, authn → 401, authz → 403,
 not found → 404, conflict → 409, read-only mode → 409, unmapped → 500.
 
+A request under `/api/v1` gets the API-6 body; any other request gets the host's
+error page — the body-or-page split of AD-9 and SC-4.
+
 Do not leak:
 
 - stack traces;
@@ -614,9 +617,15 @@ access or school data, follow `security-conventions.md`, in particular:
 
 - passwords are hashed by ASP.NET Core Identity; never store or return
   plaintext passwords or hashes, never log credentials (SC-2);
+- the Dean sign-in follows the SC-2 check sequence step by step, not
+  `PasswordSignInAsync` or `CheckPasswordSignInAsync` (SC-2);
 - an Admin has no local password — no password column, no reset flow (SC-2);
 - `AllowedAdmin` is checked on every Admin login (SC-3);
-- authorization is deny-by-default with declared policies (SC-4);
+- authorization is deny-by-default with declared policies; the anonymous
+  fallback catch-all answers `404`, and the error page covers `400`, `403`, `404`
+  and `500` (SC-4);
+- the installation's private routes answer only on the private local port,
+  checked by `Connection.LocalPort`, never by `RequireHost` (DC-6);
 - antiforgery validation is global for POST, PUT, PATCH and DELETE on both hosts,
   anonymous forms included; REST calls from the UI send the token in the
   `RequestVerificationToken` header; only endpoints on the SC-4 exemption list

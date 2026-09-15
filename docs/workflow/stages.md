@@ -41,7 +41,7 @@ backlog-sync stage and no GitHub-Issue source.
   Decisions are resolved. Everything downstream trusts it.
 - **`HUMAN_PR_APPROVAL`** — the person reads `implementation_report` and
   `security_review` and approves; the final commit follows at once, made by the
-  person or by an agent on their explicit request. Despite the name there is no
+  person, or by an agent only on their explicit «коммить». Despite the name there is no
   Pull Request in this project: commits land on `master`.
 - **`COMPLETED`** — terminal. There is no ARCHIVED stage and no archive mode.
 

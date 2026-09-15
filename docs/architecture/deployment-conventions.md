@@ -173,9 +173,13 @@ the previous one — the dependency is real, not stylistic
   not serve those paths; a test asserts that on the public port they answer
   `404`. Otherwise anyone on the internet could post a status to the push
   receiver — lifting a suspension or forcing read-only mode. The private routes
-  are bound to that port by host matching (`RequireHost("*:<private port>")`), so
-  the split is part of routing and the test can prove it through the `Host`
-  header without real ports (TC-5, v65).
+  form one route group whose filter compares the connection's actual local port
+  (`HttpContext.Connection.LocalPort`) with the private port from configuration
+  and answers `404` on any other port. The `Host` and `X-Forwarded-Host` headers
+  play no part: a client can forge them, so host matching (`RequireHost`) would
+  not bind a route to a port. The routes are anonymous, so the filter runs after
+  the match and the answer is `404`, not a sign-in redirect (SC-4). A test sets
+  the local port through `TestServer.SendAsync` (TC-5, v66).
 - **The private port speaks plain HTTP** (SC-2, `trebovaniya.md` §8, v64). It
   carries status only, and HTTPS without client authentication would not stop a
   forged push — network isolation does. HTTPS redirection and HSTS apply to the

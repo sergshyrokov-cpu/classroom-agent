@@ -75,9 +75,16 @@ Derived from `trebovaniya.md` sections 5 and 9, and from the workflow order in
   refused this way gets the translated error page; a REST call gets the API-6
   body (SC-4, API-7).
 - The installation's private endpoints (push receiver, liveness, readiness) are
-  asserted to answer `404` when requested with a `Host` header naming the public
-  port, and to answer on the private port — the split is host matching in
-  routing (DC-6, v65).
+  requested through `TestServer.SendAsync` with `Connection.LocalPort` set: on the
+  public port they answer `404` — also with a forged `Host` or
+  `X-Forwarded-Host` naming the private port — and on the private port they
+  answer (DC-6, v66).
+- The anonymous-access enumeration counts the fallback catch-all as part of the
+  SC-4 "Error page" entry. An anonymous request to an unknown address is asserted
+  to get `404` — the error page, or the API-6 body under `/api/v1` — not a
+  sign-in redirect (SC-4, v66).
+- A forbidden role on a Razor page is asserted to get `403` with the translated
+  error page, not a redirect and not `404` (SC-4, v66).
 - A state-changing action requested by GET — for example signing out or
   choosing the UI language — does not take effect (API-4).
 - The session and antiforgery cookies of each host are asserted to carry the
