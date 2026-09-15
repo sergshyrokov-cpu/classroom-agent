@@ -68,6 +68,15 @@ Derived from `trebovaniya.md` sections 5 and 9, and from the workflow order in
   as an endpoint with no policy.
 - A test enumerates every endpoint of each host and fails if one allows
   anonymous access without being on the SC-4 list.
+- A state-changing request without an antiforgery token is refused with `400` —
+  for a Razor form and for a REST call, anonymous forms included (SC-4, API-7).
+- A test enumerates every endpoint of each host and fails if one accepting
+  POST, PUT, PATCH or DELETE is exempt from antiforgery validation without being
+  on the SC-4 exemption list.
+- A state-changing action requested by GET — for example signing out or
+  choosing the UI language — does not take effect (API-4).
+- The session and antiforgery cookies of each host are asserted to carry the
+  `httpOnly`, `Secure` and `SameSite` attributes SC-2 fixes for that host.
 - Read-only mode is tested in the Application layer: a blocked write must fail
   with the conflict behaviour of AD-6 / SC-5 even when the HTTP endpoint is
   called directly. Asserting that a Razor button is hidden is not a test of

@@ -585,9 +585,9 @@ configuration). The file is the rule; the lines below are only what to look for.
 | SC | Verify |
 |---|---|
 | SC-1 Roles | No Teacher or Student in `AppRole`, a policy or a seed; no permission cell beyond `trebovaniya.md` §2. |
-| SC-2 Authentication | Identity hashes Dean and Owner passwords; an Admin has no local password, column or reset flow; a Dean login is a domain email; an Admin reset forces a change at next login; first-run setup requires the one-time code, printed to the console only. |
+| SC-2 Authentication | Identity hashes Dean and Owner passwords; an Admin has no local password, column or reset flow; a Dean login is a domain email; an Admin reset forces a change at next login; first-run setup requires the one-time code, printed to the console only; session and antiforgery cookies carry `httpOnly`, `Secure` and the per-host `SameSite`; the installation sends HSTS. |
 | SC-3 AllowedAdmin | Checked by a Control Plane call on **every** Admin login; no local copy or cached answer; login refused when the Control Plane does not answer. |
-| SC-4 Authorization | Every endpoint and page declares a policy; a fallback policy requires an authenticated user; anonymous access only for the closed list. |
+| SC-4 Authorization | Every endpoint and page declares a policy; a fallback policy requires an authenticated user; anonymous access only for the closed list; antiforgery validation is global for POST, PUT, PATCH and DELETE, and exemptions match the closed exemption list; no state-changing action on GET other than the Google OAuth callback. |
 | SC-5 Read-only mode | Every write use case refuses with `409` in Application; only BR-026 service writes run; no Google port is called. |
 | SC-6 No DB UI | No database browser, SQL console or diagnostic endpoint; developer exception page only in local development. |
 | SC-7 Key | The key is never in a database, a UI, a request or the repository; only its reference sits in configuration. |
@@ -611,10 +611,19 @@ Verify:
 
 - fallback policy and declared policies;
 - explicit `[AllowAnonymous]` endpoints match the SC-4 list;
-- CSRF/antiforgery handling — not yet defined in `security-conventions.md`;
-  record what the implementation does, and an Open Decision if a
-  state-changing form has no protection;
-- session cookie is `httpOnly` (SC-2);
+- antiforgery validation is registered globally on both hosts for POST, PUT,
+  PATCH and DELETE — Razor pages and REST controllers — and anonymous forms are
+  not exempt (SC-4);
+- every `[IgnoreAntiforgeryToken]` or equivalent exemption matches the SC-4
+  exemption list (Critical otherwise);
+- REST calls from the UI send the token in the `RequestVerificationToken`
+  header (API-7);
+- session cookie is `httpOnly` and `Secure`, `SameSite=Lax` in the
+  installation and `Strict` in the Control Plane; antiforgery cookie is
+  `Strict`, `httpOnly` and `Secure`; the installation uses HTTPS redirection and
+  HSTS (SC-2);
+- no state-changing action is reachable by GET other than the Google OAuth
+  callback, and export is POST (API-4);
 - Identity lockout where SC-4 requires it;
 - authentication/authorization middleware ordering;
 - development-only exceptions;

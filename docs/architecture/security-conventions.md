@@ -55,6 +55,18 @@ area as production severity.
   is a Critical finding (`trebovaniya.md` §9, v35).
 - Session state lives in an `httpOnly` cookie. No password and no Google
   credential is ever stored client-side (`trebovaniya.md` section 8).
+- **Cookie attributes are fixed per host** (`trebovaniya.md` §8, v61):
+  - the installation session cookie is `SameSite=Lax` — `Strict` would drop the
+    session on the first page after returning from Google; the antiforgery token
+    (SC-4) is the CSRF control, `Lax` the second layer;
+  - the Control Plane session cookie is `SameSite=Strict` — it has no OAuth;
+  - the antiforgery cookie is `SameSite=Strict` and `httpOnly` on both hosts;
+  - every session and antiforgery cookie is `Secure` on both hosts. The
+    installation redirects HTTP to HTTPS and sends HSTS; the Control Plane is
+    served over HTTPS inside the private network (DC-6, `trebovaniya.md` §9).
+
+  A session cookie without `httpOnly` or `Secure`, or with a `SameSite` value
+  other than the one fixed here, is a finding.
 
 ## SC-3 Admin identity and the AllowedAdmin check
 
@@ -105,6 +117,30 @@ Admin's account (BR-015, SC-8).
 
   An anonymous endpoint not on this list is a Critical finding; adding one
   requires extending the list.
+- **Every state-changing request carries an antiforgery token**
+  (`trebovaniya.md` §8, v61). Both hosts apply ASP.NET Core antiforgery
+  validation globally to every POST, PUT, PATCH and DELETE — Razor pages and REST
+  controllers alike — never per action. A Razor form sends the token as a hidden
+  field; a REST call from the same UI sends it in the `RequestVerificationToken`
+  header (`api-conventions.md` API-7). A request without a valid token is refused
+  with `400`. Anonymous forms are not exempt: Dean sign-in, Owner sign-in,
+  first-run setup and the "Sign in with Google" button (a POST form) all require
+  the token, which protects against login CSRF.
+- **Exemption from antiforgery is a closed list.** Only these endpoints may skip
+  antiforgery validation, each with the protection that replaces the token:
+
+  | Endpoint | Host | Protected by |
+  |---|---|---|
+  | Google OAuth callback (return from Google and completing the sign-in) | installation | OAuth `state` parameter and correlation cookie, then the `AllowedAdmin` check (SC-3) |
+  | Status-change push receiver | installation | private network, separate port (SC-9, DC-6) |
+  | Legitimacy check and Admin login check | Control Plane | private network (SC-9) |
+
+  An exemption not on this list is a Critical finding; adding one requires
+  extending the list.
+- **GET changes nothing** (`api-conventions.md` API-4). The only GET that writes
+  is the Google OAuth callback. A state-changing action reachable by GET —
+  sign-out, choosing the UI language, starting a synchronization, an export — is
+  a finding.
 - Policies are defined in `Application/Authorization` and registered in the
   host's `Security` namespace, so the matrix lives in one place and can be
   compared against `trebovaniya.md` section 2.

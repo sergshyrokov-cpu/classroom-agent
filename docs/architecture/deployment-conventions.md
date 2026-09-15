@@ -16,8 +16,8 @@ into deployment order. Where a question is open it says so and names the item in
 
 | Unit | Instances | Owns | Reachability |
 |---|---|---|---|
-| Control Plane (`ClassroomAgent.ControlPlane`) | one for the whole service | its own database: `Owner`, `Installation`, `AllowedAdmin`, `InstanceLicenseCheck`, `AuditEvent` | private network only: the Owner UI and the service channel to every installation (DC-6) |
-| Installation (`ClassroomAgent.Web`) | one per school | its own database: all teaching data of that school | public HTTPS for school staff; private channel to the Control Plane |
+| Control Plane (`ClassroomAgent.ControlPlane`) | one for the whole service | its own database: `Owner`, `Installation`, `AllowedAdmin`, `InstanceLicenseCheck`, `AuditEvent` | private network only, over HTTPS: the Owner UI and the service channel to every installation (DC-6) |
+| Installation (`ClassroomAgent.Web`) | one per school | its own database: all teaching data of that school | public HTTPS with HSTS for school staff; private channel to the Control Plane |
 | PostgreSQL | one database per unit above | — | reachable only by its own application |
 
 All of it runs on the Owner's infrastructure — no school hosts its own copy
@@ -149,7 +149,8 @@ the previous one — the dependency is real, not stylistic
   school hosting its own copy would require re-engineering that channel.
 - The school-facing UI is an ordinary public HTTPS application. Do not confuse
   the two: exposing the service endpoint publicly removes the only protection
-  the channel has.
+  the channel has. Its public port redirects HTTP to HTTPS and sends HSTS
+  (SC-2, `trebovaniya.md` §8, v61).
 - **The installation's private endpoints listen on a separate port.** The
   status-change push receiver, liveness and readiness are served by
   `ClassroomAgent.Web` on a second Kestrel endpoint bound only to the private
@@ -160,6 +161,12 @@ the previous one — the dependency is real, not stylistic
 - **The whole Control Plane is private**, the Owner UI included: the Owner
   reaches it through a VPN or tunnel, never from the public internet
   (`trebovaniya.md` §9, v35).
+- **The Control Plane is served over HTTPS as well**, inside the private network,
+  with a certificate from the Owner's internal certificate authority or from
+  Let's Encrypt via a DNS challenge; installations trust that certificate. A VPN
+  encrypts traffic only up to its gateway — beyond it the Owner's password and
+  the session cookie of the account that governs every school would travel in
+  plain text. Its cookies are `Secure` (SC-2, `trebovaniya.md` §9, v61).
 - The channel is bidirectional by design: the installation calls the Control
   Plane every 6 hours for the legitimacy check, and the Control Plane pushes
   status changes to the installation's endpoint (HTTP POST, 3 retries with

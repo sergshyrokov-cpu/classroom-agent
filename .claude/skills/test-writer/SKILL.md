@@ -198,6 +198,13 @@ Create security-focused tests for applicable behavior, as
 - an allowed-role and a forbidden-role test for each protected endpoint (TC-5);
 - a test that enumerates endpoints and fails on anonymous access not on the
   SC-4 list (TC-5);
+- a state-changing request without an antiforgery token refused with `400`,
+  for Razor forms and REST calls, anonymous forms included (TC-5);
+- a test that enumerates endpoints and fails on an antiforgery exemption not on
+  the SC-4 exemption list (TC-5);
+- a state-changing action requested by GET — sign-out, language choice — not
+  taking effect (TC-5);
+- session and antiforgery cookie attributes per host as SC-2 fixes (TC-5);
 - read-only mode tested in the Application layer, with substituted Google ports
   receiving no call (TC-5);
 - `AllowedAdmin` asserted on every Admin login, and a login refused when the

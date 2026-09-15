@@ -20,7 +20,7 @@ contract.
 - Request and response bodies are `application/json` (UTF-8).
 - `Content-Type: application/json` is required on requests with a body;
   otherwise respond `415`.
-- Exception: report export endpoints respond with the generated file
+- Exception: report export endpoints are `POST` (API-4) and respond with the generated file
   (`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` for
   Excel, `…wordprocessingml.document` for Word) plus
   `Content-Disposition: attachment`. Errors from those endpoints are still JSON
@@ -48,11 +48,22 @@ contract.
 | `DELETE /collection/{id}` | delete | `204 No Content` |
 | `POST /api/v1/sync` | enqueue background work | `202 Accepted` with the `SyncState` id |
 
+- **GET never changes state** (`trebovaniya.md` §8, v61). Anything that changes
+  data — including starting a synchronization, signing out and choosing the UI
+  language — is `POST`, `PUT`, `PATCH` or `DELETE`, and so carries the
+  antiforgery token (API-7).
+- The only exception is the Google OAuth callback, which Google reaches by
+  redirect: it creates the Admin's `AppUser` on first sign-in, records the last
+  successful sign-in and writes the sign-in audit event (SC-3, SC-11). It is not
+  a `/api/v1` endpoint and is on the SC-4 antiforgery exemption list.
+- **Report export is `POST`.** It writes an audit event (SC-11), so it is not a
+  read; the file comes back in the response (API-2).
+
 ## API-5 Error codes
 
 | Status | When |
 |---|---|
-| `400 Bad Request` | request-shape / validation failure, malformed JSON |
+| `400 Bad Request` | request-shape / validation failure, malformed JSON, missing or invalid antiforgery token (API-7) |
 | `401 Unauthorized` | authentication required or failed |
 | `403 Forbidden` | authenticated but not permitted by the role matrix |
 | `404 Not Found` | resource does not exist (or is not visible to the caller) |
@@ -97,10 +108,17 @@ All error responses use exactly this JSON shape:
   `Authorization` header is expected (`trebovaniya.md` section 8, NFR-072).
 - Admin authenticates through Google OAuth (external login); Dean through local
   login/password. Both end in the same cookie.
+- **Every state-changing call carries the antiforgery token** (SC-4,
+  `trebovaniya.md` §8, v61). The browser sends the cookie on its own, so a
+  `POST`, `PUT`, `PATCH` or `DELETE` from the UI sends the ASP.NET Core
+  antiforgery token in the `RequestVerificationToken` header; the page supplies
+  its value from a meta tag. A missing or invalid token is `400` with the API-6
+  body. `GET` needs no token because it changes nothing (API-4).
 - The Control Plane ↔ Data Plane channel is **not** part of this API and does
   not use these conventions: it is protected by network isolation
   (`trebovaniya.md` section 9) and speaks the types in
-  `ClassroomAgent.Contracts`.
+  `ClassroomAgent.Contracts`. It carries no antiforgery token and is on the SC-4
+  exemption list.
 
 ## API-8 Pagination
 

@@ -7,7 +7,7 @@ priority: HIGH
 source:
   type: authored
 # Lifecycle status is owned by docs/catalog/stories.yaml (not this file).
-# Aligned with trebovaniya.md v53.
+# Aligned with trebovaniya.md v61.
 ---
 
 # User Story
@@ -193,6 +193,23 @@ a second Owner account; the Owner switching their own UI language (US-039).
   Story adds) allow anonymous access — they are on the SC-4 closed list;
 - every other endpoint is closed by the deny-by-default fallback policy, and a
   test enumerating endpoints proves it (TC-5).
+
+## AC-011 State-changing forms are protected from CSRF
+
+**Given** the Control Plane is running
+
+**When** the first-run setup form or the Owner sign-in form is submitted without
+a valid antiforgery token
+
+**Then**:
+
+- the submission is refused, no account is created and nobody is signed in;
+- every other state-changing request this Story adds is refused the same way,
+  and none of them is on the SC-4 antiforgery exemption list;
+- no state-changing action this Story adds is reachable by GET (API-4);
+- the Control Plane session cookie is `httpOnly`, `Secure` and
+  `SameSite=Strict`, and the antiforgery cookie is `httpOnly`, `Secure` and
+  `SameSite=Strict` (SC-2, `trebovaniya.md` §8, §9, v61).
 
 ---
 

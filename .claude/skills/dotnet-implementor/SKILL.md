@@ -617,6 +617,15 @@ access or school data, follow `security-conventions.md`, in particular:
 - an Admin has no local password — no password column, no reset flow (SC-2);
 - `AllowedAdmin` is checked on every Admin login (SC-3);
 - authorization is deny-by-default with declared policies (SC-4);
+- antiforgery validation is global for POST, PUT, PATCH and DELETE on both hosts,
+  anonymous forms included; REST calls from the UI send the token in the
+  `RequestVerificationToken` header; only endpoints on the SC-4 exemption list
+  skip it (SC-4, API-7);
+- session cookie `httpOnly` and `Secure`, `SameSite=Lax` in the installation and
+  `Strict` in the Control Plane; antiforgery cookie `Strict`; HTTPS redirection
+  and HSTS in the installation (SC-2);
+- GET changes nothing — sign-out, language choice, synchronization and export
+  are POST; the Google OAuth callback is the only GET that writes (API-4);
 - the service-account key is never stored in a database, accepted through a UI,
   or committed (SC-7);
 - every Google scope is read-only; the program never writes to Google
