@@ -371,7 +371,7 @@ Non-negotiable — the Hard Stops above apply in full, and in addition:
 - **Commits go directly to `master`** — this is a solo project with no PR flow.
   Do not create feature branches.
 - No automated stage commits or pushes: a Skill never runs `git commit` or
-  `git push`. A commit happens only after `HUMAN_PR_APPROVAL`, made by the human
+  `git push`. A commit of Story code happens only after `HUMAN_PR_APPROVAL`, made by the human
   or by an agent acting on an explicit request from the human in that
   conversation.
 - **Workflow commits are offered, never made unasked.** After `/so:start` and after
