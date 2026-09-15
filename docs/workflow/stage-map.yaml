@@ -207,15 +207,19 @@ stages:
     on_approve: COMPLETED
     on_reject: IMPLEMENTATION
     meaning: >
-      The human reviews the implementation report and the security review, then
-      commits. There is no PR flow in this project — commits land on master.
+      The human reviews the implementation report and the security review and
+      approves. The final commit — Story code, its artifacts and the workflow
+      state at COMPLETED — follows at once, made by the human or by an agent on
+      the human's explicit request. There is no PR flow in this project —
+      commits land on master.
 
   COMPLETED:
     type: terminal
     owner: story-orchestrator
     meaning: >
-      The Story is delivered and committed. Terminal in this variant; there is
-      no separate ARCHIVED stage.
+      The Story is approved at HUMAN_PR_APPROVAL; the final commit made right
+      after records it on master. Terminal in this variant; there is no
+      separate ARCHIVED stage.
 
 # Input rule: every entry in a stage's `inputs` is either always-required or
 # listed in `conditional_artifacts` above (required unless its owning design

@@ -175,13 +175,9 @@ application. *(§5)*
 **NFR-071** Server-rendered Razor with a REST API behind it; not Blazor. *(§8)*
 
 **NFR-072** The session token lives in an `httpOnly` cookie. No password and no
-Google credential is stored client-side. Every state-changing request carries an
-antiforgery token, anonymous forms included, apart from a closed list of
-exemptions (the Google OAuth callback and the service channel). The session
-cookie is `SameSite=Lax` in the installation and `SameSite=Strict` in the Control
-Plane; session and antiforgery cookies are `Secure` on both hosts; the
-installation sends HSTS and the Control Plane is served over HTTPS. GET never
-changes state, except the Google OAuth callback; export is POST. *(§8, §9, v61)*
+Google credential is stored client-side. GET never changes state. CSRF protection,
+cookie attributes, HTTPS and the Data Protection keys follow
+`security-conventions.md` SC-2, SC-4 and SC-7. *(§8, §9, v61, v64)*
 
 **NFR-073** The installation UI is available in Ukrainian and English. The
 school's default language is an installation setting set by the Owner, Ukrainian

@@ -148,9 +148,9 @@ These are binding.
 # Domain Essentials
 
 **Non-normative summary** of `trebovaniya.md` sections 2, 5, 6 and 9 — a cheap
-cache so routine decisions do not require opening a ~140 KB Russian document.
+cache so routine decisions do not require opening a ~180 KB Russian document.
 `trebovaniya.md` always wins; on conflict this section is the one that gets
-corrected. **Verified against v63.** When `trebovaniya.md` moves past that
+corrected. **Verified against v64.** When `trebovaniya.md` moves past that
 version, re-verify this section and update the marker.
 
 - **Roles in the first version are Owner, Admin and Dean only.** Teacher and
@@ -374,11 +374,11 @@ Non-negotiable — the Hard Stops above apply in full, and in addition:
   `git push`. A commit of Story code happens only after `HUMAN_PR_APPROVAL`, made by the human
   or by an agent acting on an explicit request from the human in that
   conversation.
-- **Workflow commits are offered, never made unasked.** After `/so:start` and after
-  each document stage (SPECIFICATION, HUMAN_SPEC_APPROVAL, API_DESIGN, DB_DESIGN)
-  the agent offers a commit of the workflow state and that stage's artifacts, and
-  makes it only on the human's explicit "коммить" in that conversation. Story code
-  is still committed only after `HUMAN_PR_APPROVAL`.
+- **Workflow commits are offered, never made unasked.** After `/so:start`, after
+  SPECIFICATION, API_DESIGN and DB_DESIGN, and after approval at
+  HUMAN_SPEC_APPROVAL, `story-orchestrator` offers a commit of the workflow state
+  and that stage's artifacts; the agent makes it only on the human's explicit
+  "коммить" in that conversation.
 
 ---
 

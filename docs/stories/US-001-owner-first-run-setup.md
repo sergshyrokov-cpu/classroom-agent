@@ -7,7 +7,7 @@ priority: HIGH
 source:
   type: authored
 # Lifecycle status is owned by docs/catalog/stories.yaml (not this file).
-# Aligned with trebovaniya.md v62.
+# Aligned with trebovaniya.md v64.
 ---
 
 # User Story
@@ -40,7 +40,7 @@ can see, and is never re-openable afterwards.
 
 **In scope:** the Control Plane (`ClassroomAgent.ControlPlane`) only — its own
 host, its own database, ASP.NET Core Identity; the one-time setup code; Owner
-sign-in; the `AuditEvent` table of the Control Plane for the events this Story
+sign-in and sign-out; the `AuditEvent` table of the Control Plane for the events this Story
 produces; Ukrainian and English translation files for every page and message
 this Story adds.
 
@@ -115,6 +115,7 @@ a second Owner account; the Owner switching their own UI language (US-039).
 
 - they are authenticated and the session is carried by an `httpOnly` cookie
   (NFR-072);
+- the login is compared case-insensitively (SC-2, `trebovaniya.md` §3, v64);
 - on an incorrect login or password, authentication fails with a message that
   does not reveal which of the two was wrong, and does not reveal whether the
   login exists;
@@ -128,15 +129,18 @@ a second Owner account; the Owner switching their own UI language (US-039).
 
 **Given** the first-run setup page is open
 
-**When** a login or password failing the policy is submitted — a password
-shorter than 15 characters, or one equal to or containing the login (SC-2,
-`trebovaniya.md` §9, v62)
+**When** a login failing the format — shorter than 4 or longer than 64
+characters, or with a character other than Latin letters, digits, `.`, `-` and
+`_` — or a password failing the policy — shorter than 15 or longer than 128
+characters, or equal to or containing the login in any letter case — is submitted
+(SC-2, `trebovaniya.md` §3, §9, v62, v64)
 
 **Then**:
 
 - the account is not created;
 - a password of 15 or more characters with no digit, upper-case letter or symbol,
-  spaces included, is accepted, and one of 64 characters is accepted;
+  spaces included, is accepted, and one of 128 characters is accepted; length is
+  counted in characters, not bytes;
 - the response names which field failed and why, in terms safe to display
   (`api-conventions.md` API-6);
 - the submitted password never appears in the response, in a log, or in an
@@ -191,7 +195,7 @@ shorter than 15 characters, or one equal to or containing the login (SC-2,
   English (NFR-073);
 - date and number formats follow the Ukrainian locale.
 
-## AC-010 Only the setup and sign-in pages are anonymous
+## AC-010 Only the setup, sign-in and error pages are anonymous
 
 **Given** the Control Plane is running
 
@@ -199,8 +203,8 @@ shorter than 15 characters, or one equal to or containing the login (SC-2,
 
 **Then**:
 
-- only the first-run setup and Owner sign-in endpoints (and nothing else this
-  Story adds) allow anonymous access — they are on the SC-4 closed list;
+- only the first-run setup, Owner sign-in and error page endpoints (and nothing
+  else this Story adds) allow anonymous access — they are on the SC-4 closed list;
 - every other endpoint is closed by the deny-by-default fallback policy, and a
   test enumerating endpoints proves it (TC-5).
 
@@ -213,13 +217,19 @@ a valid antiforgery token
 
 **Then**:
 
-- the submission is refused, no account is created and nobody is signed in;
-- every other state-changing request this Story adds is refused the same way,
-  and none of them is on the SC-4 antiforgery exemption list;
+- the submission is refused with `400`, no account is created and nobody is
+  signed in; the Owner sees the translated "page expired — reload it and try
+  again" error page (SC-4, `trebovaniya.md` §8, v64);
+- every other state-changing request this Story adds — sign-out included — is
+  refused the same way, and none of them is on the SC-4 antiforgery exemption
+  list;
+- sign-out is a POST: a GET to it does not sign the Owner out, and after sign-out
+  the session no longer works (API-4, v64);
 - no state-changing action this Story adds is reachable by GET (API-4);
 - the Control Plane session cookie is `httpOnly`, `Secure` and
-  `SameSite=Strict`, and the antiforgery cookie is `httpOnly`, `Secure` and
-  `SameSite=Strict` (SC-2, `trebovaniya.md` §8, §9, v61).
+  `SameSite=Strict`, the antiforgery cookie is `httpOnly`, `Secure` and
+  `SameSite=Strict`, and every other cookie is `Secure` (SC-2, `trebovaniya.md`
+  §8, §9, v61, v64).
 
 ---
 
@@ -240,7 +250,10 @@ are no composition rules, and it may not equal or contain the login; 5
 consecutive failed attempts lock sign-in for 15 minutes, a successful sign-in
 resets the counter, and there is no permanent lockout; every refused sign-in
 shows the same message; the audit refusal category "locked out" is added. No
-external breached-password check (SC-13).
+external breached-password check (SC-13). *Refined in v64:* the password is at
+most 128 characters, counted in characters; "contains the login" is
+case-insensitive; the Owner login is 4–64 characters — Latin letters, digits,
+`.`, `-` and `_` — compared case-insensitively.
 
 *Resolved:* **where the Owner switches UI language** — in the separate
 cross-cutting Story US-039, which covers the Owner, Admins and Deans. This Story
@@ -265,6 +278,9 @@ ships translations and a Ukrainian default only (AC-009).
 - The Control Plane sends data nowhere except the service channel to
   installations: no external error tracker, analytics or telemetry service
   (SC-13).
+- The Control Plane keeps its ASP.NET Core Data Protection keys in its own
+  directory on a persistent volume, outside the database and backups, so a
+  restart neither signs the Owner out nor voids an open form (SC-7, v64).
 - This Story is the first to need the Control Plane `AuditEvent` table (AC-008).
   Creating the Owner account at first run and submitting a wrong setup code are
   not in the audited list of `trebovaniya.md` §5 — the Specification should say

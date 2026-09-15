@@ -198,13 +198,12 @@ Create security-focused tests for applicable behavior, as
 - an allowed-role and a forbidden-role test for each protected endpoint (TC-5);
 - a test that enumerates endpoints and fails on anonymous access not on the
   SC-4 list (TC-5);
-- a state-changing request without an antiforgery token refused with `400`,
-  for Razor forms and REST calls, anonymous forms included (TC-5);
-- a test that enumerates endpoints and fails on an antiforgery exemption not on
-  the SC-4 exemption list (TC-5);
+- a test that sends every POST, PUT, PATCH and DELETE endpoint outside the SC-4
+  exemption list a request without an antiforgery token and asserts `400`,
+  anonymous forms included (TC-5);
 - a state-changing action requested by GET — sign-out, language choice — not
   taking effect (TC-5);
-- session and antiforgery cookie attributes per host as SC-2 fixes (TC-5);
+- cookie attributes exactly as SC-2 fixes them per host (TC-5);
 - read-only mode tested in the Application layer, with substituted Google ports
   receiving no call (TC-5);
 - `AllowedAdmin` asserted on every Admin login, and a login refused when the
@@ -414,7 +413,9 @@ When applicable, verify that:
 - invalid passwords are rejected according to the approved password policy
   (for the Owner and the Dean — SC-2);
 - sign-in locks after the SC-2 number of failed attempts, unlocks after the SC-2
-  duration, and the refusal message does not reveal the lockout;
+  duration, and the refusal message is identical whether the login exists, the
+  password is wrong or sign-in is locked — apart from the SC-2 exception for a
+  disabled Dean account with the correct password;
 - an Admin has no local password path at all;
 - anonymous access is permitted or denied exactly as SC-4 lists;
 - error responses do not expose internal implementation details.

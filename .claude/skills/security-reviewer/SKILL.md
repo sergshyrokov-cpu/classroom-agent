@@ -546,10 +546,12 @@ List relevant assets:
 Identify relevant trust boundaries:
 
 - browser to the installation host (public HTTPS);
-- the Owner's browser to the Control Plane (private network only);
+- the Owner's browser to the Control Plane (private network only, over HTTPS —
+  DC-6);
 - Controller or Razor page to Application use case;
 - Application to ports: Google, Control Plane, secret store, report renderer;
-- installation to Control Plane service channel (private network, SC-9);
+- installation to Control Plane service channel (private network, SC-9; HTTPS to
+  the Control Plane, HTTP to the installation's private port — DC-6);
 - application to PostgreSQL;
 - developer environment to repository.
 
@@ -585,12 +587,12 @@ configuration). The file is the rule; the lines below are only what to look for.
 | SC | Verify |
 |---|---|
 | SC-1 Roles | No Teacher or Student in `AppRole`, a policy or a seed; no permission cell beyond `trebovaniya.md` §2. |
-| SC-2 Authentication | Identity hashes Dean and Owner passwords; an Admin has no local password, column or reset flow; a Dean login is a domain email; an Admin reset forces a change at next login; first-run setup requires the one-time code, printed to the console only; Owner and Dean passwords are at least 15 characters with no composition rules and do not contain the login, 5 failed attempts lock sign-in for 15 minutes with no permanent lockout, and every refusal shows the same message; a Dean's temporary password obeys the same policy and a reset clears a lockout; session and antiforgery cookies carry `httpOnly`, `Secure` and the per-host `SameSite`; the installation sends HSTS. |
+| SC-2 Authentication | Identity hashes Dean and Owner passwords; an Admin has no local password, column or reset flow; a Dean login is a domain email; first-run setup requires the one-time code, printed to the console only; the Owner login format, the password and lockout policy, the refusal message and its disabled-Dean exception, the temporary-password rules, cookie attributes, HTTPS redirection and HSTS per host and port all match SC-2. |
 | SC-3 AllowedAdmin | Checked by a Control Plane call on **every** Admin login; no local copy or cached answer; login refused when the Control Plane does not answer. |
-| SC-4 Authorization | Every endpoint and page declares a policy; a fallback policy requires an authenticated user; anonymous access only for the closed list; antiforgery validation is global for POST, PUT, PATCH and DELETE, and exemptions match the closed exemption list; no state-changing action on GET other than the Google OAuth callback. |
+| SC-4 Authorization | Every endpoint and page declares a policy; a fallback policy requires an authenticated user; anonymous access only for the closed list; antiforgery validation is global for POST, PUT, PATCH and DELETE, a refusal is the translated error page or the API-6 body, and exemptions match the closed exemption list; no state-changing action on GET other than the Google OAuth callback. |
 | SC-5 Read-only mode | Every write use case refuses with `409` in Application; only BR-026 service writes run; no Google port is called. |
 | SC-6 No DB UI | No database browser, SQL console or diagnostic endpoint; developer exception page only in local development. |
-| SC-7 Key | The key is never in a database, a UI, a request or the repository; only its reference sits in configuration. |
+| SC-7 Key | The key is never in a database, a UI, a request or the repository; only its reference sits in configuration; Data Protection keys sit in each host's own directory as SC-7 fixes. |
 | SC-8 Google | Only read-only scopes from `trebovaniya.md` §6; impersonates the technical account; the Admin's OAuth session never calls a data API; permission failures are neither retried nor swallowed. |
 | SC-9 Channel | A `WorkspaceConnection` whose domain differs from the `Installation` domain is refused; the service channel and Control Plane are not publicly reachable. |
 | SC-10 Hygiene | No internals in responses; no personal data in logs; rejected payloads not logged. |
@@ -612,20 +614,20 @@ Verify:
 - fallback policy and declared policies;
 - explicit `[AllowAnonymous]` endpoints match the SC-4 list;
 - antiforgery validation is registered globally on both hosts for POST, PUT,
-  PATCH and DELETE — Razor pages and REST controllers — and anonymous forms are
-  not exempt (SC-4);
+  PATCH and DELETE — Razor pages and REST controllers — anonymous forms are not
+  exempt, and every such endpoint outside the exemption list is actually
+  validated, however it is declared (SC-4);
 - every `[IgnoreAntiforgeryToken]` or equivalent exemption matches the SC-4
   exemption list (Critical otherwise);
 - REST calls from the UI send the token in the `RequestVerificationToken`
-  header (API-7);
-- session cookie is `httpOnly` and `Secure`, `SameSite=Lax` in the
-  installation and `Strict` in the Control Plane; antiforgery cookie is
-  `Strict`, `httpOnly` and `Secure`; the installation uses HTTPS redirection and
-  HSTS (SC-2);
+  header; a refusal returns the API-6 body to REST and the translated error page
+  to a Razor form (API-7, SC-4);
+- cookie attributes, HTTPS redirection and HSTS match SC-2 per host and port;
+  the Data Protection key ring matches SC-7;
 - no state-changing action is reachable by GET other than the Google OAuth
-  callback, and export is POST (API-4);
-- Identity password and lockout options match SC-2 for the Owner and the Dean
-  (15 characters, no composition rules, 5 attempts → 15 minutes);
+  callback, and export is POST (API-3, API-4);
+- Identity password, lockout and login options, the refusal message and the
+  disabled-account message match SC-2 for the Owner and the Dean;
 - authentication/authorization middleware ordering;
 - development-only exceptions;
 - error handling (the single `IExceptionHandler`, AD-9).

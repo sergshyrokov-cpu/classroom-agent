@@ -24,8 +24,8 @@ Three people use the first version. Teachers and students are data, not users
   Admin for every layout tweak would make the Admin an operator.
 - Links a Meet meeting code to its course when the system cannot tell which
   course a meeting belongs to.
-- Logs in with a login and password issued by the Admin, and changes it on first
-  login after an Admin reset.
+- Logs in with a login and a temporary password issued by the Admin, and changes
+  it at the first login — after the account is created and after an Admin reset.
 - Works in Ukrainian or English, whichever they choose.
 
 **Cannot:** configure the Google Workspace connection, create accounts.

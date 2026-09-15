@@ -20,7 +20,7 @@ contract.
 - Request and response bodies are `application/json` (UTF-8).
 - `Content-Type: application/json` is required on requests with a body;
   otherwise respond `415`.
-- Exception: report export endpoints are `POST` (API-4) and respond with the generated file
+- Exception: report export endpoints are `POST` (API-3, API-4) and respond with the generated file
   (`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` for
   Excel, `…wordprocessingml.document` for Word) plus
   `Content-Disposition: attachment`. Errors from those endpoints are still JSON
@@ -30,11 +30,16 @@ contract.
 
 - Plural nouns: `/api/v1/courses`, `/api/v1/courses/{id}`.
 - Kebab-case for multi-word path segments; `camelCase` for JSON field names.
-- No verbs in paths. The two unavoidable actions get explicit approved shapes:
+- No verbs in paths. The unavoidable actions get explicit approved shapes:
   - `POST /api/v1/sync` — enqueue a synchronization run (AD-5: returns
     immediately, does not wait)
   - `POST /api/v1/workspace-connection/test` — the "Проверить доступ" check from
     Epic 6
+  - `POST /api/v1/exports/{kind}` — export a journal or a Meet report (v64): a
+    JSON body with the courses, the period and the template; `200 OK` with the
+    file (API-2); the UI calls it by script with the antiforgery token in the
+    header (API-7) and saves the file. `openapi-designer` chooses the `{kind}`
+    values within this shape
 
 ## API-4 HTTP methods & success codes
 
@@ -47,17 +52,16 @@ contract.
 | `PATCH /collection/{id}` | partial update | `200 OK` |
 | `DELETE /collection/{id}` | delete | `204 No Content` |
 | `POST /api/v1/sync` | enqueue background work | `202 Accepted` with the `SyncState` id |
+| `POST /api/v1/exports/{kind}` | export a journal or report | `200 OK` with the file (API-2) |
 
 - **GET never changes state** (`trebovaniya.md` §8, v61). Anything that changes
   data — including starting a synchronization, signing out and choosing the UI
   language — is `POST`, `PUT`, `PATCH` or `DELETE`, and so carries the
   antiforgery token (API-7).
-- The only exception is the Google OAuth callback, which Google reaches by
-  redirect: it creates the Admin's `AppUser` on first sign-in, records the last
-  successful sign-in and writes the sign-in audit event (SC-3, SC-11). It is not
-  a `/api/v1` endpoint and is on the SC-4 antiforgery exemption list.
-- **Report export is `POST`.** It writes an audit event (SC-11), so it is not a
-  read; the file comes back in the response (API-2).
+- The only exception is the Google OAuth callback (SC-4). It is not a `/api/v1`
+  endpoint.
+- **Report export is `POST`** in the API-3 shape: it writes an audit event
+  (SC-11), so it is not a read.
 
 ## API-5 Error codes
 
@@ -113,12 +117,15 @@ All error responses use exactly this JSON shape:
   `POST`, `PUT`, `PATCH` or `DELETE` from the UI sends the ASP.NET Core
   antiforgery token in the `RequestVerificationToken` header; the page supplies
   its value from a meta tag. A missing or invalid token is `400` with the API-6
-  body. `GET` needs no token because it changes nothing (API-4).
+  body. An antiforgery refusal is a filter result, not an exception, so it never
+  reaches the `IExceptionHandler` (API-10): a result filter turns it into the
+  API-6 body. A Razor form gets the translated error page instead (SC-4, v64).
+  `GET` needs no token because it changes nothing (API-4).
 - The Control Plane ↔ Data Plane channel is **not** part of this API and does
   not use these conventions: it is protected by network isolation
   (`trebovaniya.md` section 9) and speaks the types in
-  `ClassroomAgent.Contracts`. It carries no antiforgery token and is on the SC-4
-  exemption list.
+  `ClassroomAgent.Contracts`. Its calls are `POST` without an antiforgery token,
+  as the SC-4 exemption list allows.
 
 ## API-8 Pagination
 
@@ -154,4 +161,5 @@ the closed list of endpoints in SC-4.
 
 Exception → HTTP mapping happens in the single `IExceptionHandler` per host
 (`architecture.md` AD-9). Controllers do not `try/catch` to build error
-responses.
+responses. The one error that is not an exception — an antiforgery refusal — is
+mapped by a result filter (API-7).

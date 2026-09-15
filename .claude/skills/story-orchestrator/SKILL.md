@@ -153,7 +153,7 @@ history, or from a GitHub state. Only `/so:approve` / `/so:reject` (which write
 On `/so:approve`: set `pending_human_gate.status: APPROVED`, append a
 `history.jsonl` event (`skill: null`, `verdict: "HUMAN_APPROVED"`), advance
 `current_stage` to the gate's `on_approve`, clear `pending_human_gate`, set
-`status: IN_PROGRESS` (or `COMPLETED`/`ARCHIVED` when entering those stages).
+`status: IN_PROGRESS` (or `COMPLETED` when entering that stage).
 
 On `/so:reject`: set `status: REJECTED`, record the human `comment`, append a
 `history.jsonl` event (`verdict: "HUMAN_REJECTED"`), route to the gate's
@@ -221,7 +221,7 @@ After a valid result, update `workflow-state.yaml` (per `state-schema.md`):
 - `previous_stage` := old `current_stage`;
 - `current_stage` := the derived next / loop-back / unchanged;
 - `last_completed_stage` := old stage when verdict was `PASS`/`NOT_APPLICABLE`;
-- `status` := `IN_PROGRESS` | `WAITING_FOR_HUMAN` | `BLOCKED` | `COMPLETED` | `ARCHIVED`;
+- `status` := `IN_PROGRESS` | `WAITING_FOR_HUMAN` | `BLOCKED` | `COMPLETED`;
 - `attempt` := reset to 1 on forward move; +1 on loop-back to an attempted stage;
 - `last_invoked_skill`, `last_result` (verdict/stage/recorded_at),
   `last_artifacts` ([{type, path, version}]);
@@ -281,7 +281,8 @@ approved implementation changes via the routed Skill; invoke configured Skills;
 collect diagnostics; write `workflow-state.yaml` and append `history.jsonl`.
 
 Auto Mode must NOT: pass a human gate; resolve an Open Decision; accept security
-risk; modify requirements; commit, push or create a branch; delete historical
+risk; modify requirements; commit without the human's explicit request (see
+Commit Offer), push or create a branch; delete historical
 artifacts; expose secrets;
 run destructive database operations.
 
@@ -333,6 +334,24 @@ Telemetry is execution evidence, never requirement authority.
 
 ---
 
+# Commit Offer
+
+Commits follow the Git Policy in `AGENTS.md`. The Orchestrator offers a commit;
+it never makes one unasked.
+
+- After `start` mode, after a transition out of `SPECIFICATION`, `API_DESIGN` or
+  `DB_DESIGN`, and after an approval recorded at `HUMAN_SPEC_APPROVAL`: offer a
+  commit of the workflow state (`workflow-state.yaml`, `active-story.yaml`,
+  `history.jsonl`, the Story's catalog entry) and the artifacts of that stage.
+- After an approval recorded at `HUMAN_PR_APPROVAL`: offer the final commit —
+  the Story code, its artifacts and the workflow state already at `COMPLETED`.
+- No other commit is offered.
+
+The commit is made only on the human's explicit "коммить" in the same
+conversation, directly on `master`.
+
+---
+
 # Output Format
 
 Every invocation finishes with a concise Orchestration Result:
@@ -352,6 +371,8 @@ Human Gate:          HUMAN_SPEC_APPROVAL — review docs/specifications/US-001-s
                      automated verdict PASS; run /so:approve or /so:reject
 Blocking Issues:     none
 Recommended Command: /so:approve   (after human review)
+Commit Offer:        workflow state + docs/specifications/US-001-spec.md —
+                     say «коммить» to commit (or "none")
 ```
 
 Paths shown must be resolved from `artifact-paths.yaml`. Do not claim a
@@ -367,7 +388,8 @@ overwrite a `CHANGES_REQUIRED`/`BLOCKED` artifact; skip a mandatory stage
 silently; pass a human gate; invoke multiple stage Skills per call; recurse to
 completion; delete historical
 artifacts; bypass hooks; weaken permissions; expose secrets; stage or commit
-unrelated files; commit or push before `HUMAN_PR_APPROVAL`; mark a Story `COMPLETED`
+unrelated files; commit Story code or push before `HUMAN_PR_APPROVAL`; commit
+anything without the human's explicit request; mark a Story `COMPLETED`
 without recorded human confirmation; treat chat history as workflow state;
 embed its own stage list or artifact paths.
 

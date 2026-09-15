@@ -37,35 +37,46 @@ area as production severity.
   Dean's work email in the school's domain; creating an account with any other
   address or a free-form string is refused, and `AppUser` has no separate login
   field (v55). The account is created manually by an Admin, who may also disable, re-enable and reset its
-  password; the account is never deleted (BR-014). After an Admin reset the Dean
-  must change the password at the next login, so only the Dean knows it. A reset
-  flow that lets the Admin keep a working password is a finding. A Dean may also
-  change their own password at any time (v38). The Dean's password and lockout
-  policy is the Owner's (below), plus: the temporary password an Admin sets on
-  reset obeys the same policy, the Dean's new password after a reset may not equal
-  the temporary one, and an Admin reset also clears a lockout. The Dean sign-in is
-  public and the login is guessable, which is why there is no permanent lockout —
-  anyone could otherwise lock a Dean out for good (`trebovaniya.md` §2, v62).
+  password; the account is never deleted (BR-014). The password an Admin sets when
+  creating the account or resetting it is temporary: the Dean must change it at the
+  next login, so only the Dean knows it (v38, v64). A flow that lets the Admin keep
+  a working password is a finding. A Dean may also change their own password at any
+  time (v38). The Dean's password and lockout policy is the Owner's (below), plus:
+  the temporary password obeys the same policy, the Dean's new password may not
+  equal the temporary one, and an Admin reset clears a sign-in lockout but never
+  re-enables a disabled account (v64). The Dean sign-in is public and the login is
+  guessable, which is why there is no permanent lockout — anyone could otherwise
+  lock a Dean out for good (`trebovaniya.md` §2, v62).
+- **Signing in to a disabled Dean account** (`trebovaniya.md` §2, v64): a wrong
+  password gets the common refusal message; the correct password gets a separate
+  "account disabled, contact your Admin" message and does not count as a failed
+  attempt. Showing that message without the correct password is a finding.
 - **Admin** — Google OAuth external login. **There is no local password for an
   Admin**, no password column, no password reset flow. A migration or entity
   adding one is a Critical finding.
 - **Owner** — login and password via ASP.NET Core Identity in the Control Plane,
   set once at first-run setup. Stored in the Control Plane database only, never
-  in an installation's `AppUser` table.
+  in an installation's `AppUser` table. The login is **4 to 64** characters —
+  Latin letters, digits, `.`, `-` and `_` — compared case-insensitively
+  (`trebovaniya.md` §3, v64).
 - **Password and lockout policy — Owner and Dean** (`trebovaniya.md` §2, §9,
-  v62):
-  - length: at least **15** characters; at least 64 accepted; spaces allowed;
+  v62, v64):
+  - length: **15 to 128** characters, counted in characters, not bytes; spaces
+    allowed;
   - complexity: **no composition rules** — no required digit, upper case or
-    symbol; the password may not equal or contain the login;
+    symbol; the password may not equal or contain the login, compared
+    case-insensitively, and for an email login it may not contain the part
+    before `@` either;
   - lockout: **5** consecutive failed attempts lock sign-in for **15 minutes**;
     a successful sign-in resets the counter; there is no permanent lockout;
   - every refused sign-in shows the same message — wrong login or password, or
     sign-in temporarily locked after several failed attempts — so the response
-    never reveals whether the login exists or is locked;
+    never reveals whether the login exists or is locked; the only exception is a
+    disabled Dean account with the correct password (above);
   - no check against an external breached-password service (SC-13).
 
   A weaker length, an added composition rule, a permanent lockout or a message
-  that distinguishes a locked account is a finding.
+  that distinguishes a locked account or an unknown login is a finding.
 - **First-run setup requires a one-time setup code.** While no Owner account
   exists, the Control Plane generates a random code at startup and prints it to
   the server console only — never to the log file (SC-10). Setup succeeds only
@@ -80,12 +91,23 @@ area as production severity.
     (SC-4) is the CSRF control, `Lax` the second layer;
   - the Control Plane session cookie is `SameSite=Strict` — it has no OAuth;
   - the antiforgery cookie is `SameSite=Strict` and `httpOnly` on both hosts;
-  - every session and antiforgery cookie is `Secure` on both hosts. The
-    installation redirects HTTP to HTTPS and sends HSTS; the Control Plane is
-    served over HTTPS inside the private network (DC-6, `trebovaniya.md` §9).
+  - every other cookie ASP.NET Core sets — the Google sign-in correlation and
+    nonce cookies, the external sign-in cookie and the like — keeps the
+    framework's default `SameSite` and `httpOnly`, which the return from Google
+    relies on (v64);
+  - **every cookie is `Secure`** on both hosts (v64).
+- **HTTPS per host and port** (`trebovaniya.md` §8, §9, v61, v64):
+  - the installation's public port redirects HTTP to HTTPS and sends HSTS;
+  - the installation's private port (push receiver, liveness, readiness) is plain
+    HTTP: it carries status only, and HTTPS without client authentication would
+    not stop a forged push — network isolation does (SC-9, DC-6). HTTPS
+    redirection or HSTS on that port would break the push;
+  - the Control Plane is served over HTTPS only, inside the private network, with
+    no HTTP port and therefore no HSTS (DC-6).
 
-  A session cookie without `httpOnly` or `Secure`, or with a `SameSite` value
-  other than the one fixed here, is a finding.
+  A session cookie without `httpOnly`, any cookie without `Secure`, a `SameSite`
+  value other than the one fixed here, or HTTPS rules applied to the wrong port is
+  a finding.
 
 ## SC-3 Admin identity and the AllowedAdmin check
 
@@ -126,13 +148,14 @@ Admin's account (BR-015, SC-8).
 
   | Endpoint | Host | Protected by |
   |---|---|---|
-  | Dean sign-in page | installation | Identity lockout: 5 failed attempts → 15 minutes (SC-2) |
-  | Google OAuth start and callback | installation | Google OAuth, then the `AllowedAdmin` check (SC-3) |
+  | Dean sign-in page | installation | Identity lockout (SC-2) |
+  | Google OAuth start and callback | installation | start: a POST with the antiforgery token; callback: the OAuth `state` parameter and correlation cookie; then the `AllowedAdmin` check (SC-3) |
   | Status-change push receiver | installation | private network, separate port (SC-9, DC-6) |
   | Liveness and readiness | installation | private network, separate port (DC-6, DC-11) |
-  | Owner sign-in | Control Plane | private network; Identity lockout: 5 failed attempts → 15 minutes (SC-2) |
+  | Owner sign-in | Control Plane | private network; Identity lockout (SC-2) |
   | First-run setup | Control Plane | private network and the one-time setup code (SC-2) |
   | Legitimacy check and Admin login check | Control Plane | private network (SC-9) |
+  | Error page | both | shows only translated text, no data (`trebovaniya.md` §8, v64) |
 
   An anonymous endpoint not on this list is a Critical finding; adding one
   requires extending the list.
@@ -142,22 +165,27 @@ Admin's account (BR-015, SC-8).
   controllers alike — never per action. A Razor form sends the token as a hidden
   field; a REST call from the same UI sends it in the `RequestVerificationToken`
   header (`api-conventions.md` API-7). A request without a valid token is refused
-  with `400`. Anonymous forms are not exempt: Dean sign-in, Owner sign-in,
-  first-run setup and the "Sign in with Google" button (a POST form) all require
-  the token, which protects against login CSRF.
+  with `400`: a Razor form gets the translated "page expired — reload it and try
+  again" error page, the same for every form of both hosts, and a REST call gets
+  the API-6 body (API-7, `trebovaniya.md` §8, v64). Anonymous forms are not exempt:
+  Dean sign-in, Owner sign-in, first-run setup and the "Sign in with Google" button
+  (a POST form) all require the token, which protects against login CSRF.
 - **Exemption from antiforgery is a closed list.** Only these endpoints may skip
-  antiforgery validation, each with the protection that replaces the token:
+  antiforgery validation, each with the protection that replaces the token. None
+  of them is a GET: antiforgery never validates GET, so there is nothing to exempt
+  (v64).
 
   | Endpoint | Host | Protected by |
   |---|---|---|
-  | Google OAuth callback (return from Google and completing the sign-in) | installation | OAuth `state` parameter and correlation cookie, then the `AllowedAdmin` check (SC-3) |
-  | Status-change push receiver | installation | private network, separate port (SC-9, DC-6) |
-  | Legitimacy check and Admin login check | Control Plane | private network (SC-9) |
+  | Status-change push receiver (POST) | installation | private network, separate port (SC-9, DC-6) |
+  | Legitimacy check and Admin login check (both POST; the email travels in the body, never in the URL) | Control Plane | private network (SC-9) |
 
   An exemption not on this list is a Critical finding; adding one requires
   extending the list.
 - **GET changes nothing** (`api-conventions.md` API-4). The only GET that writes
-  is the Google OAuth callback. A state-changing action reachable by GET —
+  is the Google OAuth callback, protected by the OAuth `state` parameter and
+  correlation cookie, then the `AllowedAdmin` check (SC-3); being a GET, it is not
+  on the exemption list (v64). A state-changing action reachable by GET —
   sign-out, choosing the UI language, starting a synchronization, an export — is
   a finding.
 - Policies are defined in `Application/Authorization` and registered in the
@@ -193,6 +221,14 @@ pages are disabled outside local development.
   The *reference* to it (secret name or path) lives only in the installation's
   configuration, set by the Owner (DC-3); the database holds neither the key nor
   the reference (`persistence-conventions.md` PC-9, `trebovaniya.md` §3, v33).
+- **ASP.NET Core Data Protection keys**, which encrypt session cookies and
+  antiforgery tokens, are kept by each host — every installation and the Control
+  Plane — in its own directory on a persistent volume: outside the container, the
+  repository and the database, readable only by the application process, with the
+  path in configuration (DC-3). They are not backed up (DC-13): a backup together
+  with the keys would let anyone forge a session, while losing the keys only signs
+  users out. A key ring kept in memory, in a database, in a backup or shared
+  between hosts is a finding (`trebovaniya.md` §8, v64).
 - There is **no UI to upload a key**. An Admin configures the domain and the
   impersonation user only. Adding an upload form is a Critical finding.
 - One Cloud project owned by the Owner, **a separate service account per

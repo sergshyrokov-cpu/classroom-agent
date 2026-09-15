@@ -15,7 +15,7 @@
 #   BACKLOG     — a candidate from docs/product/epic-map.md; no Story file yet
 #   READY       — the Story file exists in docs/stories/ and may be activated
 #   IN_PROGRESS — currently moving through the delivery workflow
-#   COMPLETED   — delivered and committed
+#   COMPLETED   — approved at HUMAN_PR_APPROVAL and committed
 #
 # Delivery order follows epic-map.md: EPIC-8 (bootstrap) → EPIC-6 → EPIC-1 →
 # EPIC-2/5 → EPIC-3 → EPIC-4. EPIC-9 and EPIC-10 belong to the next version and

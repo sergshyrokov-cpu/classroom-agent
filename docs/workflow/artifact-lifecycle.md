@@ -76,7 +76,7 @@ Stored in `workflow-state.yaml` (`status:` and inside `pending_human_gate`).
 | `IN_PROGRESS` | An automated stage is the current stage and is runnable. |
 | `WAITING_FOR_HUMAN` | Current stage is a `human_gate`; `pending_human_gate.status = PENDING`. |
 | `BLOCKED` | Last stage returned `BLOCKED`, or a workflow invariant failed. |
-| `COMPLETED` | Reached stage `COMPLETED` — the Story is delivered and committed. Terminal. |
+| `COMPLETED` | Reached stage `COMPLETED` — the Story is approved at `HUMAN_PR_APPROVAL` and committed by the final commit made right after. Terminal. |
 
 `ARCHIVED` is **retired in this variant**: `COMPLETED` is terminal and there is
 no `ARCHIVED` stage to reach (`stage-map.yaml` `retired_identifiers`).

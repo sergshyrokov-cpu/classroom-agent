@@ -16,8 +16,8 @@ into deployment order. Where a question is open it says so and names the item in
 
 | Unit | Instances | Owns | Reachability |
 |---|---|---|---|
-| Control Plane (`ClassroomAgent.ControlPlane`) | one for the whole service | its own database: `Owner`, `Installation`, `AllowedAdmin`, `InstanceLicenseCheck`, `AuditEvent` | private network only, over HTTPS: the Owner UI and the service channel to every installation (DC-6) |
-| Installation (`ClassroomAgent.Web`) | one per school | its own database: all teaching data of that school | public HTTPS with HSTS for school staff; private channel to the Control Plane |
+| Control Plane (`ClassroomAgent.ControlPlane`) | one for the whole service | its own database: `Owner`, `Installation`, `AllowedAdmin`, `InstanceLicenseCheck`, `AuditEvent` | private network only, HTTPS only: the Owner UI and the service channel to every installation (DC-6) |
+| Installation (`ClassroomAgent.Web`) | one per school | its own database: all teaching data of that school | public HTTPS with HSTS for school staff; private port over HTTP for the Control Plane channel and health checks (DC-6) |
 | PostgreSQL | one database per unit above | — | reachable only by its own application |
 
 All of it runs on the Owner's infrastructure — no school hosts its own copy
@@ -30,7 +30,10 @@ A new service, then a new school, come up in this order. Each step is blocked by
 the previous one — the dependency is real, not stylistic
 (`docs/product/epic-map.md`).
 
-1. Deploy the Control Plane and its database; run its migrations (DC-4).
+1. Issue the Control Plane's certificate — from the Owner's internal certificate
+   authority or from Let's Encrypt via a DNS challenge (DC-6). Create its Data
+   Protection key directory on a persistent volume (DC-3). Deploy the Control
+   Plane and its database; run its migrations (DC-4).
 2. Owner first-run setup: the Control Plane prints a one-time setup code to the
    server console, and the single Owner account is claimed once with it
    (`docs/stories/US-001-owner-first-run-setup.md`). Until it exists nothing
@@ -50,7 +53,10 @@ the previous one — the dependency is real, not stylistic
 6. Deploy the installation: its database, its migrations, its configuration
    (DC-3) — including the retention period agreed with the school and the
    school's time zone, both required — and the service-account key placed in
-   the secret store (DC-5).
+   the secret store (DC-5). Create its Data Protection key directory on a
+   persistent volume. If the Control Plane certificate comes from the internal
+   certificate authority, add that authority's root certificate to the trusted
+   roots of the installation's server (DC-6).
 7. The Admin signs in with Google OAuth, is matched against `AllowedAdmin`, and
    saves the `WorkspaceConnection` (domain + the technical account as
    impersonation user). The domain, and the domain of that account's email, must
@@ -63,11 +69,17 @@ the previous one — the dependency is real, not stylistic
   environment variables — never compile-time constants (AD-10). The prototype's
   hard-coded `admin@dac.ukr.education` is the defect this rule exists to prevent.
 - Per-installation configuration is at minimum: its database connection string,
-  the Control Plane service endpoint, the secret-store reference for its
-  service-account key, the retention period N (PC-11), and the school's time zone
+  the Control Plane service endpoint (an `https://` address, DC-6), the
+  secret-store reference for its service-account key, the Data Protection key
+  directory (SC-7), the retention period N (PC-11), and the school's time zone
   (an IANA id such as `Europe/Kyiv`, PC-6). The retention period and the time
   zone are required: an installation without either refuses to start. Optional:
   the school's default UI language (`uk` or `en`, `uk` if unset — NFR-073).
+- The Control Plane's own configuration includes its Data Protection key
+  directory as well (SC-7).
+- Trust in the Control Plane's certificate is server configuration, not
+  application configuration: an internal certificate authority's root is
+  installed on the installation's server (DC-2).
 - The Google Workspace domain and impersonation user are **not** deployment
   configuration: they are entered by the Admin and stored in
   `WorkspaceConnection`, constrained by the `Installation` record (BR-020).
@@ -158,6 +170,10 @@ the previous one — the dependency is real, not stylistic
   not serve those paths; a test asserts that on the public port they answer
   `404`. Otherwise anyone on the internet could post a status to the push
   receiver — lifting a suspension or forcing read-only mode.
+- **The private port speaks plain HTTP** (SC-2, `trebovaniya.md` §8, v64). It
+  carries status only, and HTTPS without client authentication would not stop a
+  forged push — network isolation does. HTTPS redirection and HSTS apply to the
+  public port only: on the private port they would break the push.
 - **The whole Control Plane is private**, the Owner UI included: the Owner
   reaches it through a VPN or tunnel, never from the public internet
   (`trebovaniya.md` §9, v35).
@@ -166,13 +182,15 @@ the previous one — the dependency is real, not stylistic
   Let's Encrypt via a DNS challenge; installations trust that certificate. A VPN
   encrypts traffic only up to its gateway — beyond it the Owner's password and
   the session cookie of the account that governs every school would travel in
-  plain text. Its cookies are `Secure` (SC-2, `trebovaniya.md` §9, v61).
+  plain text. Its cookies are `Secure` (SC-2, `trebovaniya.md` §9, v61). It has
+  no HTTP port, so there is nothing to redirect and no HSTS (v64).
 - The channel is bidirectional by design: the installation calls the Control
   Plane every 6 hours for the legitimacy check, and the Control Plane pushes
   status changes to the installation's endpoint (HTTP POST, 3 retries with
   exponential backoff) (BR-024, NFR-014). On every Admin login the installation
   also asks the Control Plane whether the email is in `AllowedAdmin`; while the
-  channel is down, Admin logins are refused (BR-012).
+  channel is down, Admin logins are refused (BR-012). Both calls to the Control
+  Plane are POST, and the email travels in the body (SC-4, v64).
 
 ## DC-7 Suspending and resuming a school
 
@@ -337,6 +355,8 @@ Meet data older than Google's 180 days cannot. The Control Plane database is the
 most critical one: losing it sends every school to read-only after 7 days.
 
 - **Every database is backed up** — each installation and the Control Plane.
+  Data Protection key directories are not: a backup together with the keys would
+  let anyone forge a session, and losing them only signs users out (SC-7, v64).
 - **A nightly logical dump** (`pg_dump`). Worst-case loss is one day of local
   changes; synchronization recovers teaching data.
 - **Backups are kept 30 days**, rolling. Data purged by retention (PC-11) or

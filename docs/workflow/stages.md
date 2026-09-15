@@ -40,8 +40,9 @@ backlog-sync stage and no GitHub-Issue source.
   that the Specification actually reflects `trebovaniya.md` and that any Open
   Decisions are resolved. Everything downstream trusts it.
 - **`HUMAN_PR_APPROVAL`** — the person reads `implementation_report` and
-  `security_review`, then commits. Despite the name there is no Pull Request in
-  this project: commits land on `master`.
+  `security_review` and approves; the final commit follows at once, made by the
+  person or by an agent on their explicit request. Despite the name there is no
+  Pull Request in this project: commits land on `master`.
 - **`COMPLETED`** — terminal. There is no ARCHIVED stage and no archive mode.
 
 ## Where the dropped stages' work went

@@ -80,7 +80,7 @@ Epic 7 — do not add them speculatively.
 | `Controllers` | REST API controllers | no business logic, no `DbContext` |
 | `Pages` / `Views` | Razor pages and views | presentation only |
 | `BackgroundServices` | `SyncBackgroundService` (Classroom and the Meet event pull — both are synchronization, `trebovaniya.md` §2), `RetentionPurgeBackgroundService` (daily, PC-11), `LegitimacyCheckBackgroundService` (every 6 hours, BR-024) | `architecture.md` AD-5 |
-| `Security` | Identity setup, Google OAuth external login, authorization policy registration, the deny-by-default fallback policy and the closed list of anonymous endpoints; global antiforgery validation and the closed list of antiforgery exemptions; session and antiforgery cookie settings, HTTPS redirection and HSTS | `security-conventions.md` SC-2, SC-4 |
+| `Security` | Identity setup, Google OAuth external login, authorization policy registration, the deny-by-default fallback policy and the closed list of anonymous endpoints; global antiforgery validation, the closed list of antiforgery exemptions and the result filter for an antiforgery refusal; cookie settings, HTTPS redirection and HSTS on the public port, the Data Protection key ring location | `security-conventions.md` SC-2, SC-4, SC-7; `api-conventions.md` API-7 |
 | `Configuration` | `IServiceCollection` extensions wiring `Infrastructure` | no business logic |
 | `Exceptions` | the single `IExceptionHandler` | |
 
@@ -101,7 +101,7 @@ the email checked at an Admin login (SC-12).
 | `Controllers` | Owner UI + the check endpoints called by installations | HTTP mapping only: no business rules, no `DbContext` (AD-3) |
 | `Services` | business rules and transaction boundaries: Owner first-run setup with the one-time setup code, Owner sign-in and its audit, Installation status, `AllowedAdmin`, legitimacy and compatibility checks; return DTOs | the only callers of `Persistence` |
 | `Persistence` | its **own** `DbContext`: `Owner`, `Installation`, `AllowedAdmin`, `InstanceLicenseCheck`, `AuditEvent` | separate database |
-| `Security` | Identity and cookie wiring (session and antiforgery cookie settings), the deny-by-default fallback policy and the anonymous endpoints of SC-4, global antiforgery validation and the closed list of antiforgery exemptions | no business rules — setup and sign-in logic is in `Services` |
+| `Security` | Identity and cookie wiring (cookie settings, the Data Protection key ring location), the deny-by-default fallback policy and the anonymous endpoints of SC-4, global antiforgery validation, the closed list of antiforgery exemptions and the result filter for an antiforgery refusal | no business rules — setup and sign-in logic is in `Services` |
 | `Localization` | its own translation files (Ukrainian, English) for the Owner UI — it cannot reference `Application.Localization` | NFR-073 |
 | `Push` | outbound status-change notification to installations | `architecture.md` AD-1, `trebovaniya.md` section 9 |
 
