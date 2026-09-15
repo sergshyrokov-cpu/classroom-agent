@@ -42,7 +42,7 @@ the earliest responsible stage. Do not route.
 ### 5. Check existing stage output
 Resolve `stages.<current>.outputs` via `artifact-paths.yaml`. If a current,
 valid output already exists (right `story`, `status` not
-`SUPERSEDED`/`ARCHIVED`, inputs not stale, no open `CHANGES_REQUIRED`/`BLOCKED`
+`SUPERSEDED`, inputs not stale, no open `CHANGES_REQUIRED`/`BLOCKED`
 record): do not regenerate — validate and go to step 7 using its recorded
 verdict. Otherwise continue.
 

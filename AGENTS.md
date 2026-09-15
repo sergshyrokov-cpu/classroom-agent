@@ -150,7 +150,7 @@ These are binding.
 **Non-normative summary** of `trebovaniya.md` sections 2, 5, 6 and 9 — a cheap
 cache so routine decisions do not require opening a ~180 KB Russian document.
 `trebovaniya.md` always wins; on conflict this section is the one that gets
-corrected. **Verified against v64.** When `trebovaniya.md` moves past that
+corrected. **Verified against v65.** When `trebovaniya.md` moves past that
 version, re-verify this section and update the marker.
 
 - **Roles in the first version are Owner, Admin and Dean only.** Teacher and
@@ -325,11 +325,12 @@ A Story is Done only when all of the following hold:
    code or in the Story's artifacts.
 7. `SECURITY_REVIEW` returned PASS.
 8. No secret, generated database file or IDE-local config is staged for commit.
-9. Every changed file is in the active Story's scope and traced in the
-   `implementation_report` (see Git Policy).
-10. `HUMAN_PR_APPROVAL` is recorded via `/so:approve` and the Story is committed
-    to `master`. Until then the Story is finished, not Done — `stage-map.yaml`
-    reaches `COMPLETED` only after the gate.
+9. Every changed file is in the active Story's scope: code and tests traced in
+   the `implementation_report`, workflow artifacts and state files by their
+   registry path (see Git Policy).
+10. `HUMAN_PR_APPROVAL` is recorded via `/so:approve` and the final commit has
+    landed on `master`. `/so:approve` moves the workflow to `COMPLETED`; until
+    the commit lands the Story is approved, not Done.
 
 ---
 
@@ -365,9 +366,11 @@ Non-negotiable — the Hard Stops above apply in full, and in addition:
   element of the approved API or database design, a test in the
   `ac_test_matrix`, or a supporting change the Story cannot work without
   (project scaffolding, DI registration, migration, translation entries). The
-  `implementation_report` lists every changed file with its trace; a file with
-  no trace is out of scope and requires an Open Decision. No opportunistic
-  refactoring.
+  `implementation_report` lists every changed code and test file with its trace.
+  Workflow artifacts and state files are traced by their registry path instead:
+  a file at a path `docs/workflow/artifact-paths.yaml` defines for the active
+  Story, or a workflow state file, is in scope. Any other file with no trace is
+  out of scope and requires an Open Decision. No opportunistic refactoring.
 - **Commits go directly to `master`** — this is a solo project with no PR flow.
   Do not create feature branches.
 - No automated stage commits or pushes: a Skill never runs `git commit` or
@@ -377,8 +380,9 @@ Non-negotiable — the Hard Stops above apply in full, and in addition:
 - **Workflow commits are offered, never made unasked.** After `/so:start`, after
   SPECIFICATION, API_DESIGN and DB_DESIGN, and after approval at
   HUMAN_SPEC_APPROVAL, `story-orchestrator` offers a commit of the workflow state
-  and that stage's artifacts; the agent makes it only on the human's explicit
-  "коммить" in that conversation.
+  and that stage's artifacts, and after approval at HUMAN_PR_APPROVAL the final
+  commit. The orchestrator only offers; the agent makes the commit in the
+  conversation, only on the human's explicit "коммить".
 
 ---
 

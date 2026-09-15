@@ -217,9 +217,9 @@ stages:
     type: terminal
     owner: story-orchestrator
     meaning: >
-      The Story is approved at HUMAN_PR_APPROVAL; the final commit made right
-      after records it on master. Terminal in this variant; there is no
-      separate ARCHIVED stage.
+      The Story is approved at HUMAN_PR_APPROVAL. It is Done once the final
+      commit lands on master (AGENTS.md Definition of Done, item 10). Terminal
+      in this variant; there is no separate ARCHIVED stage.
 
 # Input rule: every entry in a stage's `inputs` is either always-required or
 # listed in `conditional_artifacts` above (required unless its owning design

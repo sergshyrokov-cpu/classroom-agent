@@ -74,6 +74,10 @@ Derived from `trebovaniya.md` sections 5 and 9, and from the workflow order in
   and asserts `400` — however the endpoint is declared (v64). A Razor form
   refused this way gets the translated error page; a REST call gets the API-6
   body (SC-4, API-7).
+- The installation's private endpoints (push receiver, liveness, readiness) are
+  asserted to answer `404` when requested with a `Host` header naming the public
+  port, and to answer on the private port — the split is host matching in
+  routing (DC-6, v65).
 - A state-changing action requested by GET — for example signing out or
   choosing the UI language — does not take effect (API-4).
 - The session and antiforgery cookies of each host are asserted to carry the

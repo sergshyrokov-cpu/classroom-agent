@@ -49,8 +49,14 @@ area as production severity.
   lock a Dean out for good (`trebovaniya.md` §2, v62).
 - **Signing in to a disabled Dean account** (`trebovaniya.md` §2, v64): a wrong
   password gets the common refusal message; the correct password gets a separate
-  "account disabled, contact your Admin" message and does not count as a failed
-  attempt. Showing that message without the correct password is a finding.
+  "account disabled, contact your Admin" message and neither counts as a failed
+  attempt nor resets the counter (v65). The sign-in lockout is checked first:
+  while it is in force the common message is shown even with the correct
+  password, so a disabled account cannot be used to test passwords past the
+  lockout (v65). The disabled check comes before the forced change of a temporary
+  password: a disabled Dean with the correct temporary password sees the
+  disabled message, not the change form (v65). Showing that message without the
+  correct password, or during a lockout, is a finding.
 - **Admin** — Google OAuth external login. **There is no local password for an
   Admin**, no password column, no password reset flow. A migration or entity
   adding one is a Critical finding.
@@ -65,14 +71,17 @@ area as production severity.
     allowed;
   - complexity: **no composition rules** — no required digit, upper case or
     symbol; the password may not equal or contain the login, compared
-    case-insensitively, and for an email login it may not contain the part
-    before `@` either;
+    case-insensitively, and for the Dean's email login it may not contain the
+    part before `@` either; "contain" is checked only for a login or local part of
+    at least 4 characters — a shorter one is checked for equality only, since
+    otherwise it would forbid almost any password (v65);
   - lockout: **5** consecutive failed attempts lock sign-in for **15 minutes**;
     a successful sign-in resets the counter; there is no permanent lockout;
   - every refused sign-in shows the same message — wrong login or password, or
     sign-in temporarily locked after several failed attempts — so the response
     never reveals whether the login exists or is locked; the only exception is a
-    disabled Dean account with the correct password (above);
+    disabled Dean account with the correct password and no lockout in force
+    (above);
   - no check against an external breached-password service (SC-13).
 
   A weaker length, an added composition rule, a permanent lockout or a message
@@ -159,15 +168,21 @@ Admin's account (BR-015, SC-8).
 
   An anonymous endpoint not on this list is a Critical finding; adding one
   requires extending the list.
+- **One error page per host** (`trebovaniya.md` §8, v64, v65) serves every form
+  and every error: an antiforgery refusal (`400`), not found (`404`) and an
+  internal error (`500`), each with its own translated text and nothing else — no
+  detail, no data. A signed-in user sees it in their own language, an anonymous
+  one in the default language (the school's in the installation, Ukrainian in the
+  Control Plane, NFR-073). Text and behaviour are the same on both hosts.
 - **Every state-changing request carries an antiforgery token**
   (`trebovaniya.md` §8, v61). Both hosts apply ASP.NET Core antiforgery
   validation globally to every POST, PUT, PATCH and DELETE — Razor pages and REST
   controllers alike — never per action. A Razor form sends the token as a hidden
   field; a REST call from the same UI sends it in the `RequestVerificationToken`
   header (`api-conventions.md` API-7). A request without a valid token is refused
-  with `400`: a Razor form gets the translated "page expired — reload it and try
-  again" error page, the same for every form of both hosts, and a REST call gets
-  the API-6 body (API-7, `trebovaniya.md` §8, v64). Anonymous forms are not exempt:
+  with `400`: a Razor form gets the host's error page (below) with the translated
+  "page expired — reload it and try again" text, and a REST call gets the API-6
+  body (API-7, `trebovaniya.md` §8, v64). Anonymous forms are not exempt:
   Dean sign-in, Owner sign-in, first-run setup and the "Sign in with Google" button
   (a POST form) all require the token, which protects against login CSRF.
 - **Exemption from antiforgery is a closed list.** Only these endpoints may skip
@@ -183,7 +198,9 @@ Admin's account (BR-015, SC-8).
   An exemption not on this list is a Critical finding; adding one requires
   extending the list.
 - **GET changes nothing** (`api-conventions.md` API-4). The only GET that writes
-  is the Google OAuth callback, protected by the OAuth `state` parameter and
+  is the Google OAuth callback: it creates the Admin's `AppUser` on first
+  sign-in, records the last successful sign-in and writes the sign-in audit event
+  (SC-3, SC-11, v65). It is protected by the OAuth `state` parameter and
   correlation cookie, then the `AllowedAdmin` check (SC-3); being a GET, it is not
   on the exemption list (v64). A state-changing action reachable by GET —
   sign-out, choosing the UI language, starting a synchronization, an export — is
@@ -321,12 +338,15 @@ when" — above all, who took personal data out of the system.
   background work), action, target (entity type and internal id), outcome
   (succeeded / refused), and the request identifier that links it to the logs.
 - **A refused sign-in** names the existing account's id as actor (wrong
-  password, disabled account, email no longer in `AllowedAdmin`); with no
+  password, disabled account, sign-in temporarily locked out, email no longer in
+  `AllowedAdmin`); with no
   account, the actor is "anonymous" with no identifier, and the login or email
   typed is never recorded. Either way the row carries the refusal category:
   unknown login, wrong password, account disabled, locked out after failed
   attempts (v62), not in `AllowedAdmin`,
-  Control Plane unavailable (`trebovaniya.md` §5, v45).
+  Control Plane unavailable (`trebovaniya.md` §5, v45). For a disabled account,
+  "account disabled" is recorded only with the correct password; a wrong password
+  is "wrong password", and a refusal during a lockout is "locked out" (v65).
 - **A row never carries personal data** — SC-10 binds it exactly as it binds
   logs: no names, no email addresses, no grades. An export row records course
   ids, the period, the template id and the row count, never the file's contents.

@@ -69,7 +69,8 @@ account or resetting it is temporary: the Dean must change it at the first login
 and the new password may not equal it (v64). The password and lockout policy is
 `security-conventions.md` SC-2; an Admin reset clears a sign-in lockout but does
 not re-enable a disabled account, and a disabled Dean who enters the correct
-password is told the account is disabled (v64). *(§2, v38, v62, v64)*
+password is told the account is disabled (v64) — unless sign-in is locked out,
+which is checked first (v65). *(§2, v38, v62, v64, v65)*
 
 **BR-015** Teaching data is read on behalf of a **technical account** of the
 school — the impersonation user in `WorkspaceConnection`. The school's

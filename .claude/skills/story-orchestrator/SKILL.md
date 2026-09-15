@@ -94,7 +94,7 @@ result:
   verdict: PASS | CHANGES_REQUIRED | BLOCKED | NOT_APPLICABLE
   stage: <canonical-stage>
   story: <story-id>
-  artifact_status: DRAFT | IN_REVIEW | APPROVED | SUPERSEDED | ARCHIVED
+  artifact_status: DRAFT | IN_REVIEW | APPROVED | SUPERSEDED
   artifacts: [<relative paths produced>]
   next_stage: <canonical-stage-or-null>       # advisory; orchestrator derives the real next from stage-map.yaml
   loop_back_stage: <canonical-stage-or-null>  # set only for CHANGES_REQUIRED
@@ -155,9 +155,10 @@ On `/so:approve`: set `pending_human_gate.status: APPROVED`, append a
 `current_stage` to the gate's `on_approve`, clear `pending_human_gate`, set
 `status: IN_PROGRESS` (or `COMPLETED` when entering that stage).
 
-On `/so:reject`: set `status: REJECTED`, record the human `comment`, append a
-`history.jsonl` event (`verdict: "HUMAN_REJECTED"`), route to the gate's
-`on_reject`.
+On `/so:reject`: set `pending_human_gate.status: REJECTED`, record the human
+`comment`, append a `history.jsonl` event (`verdict: "HUMAN_REJECTED"`), route
+`current_stage` to the gate's `on_reject`, clear `pending_human_gate`, set
+`status: IN_PROGRESS`.
 
 Auto Mode never bypasses a human gate.
 
@@ -173,7 +174,7 @@ Before invoking any automated stage Skill, verify:
 - `current_stage` is a member of `stage-map.yaml` `stage_order`;
 - every registry key in `stages.<current>.inputs` resolves to an artifact that
   exists and whose `status` is `APPROVED` (for artifacts gated by a review) or
-  `DRAFT`/`APPROVED` (for un-reviewed inputs), and is not `SUPERSEDED`/`ARCHIVED`;
+  `DRAFT`/`APPROVED` (for un-reviewed inputs), and is not `SUPERSEDED`;
 - no downstream input records a superseded upstream version (staleness);
 - no unresolved **blocking** Open Decision in `open_decisions` affects the next
   stage;
@@ -228,7 +229,7 @@ After a valid result, update `workflow-state.yaml` (per `state-schema.md`):
 - `pending_human_gate` per the Human Gates section;
 - `blocking_issues`, `non_blocking_findings`;
 - `started_at` (first automated stage), `updated_at` (always),
-  `completed_at` / `archived_at` when reaching those stages.
+  `completed_at` when reaching `COMPLETED`.
 
 Then append one line to `docs/workflow/history.jsonl`:
 
@@ -249,7 +250,7 @@ Repeated invocation must be safe.
 
 Before invoking a Skill, check whether the current stage already has a current
 successful output artifact (exists, correct `story`, `status` not
-`SUPERSEDED`/`ARCHIVED`, inputs not stale):
+`SUPERSEDED`, inputs not stale):
 
 - if complete and valid → do not regenerate; validate and advance;
 - if the output has an unresolved `CHANGES_REQUIRED`/`BLOCKED` record → follow
@@ -281,8 +282,8 @@ approved implementation changes via the routed Skill; invoke configured Skills;
 collect diagnostics; write `workflow-state.yaml` and append `history.jsonl`.
 
 Auto Mode must NOT: pass a human gate; resolve an Open Decision; accept security
-risk; modify requirements; commit without the human's explicit request (see
-Commit Offer), push or create a branch; delete historical
+risk; modify requirements; commit (see Commit Offer), push or create a branch;
+delete historical
 artifacts; expose secrets;
 run destructive database operations.
 
@@ -336,8 +337,8 @@ Telemetry is execution evidence, never requirement authority.
 
 # Commit Offer
 
-Commits follow the Git Policy in `AGENTS.md`. The Orchestrator offers a commit;
-it never makes one unasked.
+Commits follow the Git Policy in `AGENTS.md`. The Orchestrator only offers a
+commit and never runs `git commit` itself.
 
 - After `start` mode, after a transition out of `SPECIFICATION`, `API_DESIGN` or
   `DB_DESIGN`, and after an approval recorded at `HUMAN_SPEC_APPROVAL`: offer a
@@ -347,8 +348,10 @@ it never makes one unasked.
   the Story code, its artifacts and the workflow state already at `COMPLETED`.
 - No other commit is offered.
 
-The commit is made only on the human's explicit "коммить" in the same
-conversation, directly on `master`.
+The commit is made by the agent in the conversation, after the Orchestrator has
+finished, and only on the human's explicit "коммить" — directly on `master`.
+Until the final commit lands the Story is approved but not Done (`AGENTS.md`
+Definition of Done, item 10).
 
 ---
 
@@ -366,9 +369,9 @@ Output Artifact(s):  docs/specifications/US-001-spec.md (v1)
 Transition:          SPECIFICATION → HUMAN_SPEC_APPROVAL
 Ending Stage:        HUMAN_SPEC_APPROVAL
 Workflow Status:     WAITING_FOR_HUMAN
-Human Gate:          HUMAN_SPEC_APPROVAL — review docs/specifications/US-001-spec.md (v1)
-                     and docs/reviews/specifications/US-001-spec-review.md (v1);
-                     automated verdict PASS; run /so:approve or /so:reject
+Human Gate:          HUMAN_SPEC_APPROVAL — review docs/specifications/US-001-spec.md (v1);
+                     no automated spec review in this variant;
+                     run /so:approve or /so:reject
 Blocking Issues:     none
 Recommended Command: /so:approve   (after human review)
 Commit Offer:        workflow state + docs/specifications/US-001-spec.md —
@@ -388,8 +391,8 @@ overwrite a `CHANGES_REQUIRED`/`BLOCKED` artifact; skip a mandatory stage
 silently; pass a human gate; invoke multiple stage Skills per call; recurse to
 completion; delete historical
 artifacts; bypass hooks; weaken permissions; expose secrets; stage or commit
-unrelated files; commit Story code or push before `HUMAN_PR_APPROVAL`; commit
-anything without the human's explicit request; mark a Story `COMPLETED`
+unrelated files; run `git commit` or `git push` (the agent commits on the
+human's "коммить", see Commit Offer); mark a Story `COMPLETED`
 without recorded human confirmation; treat chat history as workflow state;
 embed its own stage list or artifact paths.
 

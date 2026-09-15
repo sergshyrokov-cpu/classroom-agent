@@ -31,7 +31,10 @@ the previous one — the dependency is real, not stylistic
 (`docs/product/epic-map.md`).
 
 1. Issue the Control Plane's certificate — from the Owner's internal certificate
-   authority or from Let's Encrypt via a DNS challenge (DC-6). Create its Data
+   authority or from Let's Encrypt via a DNS challenge (DC-6). If it comes from the
+   internal authority, add that authority's root certificate to the trusted roots
+   of every device the Owner uses to reach the Control Plane — a browser
+   certificate warning is never clicked through (`trebovaniya.md` §9, v65). Create its Data
    Protection key directory on a persistent volume (DC-3). Deploy the Control
    Plane and its database; run its migrations (DC-4).
 2. Owner first-run setup: the Control Plane prints a one-time setup code to the
@@ -169,7 +172,10 @@ the previous one — the dependency is real, not stylistic
   network interface. The public port, and any reverse proxy in front of it, does
   not serve those paths; a test asserts that on the public port they answer
   `404`. Otherwise anyone on the internet could post a status to the push
-  receiver — lifting a suspension or forcing read-only mode.
+  receiver — lifting a suspension or forcing read-only mode. The private routes
+  are bound to that port by host matching (`RequireHost("*:<private port>")`), so
+  the split is part of routing and the test can prove it through the `Host`
+  header without real ports (TC-5, v65).
 - **The private port speaks plain HTTP** (SC-2, `trebovaniya.md` §8, v64). It
   carries status only, and HTTPS without client authentication would not stop a
   forged push — network isolation does. HTTPS redirection and HSTS apply to the
@@ -216,7 +222,8 @@ the previous one — the dependency is real, not stylistic
   of its journals — a Dean or Admin through the ordinary export, which works in
   read-only mode too; the Owner does not open the data for it. Only after the
   school confirms it has the export is the installation database deleted,
-  together with its backups, immediately (DC-13; `trebovaniya.md` §5, v53).
+  together with its backups, immediately (DC-13; `trebovaniya.md` §5, v53), and
+  with it the installation's Data Protection key directory (SC-7, v65).
 - **When a person leaves a school**, the Owner revokes their `AllowedAdmin`
   entry and the school disables their Google account. Nothing else is needed:
   data is read by the technical account (BR-015), and every school has at least
@@ -375,4 +382,5 @@ most critical one: losing it sends every school to read-only after 7 days.
   person's data recorded in the operations journal after the backup's date is
   re-applied before the installation is returned to the school.
 - **Decommissioning deletes that school's backups immediately**, without waiting
-  for the 30-day window to roll over (DC-8).
+  for the 30-day window to roll over, and its Data Protection key directory with
+  the database (DC-8, v65).

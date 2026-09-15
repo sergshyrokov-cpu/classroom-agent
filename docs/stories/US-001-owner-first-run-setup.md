@@ -7,7 +7,7 @@ priority: HIGH
 source:
   type: authored
 # Lifecycle status is owned by docs/catalog/stories.yaml (not this file).
-# Aligned with trebovaniya.md v64.
+# Aligned with trebovaniya.md v65.
 ---
 
 # User Story
@@ -60,7 +60,8 @@ a second Owner account; the Owner switching their own UI language (US-039).
 
 **Then**:
 
-- they are redirected to the first-run setup page;
+- they are redirected to the first-run setup page — except the error page,
+  which is always shown (AC-010, AC-011, `trebovaniya.md` §8, v65);
 - the setup page asks for the one-time setup code, a login and a password;
 - no other Control Plane function is reachable until setup completes.
 

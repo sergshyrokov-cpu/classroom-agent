@@ -17,7 +17,7 @@ Requirements:
   (HUMAN_SPEC_APPROVAL, HUMAN_PR_APPROVAL). If it is not, refuse and report the
   current stage;
 - confirm every artifact in the gate's `required_artifacts` exists, is current
-  (not SUPERSEDED / ARCHIVED), and its recorded automated verdict is PASS with
+  (not SUPERSEDED), and its recorded automated verdict is PASS with
   no blocking findings; if not, refuse and report what is missing;
 - set pending_human_gate.status = APPROVED, decided_at (runtime), decided_by;
   store the comment;

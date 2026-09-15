@@ -48,6 +48,8 @@ terms from `trebovaniya.md` are given so the two documents can be read together.
 | Term | Русский | Meaning |
 |---|---|---|
 | **AppUser** | — | An account inside one installation: Admin or Dean. |
+| **Disabled account** | отключённая учётная запись | A Dean account an Admin has disabled. It stays disabled until an Admin re-enables it; a password reset does not re-enable it (SC-2). |
+| **Sign-in lockout** | временная блокировка входа | The automatic, temporary refusal of sign-in after failed attempts, for the duration SC-2 fixes. An Admin's password reset clears it. Never permanent. |
 | **ClassroomParticipant** | участник Classroom | A person synced from Classroom — Google user id, personal email in the school domain, name. Teachers and students are both this; the Classroom role lives on `CourseMembership`, not on the person. Only personal domain accounts are subjects of the teaching process — group addresses and other accounts are not. |
 | **Course** | курс | **Always a Google Classroom course**, never a year of study: name, section, owner, state, calendar id. Schools use courses differently — one per class per year, one reused across years, one per specialty with students of all years — and the system assumes none of them. |
 | **CourseMembership** | участие в курсе | A person's membership of one course, with their Classroom role (`teacher` / `student`), when synchronization first and last saw them on the roster, and whether they are on it now. The same person can teach one course and study on another. |
@@ -92,5 +94,8 @@ terms from `trebovaniya.md` are given so the two documents can be read together.
   joined a meeting, not who attended the lesson. Say *Meet activity statistics*.
 - **Курс** meaning a year of study — in this system a course is always a
   Classroom course.
+- **Block / blocked account** — say *disabled account* for the Admin's action
+  and *sign-in lockout* for the automatic one. In code, the disabled flag and
+  ASP.NET Core Identity `Lockout` are never the same thing.
 - **Group** for a Google group email — group addresses are outside the system's
   logic. A course's students are its roster (`CourseMembership`).

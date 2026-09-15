@@ -175,7 +175,8 @@ application. *(§5)*
 **NFR-071** Server-rendered Razor with a REST API behind it; not Blazor. *(§8)*
 
 **NFR-072** The session token lives in an `httpOnly` cookie. No password and no
-Google credential is stored client-side. GET never changes state. CSRF protection,
+Google credential is stored client-side. GET never changes state, except the
+Google OAuth callback (SC-4). CSRF protection,
 cookie attributes, HTTPS and the Data Protection keys follow
 `security-conventions.md` SC-2, SC-4 and SC-7. *(§8, §9, v61, v64)*
 
