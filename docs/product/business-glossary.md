@@ -21,7 +21,7 @@ terms from `trebovaniya.md` are given so the two documents can be read together.
 
 | Term | Meaning |
 |---|---|
-| **Installation** | One school's deployment: its own backend process and its own database. Also the Control Plane entity recording that school — name, domain, status, assigned service-account client ID. |
+| **Installation** | One school's deployment: its own backend process and its own database. Also the Control Plane entity recording that school — id (a UUID the Control Plane generates and the installation's configuration carries), name, domain, status, assigned service-account client ID. |
 | **Data Plane** | The per-school application. One per installation. |
 | **Control Plane** | The single shared service holding Owner authentication, the `Installation` registry, the `AllowedAdmin` list, the Admin login check and legitimacy checks. Separate database. |
 | **Setup code** | The one-time code the Control Plane prints to the server console at first start; the Owner account can be created only with it (SC-2). |

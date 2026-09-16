@@ -89,7 +89,12 @@ differs from it is refused. *(§3, §9)*
 
 **BR-021** Moving a school to another domain means creating a **new**
 `Installation` with a new database — not editing the domain of an existing one.
-The previous installation's data stays in its own database. *(§6, §9)*
+The previous installation's data stays in its own database. A domain is unique
+across all `Installation` records, suspended ones included: a school returning to
+its former domain has its record resumed, not a new one created. The service-account
+client ID is unique as well. An `Installation` is created active and is never
+deleted in the first version; its name may be corrected, its domain never.
+*(§3, §6, §9, v69)*
 
 **BR-022** Removing an `AllowedAdmin` entry removes that person's right to
 configure the installation. It does **not** stop the school from working:

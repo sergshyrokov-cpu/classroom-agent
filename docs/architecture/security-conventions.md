@@ -371,7 +371,7 @@ when" — above all, who took personal data out of the system.
   setup refused for a missing or wrong one-time setup code while no Owner account
   exists (actor "anonymous", refusal category "wrong setup code"; the code, login
   and password typed are never recorded) (v67); creating an `Installation`,
-  changing its service-account client ID, suspending and resuming one, adding
+  changing its service-account client ID or its name (v69), suspending and resuming one, adding
   and revoking an `AllowedAdmin`.
 - **A row carries:** UTC timestamp, actor (internal account id and role —
   `AppUser` in an installation, `Owner` in the Control Plane — or `system` for

@@ -32,7 +32,10 @@ installation. This epic is the bootstrap.
 ### Candidate User Stories
 
 - US-001 Owner first-run setup (Control Plane account)
-- US-002 Register an Installation (school, domain, service-account client ID, status)
+- US-002 Register an Installation (school, domain, service-account client ID, status
+  "active" at creation); list and detail view, correcting the name and the client ID;
+  the Control Plane generates the installation id the Owner puts into the
+  installation's configuration (v69)
 - US-003 Manage AllowedAdmin entries for an Installation
 - US-004 Suspend and resume an Installation
 - US-005 Installation legitimacy check and grace period
@@ -192,7 +195,7 @@ work is queued rather than remembered.
   readable names **in the view only** — nothing is written back into the rows.
   Read-only: no endpoint, control or query path may edit or delete a row.
 - US-035 Audit log view in the Control Plane: the same for Owner actions —
-  sign-in, `Installation` created, its service-account client ID changed,
+  sign-in, `Installation` created, its service-account client ID or name changed,
   suspended or resumed, `AllowedAdmin` added or revoked.
 - US-036 Export of an audit extract for a period. An export of the audit log is
   itself an audited action, so this Story must not create a blind spot.
