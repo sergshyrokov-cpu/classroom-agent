@@ -44,9 +44,7 @@ stories:
   - id: US-002
     epic: EPIC-8
     title: Register an Installation
-    state: BACKLOG
-    blocked_by: >
-      Depends on US-001 (Owner account).
+    state: READY
   - id: US-003
     epic: EPIC-8
     title: Manage AllowedAdmin entries
