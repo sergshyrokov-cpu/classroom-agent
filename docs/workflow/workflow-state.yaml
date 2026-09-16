@@ -2,12 +2,12 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: null
+story: US-001
 workflow: story-delivery
-current_stage: null
+current_stage: SPECIFICATION
 previous_stage: null
 last_completed_stage: null
-status: NOT_STARTED
+status: IN_PROGRESS
 attempt: 1
 last_invoked_skill: null
 last_result:
@@ -19,5 +19,5 @@ pending_human_gate: null
 blocking_issues: []
 non_blocking_findings: []
 started_at: null
-updated_at: null
+updated_at: 2026-09-16T07:46:33Z
 completed_at: null
