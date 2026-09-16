@@ -2,9 +2,9 @@
 artifact_type: open_decisions
 story: US-002
 version: 2
-status: DRAFT
+status: APPROVED
 created_at: 2026-09-16T13:29:12Z
-updated_at: 2026-09-16T13:41:56Z
+updated_at: 2026-09-16T13:45:30Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-002-register-installation.md

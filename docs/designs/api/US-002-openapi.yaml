@@ -1,0 +1,534 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent Control Plane — Register an Installation (US-002)
+  version: "1"
+  description: >
+    HTTP contract of the Control Plane pages added by US-002. No `/api/v1`
+    endpoint: every operation is a server-rendered Razor page or an HTML form
+    post, so request bodies are `application/x-www-form-urlencoded`, responses
+    are `text/html` or redirects, and errors are the host's error page or the
+    form shown again — never the API-6 JSON body (SC-4, AD-9, v66). The host-wide
+    rules of docs/designs/api/US-001-openapi.yaml (`x-host-wide-rules`) apply to
+    every operation here unchanged. Companion document:
+    docs/designs/api/US-002-api-design.md.
+x-story: US-002
+x-source-specification: docs/specifications/US-002-spec.md
+x-source-specification-version: 2
+x-source-open-decisions: docs/decisions/US-002-open-decisions.md
+x-source-open-decisions-version: 2
+x-requirements-version: 69
+x-produced-by: openapi-designer
+x-host: ClassroomAgent.ControlPlane
+x-extends: docs/designs/api/US-001-openapi.yaml
+x-transport: "HTTPS only; no HTTP port; no HSTS (SC-2, DC-6)"
+
+servers:
+  - url: https://control-plane.internal
+    description: "Illustrative. The Control Plane is reachable only from the Owner's private network (SC-9, DC-6)."
+
+tags:
+  - name: installations
+    description: "Installation list, registration, detail, name and client ID (FR-001 … FR-009)"
+  - name: session
+    description: "Home page link (FR-002)"
+  - name: infrastructure
+    description: "Static copy script (FR-005, spec I-6)"
+
+x-host-wide-rules:
+  inherited: >
+    setup-gate, fallback-authorization, antiforgery, unauthenticated-challenge,
+    forbidden, culture and session-lifetime exactly as in US-001-openapi.yaml.
+    Before setup every operation below answers `302 /setup`; without a session
+    `302 /sign-in` (before antiforgery); a policy denial `403` error page.
+  id-route-constraint: >
+    `{id}` is constrained to a GUID. A path whose `{id}` is not a GUID matches no
+    operation and is answered by the anonymous 404 catch-all (`404`,
+    `Error.NotFound`). A GUID that identifies no installation answers `404` with
+    the same error page. Links use the lower-case hyphenated form.
+  over-posting: >
+    Only the fields of the request schema are bound. Posted `identifier`, `id`,
+    `status`, `createdAt` or any other field is ignored.
+  datetime-display: >
+    OD-003. Every time shown is the stored UTC instant formatted as the Owner's
+    culture short date pattern, a space, `HH:mm`, a space and `UTC` — in `uk`
+    `16.09.2026 13:29 UTC`. Never converted to another zone.
+  audit: >
+    FR-009. Exactly one Control Plane audit row per completed create, rename or
+    client ID change, in the same transaction; actor the Owner account id and
+    role, target type `installation` and its internal id, outcome succeeded. No
+    row for any `400`, `404`, `409` or unchanged submission. No name, domain or
+    client ID in any row or log line (SC-10, SC-11).
+  output-encoding: >
+    Values the Owner entered are rendered HTML-encoded (Razor default); never
+    `Html.Raw`. No inline script or inline event handler.
+
+paths:
+  /installations:
+    get:
+      tags: [installations]
+      operationId: getInstallationList
+      summary: "List of installations"
+      x-anonymous: false
+      x-policy: Owner
+      x-spec: [FR-001, FR-010, FR-013]
+      x-acceptance-criteria: [AC-001, AC-009, AC-011]
+      responses:
+        "200":
+          description: >
+            Every installation, no filter, not paginated (I-2), ordered by name
+            (ordinal ignore-case) then domain (I-1). Each row: name, domain,
+            status label (`Installation.Status.Active` /
+            `Installation.Status.Suspended`), creation time (datetime-display),
+            link to `/installations/{id}`. A link to `/installations/new` is
+            always present. No installations: message `Installations.Empty`.
+            Rendered from `InstallationListItem` DTOs.
+          content:
+            text/html:
+              x-view-model:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InstallationListItem"
+        "302":
+          $ref: "#/components/responses/GateOrChallenge"
+    post:
+      tags: [installations]
+      operationId: registerInstallation
+      summary: "Register an installation"
+      x-anonymous: false
+      x-policy: Owner
+      x-antiforgery: required
+      x-spec: [FR-003, FR-004, FR-008, FR-009, FR-012, FR-014, VR-001, VR-002, VR-003, VR-004]
+      x-acceptance-criteria: [AC-002, AC-003, AC-004, AC-008, AC-010]
+      x-processing-order: >
+        1 antiforgery → 2 binding validation of name, domain, clientId (all
+        failed fields reported) → 3 domain to lower case → 4 domain / client ID
+        already registered (any status; both checked) → 5 insert with a new
+        UUIDv4 identifier, status active, UTC creation time, and the audit row
+        `installation_created`, in one transaction. A unique-constraint
+        violation in step 5 is mapped to step 4's result, never `500`.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/RegisterInstallationRequest"
+      responses:
+        "302":
+          description: >
+            Created. `Location: /installations/{id}` of the new installation.
+            Without a session: `Location: /sign-in`; before setup:
+            `Location: /setup`.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "400":
+          description: >
+            (a) antiforgery refusal — error page `Error.PageExpired`; (b)
+            validation failed — the registration form again with one message key
+            per failed field (see `ValidationMessageKeys`), all values refilled
+            as typed; nothing created, not audited.
+          content:
+            text/html: {}
+        "409":
+          description: >
+            Domain (compared in lower case) and/or client ID already registered
+            to another installation, active or suspended — detected before insert
+            or as a lost race. The form again with `Installation.Domain.Taken`
+            and/or `Installation.ClientId.Taken` on the conflicting field(s),
+            values refilled; the other installation is not named; nothing
+            created, not audited, no partial row.
+          content:
+            text/html: {}
+
+  /installations/new:
+    get:
+      tags: [installations]
+      operationId: getRegisterInstallationForm
+      summary: "Registration form"
+      x-anonymous: false
+      x-policy: Owner
+      x-spec: [FR-003]
+      x-acceptance-criteria: [AC-002, AC-009]
+      responses:
+        "200":
+          description: >
+            Form with empty `name`, `domain`, `clientId` and the antiforgery
+            token. No status field.
+          content:
+            text/html: {}
+        "302":
+          $ref: "#/components/responses/GateOrChallenge"
+
+  /installations/{id}:
+    parameters:
+      - $ref: "#/components/parameters/InstallationId"
+    get:
+      tags: [installations]
+      operationId: getInstallation
+      summary: "Installation detail page"
+      x-anonymous: false
+      x-policy: Owner
+      x-spec: [FR-005, FR-013]
+      x-acceptance-criteria: [AC-005, AC-009, AC-011]
+      responses:
+        "200":
+          description: >
+            Identifier, name, domain, status label, creation time
+            (datetime-display), client ID. The identifier is selectable text in
+            the element `id="installation-identifier"`, with a copy button
+            (`data-copy-target="installation-identifier"`, script
+            `/js/copy-identifier.js`, copied text from `data-copied-text` =
+            `Installation.Identifier.Copied`) and the note
+            `Installation.Identifier.ConfigurationNote`. Links to
+            `/installations/{id}/name`, `/installations/{id}/client-id` and
+            `/installations`. No control that edits the domain, changes the
+            status or deletes. Rendered from an `InstallationDetail` DTO.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/InstallationDetail"
+        "302":
+          $ref: "#/components/responses/GateOrChallenge"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /installations/{id}/name:
+    parameters:
+      - $ref: "#/components/parameters/InstallationId"
+    get:
+      tags: [installations]
+      operationId: getRenameInstallationForm
+      summary: "Name correction form"
+      x-anonymous: false
+      x-policy: Owner
+      x-spec: [FR-006]
+      x-acceptance-criteria: [AC-006, AC-009]
+      responses:
+        "200":
+          description: "Form with `name` pre-filled with the stored name and the antiforgery token."
+          content:
+            text/html: {}
+        "302":
+          $ref: "#/components/responses/GateOrChallenge"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [installations]
+      operationId: renameInstallation
+      summary: "Correct the installation's name"
+      x-anonymous: false
+      x-policy: Owner
+      x-antiforgery: required
+      x-spec: [FR-006, FR-009, FR-014, VR-001, VR-004]
+      x-acceptance-criteria: [AC-003, AC-006, AC-008, AC-010]
+      x-processing-order: >
+        1 antiforgery → 2 installation exists (else 404, even if `name` is
+        invalid) → 3 VR-001 → 4 ordinally equal to the stored name: redirect,
+        nothing written, no audit → 5 update name and write the audit row
+        `installation_renamed` in one transaction. Names are not unique; any
+        status allowed (I-7).
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/RenameInstallationRequest"
+      responses:
+        "302":
+          description: >
+            Renamed or unchanged: `Location: /installations/{id}`. Without a
+            session: `/sign-in`; before setup: `/setup`.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "400":
+          description: >
+            (a) antiforgery refusal — error page `Error.PageExpired`; (b) VR-001
+            failed — the form again with the message key, value refilled; nothing
+            changed, not audited.
+          content:
+            text/html: {}
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /installations/{id}/client-id:
+    parameters:
+      - $ref: "#/components/parameters/InstallationId"
+    get:
+      tags: [installations]
+      operationId: getChangeClientIdForm
+      summary: "Client ID change form"
+      x-anonymous: false
+      x-policy: Owner
+      x-spec: [FR-007]
+      x-acceptance-criteria: [AC-007, AC-009]
+      responses:
+        "200":
+          description: >
+            Form with `clientId` pre-filled with the stored value, the antiforgery
+            token and the note `Installation.ClientId.ChangeNote` (only after the
+            service account was recreated; the school's super-admin must
+            authorize domain-wide delegation for the new client ID; the
+            installation picks it up at its next legitimacy check, within 6
+            hours).
+          content:
+            text/html: {}
+        "302":
+          $ref: "#/components/responses/GateOrChallenge"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [installations]
+      operationId: changeInstallationClientId
+      summary: "Change the service-account client ID"
+      x-anonymous: false
+      x-policy: Owner
+      x-antiforgery: required
+      x-spec: [FR-007, FR-008, FR-009, FR-014, VR-003, VR-004]
+      x-acceptance-criteria: [AC-003, AC-004, AC-007, AC-008, AC-010]
+      x-processing-order: >
+        1 antiforgery → 2 installation exists (else 404) → 3 VR-003 → 4 equal to
+        the stored client ID: redirect, nothing written, no audit → 5 registered
+        to another installation: 409 → 6 update client ID and write the audit
+        row `installation_client_id_changed` in one transaction; a
+        unique-constraint violation is mapped to step 5's result. Any status
+        allowed (I-7).
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ChangeInstallationClientIdRequest"
+      responses:
+        "302":
+          description: >
+            Changed or unchanged: `Location: /installations/{id}`. Without a
+            session: `/sign-in`; before setup: `/setup`.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "400":
+          description: >
+            (a) antiforgery refusal — error page `Error.PageExpired`; (b) VR-003
+            failed — the form again with the message key, value refilled.
+          content:
+            text/html: {}
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: >
+            Client ID registered to another installation (pre-check or lost
+            race): the form again with `Installation.ClientId.Taken`, value
+            refilled; nothing changed, not audited; the other installation is
+            not named.
+          content:
+            text/html: {}
+
+  /:
+    get:
+      tags: [session]
+      operationId: getHomePage
+      summary: "Home page (changed by US-002)"
+      x-anonymous: false
+      x-policy: Owner
+      x-spec: [FR-002]
+      x-acceptance-criteria: [AC-001]
+      x-compatibility: "US-001 operation; the only change is an added link."
+      responses:
+        "200":
+          description: >
+            As US-001 (signed-in state and sign-out form) plus a link to
+            `/installations` with text `Home.Installations`.
+          content:
+            text/html: {}
+        "302":
+          $ref: "#/components/responses/GateOrChallenge"
+
+  /js/copy-identifier.js:
+    get:
+      tags: [infrastructure]
+      operationId: getCopyIdentifierScript
+      summary: "Copy-to-clipboard script for the detail page"
+      x-anonymous: true
+      security: []
+      x-sc4-entry: "Static files"
+      x-spec: [FR-005]
+      x-acceptance-criteria: [AC-005]
+      responses:
+        "200":
+          description: >
+            Static JavaScript file from the static files directory. Copies the
+            text of the element named by `data-copy-target` using the Clipboard
+            API and shows the button's `data-copied-text`. Contains no
+            user-visible string of its own and no data.
+          content:
+            text/javascript: {}
+
+components:
+  parameters:
+    InstallationId:
+      name: id
+      in: path
+      required: true
+      description: >
+        The installation's UUID identifier (spec I-5), route constraint `guid`.
+        Never the internal numeric key.
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    GateOrChallenge:
+      description: >
+        No Owner account: `Location: /setup`. No session: `Location: /sign-in`
+        (no return URL).
+      headers:
+        Location:
+          $ref: "#/components/headers/Location"
+    NotFound:
+      description: >
+        No installation has this identifier. Error page `Error.NotFound`,
+        identical to the catch-all's response for a non-GUID `{id}`.
+      content:
+        text/html: {}
+
+  headers:
+    Location:
+      description: "Relative redirect target within the Control Plane; never external or query-supplied."
+      schema:
+        type: string
+        pattern: "^(/setup|/sign-in|/installations/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$"
+
+  schemas:
+    RegisterInstallationRequest:
+      type: object
+      description: "Registration form fields. Only these are bound (over-posting)."
+      additionalProperties: false
+      required: [name, domain, clientId]
+      properties:
+        name:
+          $ref: "#/components/schemas/InstallationName"
+        domain:
+          $ref: "#/components/schemas/InstallationDomain"
+        clientId:
+          $ref: "#/components/schemas/InstallationClientId"
+    RenameInstallationRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          $ref: "#/components/schemas/InstallationName"
+    ChangeInstallationClientIdRequest:
+      type: object
+      additionalProperties: false
+      required: [clientId]
+      properties:
+        clientId:
+          $ref: "#/components/schemas/InstallationClientId"
+
+    InstallationName:
+      type: string
+      description: >
+        VR-001, OD-002. Required; 1–200 Unicode code points (minLength/maxLength
+        here are code-point counts); first and last character not whitespace
+        (Unicode); no character of category Cc or Cf anywhere; not trimmed; not
+        unique. Messages: Installation.Name.Required, .Length, .EdgeWhitespace,
+        .InvalidCharacters.
+      minLength: 1
+      maxLength: 200
+      examples: ["Ліцей №1", "DAC"]
+    InstallationDomain:
+      type: string
+      description: >
+        VR-002, OD-001. Required; 3–253 characters of A–Z a–z 0–9 `.` `-`; at
+        least one dot; dot-separated labels, none empty (no leading, trailing or
+        double dot), each 1–63, none starting or ending with `-`, none starting
+        with `xn--` (any case). Accepted in any case, stored lower case; unique
+        across all installations. Messages: Installation.Domain.Required,
+        .Length, .Characters, .NoDot, .Labels, .Idn, .Taken.
+      minLength: 3
+      maxLength: 253
+      pattern: "^(?!.*(^|\\.)[xX][nN]--)(?=.*\\.)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$"
+      examples: ["dac.ukr.education", "DAC.Ukr.Education"]
+    InstallationClientId:
+      type: string
+      description: >
+        VR-003. Required; 10–32 ASCII digits; kept as a string, leading zeros
+        preserved; unique across all installations. Messages:
+        Installation.ClientId.Required, .Format, .Taken.
+      pattern: "^[0-9]{10,32}$"
+      examples: ["123456789012345678901"]
+
+    InstallationListItem:
+      type: object
+      description: "View DTO for the list (AD-8). No internal key, no secret."
+      additionalProperties: false
+      required: [identifier, name, domain, status, createdAt]
+      properties:
+        identifier: {type: string, format: uuid}
+        name: {type: string}
+        domain: {type: string}
+        status:
+          $ref: "#/components/schemas/InstallationStatus"
+        createdAt: {type: string, format: date-time, description: "UTC"}
+    InstallationDetail:
+      type: object
+      description: "View DTO for the detail page (AD-8)."
+      additionalProperties: false
+      required: [identifier, name, domain, status, createdAt, clientId]
+      properties:
+        identifier: {type: string, format: uuid}
+        name: {type: string}
+        domain: {type: string}
+        status:
+          $ref: "#/components/schemas/InstallationStatus"
+        createdAt: {type: string, format: date-time, description: "UTC"}
+        clientId: {type: string}
+    InstallationStatus:
+      type: string
+      enum: [active, suspended]
+      description: "Closed set (trebovaniya.md §3). This Story creates only `active`."
+
+    ValidationMessageKeys:
+      type: object
+      description: >
+        Translation keys (ControlPlane.Localization, uk and en, TC-8) this
+        contract names. Each field reports its first failing rule in this
+        order. Wording is the implementor's within the spec.
+      properties:
+        Installation.Name.Required: {type: string}
+        Installation.Name.Length: {type: string}
+        Installation.Name.EdgeWhitespace: {type: string}
+        Installation.Name.InvalidCharacters: {type: string}
+        Installation.Domain.Required: {type: string}
+        Installation.Domain.Length: {type: string}
+        Installation.Domain.Characters: {type: string}
+        Installation.Domain.NoDot: {type: string}
+        Installation.Domain.Labels: {type: string}
+        Installation.Domain.Idn: {type: string}
+        Installation.Domain.Taken: {type: string}
+        Installation.ClientId.Required: {type: string}
+        Installation.ClientId.Format: {type: string}
+        Installation.ClientId.Taken: {type: string}
+    PageTextKeys:
+      type: object
+      description: "Other fixed keys of this Story; page titles and labels get their own keys at the implementor's choice, all in uk and en."
+      properties:
+        Installations.Empty: {type: string}
+        Installation.Status.Active: {type: string}
+        Installation.Status.Suspended: {type: string}
+        Installation.Identifier.ConfigurationNote: {type: string}
+        Installation.Identifier.Copied: {type: string}
+        Installation.ClientId.ChangeNote: {type: string}
+        Home.Installations: {type: string}
+
+  securitySchemes:
+    ownerSession:
+      type: apiKey
+      in: cookie
+      name: __Host-cp-session
+      description: "Owner cookie session defined by US-001 (API-7)."
+
+security:
+  - ownerSession: []

@@ -4,39 +4,29 @@
 version: 1
 story: US-002
 workflow: story-delivery
-current_stage: HUMAN_SPEC_APPROVAL
-previous_stage: SPECIFICATION
-last_completed_stage: SPECIFICATION
-status: WAITING_FOR_HUMAN
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-writer
+last_invoked_skill: openapi-designer
 last_result:
   verdict: PASS
-  stage: SPECIFICATION
-  recorded_at: 2026-09-16T13:31:16Z
+  stage: API_DESIGN
+  recorded_at: 2026-09-16T13:49:35Z
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-002-spec.md
-    version: 2
-  - type: open_decisions
-    path: docs/decisions/US-002-open-decisions.md
-    version: 2
-pending_human_gate:
-  stage: HUMAN_SPEC_APPROVAL
-  status: PENDING
-  required_artifacts:
-    - type: specification
-      path: docs/specifications/US-002-spec.md
-      version: 2
-  automated_verdict: PASS
-  blocking_findings: []
-  requested_at: 2026-09-16T13:31:16Z
-  decided_at: null
-  decided_by: null
-  comment: null
+  - type: api_design
+    path: docs/designs/api/US-002-api-design.md
+    version: 1
+  - type: openapi
+    path: docs/designs/api/US-002-openapi.yaml
+    version: 1
+pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "API_DESIGN: db-designer to fix audit action codes (installation_created, installation_renamed, installation_client_id_changed), target type installation, which internal id the audit target carries, and unique-constraint names used to map a lost race to the conflicting field."
+  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV at 2026-09-16T13:45:30Z; specification v2 and open decisions v2 APPROVED."
   - "SPECIFICATION: OD-001, OD-002, OD-003 resolved by the human on 2026-09-16 with the recommended options; interpretations I-1 … I-10 confirmed; specification v2, open decisions v2."
 started_at: 2026-09-16T13:31:16Z
-updated_at: 2026-09-16T13:41:56Z
+updated_at: 2026-09-16T13:49:35Z
 completed_at: null

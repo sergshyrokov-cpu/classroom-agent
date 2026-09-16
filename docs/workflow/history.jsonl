@@ -10,3 +10,5 @@
 {"timestamp":"2026-09-16T13:07:44Z","story":"US-001","from_stage":"HUMAN_PR_APPROVAL","to_stage":"COMPLETED","skill":null,"verdict":"HUMAN_APPROVED","artifacts":["docs/evidence/US-001-implementation-report.md","docs/reviews/security/US-001-security-review.md"],"attempt":1}
 {"timestamp":"2026-09-16T13:27:18Z","story":"US-002","from_stage":null,"to_stage":"SPECIFICATION","skill":null,"verdict":"ACTIVATED","artifacts":[],"attempt":1}
 {"timestamp":"2026-09-16T13:31:16Z","story":"US-002","from_stage":"SPECIFICATION","to_stage":"HUMAN_SPEC_APPROVAL","skill":"spec-writer","verdict":"PASS","artifacts":["docs/specifications/US-002-spec.md","docs/decisions/US-002-open-decisions.md"],"attempt":1}
+{"timestamp":"2026-09-16T13:45:30Z","story":"US-002","from_stage":"HUMAN_SPEC_APPROVAL","to_stage":"API_DESIGN","skill":null,"verdict":"HUMAN_APPROVED","artifacts":["docs/specifications/US-002-spec.md"],"attempt":1}
+{"timestamp":"2026-09-16T13:49:35Z","story":"US-002","from_stage":"API_DESIGN","to_stage":"DB_DESIGN","skill":"openapi-designer","verdict":"PASS","artifacts":["docs/designs/api/US-002-api-design.md","docs/designs/api/US-002-openapi.yaml"],"attempt":1}
