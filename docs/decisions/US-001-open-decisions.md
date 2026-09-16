@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-001
-version: 2
+version: 3
 status: APPROVED
 created_at: 2026-09-16T07:54:22Z
-updated_at: 2026-09-16T08:08:55Z
+updated_at: 2026-09-16T08:34:14Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-001-owner-first-run-setup.md
@@ -33,6 +33,7 @@ Status summary:
 | OD-003 | What a refused setup shows when the Owner account already exists | RESOLVED (2026-09-16) | AC-003, AC-004 |
 | OD-004 | Order of field validation and the setup-code check | RESOLVED (2026-09-16) | AC-006, AC-007, AC-012 |
 | OD-005 | Form, strength and comparison of the one-time setup code | RESOLVED (2026-09-16) | AC-007 |
+| OD-006 | NuGet packages for scaffolding the solution | RESOLVED (2026-09-16) | all (build and tests) |
 
 ---
 
@@ -186,3 +187,52 @@ cannot assert it; SECURITY_REVIEW has no measure.
    the requirements defines.
 
 **Resolution:** *Resolved 2026-09-16 by the human (the Owner): option 1.* At least 128 bits from the OS cryptographic RNG, shown as 26 upper-case Crockford Base32 characters in groups of 4 or 5 separated by `-`; hyphens, spaces and letter case ignored on input; constant-time comparison; kept only in process memory; no separate attempt limit.
+
+---
+
+## Raised after DB_DESIGN
+
+### OD-006 — NuGet packages for scaffolding the solution
+
+**Status: RESOLVED.**
+
+**Gap.** No solution or project exists yet; US-001 creates `ClassroomAgent.sln`
+(AD-2). `AGENTS.md` allows only packages already referenced in the target
+`.csproj` and requires an approved Open Decision to add one. The packages the
+Story needs are named by the project rules — `AGENTS.md` Technology Stack, PC-1
+(Npgsql, Testcontainers), PC-5 (`EFCore.NamingConventions`), DC-10 (Serilog),
+TC-6 (xUnit, `Microsoft.AspNetCore.Mvc.Testing`) — but no Open Decision
+records them.
+
+**Impact.** TEST_WRITING (test project) and IMPLEMENTATION (Control Plane
+project) cannot reference any package without it.
+
+**Options.**
+
+1. *(Recommended)* Approve exactly the list below for US-001. Versions: the
+   latest stable release compatible with .NET 10 at the time the project is
+   created, no preview; all packages of one family on the same major version.
+   Any package not on the list still needs its own Open Decision.
+2. Decide package by package when each stage needs one.
+
+**Resolution:** *Resolved 2026-09-16 by the human (the Owner): option 1.*
+Approved packages:
+
+| Project | Package | Purpose | Rule |
+|---|---|---|---|
+| `ClassroomAgent.ControlPlane` | `Npgsql.EntityFrameworkCore.PostgreSQL` | EF Core provider for PostgreSQL (brings EF Core) | AGENTS.md, PC-1 |
+| `ClassroomAgent.ControlPlane` | `EFCore.NamingConventions` | `UseSnakeCaseNamingConvention()` | PC-5 |
+| `ClassroomAgent.ControlPlane` | `Microsoft.EntityFrameworkCore.Design` (`PrivateAssets=all`) | `dotnet ef migrations` | PC-2, DC-4 |
+| `ClassroomAgent.ControlPlane` | `Serilog.AspNetCore` | structured logging, JSON formatter | DC-10, v68 |
+| `ClassroomAgent.ControlPlane` | `Serilog.Sinks.File` | rolling file sink | DC-10, v68 |
+| `ClassroomAgent.Tests` | `Microsoft.NET.Test.Sdk` | test host | TC-6 |
+| `ClassroomAgent.Tests` | `xunit.v3` | test framework | AGENTS.md, TC-6 |
+| `ClassroomAgent.Tests` | `xunit.runner.visualstudio` | `dotnet test` runner | TC-6 |
+| `ClassroomAgent.Tests` | `Microsoft.AspNetCore.Mvc.Testing` | in-process host for endpoint tests | AGENTS.md, TC-6 |
+| `ClassroomAgent.Tests` | `Testcontainers.PostgreSql` | real PostgreSQL in tests | PC-1, TC-2 |
+
+The `dotnet-ef` command-line tool is installed as a local tool
+(`.config/dotnet-tools.json`), not as a package. ASP.NET Core Identity's core
+types ship with the ASP.NET Core shared framework and need no package;
+`Microsoft.AspNetCore.Identity.EntityFrameworkCore` is **not** approved, because
+the entity model uses its own store (entity model §4).

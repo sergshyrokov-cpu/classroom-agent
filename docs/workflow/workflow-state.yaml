@@ -4,28 +4,29 @@
 version: 1
 story: US-001
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: PASS
-  stage: API_DESIGN
-  recorded_at: 2026-09-16T08:15:36Z
+  stage: DB_DESIGN
+  recorded_at: 2026-09-16T08:29:24Z
 last_artifacts:
-  - type: openapi
-    path: docs/designs/api/US-001-openapi.yaml
+  - type: database_design
+    path: docs/designs/database/US-001-db-design.md
     version: 1
-  - type: api_design
-    path: docs/designs/api/US-001-api-design.md
+  - type: entity_model
+    path: docs/designs/database/US-001-entity-model.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
   - "The Specification records trebovaniya.md v67; v68 (session lifetime, static files in SC-4, Control Plane logging) is applied in the API design and does not contradict the Specification."
   - "Control Plane logging (trebovaniya.md v68, DC-10) is outside the HTTP contract and binds IMPLEMENTATION and SECURITY_REVIEW."
+  - "docs/decisions/US-001-open-decisions.md is now v3: it adds only OD-006 (approved NuGet packages); the Specification, API design and DB design recorded v2 and are not affected."
 started_at: 2026-09-16T07:56:45Z
-updated_at: 2026-09-16T08:15:36Z
+updated_at: 2026-09-16T08:34:14Z
 completed_at: null
