@@ -34,7 +34,11 @@ the previous one — the dependency is real, not stylistic
    authority or from Let's Encrypt via a DNS challenge (DC-6). If it comes from the
    internal authority, add that authority's root certificate to the trusted roots
    of every device the Owner uses to reach the Control Plane — a browser
-   certificate warning is never clicked through (`trebovaniya.md` §9, v65). Create its Data
+   certificate warning is never clicked through (`trebovaniya.md` §9, v65). Configure
+   the Control Plane's Kestrel with only an HTTPS endpoint bound to that
+   certificate and no HTTP URL — without it ASP.NET Core listens on plain HTTP by
+   default — and confirm after deployment that the HTTP port refuses connections
+   (DC-6, SC-2; `trebovaniya.md` §8, v64). Create its Data
    Protection key directory on a persistent volume (DC-3). Deploy the Control
    Plane and its database; run its migrations (DC-4).
 2. Owner first-run setup: the Control Plane prints a one-time setup code to the
