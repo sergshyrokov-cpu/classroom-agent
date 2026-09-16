@@ -62,14 +62,16 @@ a second Owner account; the Owner switching their own UI language (US-039).
 
 - they are redirected to the first-run setup page — except the error page,
   which is always shown (AC-010, AC-011, `trebovaniya.md` §8, v65);
-- the setup page asks for the one-time setup code, a login and a password;
+- the setup page asks for the one-time setup code, a login, a password and the
+  password repeated;
 - no other Control Plane function is reachable until setup completes.
 
 ## AC-002 Owner account is created
 
 **Given** the first-run setup page is open and no Owner account exists
 
-**When** the valid setup code, a valid login and a valid password are submitted
+**When** the valid setup code, a valid login, a valid password and the same
+password repeated are submitted
 
 **Then**:
 
@@ -133,8 +135,9 @@ a second Owner account; the Owner switching their own UI language (US-039).
 **When** a login failing the format — shorter than 4 or longer than 64
 characters, or with a character other than Latin letters, digits, `.`, `-` and
 `_` — or a password failing the policy — shorter than 15 or longer than 128
-characters, or equal to or containing the login in any letter case — is submitted
-(SC-2, `trebovaniya.md` §3, §9, v62, v64)
+characters, or equal to or containing the login in any letter case — or a
+repeated password that differs from the password is submitted (SC-2,
+`trebovaniya.md` §3, §9, v62, v64)
 
 **Then**:
 
@@ -144,8 +147,8 @@ characters, or equal to or containing the login in any letter case — is submit
   counted in characters, not bytes;
 - the response names which field failed and why, in terms safe to display
   (`api-conventions.md` API-6);
-- the submitted password never appears in the response, in a log, or in an
-  error body (SC-10).
+- the submitted password and its repetition never appear in the response, in a
+  log, or in an error body (SC-10).
 
 ## AC-007 Setup requires the one-time code
 
