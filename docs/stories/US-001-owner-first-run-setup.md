@@ -7,7 +7,7 @@ priority: HIGH
 source:
   type: authored
 # Lifecycle status is owned by docs/catalog/stories.yaml (not this file).
-# Aligned with trebovaniya.md v65.
+# Aligned with trebovaniya.md v67.
 ---
 
 # User Story
@@ -232,6 +232,23 @@ a valid antiforgery token
   `SameSite=Strict`, and every other cookie is `Secure` (SC-2, `trebovaniya.md`
   §8, §9, v61, v64).
 
+## AC-012 First-run setup is audited
+
+**Given** the Control Plane `AuditEvent` table (SC-11)
+
+**When** the Owner account is created at first run, or a setup submission is
+refused for a missing or wrong one-time setup code while no Owner account exists
+
+**Then**:
+
+- creating the account writes a row with the new Owner account's internal id and
+  role as actor, outcome "succeeded", UTC time and request id;
+- a refused code writes a row with actor "anonymous", outcome "refused" and the
+  refusal category "wrong setup code";
+- no row carries the code, login or password typed, or any other personal data;
+- these rows are kept indefinitely and cannot be updated or deleted, as in AC-008
+  (`trebovaniya.md` §5, v67).
+
 ---
 
 # Open Decisions
@@ -282,7 +299,6 @@ ships translations and a Ukrainian default only (AC-009).
 - The Control Plane keeps its ASP.NET Core Data Protection keys in its own
   directory on a persistent volume, outside the database and backups, so a
   restart neither signs the Owner out nor voids an open form (SC-7, v64).
-- This Story is the first to need the Control Plane `AuditEvent` table (AC-008).
-  Creating the Owner account at first run and submitting a wrong setup code are
-  not in the audited list of `trebovaniya.md` §5 — the Specification should say
-  explicitly whether they become audited events.
+- This Story is the first to need the Control Plane `AuditEvent` table (AC-008,
+  AC-012). Creating the Owner account at first run and a setup refused for a
+  wrong code were added to the audited list of `trebovaniya.md` §5 in v67.

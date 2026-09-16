@@ -359,7 +359,11 @@ when" — above all, who took personal data out of the system.
   automatic link (actor `system`), picking a course for an unassigned code,
   confirming and re-linking (v55); **exporting a journal or report**; each retention purge run
   (actor `system`, counts only — PC-11).
-- **Audited in the Control Plane:** Owner sign-in and refused sign-in, creating an `Installation`,
+- **Audited in the Control Plane:** Owner sign-in and refused sign-in; creating
+  the Owner account at first run (actor: the new account's id) and a first-run
+  setup refused for a missing or wrong one-time setup code while no Owner account
+  exists (actor "anonymous", refusal category "wrong setup code"; the code, login
+  and password typed are never recorded) (v67); creating an `Installation`,
   changing its service-account client ID, suspending and resuming one, adding
   and revoking an `AllowedAdmin`.
 - **A row carries:** UTC timestamp, actor (internal account id and role —
@@ -393,8 +397,9 @@ when" — above all, who took personal data out of the system.
   not together with the course they mention, so deleting a course never erases
   the trace of who exported its journal (PC-11). **Control Plane audit rows are
   kept indefinitely**: they record only the Owner's own actions, sign-in
-  attempts to the Control Plane without the login typed, and internal ids, with
-  no third-party personal data (v45, v53).
+  attempts to the Control Plane without the login typed, first-run setup attempts
+  without the code, login or password typed, and internal ids, with no
+  third-party personal data (v45, v53, v67).
 - The table and its writing path are created by the first Story that introduces
   an audited action; every later Story that introduces one writes its event and
   proves it with a test.
