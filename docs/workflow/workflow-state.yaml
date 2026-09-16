@@ -4,29 +4,29 @@
 version: 1
 story: US-002
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: PASS
-  stage: API_DESIGN
-  recorded_at: 2026-09-16T13:49:35Z
+  stage: DB_DESIGN
+  recorded_at: 2026-09-16T13:55:28Z
 last_artifacts:
-  - type: api_design
-    path: docs/designs/api/US-002-api-design.md
+  - type: database_design
+    path: docs/designs/database/US-002-db-design.md
     version: 1
-  - type: openapi
-    path: docs/designs/api/US-002-openapi.yaml
+  - type: entity_model
+    path: docs/designs/database/US-002-entity-model.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "API_DESIGN: db-designer to fix audit action codes (installation_created, installation_renamed, installation_client_id_changed), target type installation, which internal id the audit target carries, and unique-constraint names used to map a lost race to the conflicting field."
+  - "DB_DESIGN: audit codes installation_created / installation_renamed / installation_client_id_changed, target type installation with installation.id; conflict mapping by uq_installation_domain / uq_installation_client_id; TimestampInterceptor must add Installation."
   - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV at 2026-09-16T13:45:30Z; specification v2 and open decisions v2 APPROVED."
   - "SPECIFICATION: OD-001, OD-002, OD-003 resolved by the human on 2026-09-16 with the recommended options; interpretations I-1 … I-10 confirmed; specification v2, open decisions v2."
 started_at: 2026-09-16T13:31:16Z
-updated_at: 2026-09-16T13:49:35Z
+updated_at: 2026-09-16T13:55:28Z
 completed_at: null
