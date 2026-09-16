@@ -112,6 +112,12 @@ area as production severity.
   is a Critical finding (`trebovaniya.md` §9, v35).
 - Session state lives in an `httpOnly` cookie. No password and no Google
   credential is ever stored client-side (`trebovaniya.md` section 8).
+- **Session lifetime** (`trebovaniya.md` §8, v68): the session cookie is not
+  persistent — it ends when the browser is closed — and there is no "remember
+  me". A session ends after inactivity — **30 minutes** for the Owner, **60
+  minutes** for an Admin or a Dean (sliding) — and in any case **8 hours** after
+  sign-in. A persistent session cookie, a longer or missing expiry, or a
+  "remember me" option is a finding.
 - **Cookie attributes are fixed per host** (`trebovaniya.md` §8, v61):
   - the installation session cookie is `SameSite=Lax` — `Strict` would drop the
     session on the first page after returning from Google; the antiforgery token
@@ -183,6 +189,7 @@ Admin's account (BR-015, SC-8).
   | First-run setup | Control Plane | private network and the one-time setup code (SC-2) |
   | Legitimacy check and Admin login check | Control Plane | private network (SC-9) |
   | Error page, and the fallback catch-all that answers `404` for any unmatched request | both | shows only translated text, no data; reads and writes nothing (`trebovaniya.md` §8, v64, v66) |
+  | Static files — CSS, JS, images | both | only files from the application's static files directory, read-only, with no data and nothing user-specific (`trebovaniya.md` §8, v68) |
 
   An anonymous endpoint not on this list is a Critical finding; adding one
   requires extending the list.

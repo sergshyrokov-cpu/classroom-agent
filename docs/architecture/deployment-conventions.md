@@ -297,6 +297,13 @@ without long-lived keys (DC-5).
   *which* course or participant id was involved, never who they are.
 - Logs are the Owner's diagnostic tool. What a Dean or Admin sees about
   synchronization comes from `SyncState`, not from logs (BR-044).
+- **The Control Plane logs by the same rules** (`trebovaniya.md` §8, v68):
+  Serilog, one JSON object per line in a rolling file on the Control Plane
+  server, a new file per day, kept 30 days with a size cap, the request
+  identifier on every line written inside a request. `Information` — start and
+  stop; `Error` — unhandled exceptions; later Stories add their own events.
+  Never logged: the one-time setup code, the login or password typed, an
+  `AllowedAdmin` email — internal identifiers only (SC-2, SC-10).
 
 ## DC-11 Health checks
 

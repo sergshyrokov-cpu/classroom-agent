@@ -45,7 +45,8 @@ per day, retained 30 days) and exposes liveness and readiness endpoints reachabl
 only from the Owner's private network. Readiness distinguishes "cannot serve"
 (`Unhealthy`) from read-only or a failing legitimacy check within the grace
 period (`Degraded`, still HTTP 200). *(§8, `deployment-conventions.md` DC-10,
-DC-11)*
+DC-11)* The Control Plane writes structured logs by the same rules, never the
+setup code, a typed login or password, or an `AllowedAdmin` email. *(§8, v68)*
 
 **NFR-016** Metrics and centralized log collection are out of scope for the
 first version. Readiness plus `SyncState` are how the Owner sees that a school is
@@ -178,7 +179,10 @@ application. *(§5)*
 Google credential is stored client-side. GET never changes state, except the
 Google OAuth callback (SC-4). CSRF protection,
 cookie attributes, HTTPS and the Data Protection keys follow
-`security-conventions.md` SC-2, SC-4 and SC-7. *(§8, §9, v61, v64)*
+`security-conventions.md` SC-2, SC-4 and SC-7. The session cookie is not
+persistent and there is no "remember me"; a session ends after 30 minutes of
+inactivity for the Owner and 60 minutes for an Admin or Dean, and 8 hours after
+sign-in at the latest. *(§8, §9, v61, v64, v68)*
 
 **NFR-073** The installation UI is available in Ukrainian and English. The
 school's default language is an installation setting set by the Owner, Ukrainian

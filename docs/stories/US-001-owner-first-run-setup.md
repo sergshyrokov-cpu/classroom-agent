@@ -7,7 +7,7 @@ priority: HIGH
 source:
   type: authored
 # Lifecycle status is owned by docs/catalog/stories.yaml (not this file).
-# Aligned with trebovaniya.md v67.
+# Aligned with trebovaniya.md v68.
 ---
 
 # User Story
