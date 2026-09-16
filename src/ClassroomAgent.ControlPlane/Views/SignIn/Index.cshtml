@@ -1,0 +1,20 @@
+@model SignInPageModel
+@{
+    ViewData["Title"] = T["SignIn.Title"];
+}
+@if (Model.Refused)
+{
+    <p class="form-error">@T["SignIn.Refused"]</p>
+}
+<form method="post" action="/sign-in">
+    @Html.AntiForgeryToken()
+    <label for="login">@T["SignIn.Login.Label"]</label>
+    <input id="login" name="login" type="text" value="@Model.Login" />
+    @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "login")
+
+    <label for="password">@T["SignIn.Password.Label"]</label>
+    <input id="password" name="password" type="password" value="" />
+    @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "password")
+
+    <button type="submit">@T["SignIn.Submit"]</button>
+</form>

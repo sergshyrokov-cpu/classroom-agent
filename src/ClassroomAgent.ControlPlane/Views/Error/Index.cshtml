@@ -1,0 +1,9 @@
+@model ErrorPageModel
+@{
+    ViewData["Title"] = T["Error.Title"];
+}
+<p>@T[Model.MessageKey]</p>
+@if (Model.BackLink is not null)
+{
+    <p><a href="@Model.BackLink">@T["Error.BackLink"]</a></p>
+}

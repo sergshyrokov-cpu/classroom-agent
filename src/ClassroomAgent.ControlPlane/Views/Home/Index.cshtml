@@ -1,0 +1,8 @@
+@{
+    ViewData["Title"] = T["Home.Title"];
+}
+<p>@T["Home.SignedIn"]</p>
+<form method="post" action="/sign-out">
+    @Html.AntiForgeryToken()
+    <button type="submit">@T["Home.SignOut"]</button>
+</form>

@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-001
-version: 3
+version: 4
 status: APPROVED
 created_at: 2026-09-16T07:54:22Z
-updated_at: 2026-09-16T08:34:14Z
+updated_at: 2026-09-16T10:37:11Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-001-owner-first-run-setup.md
@@ -34,6 +34,7 @@ Status summary:
 | OD-004 | Order of field validation and the setup-code check | RESOLVED (2026-09-16) | AC-006, AC-007, AC-012 |
 | OD-005 | Form, strength and comparison of the one-time setup code | RESOLVED (2026-09-16) | AC-007 |
 | OD-006 | NuGet packages for scaffolding the solution | RESOLVED (2026-09-16) | all (build and tests) |
+| OD-007 | Compile-only Control Plane skeleton created at TEST_WRITING | RESOLVED (2026-09-16) | all (red phase of TEST_WRITING) |
 
 ---
 
@@ -236,3 +237,38 @@ The `dotnet-ef` command-line tool is installed as a local tool
 types ship with the ASP.NET Core shared framework and need no package;
 `Microsoft.AspNetCore.Identity.EntityFrameworkCore` is **not** approved, because
 the entity model uses its own store (entity model §4).
+
+### OD-007 — Compile-only Control Plane skeleton created at TEST_WRITING
+
+**Status: RESOLVED.**
+
+**Gap.** US-001 is greenfield: no solution and no production project exist.
+TEST_WRITING runs before IMPLEMENTATION and must leave tests that compile and fail
+only for missing production behaviour (red phase). The test-writer Skill may not
+modify production code, and no artifact says who creates the solution skeleton the
+tests need (`Program`, `ControlPlaneDbContext`, the service and seam types of the
+entity model §5 and the test strategy §3). Raised on the TEST_WRITING re-run
+(attempt 2).
+
+**Impact.** Without a skeleton the test project cannot compile, so test errors
+cannot be told apart from missing implementation until IMPLEMENTATION.
+
+**Options.**
+
+1. *(Recommended)* TEST_WRITING creates a compile-only skeleton: `ClassroomAgent.sln`,
+   `src/ClassroomAgent.ControlPlane` with an empty `Program`, and declarations of
+   the types the tests reference — `ControlPlaneDbContext`, `AuditEvent` (the one
+   factory the tests call), `FirstRunSetupService`, `OwnerSignInService`, their
+   result types, `ISetupCodeGenerator`, `IOperatorConsole`, `SetupCodeGenerator`,
+   `SetupCodeComparer`, `Localization.SharedResource`. No logic: members throw
+   `NotImplementedException`; nothing is registered in DI. Plus the test-host
+   scaffolding the run needs: `global.json` selecting Microsoft.Testing.Platform
+   for `dotnet test` (required by xunit.v3 on the .NET 10 SDK). IMPLEMENTATION owns
+   every one of these files from then on and may reshape them together with the
+   tests.
+2. Write only the test project; the red phase is "does not compile for want of
+   production types" until IMPLEMENTATION.
+3. Stop as `BLOCKED` until the process for greenfield Stories is decided.
+
+**Resolution:** *Resolved 2026-09-16 by the human (the Owner): option 1.*
+

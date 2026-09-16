@@ -1,0 +1,14 @@
+@model string
+@{
+    // The translated messages of one form field; the keys come from validation or the controller.
+    var messages = ViewData.ModelState
+        .Where(entry => entry.Key.Equals(Model, StringComparison.OrdinalIgnoreCase)
+            || entry.Key.EndsWith("." + Model, StringComparison.OrdinalIgnoreCase))
+        .SelectMany(entry => entry.Value!.Errors)
+        .Select(error => error.ErrorMessage)
+        .Distinct();
+}
+@foreach (var key in messages)
+{
+    <p class="field-error">@T[key]</p>
+}

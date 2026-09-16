@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Layout.AppName" xml:space="preserve"><value>Control Plane</value></data>
+  <data name="Setup.Title" xml:space="preserve"><value>First-run setup</value></data>
+  <data name="Setup.Intro" xml:space="preserve"><value>Create the Owner account. The one-time code is shown on the server console.</value></data>
+  <data name="Setup.SetupCode.Label" xml:space="preserve"><value>One-time code</value></data>
+  <data name="Setup.Login.Label" xml:space="preserve"><value>Login</value></data>
+  <data name="Setup.Password.Label" xml:space="preserve"><value>Password</value></data>
+  <data name="Setup.PasswordConfirmation.Label" xml:space="preserve"><value>Repeat the password</value></data>
+  <data name="Setup.Submit" xml:space="preserve"><value>Create account</value></data>
+  <data name="Setup.SignInLink" xml:space="preserve"><value>Go to sign-in</value></data>
+  <data name="Setup.Login.Required" xml:space="preserve"><value>Enter a login.</value></data>
+  <data name="Setup.Login.Length" xml:space="preserve"><value>The login must be 4 to 64 characters long.</value></data>
+  <data name="Setup.Login.Characters" xml:space="preserve"><value>The login may contain only Latin letters, digits, dot, hyphen and underscore.</value></data>
+  <data name="Setup.Password.Required" xml:space="preserve"><value>Enter a password.</value></data>
+  <data name="Setup.Password.Length" xml:space="preserve"><value>The password must be 15 to 128 characters long.</value></data>
+  <data name="Setup.Password.ContainsLogin" xml:space="preserve"><value>The password may not equal or contain the login.</value></data>
+  <data name="Setup.PasswordConfirmation.Required" xml:space="preserve"><value>Repeat the password.</value></data>
+  <data name="Setup.PasswordConfirmation.Mismatch" xml:space="preserve"><value>The passwords do not match.</value></data>
+  <data name="Setup.SetupCode.Invalid" xml:space="preserve"><value>The one-time code is not correct.</value></data>
+  <data name="Setup.AlreadyCreated" xml:space="preserve"><value>The Owner account has already been created. Sign in.</value></data>
+  <data name="SignIn.Title" xml:space="preserve"><value>Sign in</value></data>
+  <data name="SignIn.Login.Label" xml:space="preserve"><value>Login</value></data>
+  <data name="SignIn.Password.Label" xml:space="preserve"><value>Password</value></data>
+  <data name="SignIn.Submit" xml:space="preserve"><value>Sign in</value></data>
+  <data name="SignIn.Login.Required" xml:space="preserve"><value>Enter your login.</value></data>
+  <data name="SignIn.Password.Required" xml:space="preserve"><value>Enter your password.</value></data>
+  <data name="SignIn.Refused" xml:space="preserve"><value>Wrong login or password, or sign-in is temporarily locked after several failed attempts — try again later.</value></data>
+  <data name="Home.Title" xml:space="preserve"><value>Control Plane</value></data>
+  <data name="Home.SignedIn" xml:space="preserve"><value>You are signed in as the Owner.</value></data>
+  <data name="Home.SignOut" xml:space="preserve"><value>Sign out</value></data>
+  <data name="Error.Title" xml:space="preserve"><value>Error</value></data>
+  <data name="Error.BackLink" xml:space="preserve"><value>Back to the page</value></data>
+  <data name="Error.PageExpired" xml:space="preserve"><value>The page has expired — reload it and try again.</value></data>
+  <data name="Error.Forbidden" xml:space="preserve"><value>This action is not permitted.</value></data>
+  <data name="Error.NotFound" xml:space="preserve"><value>Page not found.</value></data>
+  <data name="Error.Internal" xml:space="preserve"><value>An internal error occurred.</value></data>
+</root>

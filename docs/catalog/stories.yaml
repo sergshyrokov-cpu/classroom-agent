@@ -40,7 +40,7 @@ stories:
   - id: US-001
     epic: EPIC-8
     title: Owner first-run setup
-    state: IN_PROGRESS
+    state: COMPLETED
   - id: US-002
     epic: EPIC-8
     title: Register an Installation

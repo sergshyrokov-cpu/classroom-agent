@@ -4,29 +4,30 @@
 version: 1
 story: US-001
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: security-reviewer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: 2026-09-16T08:29:24Z
+  stage: SECURITY_REVIEW
+  recorded_at: 2026-09-16T13:02:10Z
 last_artifacts:
-  - type: database_design
-    path: docs/designs/database/US-001-db-design.md
-    version: 1
-  - type: entity_model
-    path: docs/designs/database/US-001-entity-model.md
+  - type: security_review
+    path: docs/reviews/security/US-001-security-review.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "The Specification records trebovaniya.md v67; v68 (session lifetime, static files in SC-4, Control Plane logging) is applied in the API design and does not contradict the Specification."
-  - "Control Plane logging (trebovaniya.md v68, DC-10) is outside the HTTP contract and binds IMPLEMENTATION and SECURITY_REVIEW."
-  - "docs/decisions/US-001-open-decisions.md is now v3: it adds only OD-006 (approved NuGet packages); the Specification, API design and DB design recorded v2 and are not affected."
+  - "HUMAN_PR_APPROVAL approved by Serhii SHYROKOV at 2026-09-16T13:07:44Z: Отклонение F-02 принято: вход без UserManager (нет TimeProvider), поведение проверено; entity model v1 не обновляется."
+  - "SECURITY_REVIEW: 0 Critical, 0 Major, 1 Minor, 5 Informational; independent run 158/158 tests passed; no vulnerable package."
+  - "F-01 (Minor): HTTPS-only Kestrel endpoint is not stated as a deployment step in DC-2/DC-3; default binding would be plain HTTP. Documentation follow-up, no code change."
+  - "F-02 (Info): entity model section 4 names UserManager; implementation uses PasswordHasher/ILookupNormalizer because UserManager has no TimeProvider; behaviour verified."
+  - "F-03 (Info): request id on log lines established from wiring, not observed at runtime; check at first deployment."
+  - "F-05 (Info): Data Protection key directory permissions and backup exclusion are deployment controls (SC-7)."
+  - "F-06 (Info): AuditEventSchemaTests.cs modified before IMPLEMENTATION without record; matches ac_test_matrix v2, no weakening found."
 started_at: 2026-09-16T07:56:45Z
-updated_at: 2026-09-16T08:34:14Z
-completed_at: null
+updated_at: 2026-09-16T13:07:44Z
+completed_at: 2026-09-16T13:07:44Z

@@ -1,0 +1,30 @@
+@model SetupPageModel
+@{
+    ViewData["Title"] = T["Setup.Title"];
+}
+@if (Model.AlreadyCreated)
+{
+    <p class="form-error">@T["Setup.AlreadyCreated"]</p>
+    <p><a href="/sign-in">@T["Setup.SignInLink"]</a></p>
+}
+<p>@T["Setup.Intro"]</p>
+<form method="post" action="/setup" autocomplete="off">
+    @Html.AntiForgeryToken()
+    <label for="setupCode">@T["Setup.SetupCode.Label"]</label>
+    <input id="setupCode" name="setupCode" type="text" value="" />
+    @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "setupCode")
+
+    <label for="login">@T["Setup.Login.Label"]</label>
+    <input id="login" name="login" type="text" value="@Model.Login" />
+    @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "login")
+
+    <label for="password">@T["Setup.Password.Label"]</label>
+    <input id="password" name="password" type="password" value="" />
+    @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "password")
+
+    <label for="passwordConfirmation">@T["Setup.PasswordConfirmation.Label"]</label>
+    <input id="passwordConfirmation" name="passwordConfirmation" type="password" value="" />
+    @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "passwordConfirmation")
+
+    <button type="submit">@T["Setup.Submit"]</button>
+</form>
