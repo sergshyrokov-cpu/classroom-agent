@@ -4,10 +4,10 @@
 version: 1
 story: US-001
 workflow: story-delivery
-current_stage: HUMAN_SPEC_APPROVAL
-previous_stage: SPECIFICATION
-last_completed_stage: SPECIFICATION
-status: WAITING_FOR_HUMAN
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
 last_invoked_skill: spec-writer
 last_result:
@@ -21,24 +21,12 @@ last_artifacts:
   - type: open_decisions
     path: docs/decisions/US-001-open-decisions.md
     version: 2
-pending_human_gate:
-  stage: HUMAN_SPEC_APPROVAL
-  status: PENDING
-  required_artifacts:
-    - type: specification
-      path: docs/specifications/US-001-spec.md
-      version: 3
-  automated_verdict: PASS
-  blocking_findings: []
-  requested_at: 2026-09-16T07:56:45Z
-  decided_at: null
-  decided_by: null
-  comment: null
+pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "Spec interpretations I-1..I-10 need human confirmation (spec section 11)."
   - "Static assets served as endpoints (MapStaticAssets) would fall under the deny-by-default policy and are not on the SC-4 anonymous list; API/implementation must serve them without adding an anonymous endpoint, or SC-4 must be extended."
   - "deployment-conventions.md DC-10 defines logging for installations only; Control Plane logging is not described."
+  - "OD-002 fixes the Owner session lifetime only; Admin and Dean session lifetime is undecided (candidate for trebovaniya.md v68)."
 started_at: 2026-09-16T07:56:45Z
-updated_at: 2026-09-16T08:02:24Z
+updated_at: 2026-09-16T08:08:55Z
 completed_at: null

@@ -1,2 +1,3 @@
 {"timestamp":"2026-09-16T07:46:33Z","story":"US-001","from_stage":null,"to_stage":"SPECIFICATION","skill":null,"verdict":"ACTIVATED","artifacts":[],"attempt":1}
 {"timestamp":"2026-09-16T07:56:45Z","story":"US-001","from_stage":"SPECIFICATION","to_stage":"HUMAN_SPEC_APPROVAL","skill":"spec-writer","verdict":"PASS","artifacts":["docs/specifications/US-001-spec.md","docs/decisions/US-001-open-decisions.md"],"attempt":1}
+{"timestamp":"2026-09-16T08:08:55Z","story":"US-001","from_stage":"HUMAN_SPEC_APPROVAL","to_stage":"API_DESIGN","skill":null,"verdict":"HUMAN_APPROVED","artifacts":["docs/specifications/US-001-spec.md"],"attempt":1}

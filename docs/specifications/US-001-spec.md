@@ -2,9 +2,9 @@
 artifact_type: specification
 story: US-001
 version: 3
-status: DRAFT
+status: APPROVED
 created_at: 2026-09-16T07:54:22Z
-updated_at: 2026-09-16T08:02:24Z
+updated_at: 2026-09-16T08:08:55Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-001-owner-first-run-setup.md
