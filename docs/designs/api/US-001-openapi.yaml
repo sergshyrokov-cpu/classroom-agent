@@ -1,0 +1,500 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent Control Plane — Owner first-run setup and sign-in (US-001)
+  version: "1"
+  description: >
+    HTTP contract of the Control Plane pages added by US-001. This Story adds no
+    `/api/v1` endpoint: every operation below is a server-rendered Razor page or
+    an HTML form post, so request bodies are `application/x-www-form-urlencoded`,
+    responses are `text/html` or redirects, and errors are the host's error page
+    or the form shown again — never the API-6 JSON body (SC-4, AD-9, v66).
+    Razor routes are not part of the versioned `/api/v1` contract (api-conventions.md);
+    they are described here so tests can assert status codes and behaviour
+    (TC-3, TC-5). Companion document: docs/designs/api/US-001-api-design.md.
+x-story: US-001
+x-source-specification: docs/specifications/US-001-spec.md
+x-source-specification-version: 3
+x-source-open-decisions: docs/decisions/US-001-open-decisions.md
+x-source-open-decisions-version: 2
+x-requirements-version: 68
+x-produced-by: openapi-designer
+x-host: ClassroomAgent.ControlPlane
+x-transport: "HTTPS only; no HTTP port; no HSTS (SC-2, DC-6)"
+
+servers:
+  - url: https://control-plane.internal
+    description: "Illustrative. The Control Plane is reachable only from the Owner's private network (SC-9, DC-6)."
+
+tags:
+  - name: setup
+    description: "First-run setup (FR-001 … FR-006)"
+  - name: session
+    description: "Owner sign-in, sign-out and home page (FR-007 … FR-011, FR-013)"
+  - name: infrastructure
+    description: "Error page, 404 catch-all, static files (FR-014, FR-016; SC-4 v68)"
+
+x-host-wide-rules:
+  setup-gate: >
+    FR-001. While no Owner account exists, every request to an operation of this
+    contract answers `302` with `Location: /setup`, except `GET /setup`,
+    `POST /setup`, `GET /error/{statusCode}`, static files and the 404 catch-all.
+    The gate runs before authentication challenges and before antiforgery
+    validation.
+  fallback-authorization: >
+    SC-4. A fallback policy requires an authenticated Owner. Operations marked
+    `x-anonymous: true` are the only anonymous ones; each maps to an SC-4 entry.
+  antiforgery: >
+    SC-4, API-7. Validated globally on every POST. A missing or invalid token
+    answers `400` with the error page, text key `Error.PageExpired`, and a link
+    back to the page the form came from. Nothing is created, nobody is signed in.
+  unauthenticated-challenge: >
+    A request without a session to an Owner-only operation (Owner account
+    exists) answers `302` with `Location: /sign-in`. No return-URL query
+    parameter is emitted or honoured (spec I-6).
+  forbidden: >
+    The cookie authentication AccessDenied path is `/error/403`; a signed-in
+    request denied by a policy answers `403` with the error page (SC-4, v66).
+  culture: >
+    Pages are rendered in the signed-in Owner's account language; for an
+    anonymous request, Ukrainian (`uk`). `Accept-Language`, query string and
+    cookies do not select the culture in this Story (FR-019, US-039 adds choice).
+  session-lifetime: >
+    OD-002, trebovaniya.md §8 v68. The session cookie carries no `Expires` or
+    `Max-Age` (not persistent). A request more than 30 minutes after the
+    previous authenticated request, or more than 8 hours after sign-in, is
+    treated as unauthenticated (`302 /sign-in`). No "remember me".
+
+paths:
+  /setup:
+    get:
+      tags: [setup]
+      operationId: getSetupPage
+      summary: "First-run setup form"
+      x-anonymous: true
+      security: []
+      x-sc4-entry: "First-run setup"
+      x-spec: [FR-001, FR-003]
+      x-acceptance-criteria: [AC-001, AC-003, AC-009, AC-010]
+      responses:
+        "200":
+          description: >
+            No Owner account exists. The setup form with fields `setupCode`,
+            `login`, `password`, `passwordConfirmation` and the antiforgery
+            token. `setupCode`, `password` and `passwordConfirmation` are never
+            pre-filled. Sets the antiforgery cookie.
+          headers:
+            Set-Cookie:
+              $ref: "#/components/headers/AntiforgeryCookie"
+          content:
+            text/html: {}
+        "302":
+          description: >
+            An Owner account exists. Anonymous → `Location: /sign-in`;
+            signed-in Owner → `Location: /` (spec I-1). The response reveals
+            nothing about the existing account.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+    post:
+      tags: [setup]
+      operationId: submitSetup
+      summary: "Create the Owner account with the one-time setup code"
+      x-anonymous: true
+      security: []
+      x-sc4-entry: "First-run setup"
+      x-antiforgery: required
+      x-spec: [FR-004, FR-005, FR-006, FR-012, VR-001, VR-002, VR-003, VR-004, VR-006, VR-007]
+      x-acceptance-criteria: [AC-002, AC-003, AC-004, AC-006, AC-007, AC-011, AC-012]
+      x-processing-order: >
+        1 antiforgery → 2 field validation at binding (VR-001, VR-002, VR-003,
+        VR-007) → 3 Owner account already exists → 4 setup code check (VR-004)
+        → 5 create account. Each step runs only if the previous passed (OD-004).
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/SetupRequest"
+      responses:
+        "302":
+          description: >
+            Account created (FR-005): exactly one Owner account, success audit
+            row, setup code voided, Owner signed in. `Location: /`; sets the
+            session cookie.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+            Set-Cookie:
+              $ref: "#/components/headers/SessionCookie"
+        "400":
+          description: >
+            One of: (a) antiforgery refusal — error page `Error.PageExpired`;
+            (b) field validation failed — the setup form shown again with a
+            message per failed field (`login`, `password`,
+            `passwordConfirmation`), `login` may be refilled, secrets are not;
+            not audited; (c) setup code missing or wrong while no Owner account
+            exists — the setup form with an error on `setupCode` that never
+            reveals the expected code; audit row "wrong setup code".
+          content:
+            text/html: {}
+        "409":
+          description: >
+            An Owner account already exists — a stale form, or the loser of a
+            concurrent submission (FR-006, OD-003). The setup page with one
+            form-level message `Setup.AlreadyCreated` and a link to `/sign-in`;
+            no field refilled; nothing about the existing account shown; not
+            audited; no partial account remains.
+          content:
+            text/html: {}
+
+  /sign-in:
+    get:
+      tags: [session]
+      operationId: getSignInPage
+      summary: "Owner sign-in form"
+      x-anonymous: true
+      security: []
+      x-sc4-entry: "Owner sign-in"
+      x-spec: [FR-007]
+      x-acceptance-criteria: [AC-005, AC-009, AC-010]
+      responses:
+        "200":
+          description: >
+            Owner account exists, no session. The sign-in form with `login`,
+            `password` and the antiforgery token; `password` never pre-filled.
+          headers:
+            Set-Cookie:
+              $ref: "#/components/headers/AntiforgeryCookie"
+          content:
+            text/html: {}
+        "302":
+          description: >
+            Signed-in Owner → `Location: /` (spec I-1); no Owner account →
+            `Location: /setup` (setup gate).
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+    post:
+      tags: [session]
+      operationId: submitSignIn
+      summary: "Owner sign-in"
+      x-anonymous: true
+      security: []
+      x-sc4-entry: "Owner sign-in"
+      x-antiforgery: required
+      x-spec: [FR-008, FR-009, FR-010, FR-012, VR-005]
+      x-acceptance-criteria: [AC-005, AC-008, AC-011]
+      x-processing-order: >
+        antiforgery → binding (VR-005) → SC-2 v66 sequence: 1 unknown login →
+        2 lockout in force (password not checked) → 3 wrong password (counter +1;
+        5th starts a 15-minute lockout) → 4 success (counter reset). Not built on
+        SignInManager.PasswordSignInAsync or CheckPasswordSignInAsync.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/SignInRequest"
+      responses:
+        "302":
+          description: >
+            Signed in; success audit row; counter reset. `Location: /`; sets the
+            session cookie. A `ReturnUrl` in the query or body is ignored.
+            No Owner account → `Location: /setup` (setup gate, no sign-in attempt).
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+            Set-Cookie:
+              $ref: "#/components/headers/SessionCookie"
+        "400":
+          description: >
+            (a) antiforgery refusal — error page `Error.PageExpired`;
+            (b) `login` or `password` empty — the sign-in form naming the
+            missing field; no attempt, no audit, no counter change (spec I-2).
+          content:
+            text/html: {}
+        "401":
+          description: >
+            Unknown login, lockout in force, or wrong password (spec I-3). The
+            response — status, body, headers other than antiforgery tokens — is
+            identical for the three cases: the sign-in form with the one message
+            `SignIn.Refused`; `login` may be refilled, `password` is not. Audit
+            row per case: "unknown login" (actor anonymous), "locked out" or
+            "wrong password" (actor the Owner account).
+          content:
+            text/html: {}
+
+  /sign-out:
+    post:
+      tags: [session]
+      operationId: submitSignOut
+      summary: "End the Owner session"
+      x-anonymous: false
+      x-policy: Owner
+      x-antiforgery: required
+      x-spec: [FR-011]
+      x-acceptance-criteria: [AC-011]
+      responses:
+        "302":
+          description: >
+            Signed-in Owner with a valid token: the session ends, the session
+            cookie is deleted, `Location: /sign-in`; a later request with the old
+            cookie is unauthenticated. Without a session: `Location: /sign-in`
+            (challenge). No Owner account: `Location: /setup` (gate). Not audited.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+            Set-Cookie:
+              $ref: "#/components/headers/SessionCookieDeleted"
+        "400":
+          description: "Signed-in Owner without a valid antiforgery token — error page `Error.PageExpired`; the session stays."
+          content:
+            text/html: {}
+    x-get-behaviour: >
+      There is no GET operation. `GET /sign-out` is answered by the 404
+      catch-all (`404`, error page) and does not sign the Owner out (API-4).
+
+  /:
+    get:
+      tags: [session]
+      operationId: getHomePage
+      summary: "Control Plane home page"
+      x-anonymous: false
+      x-policy: Owner
+      x-spec: [FR-013]
+      x-acceptance-criteria: [AC-002, AC-005, AC-010]
+      responses:
+        "200":
+          description: "The signed-in state and a sign-out form (POST `/sign-out` with the token). No other function."
+          content:
+            text/html: {}
+        "302":
+          description: "No session → `Location: /sign-in`; no Owner account → `Location: /setup`."
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+
+  /error/{statusCode}:
+    get:
+      tags: [infrastructure]
+      operationId: getErrorPage
+      summary: "The host's error page"
+      description: >
+        Reached by re-execution (`UseExceptionHandler`, `UseStatusCodePagesWithReExecute`,
+        the antiforgery result filter, AccessDenied) or directly. Shows only the
+        translated text for the status — no detail, no data; reads and writes
+        nothing. Signed-in Owner: account language; anonymous: Ukrainian.
+        Exempt from the setup gate.
+      x-anonymous: true
+      security: []
+      x-sc4-entry: "Error page"
+      x-spec: [FR-016, FR-019]
+      x-acceptance-criteria: [AC-001, AC-009, AC-010, AC-011]
+      parameters:
+        - name: statusCode
+          in: path
+          required: true
+          schema:
+            type: integer
+            enum: [400, 403, 404, 500]
+      responses:
+        "400":
+          description: "Text `Error.PageExpired` with a link back to the originating page when re-executed from an antiforgery refusal."
+          content:
+            text/html: {}
+        "403":
+          description: "Text `Error.Forbidden`."
+          content:
+            text/html: {}
+        "404":
+          description: "Text `Error.NotFound`. Also the answer for any `statusCode` outside the enum."
+          content:
+            text/html: {}
+        "500":
+          description: "Text `Error.Internal`."
+          content:
+            text/html: {}
+
+  /{unmatchedPath}:
+    x-catch-all: true
+    get:
+      tags: [infrastructure]
+      operationId: fallbackNotFound
+      summary: "Anonymous catch-all for any unmatched request (any method)"
+      description: >
+        `MapFallback` with `AllowAnonymous`. Any request that matches no other
+        endpoint — any method, any path, before or after setup, signed in or not —
+        answers `404` with the error page `Error.NotFound`, never a redirect to
+        sign-in or setup (SC-4, v66). Exempt from the setup gate.
+      x-anonymous: true
+      security: []
+      x-sc4-entry: "Error page (fallback catch-all)"
+      x-spec: [FR-001, FR-016]
+      x-acceptance-criteria: [AC-010]
+      parameters:
+        - name: unmatchedPath
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "404":
+          description: "Error page `Error.NotFound`."
+          content:
+            text/html: {}
+
+  /css/{file}:
+    x-static-files: true
+    get:
+      tags: [infrastructure]
+      operationId: getStaticFile
+      summary: "Static files (CSS; likewise /js/ and /images/ from the static files directory)"
+      description: >
+        Only files present in the application's static files directory, read-only,
+        no data and nothing user-specific (SC-4 "Static files", trebovaniya.md §8
+        v68). Exempt from the setup gate. A missing file answers `404`.
+      x-anonymous: true
+      security: []
+      x-sc4-entry: "Static files"
+      x-spec: [FR-014]
+      parameters:
+        - name: file
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "The file."
+        "404":
+          description: "No such file."
+
+components:
+  schemas:
+    SetupRequest:
+      type: object
+      description: >
+        Form fields of the setup form (Application/Models/Requests equivalent in
+        ControlPlane). The antiforgery token field `__RequestVerificationToken`
+        is sent alongside and validated globally, not bound. `setupCode`
+        carries no binding-time required rule (OD-004): an empty value is
+        refused in the use case as a wrong code.
+      additionalProperties: false
+      required: [login, password, passwordConfirmation]
+      properties:
+        setupCode:
+          type: string
+          description: >
+            The one-time code from the server console (OD-005): 26 Crockford
+            Base32 characters, shown in groups separated by `-`. On comparison
+            hyphens and spaces are removed and case is ignored; compared in
+            constant time. Never echoed, logged or audited.
+          writeOnly: true
+          x-sensitive: true
+        login:
+          type: string
+          description: >
+            VR-001. 4–64 characters; only `A–Z`, `a–z`, `0–9`, `.`, `-`, `_`.
+            Compared case-insensitively.
+          minLength: 4
+          maxLength: 64
+          pattern: "^[A-Za-z0-9._-]{4,64}$"
+        password:
+          type: string
+          description: >
+            VR-002, VR-003. 15–128 Unicode code points (not bytes, not UTF-16
+            units); any characters, spaces included, not trimmed; no composition
+            rules; must not equal or contain `login`, case-insensitively.
+            Never echoed, logged or audited. `minLength`/`maxLength` here are
+            code-point counts.
+          minLength: 15
+          maxLength: 128
+          writeOnly: true
+          format: password
+          x-sensitive: true
+        passwordConfirmation:
+          type: string
+          description: >
+            VR-007. Required; exactly equal to `password` (ordinal,
+            case-sensitive, no trimming or normalization). Never stored, logged,
+            audited or echoed.
+          writeOnly: true
+          format: password
+          x-sensitive: true
+    SignInRequest:
+      type: object
+      description: >
+        Form fields of the sign-in form. VR-005: only non-empty is required; no
+        format or policy rule applies at sign-in.
+      additionalProperties: false
+      required: [login, password]
+      properties:
+        login:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+          writeOnly: true
+          format: password
+          x-sensitive: true
+    FieldMessageKeys:
+      type: object
+      description: >
+        Translation keys (ControlPlane.Localization, uk and en) for the messages
+        this contract names. Wording is the implementor's within the spec; keys
+        are fixed so tests can assert them in both languages (TC-8).
+      properties:
+        Setup.Login.Required: {type: string}
+        Setup.Login.Length: {type: string}
+        Setup.Login.Characters: {type: string}
+        Setup.Password.Required: {type: string}
+        Setup.Password.Length: {type: string}
+        Setup.Password.ContainsLogin: {type: string}
+        Setup.PasswordConfirmation.Required: {type: string}
+        Setup.PasswordConfirmation.Mismatch: {type: string}
+        Setup.SetupCode.Invalid: {type: string}
+        Setup.AlreadyCreated: {type: string}
+        SignIn.Login.Required: {type: string}
+        SignIn.Password.Required: {type: string}
+        SignIn.Refused: {type: string}
+        Error.PageExpired: {type: string}
+        Error.Forbidden: {type: string}
+        Error.NotFound: {type: string}
+        Error.Internal: {type: string}
+
+  headers:
+    Location:
+      description: "Relative redirect target within the Control Plane; never an external or query-supplied URL."
+      schema:
+        type: string
+        enum: [/, /setup, /sign-in]
+    SessionCookie:
+      description: >
+        `__Host-cp-session=…; Path=/; Secure; HttpOnly; SameSite=Strict` — no
+        `Domain`, no `Expires`, no `Max-Age` (SC-2, OD-002, v68).
+      schema:
+        type: string
+    SessionCookieDeleted:
+      description: "The session cookie expired in the past (deleted), same name, path and attributes."
+      schema:
+        type: string
+    AntiforgeryCookie:
+      description: >
+        `__Host-cp-antiforgery=…; Path=/; Secure; HttpOnly; SameSite=Strict`
+        (SC-2). Every other cookie the host sets is `Secure`.
+      schema:
+        type: string
+
+  securitySchemes:
+    ownerSession:
+      type: apiKey
+      in: cookie
+      name: __Host-cp-session
+      description: >
+        ASP.NET Core cookie authentication for the Owner (API-7). Principal
+        carries the Owner account id, role `Owner`, the account language and the
+        sign-in time used for the 8-hour absolute limit.
+
+security:
+  - ownerSession: []

@@ -4,29 +4,28 @@
 version: 1
 story: US-001
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-writer
+last_invoked_skill: openapi-designer
 last_result:
   verdict: PASS
-  stage: SPECIFICATION
-  recorded_at: 2026-09-16T07:56:45Z
+  stage: API_DESIGN
+  recorded_at: 2026-09-16T08:15:36Z
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-001-spec.md
-    version: 3
-  - type: open_decisions
-    path: docs/decisions/US-001-open-decisions.md
-    version: 2
+  - type: openapi
+    path: docs/designs/api/US-001-openapi.yaml
+    version: 1
+  - type: api_design
+    path: docs/designs/api/US-001-api-design.md
+    version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "Static assets served as endpoints (MapStaticAssets) would fall under the deny-by-default policy and are not on the SC-4 anonymous list; API/implementation must serve them without adding an anonymous endpoint, or SC-4 must be extended."
-  - "deployment-conventions.md DC-10 defines logging for installations only; Control Plane logging is not described."
-  - "OD-002 fixes the Owner session lifetime only; Admin and Dean session lifetime is undecided (candidate for trebovaniya.md v68)."
+  - "The Specification records trebovaniya.md v67; v68 (session lifetime, static files in SC-4, Control Plane logging) is applied in the API design and does not contradict the Specification."
+  - "Control Plane logging (trebovaniya.md v68, DC-10) is outside the HTTP contract and binds IMPLEMENTATION and SECURITY_REVIEW."
 started_at: 2026-09-16T07:56:45Z
-updated_at: 2026-09-16T08:08:55Z
+updated_at: 2026-09-16T08:15:36Z
 completed_at: null
