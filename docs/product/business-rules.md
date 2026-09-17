@@ -113,6 +113,15 @@ revoked — but the school's page warns the Owner while there are fewer than two
 **BR-023** Only suspending the `Installation` stops a school. That is a separate
 lever from revoking an Admin and must not be conflated with it. *(§9)*
 
+**BR-080** The Owner suspends an active `Installation` and resumes a suspended
+one from its page in the Control Plane, each after a confirmation that shows the
+school's name and domain and what the action does; nothing changes until the
+Owner confirms. A status change deletes no data and leaves the `AllowedAdmin`
+entries, name, domain and client ID untouched. No reason is recorded and the
+time of the change is not stored on the `Installation` — the audit row is the
+trace. An action that would not change the status (the school is already in it)
+writes nothing, audit included. *(§3, §4, §9, v71)*
+
 **BR-024** An installation confirms its legitimacy with the Control Plane every
 6 hours, and the Control Plane pushes status changes immediately. The periodic
 check is the fallback when a push does not arrive. *(§9)*
