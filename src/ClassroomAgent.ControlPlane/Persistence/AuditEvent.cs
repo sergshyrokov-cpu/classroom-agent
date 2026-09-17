@@ -76,6 +76,28 @@ public class AuditEvent
         string? requestId) =>
         OwnerActsOnInstallation(AuditAction.InstallationClientIdChanged, ownerId, installationId, occurredAt, requestId);
 
+    public static AuditEvent AllowedAdminAdded(long ownerId, long allowedAdminId, DateTimeOffset occurredAt, string? requestId) =>
+        OwnerActsOn(
+            AuditAction.AllowedAdminAdded,
+            ownerId,
+            AuditTargetType.AllowedAdmin,
+            allowedAdminId,
+            AuditOutcome.Succeeded,
+            null,
+            occurredAt,
+            requestId);
+
+    public static AuditEvent AllowedAdminRevoked(long ownerId, long allowedAdminId, DateTimeOffset occurredAt, string? requestId) =>
+        OwnerActsOn(
+            AuditAction.AllowedAdminRevoked,
+            ownerId,
+            AuditTargetType.AllowedAdmin,
+            allowedAdminId,
+            AuditOutcome.Succeeded,
+            null,
+            occurredAt,
+            requestId);
+
     private static AuditEvent OwnerActs(
         AuditAction action,
         long ownerId,

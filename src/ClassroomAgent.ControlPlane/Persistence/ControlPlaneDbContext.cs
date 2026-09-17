@@ -15,10 +15,13 @@ public class ControlPlaneDbContext(DbContextOptions<ControlPlaneDbContext> optio
 
     public DbSet<Installation> Installations => Set<Installation>();
 
+    public DbSet<AllowedAdmin> AllowedAdmins => Set<AllowedAdmin>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new OwnerConfiguration());
         modelBuilder.ApplyConfiguration(new AuditEventConfiguration());
         modelBuilder.ApplyConfiguration(new InstallationConfiguration());
+        modelBuilder.ApplyConfiguration(new AllowedAdminConfiguration());
     }
 }

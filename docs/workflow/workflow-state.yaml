@@ -4,30 +4,33 @@
 version: 1
 story: US-003
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: security-reviewer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: 2026-09-17T09:43:57Z
+  stage: SECURITY_REVIEW
+  recorded_at: 2026-09-17T10:23:05Z
 last_artifacts:
-  - type: database_design
-    path: docs/designs/database/US-003-db-design.md
-    version: 1
-  - type: entity_model
-    path: docs/designs/database/US-003-entity-model.md
+  - type: security_review
+    path: docs/reviews/security/US-003-security-review.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "HUMAN_PR_APPROVAL approved by Serhii SHYROKOV at 2026-09-17T10:25:08Z (no comment)."
+  - "SECURITY_REVIEW: PASS, 0 critical, 0 major. MIN-1 (SC-10): lost-race add path log statically free of values, not tested. INF-1 same-session review — human look at AllowedAdminsController and AllowedAdminRegistry.RevokeAsync advised; INF-2 test clock correction accepted; INF-3 non-ASCII look-alikes fold to ASCII, harmless."
+  - "IMPLEMENTATION: build 0 warnings; tests 499/499 pass, 0 skipped; dotnet format clean. AC-001 … AC-012 implemented; migration AddAllowedAdmin with domain-match and no-update triggers."
+  - "IMPLEMENTATION: story test Revoke_ThenAddSameEmail… corrected — clock advance 3 h exceeded the Owner 30-minute idle timeout (v68); now 10 min, assertions unchanged. For SECURITY_REVIEW / human confirmation."
+  - "IMPLEMENTATION: as US-002 MIN-1, no test reads the log after a lost add race (EF logs without values)."
+  - "TEST_WRITING: 63 methods / 140 cases; suite 499 cases, 363 pass, 136 fail for missing behaviour; 5 new cases are guards (non-GUID 404 catch-all, before-setup on existing detail route). Changed existing tests: MigrationTests (third migration), InstallationAuthorizationTests (route list excludes admins routes), HostEndpoint.SamplePath ({adminid} gets a UUID)."
   - "DB_DESIGN: table allowed_admin (migration AddAllowedAdmin) with uuid identifier, FKs to installation and owner (Restrict), unique (installation_id, email), lower-case and format checks, domain-match trigger and no-update trigger; delete allowed. Audit codes allowed_admin_added / allowed_admin_revoked, target allowed_admin; revoke deletes via affected-row count (0 -> 404). TimestampInterceptor must add AllowedAdmin; migration tests of US-001/US-002 may need the new table."
   - "API_DESIGN: 4 new Razor routes under /installations/{id}/admins plus the changed detail page; AllowedAdmin entries addressed by a server-generated UUID (db-designer adds it); audit codes allowed_admin_added / allowed_admin_revoked, target allowed_admin; revocation POST affecting zero rows answers 404."
   - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV at 2026-09-17T09:29:38Z (no comment); specification v1 and open decisions v1 APPROVED; interpretations I-1 … I-10 accepted."
   - "SPECIFICATION: no Open Decisions (Story questions decided in trebovaniya.md v70); interpretations I-1 … I-10 for human review."
 started_at: 2026-09-17T09:16:58Z
-updated_at: 2026-09-17T09:43:57Z
-completed_at: null
+updated_at: 2026-09-17T10:25:08Z
+completed_at: 2026-09-17T10:25:08Z

@@ -1,0 +1,24 @@
+@using ClassroomAgent.ControlPlane.Services
+@model RevokeAllowedAdminConfirmationDto
+@{
+    ViewData["Title"] = T["AllowedAdmin.Revoke.Title"];
+    var detailPath = "/installations/" + Model.InstallationIdentifier.ToString("D");
+    var revocationPath = detailPath + "/admins/" + Model.AdminIdentifier.ToString("D") + "/revocation";
+}
+<dl>
+    <dt>@T["AllowedAdmin.Email.Label"]</dt>
+    <dd>@Model.Email</dd>
+
+    <dt>@T["Installation.Name.Label"]</dt>
+    <dd>@Model.InstallationName</dd>
+</dl>
+<p class="note">@T["AllowedAdmin.Revoke.Explanation"]</p>
+@if (Model.LeavesFewerThanTwo)
+{
+    <p class="warning" id="revoke-fewer-than-two-note">@T["AllowedAdmin.Revoke.FewerThanTwoNote"]</p>
+}
+<form method="post" action="@revocationPath">
+    @Html.AntiForgeryToken()
+    <button type="submit">@T["AllowedAdmin.Revoke.Confirm"]</button>
+</form>
+<p><a href="@detailPath">@T["AllowedAdmin.Revoke.Cancel"]</a></p>

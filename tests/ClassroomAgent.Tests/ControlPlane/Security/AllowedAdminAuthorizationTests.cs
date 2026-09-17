@@ -3,28 +3,22 @@ using ClassroomAgent.Tests.TestInfrastructure;
 
 namespace ClassroomAgent.Tests.ControlPlane.Security;
 
-/// <summary>AC-009: only the signed-in Owner reaches the installation pages (FR-010, SC-4, TC-5).</summary>
-public sealed class InstallationAuthorizationTests(PostgreSqlFixture database)
+/// <summary>AC-010: only the signed-in Owner reaches the AllowedAdmin pages (FR-009, SC-4, TC-5).</summary>
+public sealed class AllowedAdminAuthorizationTests(PostgreSqlFixture database)
 {
     public static TheoryData<string, string> Operations => new()
     {
-        { "GET", "/installations" },
-        { "GET", "/installations/new" },
-        { "POST", "/installations" },
         { "GET", "/installations/{id}" },
-        { "GET", "/installations/{id}/name" },
-        { "POST", "/installations/{id}/name" },
-        { "GET", "/installations/{id}/client-id" },
-        { "POST", "/installations/{id}/client-id" },
+        { "GET", "/installations/{id}/admins/new" },
+        { "POST", "/installations/{id}/admins" },
+        { "GET", "/installations/{id}/admins/{adminId}/revocation" },
+        { "POST", "/installations/{id}/admins/{adminId}/revocation" },
     };
 
     public static TheoryData<string> Pages => new()
     {
-        "/installations",
-        "/installations/new",
-        "/installations/{id}",
-        "/installations/{id}/name",
-        "/installations/{id}/client-id",
+        "/installations/{id}/admins/new",
+        "/installations/{id}/admins/{adminId}/revocation",
     };
 
     [Theory]
@@ -34,23 +28,21 @@ public sealed class InstallationAuthorizationTests(PostgreSqlFixture database)
         var ct = TestContext.Current.CancellationToken;
         await using var host = await ControlPlaneTestHost.StartAsync(database, ct);
         using var owner = await host.CreateOwnerAsync(ct);
-        var identifier = await host.InsertInstallationAsync(ct);
-        var before = await host.InstallationsAsync(ct);
+        var installation = await host.InsertInstallationAsync(ct);
+        var admin = await host.InsertAllowedAdminAsync(installation, AllowedAdminTestData.Email, ct);
         var auditRowsBefore = (await host.AuditRowsAsync(ct)).Count;
         using var anonymous = host.CreateClient();
 
         var response = await anonymous.SendAsync(
             new HttpMethod(method),
-            template.Replace("{id}", identifier.ToString("D"), StringComparison.Ordinal),
-            method == "POST"
-                ? new FormUrlEncodedContent(InstallationTestData.RegisterFields(InstallationTestData.OtherName, InstallationTestData.OtherDomain, InstallationTestData.OtherClientId))
-                : null,
+            Path(template, installation, admin),
+            method == "POST" ? new FormUrlEncodedContent(AllowedAdminTestData.AddFields(AllowedAdminTestData.OtherEmail)) : null,
             ct);
 
         Assert.Equal(HttpStatusCode.Redirect, response.Status);
         Assert.Equal("/sign-in", response.LocationPath);
-        Assert.DoesNotContain(InstallationTestData.Domain, response.Body, StringComparison.Ordinal);
-        Assert.Equal(before, await host.InstallationsAsync(ct));
+        Assert.DoesNotContain(AllowedAdminTestData.Email, response.Body, StringComparison.Ordinal);
+        Assert.Single(await host.AllowedAdminsAsync(ct));
         Assert.Equal(auditRowsBefore, (await host.AuditRowsAsync(ct)).Count);
     }
 
@@ -61,11 +53,12 @@ public sealed class InstallationAuthorizationTests(PostgreSqlFixture database)
         var ct = TestContext.Current.CancellationToken;
         await using var host = await ControlPlaneTestHost.StartAsync(database, ct);
         using var anonymous = host.CreateClient();
+        var unknown = Guid.Parse(InstallationTestData.UnknownIdentifier);
 
         var response = await anonymous.SendAsync(
             new HttpMethod(method),
-            template.Replace("{id}", InstallationTestData.UnknownIdentifier, StringComparison.Ordinal),
-            method == "POST" ? new FormUrlEncodedContent(InstallationTestData.RegisterFields()) : null,
+            Path(template, unknown, unknown),
+            method == "POST" ? new FormUrlEncodedContent(AllowedAdminTestData.AddFields(AllowedAdminTestData.Email)) : null,
             ct);
 
         Assert.Equal(HttpStatusCode.Redirect, response.Status);
@@ -79,9 +72,10 @@ public sealed class InstallationAuthorizationTests(PostgreSqlFixture database)
         var ct = TestContext.Current.CancellationToken;
         await using var host = await ControlPlaneTestHost.StartAsync(database, ct);
         using var owner = await host.CreateOwnerAsync(ct);
-        var identifier = await host.InsertInstallationAsync(ct);
+        var installation = await host.InsertInstallationAsync(ct);
+        var admin = await host.InsertAllowedAdminAsync(installation, AllowedAdminTestData.Email, ct);
 
-        var response = await owner.GetAsync(template.Replace("{id}", identifier.ToString("D"), StringComparison.Ordinal), ct);
+        var response = await owner.GetAsync(Path(template, installation, admin), ct);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
     }
@@ -93,11 +87,10 @@ public sealed class InstallationAuthorizationTests(PostgreSqlFixture database)
         var ct = TestContext.Current.CancellationToken;
         await using var host = await ControlPlaneTestHost.StartAsync(database, ct);
         using var owner = await host.CreateOwnerAsync(ct);
-        var identifier = await host.InsertInstallationAsync(ct);
-        var path = template.Replace("{id}", identifier.ToString("D"), StringComparison.Ordinal);
+        var installation = await host.InsertInstallationAsync(ct);
+        var admin = await host.InsertAllowedAdminAsync(installation, AllowedAdminTestData.Email, ct);
         await owner.GetAsync("/installations/new", ct);
         var token = owner.LastToken;
-        var before = await host.InstallationsAsync(ct);
         var auditRowsBefore = (await host.AuditRowsAsync(ct)).Count;
         using var forged = host.CreateClient();
         forged.ReplaceCookies(new Dictionary<string, string>(owner.Cookies)
@@ -105,39 +98,39 @@ public sealed class InstallationAuthorizationTests(PostgreSqlFixture database)
             [SetCookieHeader.SessionCookieName] = await host.SessionWithoutOwnerRoleAsync(owner),
         });
 
-        var fields = InstallationTestData.RegisterFields(InstallationTestData.OtherName, InstallationTestData.OtherDomain, InstallationTestData.OtherClientId)
+        var fields = AllowedAdminTestData.AddFields(AllowedAdminTestData.OtherEmail)
             .Append(new(Html.AntiforgeryFieldName, token ?? string.Empty));
         var response = await forged.SendAsync(
             new HttpMethod(method),
-            path,
+            Path(template, installation, admin),
             method == "POST" ? new FormUrlEncodedContent(fields) : null,
             ct);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains(host.Text("Error.Forbidden", "uk"), response.Text, StringComparison.Ordinal);
-        Assert.Equal(before, await host.InstallationsAsync(ct));
+        Assert.Single(await host.AllowedAdminsAsync(ct));
         Assert.Equal(auditRowsBefore, (await host.AuditRowsAsync(ct)).Count);
     }
 
     [Fact]
-    public async Task InstallationEndpoints_ExistAndNoneAllowsAnonymous()
+    public async Task AllowedAdminEndpoints_ExistAndNoneAllowsAnonymous()
     {
         var ct = TestContext.Current.CancellationToken;
         await using var host = await ControlPlaneTestHost.StartAsync(database, ct);
 
-        // US-003 adds installations/{id}/admins… routes; AllowedAdminAuthorizationTests covers them.
-        var installationEndpoints = HostEndpoint.All(host.Services)
-            .Where(e => e.Pattern.StartsWith("installations", StringComparison.Ordinal)
-                && !e.Pattern.StartsWith("installations/{id}/admins", StringComparison.Ordinal))
+        var endpoints = HostEndpoint.All(host.Services)
+            .Where(e => e.Pattern.StartsWith("installations/{id}/admins", StringComparison.Ordinal))
             .ToList();
 
-        var patterns = installationEndpoints.Select(e => e.Pattern).Distinct().Order(StringComparer.Ordinal).ToList();
         Assert.Equal(
-            new[] { "installations", "installations/new", "installations/{id}", "installations/{id}/client-id", "installations/{id}/name" },
-            patterns);
-        Assert.DoesNotContain(installationEndpoints, e => e.AllowsAnonymous);
-        Assert.DoesNotContain(
-            installationEndpoints,
-            e => e.Methods is null || e.Methods.Any(m => m is "PUT" or "PATCH" or "DELETE"));
+            new[] { "installations/{id}/admins", "installations/{id}/admins/new", "installations/{id}/admins/{adminid}/revocation" },
+            endpoints.Select(e => e.Pattern).Distinct().Order(StringComparer.Ordinal));
+        Assert.DoesNotContain(endpoints, e => e.AllowsAnonymous);
+        Assert.DoesNotContain(endpoints, e => e.Methods is null || e.Methods.Any(m => m is "PUT" or "PATCH" or "DELETE"));
     }
+
+    private static string Path(string template, Guid installation, Guid admin) =>
+        template
+            .Replace("{id}", installation.ToString("D"), StringComparison.Ordinal)
+            .Replace("{adminId}", admin.ToString("D"), StringComparison.Ordinal);
 }

@@ -27,12 +27,34 @@ public class InstallationRegistry(ControlPlaneDbContext db, TimeProvider timePro
             .ToList();
     }
 
-    public Task<InstallationDetailDto?> GetAsync(Guid identifier, CancellationToken cancellationToken) =>
-        db.Installations
+    public async Task<InstallationDetailDto?> GetAsync(Guid identifier, CancellationToken cancellationToken)
+    {
+        var installation = await db.Installations
             .AsNoTracking()
             .Where(i => i.Identifier == identifier)
-            .Select(i => new InstallationDetailDto(i.Identifier, i.Name, i.Domain, i.Status, i.CreatedAt, i.ClientId))
+            .Select(i => new { i.Id, i.Identifier, i.Name, i.Domain, i.Status, i.CreatedAt, i.ClientId })
             .SingleOrDefaultAsync(cancellationToken);
+        if (installation is null)
+        {
+            return null;
+        }
+
+        var admins = await db.AllowedAdmins
+            .AsNoTracking()
+            .Where(a => a.InstallationId == installation.Id)
+            .Select(a => new AllowedAdminItemDto(a.Identifier, a.Email, a.CreatedAt))
+            .ToListAsync(cancellationToken);
+
+        // Entries of this installation only, ordered by email in memory, independent of the collation (US-003 I-4).
+        return new InstallationDetailDto(
+            installation.Identifier,
+            installation.Name,
+            installation.Domain,
+            installation.Status,
+            installation.CreatedAt,
+            installation.ClientId,
+            admins.OrderBy(a => a.Email, StringComparer.Ordinal).ToList());
+    }
 
     public async Task<RegisterInstallationResult> RegisterAsync(
         string name,

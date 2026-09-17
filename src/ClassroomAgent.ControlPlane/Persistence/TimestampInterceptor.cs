@@ -39,7 +39,7 @@ public sealed class TimestampInterceptor(TimeProvider timeProvider) : SaveChange
                 throw new InvalidOperationException("Audit events are never updated or deleted.");
             }
 
-            if (entry.Entity is not (Owner or AuditEvent or Installation))
+            if (entry.Entity is not (Owner or AuditEvent or Installation or AllowedAdmin))
             {
                 continue;
             }

@@ -62,6 +62,7 @@ builder.Services.AddScoped<OwnerSessionService>();
 builder.Services.AddScoped<FirstRunSetupService>();
 builder.Services.AddScoped<OwnerSignInService>();
 builder.Services.AddScoped<InstallationRegistry>();
+builder.Services.AddScoped<AllowedAdminRegistry>();
 builder.Services.AddHostedService<SetupCodeStartup>();
 
 builder.Services.AddControlPlaneSecurity(keyDirectory);

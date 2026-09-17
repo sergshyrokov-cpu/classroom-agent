@@ -88,4 +88,26 @@
   <data name="Installation.ClientId.Required" xml:space="preserve"><value>Enter the client ID.</value></data>
   <data name="Installation.ClientId.Format" xml:space="preserve"><value>The client ID must consist of digits only — 10 to 32 of them.</value></data>
   <data name="Installation.ClientId.Taken" xml:space="preserve"><value>This client ID is already registered to another installation.</value></data>
+  <data name="AllowedAdmins.Title" xml:space="preserve"><value>School Admins</value></data>
+  <data name="AllowedAdmins.Empty" xml:space="preserve"><value>No Admins yet.</value></data>
+  <data name="AllowedAdmins.FewerThanTwoWarning" xml:space="preserve"><value>Onboarding requires at least two Admins, so that one person leaving never stops the school's configuration.</value></data>
+  <data name="AllowedAdmins.Add" xml:space="preserve"><value>Add an Admin</value></data>
+  <data name="AllowedAdmin.Revoke" xml:space="preserve"><value>Revoke</value></data>
+  <data name="AllowedAdmin.Add.Title" xml:space="preserve"><value>New school Admin</value></data>
+  <data name="AllowedAdmin.Email.Label" xml:space="preserve"><value>Email</value></data>
+  <data name="AllowedAdmin.AddedAt.Label" xml:space="preserve"><value>Added</value></data>
+  <data name="AllowedAdmin.Email.DomainHint" xml:space="preserve"><value>The email must be in this school's domain: {0}.</value></data>
+  <data name="AllowedAdmin.Email.Required" xml:space="preserve"><value>Enter an email.</value></data>
+  <data name="AllowedAdmin.Email.Length" xml:space="preserve"><value>The email cannot be longer than 254 characters.</value></data>
+  <data name="AllowedAdmin.Email.Format" xml:space="preserve"><value>The email must look like name@domain: one @ sign, with a non-empty name and domain.</value></data>
+  <data name="AllowedAdmin.Email.NameLength" xml:space="preserve"><value>The part of the email before @ cannot be longer than 64 characters.</value></data>
+  <data name="AllowedAdmin.Email.NameCharacters" xml:space="preserve"><value>The part of the email before @ may contain only Latin letters, digits, dot, underscore, hyphen and apostrophe.</value></data>
+  <data name="AllowedAdmin.Email.NameDots" xml:space="preserve"><value>The part of the email before @ cannot start or end with a dot or contain two dots in a row.</value></data>
+  <data name="AllowedAdmin.Email.WrongDomain" xml:space="preserve"><value>The email is not in this school's domain; it must end with @{0}.</value></data>
+  <data name="AllowedAdmin.Email.Taken" xml:space="preserve"><value>This email is already an Admin of this school.</value></data>
+  <data name="AllowedAdmin.Revoke.Title" xml:space="preserve"><value>Revoke an Admin</value></data>
+  <data name="AllowedAdmin.Revoke.Explanation" xml:space="preserve"><value>Revoking takes away only this person's right to sign in to the school's installation and configure it. Synchronization and Deans keep working; stopping a school is a separate action.</value></data>
+  <data name="AllowedAdmin.Revoke.FewerThanTwoNote" xml:space="preserve"><value>After revoking, the school will have fewer than two Admins.</value></data>
+  <data name="AllowedAdmin.Revoke.Confirm" xml:space="preserve"><value>Revoke access</value></data>
+  <data name="AllowedAdmin.Revoke.Cancel" xml:space="preserve"><value>Cancel</value></data>
 </root>

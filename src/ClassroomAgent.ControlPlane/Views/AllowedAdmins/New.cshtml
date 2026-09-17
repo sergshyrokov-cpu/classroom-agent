@@ -1,0 +1,20 @@
+@model AddAllowedAdminPageModel
+@{
+    ViewData["Title"] = T["AllowedAdmin.Add.Title"];
+    var detailPath = "/installations/" + Model.Installation.InstallationIdentifier.ToString("D");
+}
+<p>@Model.Installation.InstallationName — @Model.Installation.InstallationDomain</p>
+<form method="post" action="@(detailPath + "/admins")" autocomplete="off">
+    @Html.AntiForgeryToken()
+    <label for="email">@T["AllowedAdmin.Email.Label"]</label>
+    <input id="email" name="email" type="text" value="@Model.Email" />
+    <p class="note">@T["AllowedAdmin.Email.DomainHint", Model.Installation.InstallationDomain]</p>
+    @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "email")
+    @if (Model.WrongDomain is not null)
+    {
+        <p class="field-error">@T["AllowedAdmin.Email.WrongDomain", Model.WrongDomain]</p>
+    }
+
+    <button type="submit">@T["AllowedAdmins.Add"]</button>
+</form>
+<p><a href="@detailPath">@T["Installation.BackToDetail"]</a></p>

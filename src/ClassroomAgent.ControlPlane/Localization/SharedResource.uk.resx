@@ -88,4 +88,26 @@
   <data name="Installation.ClientId.Required" xml:space="preserve"><value>Введіть client ID.</value></data>
   <data name="Installation.ClientId.Format" xml:space="preserve"><value>Client ID має складатися лише з цифр — від 10 до 32.</value></data>
   <data name="Installation.ClientId.Taken" xml:space="preserve"><value>Цей client ID уже зареєстровано для іншої інсталяції.</value></data>
+  <data name="AllowedAdmins.Title" xml:space="preserve"><value>Адміни школи</value></data>
+  <data name="AllowedAdmins.Empty" xml:space="preserve"><value>Адмінів ще немає.</value></data>
+  <data name="AllowedAdmins.FewerThanTwoWarning" xml:space="preserve"><value>Для впровадження потрібно щонайменше два Адміни, щоб звільнення однієї людини не зупиняло налаштування школи.</value></data>
+  <data name="AllowedAdmins.Add" xml:space="preserve"><value>Додати Адміна</value></data>
+  <data name="AllowedAdmin.Revoke" xml:space="preserve"><value>Відкликати</value></data>
+  <data name="AllowedAdmin.Add.Title" xml:space="preserve"><value>Новий Адмін школи</value></data>
+  <data name="AllowedAdmin.Email.Label" xml:space="preserve"><value>Email</value></data>
+  <data name="AllowedAdmin.AddedAt.Label" xml:space="preserve"><value>Додано</value></data>
+  <data name="AllowedAdmin.Email.DomainHint" xml:space="preserve"><value>Email має бути в домені цієї школи: {0}.</value></data>
+  <data name="AllowedAdmin.Email.Required" xml:space="preserve"><value>Введіть email.</value></data>
+  <data name="AllowedAdmin.Email.Length" xml:space="preserve"><value>Email не може бути довшим за 254 символи.</value></data>
+  <data name="AllowedAdmin.Email.Format" xml:space="preserve"><value>Email має мати вигляд ім'я@домен: один символ @, ім'я і домен не порожні.</value></data>
+  <data name="AllowedAdmin.Email.NameLength" xml:space="preserve"><value>Частина email до @ не може бути довшою за 64 символи.</value></data>
+  <data name="AllowedAdmin.Email.NameCharacters" xml:space="preserve"><value>Частина email до @ може містити лише латинські літери, цифри, крапку, підкреслення, дефіс і апостроф.</value></data>
+  <data name="AllowedAdmin.Email.NameDots" xml:space="preserve"><value>Частина email до @ не може починатися чи закінчуватися крапкою або містити дві крапки поспіль.</value></data>
+  <data name="AllowedAdmin.Email.WrongDomain" xml:space="preserve"><value>Цей email не в домені школи; він має закінчуватися на @{0}.</value></data>
+  <data name="AllowedAdmin.Email.Taken" xml:space="preserve"><value>Цей email уже є серед Адмінів цієї школи.</value></data>
+  <data name="AllowedAdmin.Revoke.Title" xml:space="preserve"><value>Відкликання Адміна</value></data>
+  <data name="AllowedAdmin.Revoke.Explanation" xml:space="preserve"><value>Відкликання забирає в цієї людини лише право входити в програму школи й налаштовувати її. Синхронізація і Декани продовжують працювати; зупинити школу — окрема дія.</value></data>
+  <data name="AllowedAdmin.Revoke.FewerThanTwoNote" xml:space="preserve"><value>Після відкликання в школи залишиться менше двох Адмінів.</value></data>
+  <data name="AllowedAdmin.Revoke.Confirm" xml:space="preserve"><value>Відкликати доступ</value></data>
+  <data name="AllowedAdmin.Revoke.Cancel" xml:space="preserve"><value>Скасувати</value></data>
 </root>

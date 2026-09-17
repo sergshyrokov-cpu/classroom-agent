@@ -28,6 +28,40 @@
     <dt>@T["Installation.ClientId.Label"]</dt>
     <dd>@Model.ClientId</dd>
 </dl>
+<section>
+    <h2>@T["AllowedAdmins.Title"]</h2>
+    @if (Model.Admins.Count < 2)
+    {
+        <p class="warning" id="allowed-admins-warning">@T["AllowedAdmins.FewerThanTwoWarning"]</p>
+    }
+    @if (Model.Admins.Count == 0)
+    {
+        <p>@T["AllowedAdmins.Empty"]</p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>@T["AllowedAdmin.Email.Label"]</th>
+                    <th>@T["AllowedAdmin.AddedAt.Label"]</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var admin in Model.Admins)
+                {
+                    <tr>
+                        <td>@admin.Email</td>
+                        <td>@InstallationDisplay.UtcTime(admin.AddedAt)</td>
+                        <td><a href="@(detailPath + "/admins/" + admin.Identifier.ToString("D") + "/revocation")">@T["AllowedAdmin.Revoke"]</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    <p><a href="@(detailPath + "/admins/new")">@T["AllowedAdmins.Add"]</a></p>
+</section>
 <p><a href="@(detailPath + "/name")">@T["Installation.Rename.Link"]</a></p>
 <p><a href="@(detailPath + "/client-id")">@T["Installation.ChangeClientId.Link"]</a></p>
 <p><a href="/installations">@T["Installation.BackToList"]</a></p>

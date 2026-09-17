@@ -44,12 +44,12 @@ public sealed partial record HostEndpoint(RouteEndpoint Endpoint)
         Endpoint.Metadata.OfType<IAntiforgeryMetadata>().Any(m => !m.RequiresValidation)
         || Endpoint.Metadata.OfType<IgnoreAntiforgeryTokenAttribute>().Any();
 
-    /// <summary>A concrete request path for the pattern; an <c>{id}</c> gets a UUID so a <c>guid</c> route constraint matches.</summary>
+    /// <summary>A concrete request path for the pattern; an <c>{id}</c> or <c>{adminId}</c> gets a UUID so a <c>guid</c> route constraint matches.</summary>
     public string SamplePath =>
         "/" + ParameterName().Replace(Pattern, m => m.Groups[1].Value switch
         {
             "statuscode" => "404",
-            "id" => InstallationTestData.UnknownIdentifier,
+            "id" or "adminid" => InstallationTestData.UnknownIdentifier,
             _ => "sample",
         });
 
