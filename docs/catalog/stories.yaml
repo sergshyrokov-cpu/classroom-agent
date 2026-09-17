@@ -56,9 +56,7 @@ stories:
   - id: US-005
     epic: EPIC-8
     title: Installation legitimacy check and grace period
-    state: BACKLOG
-    blocked_by: >
-      Depends on US-002 (an Installation to check).
+    state: READY
   - id: US-006
     epic: EPIC-8
     title: Control Plane push on status change
