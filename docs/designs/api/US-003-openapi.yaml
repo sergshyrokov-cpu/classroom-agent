@@ -1,0 +1,405 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent Control Plane — Manage AllowedAdmin entries (US-003)
+  version: "1"
+  description: >
+    HTTP contract of the Control Plane pages added or changed by US-003. No
+    `/api/v1` endpoint: every operation is a server-rendered Razor page or an HTML
+    form post, so request bodies are `application/x-www-form-urlencoded`,
+    responses are `text/html` or redirects, and errors are the host's error page
+    or the form shown again — never the API-6 JSON body (SC-4, AD-9, v66). The
+    host-wide rules of docs/designs/api/US-001-openapi.yaml and the `{id}` route,
+    datetime-display and output-encoding rules of
+    docs/designs/api/US-002-openapi.yaml apply unchanged. Companion document:
+    docs/designs/api/US-003-api-design.md.
+x-story: US-003
+x-source-specification: docs/specifications/US-003-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-003-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 70
+x-produced-by: openapi-designer
+x-host: ClassroomAgent.ControlPlane
+x-extends: docs/designs/api/US-002-openapi.yaml
+x-transport: "HTTPS only; no HTTP port; no HSTS (SC-2, DC-6)"
+
+servers:
+  - url: https://control-plane.internal
+    description: "Illustrative. The Control Plane is reachable only from the Owner's private network (SC-9, DC-6)."
+
+tags:
+  - name: allowed-admins
+    description: "AllowedAdmin list, add, revoke with confirmation, fewer-than-two warning (FR-001 … FR-008)"
+
+x-host-wide-rules:
+  inherited: >
+    setup-gate, fallback-authorization, antiforgery, unauthenticated-challenge,
+    forbidden, culture and session-lifetime as in US-001-openapi.yaml; id-route-
+    constraint, datetime-display and output-encoding as in US-002-openapi.yaml.
+    Before setup every operation answers `302 /setup`; without a session
+    `302 /sign-in` (before antiforgery); a policy denial `403` error page.
+  admin-id-route-constraint: >
+    `{adminId}` is the entry's UUID identifier, constrained to a GUID; never the
+    internal numeric key. A non-GUID value matches no operation → anonymous 404
+    catch-all. A GUID that identifies no entry, or an entry of a different
+    installation than `{id}`, answers `404` `Error.NotFound` — the same page as
+    an unknown installation.
+  over-posting: >
+    Only `email` is bound when adding; nothing is bound when revoking. Posted
+    `identifier`, `installationId`, `addedBy`, `addedAt` or any other field is
+    ignored.
+  audit: >
+    FR-007. Exactly one Control Plane audit row per completed addition
+    (`allowed_admin_added`) or revocation (`allowed_admin_revoked`), in the same
+    transaction; actor the Owner account id and role, target type
+    `allowed_admin` and the entry's internal id, outcome succeeded. No row for
+    any `400`, `404`, `409`, GET or cancelled revocation. No email, installation
+    name or domain in any row or log line (SC-10, SC-11).
+  status-independence: >
+    Adding and revoking behave identically for active and suspended
+    installations and never change the installation row (AC-006).
+
+paths:
+  /installations/{id}:
+    parameters:
+      - $ref: "#/components/parameters/InstallationId"
+    get:
+      tags: [allowed-admins]
+      operationId: getInstallation
+      summary: "Installation detail page (changed by US-003)"
+      x-anonymous: false
+      x-policy: Owner
+      x-spec: [FR-001, FR-006, FR-012]
+      x-acceptance-criteria: [AC-001, AC-007, AC-010, AC-012]
+      x-compatibility: "US-002 operation; everything of US-002 stays, an Admins section is added."
+      responses:
+        "200":
+          description: >
+            As US-002, plus the Admins section: heading `AllowedAdmins.Title`;
+            while fewer than two entries the warning
+            `AllowedAdmins.FewerThanTwoWarning` in `id="allowed-admins-warning"`;
+            with no entries `AllowedAdmins.Empty`; otherwise one row per entry of
+            this installation ordered by email (ordinal) with email, date added
+            (datetime-display) and link `AllowedAdmin.Revoke` to
+            `/installations/{id}/admins/{adminId}/revocation`; always the link
+            `AllowedAdmins.Add` to `/installations/{id}/admins/new`.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/InstallationDetail"
+        "302":
+          $ref: "#/components/responses/GateOrChallenge"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /installations/{id}/admins/new:
+    parameters:
+      - $ref: "#/components/parameters/InstallationId"
+    get:
+      tags: [allowed-admins]
+      operationId: getAddAllowedAdminForm
+      summary: "Add-Admin form"
+      x-anonymous: false
+      x-policy: Owner
+      x-spec: [FR-002]
+      x-acceptance-criteria: [AC-002, AC-010]
+      responses:
+        "200":
+          description: >
+            Installation name and domain, empty `email` field, hint
+            `AllowedAdmin.Email.DomainHint` (argument: the installation's domain),
+            antiforgery token, link back to `/installations/{id}`.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/AddAllowedAdminForm"
+        "302":
+          $ref: "#/components/responses/GateOrChallenge"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /installations/{id}/admins:
+    parameters:
+      - $ref: "#/components/parameters/InstallationId"
+    post:
+      tags: [allowed-admins]
+      operationId: addAllowedAdmin
+      summary: "Add an AllowedAdmin entry"
+      x-anonymous: false
+      x-policy: Owner
+      x-antiforgery: required
+      x-spec: [FR-003, FR-007, FR-011, FR-013, VR-001, VR-002, VR-003]
+      x-acceptance-criteria: [AC-002, AC-003, AC-004, AC-006, AC-008, AC-009, AC-011]
+      x-processing-order: >
+        1 antiforgery → 2 installation exists (else 404, even if `email` is
+        invalid) → 3 VR-001 format, first failing rule → 4 lower-case (invariant)
+        → 5 domain part equals the installation domain (VR-002, else 400
+        WrongDomain) → 6 not already an entry of this installation (else 409) →
+        7 insert with a new UUID identifier, added-by the Owner account id,
+        added-at UTC now, and the audit row `allowed_admin_added`, in one
+        transaction; a unique-constraint violation is mapped to step 6's result,
+        never `500`. Any installation status.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/AddAllowedAdminRequest"
+      responses:
+        "302":
+          description: >
+            Added: `Location: /installations/{id}`. Without a session:
+            `/sign-in`; before setup: `/setup`.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "400":
+          description: >
+            (a) antiforgery refusal — error page `Error.PageExpired`; (b) format
+            rule failed — the form again with one key from
+            `ValidationMessageKeys`, value refilled; (c) domain part is not the
+            installation's domain — the form again with
+            `AllowedAdmin.Email.WrongDomain` naming the expected domain. Nothing
+            created, not audited.
+          content:
+            text/html: {}
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: >
+            The email (compared after lower-casing) is already an entry of this
+            installation — pre-check or lost race. The form again with
+            `AllowedAdmin.Email.Taken`, value refilled; nothing created, not
+            audited, no partial row.
+          content:
+            text/html: {}
+
+  /installations/{id}/admins/{adminId}/revocation:
+    parameters:
+      - $ref: "#/components/parameters/InstallationId"
+      - $ref: "#/components/parameters/AdminId"
+    get:
+      tags: [allowed-admins]
+      operationId: getRevokeAllowedAdminConfirmation
+      summary: "Revoke confirmation page"
+      x-anonymous: false
+      x-policy: Owner
+      x-spec: [FR-004, FR-008]
+      x-acceptance-criteria: [AC-005, AC-008, AC-010, AC-011]
+      responses:
+        "200":
+          description: >
+            The entry's email and the installation's name; explanation
+            `AllowedAdmin.Revoke.Explanation`; when the installation has two
+            entries or fewer, note `AllowedAdmin.Revoke.FewerThanTwoNote` in
+            `id="revoke-fewer-than-two-note"`; a form posting to this path with
+            the antiforgery token and button `AllowedAdmin.Revoke.Confirm`; link
+            `AllowedAdmin.Revoke.Cancel` to `/installations/{id}`. Changes
+            nothing, audits nothing.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/RevokeAllowedAdminConfirmation"
+        "302":
+          $ref: "#/components/responses/GateOrChallenge"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [allowed-admins]
+      operationId: revokeAllowedAdmin
+      summary: "Revoke an AllowedAdmin entry"
+      x-anonymous: false
+      x-policy: Owner
+      x-antiforgery: required
+      x-spec: [FR-005, FR-007, FR-008, FR-013]
+      x-acceptance-criteria: [AC-005, AC-006, AC-008, AC-009, AC-011]
+      x-processing-order: >
+        1 antiforgery → 2 installation exists and the entry exists and belongs to
+        it (else 404) → 3 delete the entry scoped to (installation, entry) and
+        write the audit row `allowed_admin_revoked` in one transaction; if the
+        delete affects zero rows (already revoked), roll back and answer 404 with
+        no audit row. The last entry may be revoked. Any installation status.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/RevokeAllowedAdminRequest"
+      responses:
+        "302":
+          description: >
+            Revoked: `Location: /installations/{id}`. Without a session:
+            `/sign-in`; before setup: `/setup`.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "400":
+          description: "Antiforgery refusal — error page `Error.PageExpired`; nothing deleted."
+          content:
+            text/html: {}
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  parameters:
+    InstallationId:
+      name: id
+      in: path
+      required: true
+      description: "The installation's UUID identifier (US-002 I-5), route constraint `guid`."
+      schema:
+        type: string
+        format: uuid
+    AdminId:
+      name: adminId
+      in: path
+      required: true
+      description: >
+        The AllowedAdmin entry's UUID identifier, generated server-side, route
+        constraint `guid`. Never the internal numeric key.
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    GateOrChallenge:
+      description: >
+        No Owner account: `Location: /setup`. No session: `Location: /sign-in`
+        (no return URL).
+      headers:
+        Location:
+          $ref: "#/components/headers/Location"
+    NotFound:
+      description: >
+        No installation with `{id}`, no entry with `{adminId}`, or the entry
+        belongs to another installation, or (revocation POST) the entry was
+        already revoked. Error page `Error.NotFound`, identical to the
+        catch-all's response for a non-GUID path value. Nothing changed or
+        audited.
+      content:
+        text/html: {}
+
+  headers:
+    Location:
+      description: "Relative redirect target within the Control Plane; never external or query-supplied."
+      schema:
+        type: string
+        pattern: "^(/setup|/sign-in|/installations/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$"
+
+  schemas:
+    AddAllowedAdminRequest:
+      type: object
+      description: "Add form. Only `email` is bound (over-posting)."
+      additionalProperties: false
+      required: [email]
+      properties:
+        email:
+          $ref: "#/components/schemas/AllowedAdminEmail"
+    RevokeAllowedAdminRequest:
+      type: object
+      description: "No fields besides the antiforgery token; nothing is bound."
+      additionalProperties: false
+      properties: {}
+
+    AllowedAdminEmail:
+      type: string
+      description: >
+        VR-001 and VR-002. Required; 1–254 characters; exactly one `@`; name part
+        1–64 of ASCII `A–Z a–z 0–9 . _ - '`, not starting or ending with `.`, no
+        `..`; domain part, lower-cased, equal to the installation's domain. Not
+        trimmed. Accepted in any case, stored lower case; unique per
+        installation. Messages in order: AllowedAdmin.Email.Required, .Length,
+        .Format, .NameLength, .NameCharacters, .NameDots, .WrongDomain, .Taken.
+        The pattern covers the binding rules only; the domain equality is checked
+        against the installation.
+      minLength: 1
+      maxLength: 254
+      pattern: "^(?!\\.)(?!.*\\.\\.)[A-Za-z0-9._'-]{1,64}(?<!\\.)@[^@]+$"
+      examples: ["ivan.petrenko@dac.ukr.education", "O'Brien@DAC.Ukr.Education"]
+
+    InstallationDetail:
+      type: object
+      description: "US-002 view DTO for the detail page, extended with `admins` (AD-8)."
+      additionalProperties: false
+      required: [identifier, name, domain, status, createdAt, clientId, admins]
+      properties:
+        identifier: {type: string, format: uuid}
+        name: {type: string}
+        domain: {type: string}
+        status: {type: string, enum: [active, suspended]}
+        createdAt: {type: string, format: date-time, description: "UTC"}
+        clientId: {type: string}
+        admins:
+          type: array
+          description: "Entries of this installation only, ordered by email (ordinal). Warning shown when fewer than two."
+          items:
+            $ref: "#/components/schemas/AllowedAdminItem"
+    AllowedAdminItem:
+      type: object
+      description: "View DTO for one entry. No added-by id, no internal key."
+      additionalProperties: false
+      required: [identifier, email, addedAt]
+      properties:
+        identifier: {type: string, format: uuid}
+        email: {type: string}
+        addedAt: {type: string, format: date-time, description: "UTC"}
+    AddAllowedAdminForm:
+      type: object
+      additionalProperties: false
+      required: [installationIdentifier, installationName, installationDomain]
+      properties:
+        installationIdentifier: {type: string, format: uuid}
+        installationName: {type: string}
+        installationDomain: {type: string}
+    RevokeAllowedAdminConfirmation:
+      type: object
+      additionalProperties: false
+      required: [installationIdentifier, installationName, adminIdentifier, email, leavesFewerThanTwo]
+      properties:
+        installationIdentifier: {type: string, format: uuid}
+        installationName: {type: string}
+        adminIdentifier: {type: string, format: uuid}
+        email: {type: string}
+        leavesFewerThanTwo:
+          type: boolean
+          description: "True when the installation currently has two entries or fewer (spec I-10)."
+
+    ValidationMessageKeys:
+      type: object
+      description: >
+        Translation keys (ControlPlane.Localization, uk and en, TC-8). The email
+        field reports its first failing rule in this order. Wording is the
+        implementor's within the spec.
+      properties:
+        AllowedAdmin.Email.Required: {type: string}
+        AllowedAdmin.Email.Length: {type: string}
+        AllowedAdmin.Email.Format: {type: string}
+        AllowedAdmin.Email.NameLength: {type: string}
+        AllowedAdmin.Email.NameCharacters: {type: string}
+        AllowedAdmin.Email.NameDots: {type: string}
+        AllowedAdmin.Email.WrongDomain: {type: string, description: "Argument: the installation's domain."}
+        AllowedAdmin.Email.Taken: {type: string}
+    PageTextKeys:
+      type: object
+      description: "Other fixed keys of this Story; page titles and labels get their own keys at the implementor's choice, all in uk and en."
+      properties:
+        AllowedAdmins.Title: {type: string}
+        AllowedAdmins.Empty: {type: string}
+        AllowedAdmins.FewerThanTwoWarning: {type: string}
+        AllowedAdmins.Add: {type: string}
+        AllowedAdmin.Revoke: {type: string}
+        AllowedAdmin.Email.DomainHint: {type: string, description: "Argument: the installation's domain."}
+        AllowedAdmin.Revoke.Explanation: {type: string}
+        AllowedAdmin.Revoke.FewerThanTwoNote: {type: string}
+        AllowedAdmin.Revoke.Confirm: {type: string}
+        AllowedAdmin.Revoke.Cancel: {type: string}
+
+  securitySchemes:
+    ownerSession:
+      type: apiKey
+      in: cookie
+      name: __Host-cp-session
+      description: "Owner cookie session defined by US-001 (API-7)."
+
+security:
+  - ownerSession: []

@@ -48,7 +48,7 @@ stories:
   - id: US-003
     epic: EPIC-8
     title: Manage AllowedAdmin entries
-    state: READY
+    state: IN_PROGRESS
   - id: US-004
     epic: EPIC-8
     title: Suspend and resume an Installation
