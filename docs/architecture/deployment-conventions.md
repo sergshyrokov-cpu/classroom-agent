@@ -402,7 +402,8 @@ operating condition, not an incident (`trebovaniya.md` §8, decided in v16).
   retries exhausted, a `404` from the installation or no push address — `Warning`;
   the push address is never logged. Installation: an accepted push that starts a
   check — `Information`; a push with another installation's id — `Warning`; a
-  push throttled by the one-minute limit is not logged.
+  push that cannot start a check yet is not logged; starting its pending check is
+  `Information` (v77). The installation remembers at most one pending check.
 
 ## DC-13 Backup and restore
 

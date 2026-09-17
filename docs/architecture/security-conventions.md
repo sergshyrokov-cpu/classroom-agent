@@ -345,7 +345,8 @@ pages are disabled outside local development.
 - **A push never sets the status** (v76): it carries the installation id only and
   triggers the ordinary legitimacy check, so the status always comes from the
   Control Plane's answer. A receiver that writes `LegitimacyState` from the push
-  body, or runs checks more often than once a minute on push, is a finding. A push
+  body, or runs checks more often than once a minute on push, is a finding. A push that
+  cannot start a check yet leaves at most one pending check, never a queue (v77). A push
   whose id is not the installation's own is answered `404` and does nothing.
 - The domain an installation may work with comes from the Control Plane. Saving
   a `WorkspaceConnection` whose domain, or whose impersonation user's email

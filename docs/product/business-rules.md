@@ -129,13 +129,15 @@ check is the fallback when a push does not arrive. *(§9)*
 **BR-082** A status-change push is only a signal to check now. It carries the
 installation id and nothing else; the installation answers `202` and runs its
 ordinary legitimacy check in the background — at most once a minute, never two
-at once — and the status comes from that check's answer. A push is sent only when
+at once — and the status comes from that check's answer. A push that cannot start a
+check yet is not lost: the installation remembers one pending check, however many
+such pushes arrive, and runs it as soon as it is allowed (v77). A push is sent only when
 suspending or resuming actually changed the status, to the push address on the
 school's page (`http://`, host and port; optional — no address, no push, and the
 page warns). Delivery waits 10 seconds, retries 3 times after 5 s, 30 s and 2 min
 in memory, and a newer push to the same school replaces an unfinished one. A `404`
 (another installation's id) is not retried. The Owner does not see the push
-result; it is logged, not audited. *(§3, §8, §9, v76)*
+result; it is logged, not audited. *(§3, §8, §9, v76, v77)*
 
 **BR-081** An installation checks its legitimacy at startup, then 6 hours after
 a successful check, or 15 minutes after an unsuccessful one until a check
