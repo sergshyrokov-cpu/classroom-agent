@@ -13,9 +13,12 @@ public class ControlPlaneDbContext(DbContextOptions<ControlPlaneDbContext> optio
 
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
 
+    public DbSet<Installation> Installations => Set<Installation>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new OwnerConfiguration());
         modelBuilder.ApplyConfiguration(new AuditEventConfiguration());
+        modelBuilder.ApplyConfiguration(new InstallationConfiguration());
     }
 }

@@ -1,0 +1,14 @@
+@model RenameInstallationPageModel
+@{
+    ViewData["Title"] = T["Installation.Rename.Title"];
+    var detailPath = "/installations/" + Model.Identifier.ToString("D");
+}
+<form method="post" action="@(detailPath + "/name")" autocomplete="off">
+    @Html.AntiForgeryToken()
+    <label for="name">@T["Installation.Name.Label"]</label>
+    <input id="name" name="name" type="text" value="@Model.Name" />
+    @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "name")
+
+    <button type="submit">@T["Installation.Save"]</button>
+</form>
+<p><a href="@detailPath">@T["Installation.BackToDetail"]</a></p>

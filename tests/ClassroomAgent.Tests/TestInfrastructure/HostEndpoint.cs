@@ -44,9 +44,14 @@ public sealed partial record HostEndpoint(RouteEndpoint Endpoint)
         Endpoint.Metadata.OfType<IAntiforgeryMetadata>().Any(m => !m.RequiresValidation)
         || Endpoint.Metadata.OfType<IgnoreAntiforgeryTokenAttribute>().Any();
 
-    /// <summary>A concrete request path for the pattern.</summary>
+    /// <summary>A concrete request path for the pattern; an <c>{id}</c> gets a UUID so a <c>guid</c> route constraint matches.</summary>
     public string SamplePath =>
-        "/" + ParameterName().Replace(Pattern, m => m.Groups[1].Value == "statuscode" ? "404" : "sample");
+        "/" + ParameterName().Replace(Pattern, m => m.Groups[1].Value switch
+        {
+            "statuscode" => "404",
+            "id" => InstallationTestData.UnknownIdentifier,
+            _ => "sample",
+        });
 
     public override string ToString() => $"{Pattern} [{string.Join(",", Methods ?? ["*"])}]";
 

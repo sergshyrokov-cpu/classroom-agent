@@ -32,4 +32,19 @@ public sealed class PostgreSqlFixture : IAsyncLifetime
 
         return new NpgsqlConnectionStringBuilder(_container.GetConnectionString()) { Database = name }.ConnectionString;
     }
+
+    /// <summary>
+    /// Drops a database made by <see cref="CreateDatabaseAsync"/>. Without this, hundreds of test
+    /// databases stay in the container's page cache and grow the Docker VM until Windows runs out
+    /// of commit memory and stops it (US-002 test-generation report).
+    /// </summary>
+    public async Task DropDatabaseAsync(string connectionString, CancellationToken cancellationToken)
+    {
+        var name = new NpgsqlConnectionStringBuilder(connectionString).Database
+            ?? throw new ArgumentException("The connection string names no database.", nameof(connectionString));
+        await using var connection = new NpgsqlConnection(_container.GetConnectionString());
+        await connection.OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand($"DROP DATABASE IF EXISTS \"{name}\" WITH (FORCE)", connection);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
 }

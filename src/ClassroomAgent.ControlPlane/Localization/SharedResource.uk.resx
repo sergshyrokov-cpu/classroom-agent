@@ -47,4 +47,45 @@
   <data name="Error.Forbidden" xml:space="preserve"><value>Цю дію не дозволено.</value></data>
   <data name="Error.NotFound" xml:space="preserve"><value>Сторінку не знайдено.</value></data>
   <data name="Error.Internal" xml:space="preserve"><value>Сталася внутрішня помилка.</value></data>
+  <data name="Home.Installations" xml:space="preserve"><value>Школи</value></data>
+  <data name="Installations.Title" xml:space="preserve"><value>Школи</value></data>
+  <data name="Installations.Register" xml:space="preserve"><value>Зареєструвати школу</value></data>
+  <data name="Installations.Empty" xml:space="preserve"><value>Ще не зареєстровано жодної школи.</value></data>
+  <data name="Installations.BackHome" xml:space="preserve"><value>На головну</value></data>
+  <data name="Installation.Status.Active" xml:space="preserve"><value>активна</value></data>
+  <data name="Installation.Status.Suspended" xml:space="preserve"><value>призупинена</value></data>
+  <data name="Installation.Status.Label" xml:space="preserve"><value>Статус</value></data>
+  <data name="Installation.CreatedAt.Label" xml:space="preserve"><value>Дата створення</value></data>
+  <data name="Installation.Name.Label" xml:space="preserve"><value>Назва школи</value></data>
+  <data name="Installation.Domain.Label" xml:space="preserve"><value>Домен Google Workspace</value></data>
+  <data name="Installation.ClientId.Label" xml:space="preserve"><value>Client ID сервісного акаунта</value></data>
+  <data name="Installation.New.Title" xml:space="preserve"><value>Реєстрація школи</value></data>
+  <data name="Installation.New.Submit" xml:space="preserve"><value>Зареєструвати</value></data>
+  <data name="Installation.Detail.Title" xml:space="preserve"><value>Школа</value></data>
+  <data name="Installation.Identifier.Label" xml:space="preserve"><value>Ідентифікатор інсталяції</value></data>
+  <data name="Installation.Identifier.Copy" xml:space="preserve"><value>Копіювати</value></data>
+  <data name="Installation.Identifier.Copied" xml:space="preserve"><value>Скопійовано</value></data>
+  <data name="Installation.Identifier.ConfigurationNote" xml:space="preserve"><value>Під час розгортання вкажіть цей ідентифікатор у конфігурації інсталяції школи. Інсталяція без нього не запускається.</value></data>
+  <data name="Installation.Rename.Link" xml:space="preserve"><value>Виправити назву</value></data>
+  <data name="Installation.ChangeClientId.Link" xml:space="preserve"><value>Змінити client ID</value></data>
+  <data name="Installation.BackToList" xml:space="preserve"><value>До списку шкіл</value></data>
+  <data name="Installation.BackToDetail" xml:space="preserve"><value>Назад до школи</value></data>
+  <data name="Installation.Save" xml:space="preserve"><value>Зберегти</value></data>
+  <data name="Installation.Rename.Title" xml:space="preserve"><value>Виправлення назви школи</value></data>
+  <data name="Installation.ChangeClientId.Title" xml:space="preserve"><value>Зміна client ID</value></data>
+  <data name="Installation.ClientId.ChangeNote" xml:space="preserve"><value>Змінюйте client ID лише тоді, коли сервісний акаунт школи створено заново. Після зміни суперадміністратор школи має знову надати делегування на рівні домену для нового client ID. Інсталяція отримає нове значення не пізніше наступної перевірки легітимності — протягом 6 годин.</value></data>
+  <data name="Installation.Name.Required" xml:space="preserve"><value>Введіть назву школи.</value></data>
+  <data name="Installation.Name.Length" xml:space="preserve"><value>Назва школи має містити не більше 200 символів.</value></data>
+  <data name="Installation.Name.EdgeWhitespace" xml:space="preserve"><value>Назва школи не може починатися або закінчуватися пробілом.</value></data>
+  <data name="Installation.Name.InvalidCharacters" xml:space="preserve"><value>Назва школи містить недопустимі символи (перенесення рядка, табуляцію або невидимі символи).</value></data>
+  <data name="Installation.Domain.Required" xml:space="preserve"><value>Введіть домен.</value></data>
+  <data name="Installation.Domain.Length" xml:space="preserve"><value>Домен має містити від 3 до 253 символів.</value></data>
+  <data name="Installation.Domain.Characters" xml:space="preserve"><value>Домен може містити лише латинські літери, цифри, крапку та дефіс — без https://, шляху чи @.</value></data>
+  <data name="Installation.Domain.NoDot" xml:space="preserve"><value>Домен має містити принаймні одну крапку.</value></data>
+  <data name="Installation.Domain.Labels" xml:space="preserve"><value>Частини домену між крапками мають бути непорожні, до 63 символів і не починатися та не закінчуватися дефісом.</value></data>
+  <data name="Installation.Domain.Idn" xml:space="preserve"><value>Інтернаціоналізовані домени (частина, що починається з xn--) не підтримуються.</value></data>
+  <data name="Installation.Domain.Taken" xml:space="preserve"><value>Цей домен уже зареєстровано для іншої інсталяції. Школу, яка повертається до свого колишнього домену, відновлюють, а не реєструють знову.</value></data>
+  <data name="Installation.ClientId.Required" xml:space="preserve"><value>Введіть client ID.</value></data>
+  <data name="Installation.ClientId.Format" xml:space="preserve"><value>Client ID має складатися лише з цифр — від 10 до 32.</value></data>
+  <data name="Installation.ClientId.Taken" xml:space="preserve"><value>Цей client ID уже зареєстровано для іншої інсталяції.</value></data>
 </root>

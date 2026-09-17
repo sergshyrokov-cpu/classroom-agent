@@ -68,6 +68,9 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
     {
         AuditAction.OwnerSignIn => "owner_sign_in",
         AuditAction.OwnerFirstRunSetup => "owner_first_run_setup",
+        AuditAction.InstallationCreated => "installation_created",
+        AuditAction.InstallationRenamed => "installation_renamed",
+        AuditAction.InstallationClientIdChanged => "installation_client_id_changed",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -75,18 +78,23 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
     {
         "owner_sign_in" => AuditAction.OwnerSignIn,
         "owner_first_run_setup" => AuditAction.OwnerFirstRunSetup,
+        "installation_created" => AuditAction.InstallationCreated,
+        "installation_renamed" => AuditAction.InstallationRenamed,
+        "installation_client_id_changed" => AuditAction.InstallationClientIdChanged,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 
     private static string TargetTypeCode(AuditTargetType value) => value switch
     {
         AuditTargetType.Owner => "owner",
+        AuditTargetType.Installation => "installation",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
     private static AuditTargetType? TargetTypeFromCode(string code) => code switch
     {
         "owner" => AuditTargetType.Owner,
+        "installation" => AuditTargetType.Installation,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 

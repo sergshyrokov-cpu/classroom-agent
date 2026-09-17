@@ -5,11 +5,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ClassroomAgent.Tests.ControlPlane.Persistence;
 
-/// <summary>db-design §1 and §6: the <c>InitialOwnerAndAudit</c> migration and model drift (PC-2).</summary>
+/// <summary>
+/// US-001 db-design §1, §6 and US-002 db-design §7: the Control Plane migrations in order, and model drift (PC-2).
+/// </summary>
 public sealed class MigrationTests(PostgreSqlFixture database)
 {
     [Fact]
-    public async Task InitialMigration_CreatesOnlyOwnerAndAuditEvent()
+    public async Task Migrations_CreateOwnerAuditEventAndInstallation_InOrder()
     {
         var ct = TestContext.Current.CancellationToken;
         await using var host = await ControlPlaneTestHost.StartAsync(database, ct);
@@ -19,16 +21,17 @@ public sealed class MigrationTests(PostgreSqlFixture database)
             r => r.GetString(0),
             ct);
         var migrations = await host.QueryAsync(
-            "SELECT \"MigrationId\" FROM \"__EFMigrationsHistory\"",
+            "SELECT \"MigrationId\" FROM \"__EFMigrationsHistory\" ORDER BY \"MigrationId\"",
             r => r.GetString(0),
             ct);
         var trigger = await host.ScalarAsync<string>(
             "SELECT tgname::text FROM pg_trigger WHERE tgname = 'trg_audit_event_immutable' AND tgrelid = 'audit_event'::regclass",
             ct);
 
-        Assert.Equal(new[] { "__EFMigrationsHistory", "audit_event", "owner" }, tables.Order(StringComparer.Ordinal));
-        var migration = Assert.Single(migrations);
-        Assert.EndsWith("_InitialOwnerAndAudit", migration, StringComparison.Ordinal);
+        Assert.Equal(new[] { "__EFMigrationsHistory", "audit_event", "installation", "owner" }, tables.Order(StringComparer.Ordinal));
+        Assert.Equal(2, migrations.Count);
+        Assert.EndsWith("_InitialOwnerAndAudit", migrations[0], StringComparison.Ordinal);
+        Assert.EndsWith("_AddInstallation", migrations[1], StringComparison.Ordinal);
         Assert.Equal("trg_audit_event_immutable", trigger);
     }
 

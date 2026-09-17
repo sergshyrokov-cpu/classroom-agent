@@ -63,9 +63,41 @@ public class AuditEvent
     public static AuditEvent OwnerFirstRunSetupRefusedWrongCode(DateTimeOffset occurredAt, string? requestId) =>
         AnonymousRefused(AuditAction.OwnerFirstRunSetup, AuditRefusalCategory.WrongSetupCode, occurredAt, requestId);
 
+    public static AuditEvent InstallationCreated(long ownerId, long installationId, DateTimeOffset occurredAt, string? requestId) =>
+        OwnerActsOnInstallation(AuditAction.InstallationCreated, ownerId, installationId, occurredAt, requestId);
+
+    public static AuditEvent InstallationRenamed(long ownerId, long installationId, DateTimeOffset occurredAt, string? requestId) =>
+        OwnerActsOnInstallation(AuditAction.InstallationRenamed, ownerId, installationId, occurredAt, requestId);
+
+    public static AuditEvent InstallationClientIdChanged(
+        long ownerId,
+        long installationId,
+        DateTimeOffset occurredAt,
+        string? requestId) =>
+        OwnerActsOnInstallation(AuditAction.InstallationClientIdChanged, ownerId, installationId, occurredAt, requestId);
+
     private static AuditEvent OwnerActs(
         AuditAction action,
         long ownerId,
+        AuditOutcome outcome,
+        AuditRefusalCategory? category,
+        DateTimeOffset occurredAt,
+        string? requestId) =>
+        OwnerActsOn(action, ownerId, AuditTargetType.Owner, ownerId, outcome, category, occurredAt, requestId);
+
+    private static AuditEvent OwnerActsOnInstallation(
+        AuditAction action,
+        long ownerId,
+        long installationId,
+        DateTimeOffset occurredAt,
+        string? requestId) =>
+        OwnerActsOn(action, ownerId, AuditTargetType.Installation, installationId, AuditOutcome.Succeeded, null, occurredAt, requestId);
+
+    private static AuditEvent OwnerActsOn(
+        AuditAction action,
+        long ownerId,
+        AuditTargetType targetType,
+        long targetId,
         AuditOutcome outcome,
         AuditRefusalCategory? category,
         DateTimeOffset occurredAt,
@@ -76,8 +108,8 @@ public class AuditEvent
             ActorType = AuditActorType.Owner,
             ActorId = ownerId,
             Action = action,
-            TargetType = AuditTargetType.Owner,
-            TargetId = ownerId,
+            TargetType = targetType,
+            TargetId = targetId,
             Outcome = outcome,
             RefusalCategory = category,
             RequestId = requestId,

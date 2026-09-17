@@ -5,4 +5,7 @@ public enum AuditAction
 {
     OwnerSignIn,
     OwnerFirstRunSetup,
+    InstallationCreated,
+    InstallationRenamed,
+    InstallationClientIdChanged,
 }

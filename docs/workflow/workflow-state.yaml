@@ -4,29 +4,36 @@
 version: 1
 story: US-002
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: security-reviewer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: 2026-09-16T13:55:28Z
+  stage: SECURITY_REVIEW
+  recorded_at: 2026-09-17T08:44:10Z
 last_artifacts:
-  - type: database_design
-    path: docs/designs/database/US-002-db-design.md
-    version: 1
-  - type: entity_model
-    path: docs/designs/database/US-002-entity-model.md
+  - type: security_review
+    path: docs/reviews/security/US-002-security-review.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "HUMAN_PR_APPROVAL approved by Serhii SHYROKOV at 2026-09-17T09:01:22Z (no comment)."
+  - "SECURITY_REVIEW: PASS, 0 critical, 0 major. MIN-1 (SC-10): lost-race path logs the failed EF save; statically free of values but no test reads the log after a race."
+  - "SECURITY_REVIEW: INF-1 review ran in the same session as the implementation — human look at InstallationsController and InstallationRegistry advised; INF-2 edit posts read before validation (by design)."
+  - "IMPLEMENTATION: build 0 warnings; tests 359/359 pass, 0 skipped; dotnet format clean. AC-001 … AC-011 implemented; migration AddInstallation with immutability and no-delete triggers."
+  - "IMPLEMENTATION: lost-race registration logs the failed EF save at Error without values (placeholders, redacted Npgsql detail); no automated test reads the log after a race — for SECURITY_REVIEW."
+  - "IMPLEMENTATION: POST …/name and …/client-id look up the installation before validation (404 before 400), one extra query per submission."
+  - "IMPLEMENTATION: Docker Desktop was not running at stage start and was started; first test run failed on connections only."
+  - "TEST_WRITING: 359 cases, 161 pass, 198 fail for missing behaviour; 4 NonUuidIdentifier cases are guards passing via the US-001 catch-all."
+  - "TEST_WRITING: test infrastructure now drops each test database on disposal — without it the Docker WSL VM exhausted Windows commit memory (16 GB limit, 400 MB page file) and restarted mid-run. Human recommendation: system-managed page file."
+  - "TEST_WRITING: US-001 MigrationTests and HostEndpoint.SamplePath modified to fit the approved US-002 migration and guid routes."
   - "DB_DESIGN: audit codes installation_created / installation_renamed / installation_client_id_changed, target type installation with installation.id; conflict mapping by uq_installation_domain / uq_installation_client_id; TimestampInterceptor must add Installation."
   - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV at 2026-09-16T13:45:30Z; specification v2 and open decisions v2 APPROVED."
   - "SPECIFICATION: OD-001, OD-002, OD-003 resolved by the human on 2026-09-16 with the recommended options; interpretations I-1 … I-10 confirmed; specification v2, open decisions v2."
 started_at: 2026-09-16T13:31:16Z
-updated_at: 2026-09-16T13:55:28Z
-completed_at: null
+updated_at: 2026-09-17T09:01:22Z
+completed_at: 2026-09-17T09:01:22Z

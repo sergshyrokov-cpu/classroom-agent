@@ -21,6 +21,9 @@ public sealed class ControlPlaneTestHost : IAsyncDisposable
     private readonly string _root;
     private ControlPlaneFactory? _factory;
 
+    /// <summary>Set on the host that created the database; only that host drops it on disposal.</summary>
+    private PostgreSqlFixture? _ownedDatabase;
+
     private ControlPlaneTestHost(string connectionString, string setupCode)
     {
         var now = DateTimeOffset.UtcNow;
@@ -56,7 +59,9 @@ public sealed class ControlPlaneTestHost : IAsyncDisposable
     {
         var connectionString = await database.CreateDatabaseAsync(cancellationToken);
         await MigrateAsync(connectionString, cancellationToken);
-        return Start(connectionString, setupCode);
+        var host = Start(connectionString, setupCode);
+        host._ownedDatabase = database;
+        return host;
     }
 
     /// <summary>Starts another host over the same database — a restart of the Control Plane.</summary>
@@ -248,6 +253,13 @@ public sealed class ControlPlaneTestHost : IAsyncDisposable
         await using (var connection = new NpgsqlConnection(ConnectionString))
         {
             NpgsqlConnection.ClearPool(connection);
+        }
+
+        if (_ownedDatabase is not null)
+        {
+            // A restarted host over the same database is disposed first (declared later), so the
+            // database is dropped only once nothing uses it.
+            await _ownedDatabase.DropDatabaseAsync(ConnectionString, CancellationToken.None);
         }
 
         try

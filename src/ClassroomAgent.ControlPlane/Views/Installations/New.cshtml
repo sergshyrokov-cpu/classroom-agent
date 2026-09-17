@@ -1,0 +1,21 @@
+@model RegisterInstallationPageModel
+@{
+    ViewData["Title"] = T["Installation.New.Title"];
+}
+<form method="post" action="/installations" autocomplete="off">
+    @Html.AntiForgeryToken()
+    <label for="name">@T["Installation.Name.Label"]</label>
+    <input id="name" name="name" type="text" value="@Model.Name" />
+    @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "name")
+
+    <label for="domain">@T["Installation.Domain.Label"]</label>
+    <input id="domain" name="domain" type="text" value="@Model.Domain" />
+    @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "domain")
+
+    <label for="clientId">@T["Installation.ClientId.Label"]</label>
+    <input id="clientId" name="clientId" type="text" inputmode="numeric" value="@Model.ClientId" />
+    @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "clientId")
+
+    <button type="submit">@T["Installation.New.Submit"]</button>
+</form>
+<p><a href="/installations">@T["Installation.BackToList"]</a></p>

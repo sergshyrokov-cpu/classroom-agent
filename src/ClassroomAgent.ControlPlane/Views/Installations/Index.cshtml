@@ -1,0 +1,35 @@
+@using ClassroomAgent.ControlPlane.Services
+@model IReadOnlyList<InstallationListItemDto>
+@{
+    ViewData["Title"] = T["Installations.Title"];
+}
+<p><a href="/installations/new">@T["Installations.Register"]</a></p>
+@if (Model.Count == 0)
+{
+    <p>@T["Installations.Empty"]</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr>
+                <th>@T["Installation.Name.Label"]</th>
+                <th>@T["Installation.Domain.Label"]</th>
+                <th>@T["Installation.Status.Label"]</th>
+                <th>@T["Installation.CreatedAt.Label"]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var installation in Model)
+            {
+                <tr>
+                    <td><a href="/installations/@installation.Identifier.ToString("D")">@installation.Name</a></td>
+                    <td>@installation.Domain</td>
+                    <td>@T[InstallationDisplay.StatusKey(installation.Status)]</td>
+                    <td>@InstallationDisplay.UtcTime(installation.CreatedAt)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+<p><a href="/">@T["Installations.BackHome"]</a></p>

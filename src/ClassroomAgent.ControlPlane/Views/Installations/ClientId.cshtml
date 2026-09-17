@@ -1,0 +1,15 @@
+@model ChangeInstallationClientIdPageModel
+@{
+    ViewData["Title"] = T["Installation.ChangeClientId.Title"];
+    var detailPath = "/installations/" + Model.Identifier.ToString("D");
+}
+<p class="note">@T["Installation.ClientId.ChangeNote"]</p>
+<form method="post" action="@(detailPath + "/client-id")" autocomplete="off">
+    @Html.AntiForgeryToken()
+    <label for="clientId">@T["Installation.ClientId.Label"]</label>
+    <input id="clientId" name="clientId" type="text" inputmode="numeric" value="@Model.ClientId" />
+    @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "clientId")
+
+    <button type="submit">@T["Installation.Save"]</button>
+</form>
+<p><a href="@detailPath">@T["Installation.BackToDetail"]</a></p>

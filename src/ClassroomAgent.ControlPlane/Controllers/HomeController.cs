@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ClassroomAgent.ControlPlane.Controllers;
 
-/// <summary>The home page: the signed-in state and sign-out, nothing else (FR-013, spec I-8).</summary>
+/// <summary>The home page: the signed-in state, sign-out and the link to the installations (US-001 FR-013; US-002 FR-002).</summary>
 [Authorize(Policy = OwnerSession.OwnerPolicy)]
 public sealed class HomeController : Controller
 {

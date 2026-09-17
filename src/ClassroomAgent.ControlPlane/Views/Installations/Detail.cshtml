@@ -1,0 +1,34 @@
+@using ClassroomAgent.ControlPlane.Services
+@model InstallationDetailDto
+@{
+    ViewData["Title"] = T["Installation.Detail.Title"];
+    var detailPath = "/installations/" + Model.Identifier.ToString("D");
+}
+<dl>
+    <dt>@T["Installation.Identifier.Label"]</dt>
+    <dd>
+        <code id="installation-identifier">@Model.Identifier.ToString("D")</code>
+        <button type="button" data-copy-target="installation-identifier" data-copied-text="@T["Installation.Identifier.Copied"]">@T["Installation.Identifier.Copy"]</button>
+        <span class="copy-status" data-copy-status="installation-identifier"></span>
+        <p class="note">@T["Installation.Identifier.ConfigurationNote"]</p>
+    </dd>
+
+    <dt>@T["Installation.Name.Label"]</dt>
+    <dd>@Model.Name</dd>
+
+    <dt>@T["Installation.Domain.Label"]</dt>
+    <dd>@Model.Domain</dd>
+
+    <dt>@T["Installation.Status.Label"]</dt>
+    <dd>@T[InstallationDisplay.StatusKey(Model.Status)]</dd>
+
+    <dt>@T["Installation.CreatedAt.Label"]</dt>
+    <dd>@InstallationDisplay.UtcTime(Model.CreatedAt)</dd>
+
+    <dt>@T["Installation.ClientId.Label"]</dt>
+    <dd>@Model.ClientId</dd>
+</dl>
+<p><a href="@(detailPath + "/name")">@T["Installation.Rename.Link"]</a></p>
+<p><a href="@(detailPath + "/client-id")">@T["Installation.ChangeClientId.Link"]</a></p>
+<p><a href="/installations">@T["Installation.BackToList"]</a></p>
+<script src="/js/copy-identifier.js" defer></script>

@@ -32,3 +32,26 @@ button {
     color: #b3261e;
     margin: 0;
 }
+
+/* US-002: installation list and detail. */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 0.4rem;
+    border-bottom: 1px solid #d0d7de;
+    overflow-wrap: anywhere;
+}
+
+dd {
+    margin: 0 0 0.8rem;
+    overflow-wrap: anywhere;
+}
+
+.note {
+    color: #57606a;
+}
