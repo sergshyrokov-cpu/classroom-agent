@@ -56,7 +56,7 @@ stories:
   - id: US-005
     epic: EPIC-8
     title: Installation legitimacy check and grace period
-    state: READY
+    state: IN_PROGRESS
   - id: US-006
     epic: EPIC-8
     title: Control Plane push on status change
