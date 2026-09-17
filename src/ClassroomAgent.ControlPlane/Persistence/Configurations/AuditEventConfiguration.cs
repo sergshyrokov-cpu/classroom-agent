@@ -73,6 +73,8 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         AuditAction.InstallationClientIdChanged => "installation_client_id_changed",
         AuditAction.AllowedAdminAdded => "allowed_admin_added",
         AuditAction.AllowedAdminRevoked => "allowed_admin_revoked",
+        AuditAction.InstallationSuspended => "installation_suspended",
+        AuditAction.InstallationResumed => "installation_resumed",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -85,6 +87,8 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         "installation_client_id_changed" => AuditAction.InstallationClientIdChanged,
         "allowed_admin_added" => AuditAction.AllowedAdminAdded,
         "allowed_admin_revoked" => AuditAction.AllowedAdminRevoked,
+        "installation_suspended" => AuditAction.InstallationSuspended,
+        "installation_resumed" => AuditAction.InstallationResumed,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 

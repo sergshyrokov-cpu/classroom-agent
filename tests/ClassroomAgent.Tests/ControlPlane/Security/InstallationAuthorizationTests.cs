@@ -126,9 +126,11 @@ public sealed class InstallationAuthorizationTests(PostgreSqlFixture database)
         await using var host = await ControlPlaneTestHost.StartAsync(database, ct);
 
         // US-003 adds installations/{id}/admins… routes; AllowedAdminAuthorizationTests covers them.
+        // US-004 adds installations/{id}/suspension and …/resumption; InstallationStatusAuthorizationTests covers them.
         var installationEndpoints = HostEndpoint.All(host.Services)
             .Where(e => e.Pattern.StartsWith("installations", StringComparison.Ordinal)
-                && !e.Pattern.StartsWith("installations/{id}/admins", StringComparison.Ordinal))
+                && !e.Pattern.StartsWith("installations/{id}/admins", StringComparison.Ordinal)
+                && e.Pattern is not ("installations/{id}/suspension" or "installations/{id}/resumption"))
             .ToList();
 
         var patterns = installationEndpoints.Select(e => e.Pattern).Distinct().Order(StringComparer.Ordinal).ToList();

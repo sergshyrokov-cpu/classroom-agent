@@ -1,0 +1,18 @@
+@using ClassroomAgent.ControlPlane.Controllers
+@model InstallationStatusConfirmationPageModel
+@{
+    ViewData["Title"] = T[Model.KeyPrefix + ".Title"];
+}
+<dl>
+    <dt>@T["Installation.Name.Label"]</dt>
+    <dd>@Model.Installation.Name</dd>
+
+    <dt>@T["Installation.Domain.Label"]</dt>
+    <dd>@Model.Installation.Domain</dd>
+</dl>
+<p class="note">@T[Model.KeyPrefix + ".Explanation"]</p>
+<form method="post" action="@Model.ActionPath">
+    @Html.AntiForgeryToken()
+    <button type="submit">@T[Model.KeyPrefix + ".Confirm"]</button>
+</form>
+<p><a href="@Model.DetailPath">@T[Model.KeyPrefix + ".Cancel"]</a></p>

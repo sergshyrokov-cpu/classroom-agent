@@ -1,40 +1,56 @@
-@using ClassroomAgent.ControlPlane.Services
-@model InstallationDetailDto
+@using ClassroomAgent.ControlPlane.Controllers
+@using ClassroomAgent.ControlPlane.Persistence
+@model InstallationDetailPageModel
 @{
+    var installation = Model.Installation;
     ViewData["Title"] = T["Installation.Detail.Title"];
-    var detailPath = "/installations/" + Model.Identifier.ToString("D");
+    var detailPath = "/installations/" + installation.Identifier.ToString("D");
 }
 <dl>
     <dt>@T["Installation.Identifier.Label"]</dt>
     <dd>
-        <code id="installation-identifier">@Model.Identifier.ToString("D")</code>
+        <code id="installation-identifier">@installation.Identifier.ToString("D")</code>
         <button type="button" data-copy-target="installation-identifier" data-copied-text="@T["Installation.Identifier.Copied"]">@T["Installation.Identifier.Copy"]</button>
         <span class="copy-status" data-copy-status="installation-identifier"></span>
         <p class="note">@T["Installation.Identifier.ConfigurationNote"]</p>
     </dd>
 
     <dt>@T["Installation.Name.Label"]</dt>
-    <dd>@Model.Name</dd>
+    <dd>@installation.Name</dd>
 
     <dt>@T["Installation.Domain.Label"]</dt>
-    <dd>@Model.Domain</dd>
+    <dd>@installation.Domain</dd>
 
     <dt>@T["Installation.Status.Label"]</dt>
-    <dd>@T[InstallationDisplay.StatusKey(Model.Status)]</dd>
+    <dd>
+        @T[InstallationDisplay.StatusKey(installation.Status)]
+        @if (installation.Status == InstallationStatus.Active)
+        {
+            <span id="installation-suspend"><a href="@(detailPath + "/suspension")">@T["Installation.Suspend"]</a></span>
+        }
+        else
+        {
+            <span id="installation-resume"><a href="@(detailPath + "/resumption")">@T["Installation.Resume"]</a></span>
+        }
+        @if (Model.NoticeKey is { } noticeKey)
+        {
+            <p class="note" id="installation-status-notice">@T[noticeKey]</p>
+        }
+    </dd>
 
     <dt>@T["Installation.CreatedAt.Label"]</dt>
-    <dd>@InstallationDisplay.UtcTime(Model.CreatedAt)</dd>
+    <dd>@InstallationDisplay.UtcTime(installation.CreatedAt)</dd>
 
     <dt>@T["Installation.ClientId.Label"]</dt>
-    <dd>@Model.ClientId</dd>
+    <dd>@installation.ClientId</dd>
 </dl>
 <section>
     <h2>@T["AllowedAdmins.Title"]</h2>
-    @if (Model.Admins.Count < 2)
+    @if (installation.Admins.Count < 2)
     {
         <p class="warning" id="allowed-admins-warning">@T["AllowedAdmins.FewerThanTwoWarning"]</p>
     }
-    @if (Model.Admins.Count == 0)
+    @if (installation.Admins.Count == 0)
     {
         <p>@T["AllowedAdmins.Empty"]</p>
     }
@@ -49,7 +65,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var admin in Model.Admins)
+                @foreach (var admin in installation.Admins)
                 {
                     <tr>
                         <td>@admin.Email</td>

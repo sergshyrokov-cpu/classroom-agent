@@ -52,7 +52,7 @@ stories:
   - id: US-004
     epic: EPIC-8
     title: Suspend and resume an Installation
-    state: READY
+    state: COMPLETED
   - id: US-005
     epic: EPIC-8
     title: Installation legitimacy check and grace period

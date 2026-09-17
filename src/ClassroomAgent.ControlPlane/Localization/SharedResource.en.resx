@@ -110,4 +110,16 @@
   <data name="AllowedAdmin.Revoke.FewerThanTwoNote" xml:space="preserve"><value>After revoking, the school will have fewer than two Admins.</value></data>
   <data name="AllowedAdmin.Revoke.Confirm" xml:space="preserve"><value>Revoke access</value></data>
   <data name="AllowedAdmin.Revoke.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Installation.Suspend" xml:space="preserve"><value>Suspend school</value></data>
+  <data name="Installation.Resume" xml:space="preserve"><value>Resume school</value></data>
+  <data name="Installation.Suspend.Title" xml:space="preserve"><value>Suspending a school</value></data>
+  <data name="Installation.Resume.Title" xml:space="preserve"><value>Resuming a school</value></data>
+  <data name="Installation.Suspend.Explanation" xml:space="preserve"><value>The school will switch to read-only mode: viewing and export keep working, synchronization and configuration stop. No data is deleted. The Admins in the list stay.</value></data>
+  <data name="Installation.Suspend.Confirm" xml:space="preserve"><value>Suspend</value></data>
+  <data name="Installation.Suspend.Cancel" xml:space="preserve"><value>Cancel suspension</value></data>
+  <data name="Installation.Resume.Explanation" xml:space="preserve"><value>The school will return to normal work.</value></data>
+  <data name="Installation.Resume.Confirm" xml:space="preserve"><value>Resume</value></data>
+  <data name="Installation.Resume.Cancel" xml:space="preserve"><value>Cancel resumption</value></data>
+  <data name="Installation.Status.AlreadySuspended" xml:space="preserve"><value>The school is already suspended.</value></data>
+  <data name="Installation.Status.AlreadyActive" xml:space="preserve"><value>The school is already active.</value></data>
 </root>

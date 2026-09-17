@@ -10,4 +10,6 @@ public enum AuditAction
     InstallationClientIdChanged,
     AllowedAdminAdded,
     AllowedAdminRevoked,
+    InstallationSuspended,
+    InstallationResumed,
 }

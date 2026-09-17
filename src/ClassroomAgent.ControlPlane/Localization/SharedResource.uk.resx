@@ -110,4 +110,16 @@
   <data name="AllowedAdmin.Revoke.FewerThanTwoNote" xml:space="preserve"><value>Після відкликання в школи залишиться менше двох Адмінів.</value></data>
   <data name="AllowedAdmin.Revoke.Confirm" xml:space="preserve"><value>Відкликати доступ</value></data>
   <data name="AllowedAdmin.Revoke.Cancel" xml:space="preserve"><value>Скасувати</value></data>
+  <data name="Installation.Suspend" xml:space="preserve"><value>Призупинити школу</value></data>
+  <data name="Installation.Resume" xml:space="preserve"><value>Відновити школу</value></data>
+  <data name="Installation.Suspend.Title" xml:space="preserve"><value>Призупинення школи</value></data>
+  <data name="Installation.Resume.Title" xml:space="preserve"><value>Відновлення школи</value></data>
+  <data name="Installation.Suspend.Explanation" xml:space="preserve"><value>Школа перейде в режим «лише читання»: перегляд і експорт працюватимуть, синхронізація та налаштування — ні. Дані не видаляються. Адміни зі списку залишаються.</value></data>
+  <data name="Installation.Suspend.Confirm" xml:space="preserve"><value>Призупинити</value></data>
+  <data name="Installation.Suspend.Cancel" xml:space="preserve"><value>Скасувати призупинення</value></data>
+  <data name="Installation.Resume.Explanation" xml:space="preserve"><value>Школа повернеться до звичайної роботи.</value></data>
+  <data name="Installation.Resume.Confirm" xml:space="preserve"><value>Відновити</value></data>
+  <data name="Installation.Resume.Cancel" xml:space="preserve"><value>Скасувати відновлення</value></data>
+  <data name="Installation.Status.AlreadySuspended" xml:space="preserve"><value>Школа вже призупинена.</value></data>
+  <data name="Installation.Status.AlreadyActive" xml:space="preserve"><value>Школа вже активна.</value></data>
 </root>

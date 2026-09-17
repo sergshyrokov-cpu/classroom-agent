@@ -70,7 +70,9 @@ public sealed class InstallationsController(InstallationRegistry registry) : Con
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Detail(Guid id, CancellationToken cancellationToken) =>
         await registry.GetAsync(id, cancellationToken) is { } installation
-            ? View(DetailView, installation)
+            ? View(DetailView, new InstallationDetailPageModel(
+                installation,
+                InstallationStatusNotice.KeyFor(Request.Query["notice"], installation.Status)))
             : NotFound();
 
     [HttpGet("{id:guid}/name")]

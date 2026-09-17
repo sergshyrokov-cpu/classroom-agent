@@ -2,7 +2,7 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-003
+story: US-004
 workflow: story-delivery
 current_stage: COMPLETED
 previous_stage: HUMAN_PR_APPROVAL
@@ -13,24 +13,22 @@ last_invoked_skill: security-reviewer
 last_result:
   verdict: PASS
   stage: SECURITY_REVIEW
-  recorded_at: 2026-09-17T10:23:05Z
+  recorded_at: 2026-09-17T11:18:35Z
 last_artifacts:
   - type: security_review
-    path: docs/reviews/security/US-003-security-review.md
+    path: docs/reviews/security/US-004-security-review.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "HUMAN_PR_APPROVAL approved by Serhii SHYROKOV at 2026-09-17T10:25:08Z (no comment)."
-  - "SECURITY_REVIEW: PASS, 0 critical, 0 major. MIN-1 (SC-10): lost-race add path log statically free of values, not tested. INF-1 same-session review — human look at AllowedAdminsController and AllowedAdminRegistry.RevokeAsync advised; INF-2 test clock correction accepted; INF-3 non-ASCII look-alikes fold to ASCII, harmless."
-  - "IMPLEMENTATION: build 0 warnings; tests 499/499 pass, 0 skipped; dotnet format clean. AC-001 … AC-012 implemented; migration AddAllowedAdmin with domain-match and no-update triggers."
-  - "IMPLEMENTATION: story test Revoke_ThenAddSameEmail… corrected — clock advance 3 h exceeded the Owner 30-minute idle timeout (v68); now 10 min, assertions unchanged. For SECURITY_REVIEW / human confirmation."
-  - "IMPLEMENTATION: as US-002 MIN-1, no test reads the log after a lost add race (EF logs without values)."
-  - "TEST_WRITING: 63 methods / 140 cases; suite 499 cases, 363 pass, 136 fail for missing behaviour; 5 new cases are guards (non-GUID 404 catch-all, before-setup on existing detail route). Changed existing tests: MigrationTests (third migration), InstallationAuthorizationTests (route list excludes admins routes), HostEndpoint.SamplePath ({adminid} gets a UUID)."
-  - "DB_DESIGN: table allowed_admin (migration AddAllowedAdmin) with uuid identifier, FKs to installation and owner (Restrict), unique (installation_id, email), lower-case and format checks, domain-match trigger and no-update trigger; delete allowed. Audit codes allowed_admin_added / allowed_admin_revoked, target allowed_admin; revoke deletes via affected-row count (0 -> 404). TimestampInterceptor must add AllowedAdmin; migration tests of US-001/US-002 may need the new table."
-  - "API_DESIGN: 4 new Razor routes under /installations/{id}/admins plus the changed detail page; AllowedAdmin entries addressed by a server-generated UUID (db-designer adds it); audit codes allowed_admin_added / allowed_admin_revoked, target allowed_admin; revocation POST affecting zero rows answers 404."
-  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV at 2026-09-17T09:29:38Z (no comment); specification v1 and open decisions v1 APPROVED; interpretations I-1 … I-10 accepted."
-  - "SPECIFICATION: no Open Decisions (Story questions decided in trebovaniya.md v70); interpretations I-1 … I-10 for human review."
-started_at: 2026-09-17T09:16:58Z
-updated_at: 2026-09-17T10:25:08Z
-completed_at: 2026-09-17T10:25:08Z
+  - "HUMAN_PR_APPROVAL approved by Serhii SHYROKOV at 2026-09-17T11:19:21Z (no comment)."
+  - "SECURITY_REVIEW: PASS, 0 critical, 0 major, 0 minor. Build and 571 tests re-run green; no vulnerable packages. INF-1 same-session review — human look at InstallationStatusService.ChangeStatusAsync and InstallationStatusController advised; INF-2 concurrency tests probabilistic, guarantee rests on the conditional update; INF-3 status has no effect on installations until US-005/US-006."
+  - "IMPLEMENTATION: build 0 warnings; tests 571/571 pass, 0 skipped; dotnet format clean; no migration. AC-001 … AC-011 implemented: InstallationStatusController + InstallationStatusService (conditional ExecuteUpdateAsync setting status and updated_at, audit row only on change); notice via ?notice= rendered only when matching status; 12 translation keys per language. InstallationStatusUnchangedTests repeated 3x green."
+  - "TEST_WRITING: 45 methods / 72 cases; suite 571 cases, 510 pass, 61 fail for missing behaviour; 11 new cases are guards (non-GUID and unknown-GUID 404, repeated notice, PUT/PATCH/DELETE, log file). Changed existing test: InstallationAuthorizationTests route list excludes suspension/resumption. Concurrency tests show absence of anomalies over 5 sessions / 5 rounds; the guarantee rests on the conditional update."
+  - "DB_DESIGN: no schema change and no migration (audit action has no DB check constraint; converter changes do not alter the snapshot). Status set by conditional ExecuteUpdateAsync (id AND expected status) setting status and updated_at; audit row only when 1 row affected, same transaction. Audit codes installation_suspended / installation_resumed, target installation (bigint id). No Suspend()/Resume() entity methods."
+  - "API_DESIGN: 4 new Razor routes /installations/{id}/suspension and /resumption (GET confirmation, POST action) plus the changed detail page; unchanged outcome redirects with ?notice=already-suspended|already-active, rendered only when matching the current status; conditional status update; audit codes installation_suspended / installation_resumed, target installation. db-designer: confirm audit codes and how updated_at is set on a set-based update."
+  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV at 2026-09-17T10:53:50Z (no comment); specification v1 and open decisions v1 APPROVED; interpretations I-1 … I-9 accepted."
+  - "SPECIFICATION: no Open Decisions (Story questions decided in trebovaniya.md v71); interpretations I-1 … I-9 for human review."
+started_at: 2026-09-17T10:47:49Z
+updated_at: 2026-09-17T11:19:21Z
+completed_at: 2026-09-17T11:19:21Z
