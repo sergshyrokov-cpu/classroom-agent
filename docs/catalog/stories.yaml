@@ -60,12 +60,10 @@ stories:
   - id: US-006
     epic: EPIC-8
     title: Control Plane push on status change
-    state: BACKLOG
-    blocked_by: >
-      Depends on US-004 (status changes to push) and US-005 (LegitimacyState on
-      the installation side).
-    # Also introduces the required private-port address setting (trebovaniya.md v75, §5, §9):
-    # the push receiver is the first endpoint that makes the binding security-critical.
+    state: READY
+    # Depended on US-004 and US-005 (both COMPLETED). Push semantics and the push
+    # address decided in trebovaniya.md v76; also introduces the required
+    # private-port address setting (v75, §5, §9).
   - id: US-007
     epic: EPIC-8
     title: Read-only mode enforcement
