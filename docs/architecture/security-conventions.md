@@ -336,6 +336,12 @@ pages are disabled outside local development.
   isolation applies to the service channel and to the whole Control Plane,
   including the Owner UI, which is never reachable from the public internet
   (v35). Do not confuse the two.
+- **The installation's private port has two independent protections** (v75): it
+  listens only on the address from configuration, normally the private network
+  address, and deployment confirms it does not answer on the school's public
+  address. "All addresses" is allowed only as an explicit value, never as a
+  default; a private endpoint bound to all interfaces without that explicit value
+  is a finding (DC-6).
 - The domain an installation may work with comes from the Control Plane. Saving
   a `WorkspaceConnection` whose domain, or whose impersonation user's email
   domain, differs from the `Installation` domain must be refused (BR-020) —

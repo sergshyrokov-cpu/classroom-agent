@@ -65,7 +65,9 @@ the previous one — the dependency is real, not stylistic
    the secret store (DC-5). Create its Data Protection key directory on a
    persistent volume. If the Control Plane certificate comes from the internal
    certificate authority, add that authority's root certificate to the trusted
-   roots of the installation's server (DC-6).
+   roots of the installation's server (DC-6). Set the private port's address
+   (DC-3, DC-6) and confirm after deployment that the private port does not answer
+   on the school's public address (`trebovaniya.md` §9, v75).
 7. The Admin signs in with Google OAuth, is matched against `AllowedAdmin`, and
    saves the `WorkspaceConnection` (domain + the technical account as
    impersonation user). The domain, and the domain of that account's email, must
@@ -82,9 +84,11 @@ the previous one — the dependency is real, not stylistic
   the Control Plane service endpoint (an `https://` address, DC-6), the
   secret-store reference for its service-account key, the Data Protection key
   directory (SC-7), the retention period N (PC-11), and the school's time zone
-  (an IANA id such as `Europe/Kyiv`, PC-6). The installation id, the retention
-  period and the time zone are required: an installation without any of them
-  refuses to start. Optional:
+  (an IANA id such as `Europe/Kyiv`, PC-6), and the private port with the address
+  it listens on (DC-6). The installation id, the Control Plane address, the private
+  port and its address, the retention period and the time zone are required: an
+  installation without any of them refuses to start (`trebovaniya.md` §5, v73,
+  v75). Optional:
   the school's default UI language (`uk` or `en`, `uk` if unset — NFR-073).
 - The Control Plane's own configuration includes its Data Protection key
   directory as well (SC-7).
@@ -177,7 +181,14 @@ the previous one — the dependency is real, not stylistic
 - **The installation's private endpoints listen on a separate port.** The
   status-change push receiver, liveness and readiness are served by
   `ClassroomAgent.Web` on a second Kestrel endpoint bound only to the private
-  network interface. The public port, and any reverse proxy in front of it, does
+  network interface. **The address is a required setting** (`trebovaniya.md` §5,
+  §9, v75): normally the server's private network address, so the port is
+  unreachable from the internet even if the firewall is wrong. Listening on all
+  addresses is allowed only through an explicit "all addresses" value — for example
+  inside a container, where publishing the port restricts access — and is never the
+  default; a missing or empty value stops the installation at startup. Deployment
+  checks that the private port does not answer on the school's public address
+  (DC-2). The public port, and any reverse proxy in front of it, does
   not serve those paths; a test asserts that on the public port they answer
   `404`. Otherwise anyone on the internet could post a status to the push
   receiver — lifting a suspension or forcing read-only mode. The private routes
