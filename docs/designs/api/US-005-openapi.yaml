@@ -1,0 +1,365 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Installation legitimacy check (US-005)
+  version: "1"
+  description: >
+    HTTP contract of US-005 across two hosts. Control Plane: the service-channel
+    endpoint `POST /service/v1/legitimacy-checks` (JSON, anonymous, antiforgery-
+    exempt, protected by network isolation — SC-4, SC-9; not the public REST API,
+    API-7) and the changed installation detail page. Installation: liveness and
+    readiness on the private port; the public port answers `404` to everything in
+    this Story. The Control Plane host-wide rules of
+    docs/designs/api/US-001-openapi.yaml, the `{id}` route and output encoding of
+    docs/designs/api/US-002-openapi.yaml, and the detail page as extended by
+    US-003 and US-004 apply unchanged. Companion document:
+    docs/designs/api/US-005-api-design.md.
+x-story: US-005
+x-source-specification: docs/specifications/US-005-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-005-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 73
+x-produced-by: openapi-designer
+x-extends: docs/designs/api/US-004-openapi.yaml
+x-contract-version: 1
+
+servers:
+  - url: https://control-plane.internal
+    description: "Control Plane. Illustrative; private network only, HTTPS only (SC-9, DC-6)."
+  - url: http://installation.private:{privatePort}
+    description: "Installation private port, plain HTTP, private network only (DC-6)."
+    variables:
+      privatePort:
+        default: "8081"
+        description: "Configured by `Hosting:PrivatePort`."
+
+tags:
+  - name: service-channel
+    description: "Control Plane ↔ installation legitimacy check (FR-002, FR-004 … FR-007)"
+  - name: installations
+    description: "Control Plane detail page, last check section (FR-011)"
+  - name: health
+    description: "Installation liveness and readiness on the private port (FR-013)"
+
+x-host-wide-rules:
+  control-plane-channel: >
+    `POST /service/v1/legitimacy-checks` is the only anonymous, antiforgery-exempt
+    POST of the Control Plane (SC-4 "Legitimacy check"). It is not cookie-
+    authenticated. The US-001 setup gate applies unchanged: before the Owner
+    account exists it answers `302 /setup`, which the installation classifies as
+    an error answer. Other methods on the path answer `404` or `405` and record
+    nothing. No audit row. Log lines carry the installation id, versions, status
+    and compatibility only — never domain, client ID or body (SC-10).
+  control-plane-pages: >
+    As US-001 … US-004: setup gate, Owner policy, antiforgery, error page, culture,
+    session lifetime, `{id}` guid route, HTML encoding.
+  installation-private-port: >
+    `/health/live` and `/health/ready` form the private route group; its filter
+    compares `HttpContext.Connection.LocalPort` with `Hosting:PrivatePort` and
+    answers `404` on any other port. `Host` and `X-Forwarded-Host` play no part.
+    Plain HTTP; no HTTPS redirection, no HSTS.
+  installation-public-port: >
+    Every method and path answers `404` with an empty body; no cookie, no
+    redirect, nothing read or written (spec I-13). The host baseline arrives with
+    US-008.
+  configuration: >
+    Installation: `Installation:Id` (UUID), `ControlPlane:Address` (absolute
+    https URI, no user info, query or fragment), `Hosting:PrivatePort` (1–65535,
+    not a public port), `ConnectionStrings:Installation` (non-empty) — all
+    required; invalid → host does not start, log names key and rule, never the
+    value. Control Plane: `Compatibility:MinimumSupportedVersion` and
+    `Compatibility:RecommendedVersion` — optional `MAJOR.MINOR.PATCH`; set but
+    invalid → host does not start.
+  client-classification: >
+    Installation `IControlPlaneClient`: connection/DNS/TLS failure → unreachable;
+    no complete answer within 30 s → timeout; `200` with a valid
+    `LegitimacyCheckResponse` → answer; `200` otherwise → unparseable answer;
+    `404` with `{"outcome":"unknown_installation"}` → unknown installation; any
+    other status (including `3xx`, not followed) → error answer. Only the category
+    leaves the client.
+
+paths:
+  /service/v1/legitimacy-checks:
+    post:
+      tags: [service-channel]
+      operationId: checkLegitimacy
+      summary: "An installation confirms its legitimacy"
+      x-host: ClassroomAgent.ControlPlane
+      x-anonymous: true
+      x-anonymous-list-entry: "SC-4: Legitimacy check and Admin login check"
+      x-antiforgery: exempt
+      x-audit: none
+      x-spec: [FR-002, FR-004, FR-005, FR-006, FR-012]
+      x-acceptance-criteria: [AC-003, AC-004, AC-005, AC-006, AC-013, AC-015]
+      x-processing-order: >
+        1 bind and validate body (else 400 invalid_request, nothing recorded, body
+        not logged) → 2 find Installation by installationId (else 404
+        unknown_installation, nothing recorded, Warning with the received id) → 3
+        compatibility: contractVersion not in {1} → upgrade_required; below
+        configured minimum → upgrade_required; below configured recommended →
+        upgrade_recommended; else supported → 4 upsert InstanceLicenseCheck
+        (answeredAt UTC now, applicationVersion, contractVersion, status,
+        compatibility; one record per installation, last write wins) → 5 200 with
+        the answer; Information log.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LegitimacyCheckRequest"
+            example:
+              installationId: 3f1c2a8e-5b7d-4c9e-a1f0-2d6b8e4c7a15
+              applicationVersion: 1.0.0
+              contractVersion: 1
+      responses:
+        "200":
+          description: >
+            Known installation, active or suspended, any compatibility state
+            (`upgrade_required` included). Exactly these four properties.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegitimacyCheckResponse"
+              example:
+                status: active
+                compatibility: supported
+                domain: school.example
+                clientId: "1234567890123456789"
+        "302":
+          description: "No Owner account yet: `Location: /setup` (US-001 setup gate). Nothing recorded."
+          headers:
+            Location:
+              schema:
+                type: string
+                const: /setup
+        "400":
+          description: >
+            Missing body, non-JSON content type, malformed JSON, missing property,
+            wrong type or a rule of `LegitimacyCheckRequest` broken. Nothing
+            recorded; the body is never logged or echoed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceOutcome"
+              example:
+                outcome: invalid_request
+        "404":
+          description: >
+            Well-formed request, no Installation with that id. Nothing recorded;
+            `Warning` log with the received id. Carries no status, compatibility,
+            domain or client ID.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceOutcome"
+              example:
+                outcome: unknown_installation
+        "500":
+          description: "Unhandled exception only. Empty body; nothing recorded."
+
+  /installations/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: "The installation's UUID identifier (US-002 I-5), route constraint `guid`."
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [installations]
+      operationId: getInstallation
+      summary: "Installation detail page (changed by US-005)"
+      x-host: ClassroomAgent.ControlPlane
+      x-anonymous: false
+      x-policy: Owner
+      x-spec: [FR-011]
+      x-acceptance-criteria: [AC-012]
+      x-compatibility: "US-002 operation extended by US-003 and US-004; everything stays, a last-check section is added."
+      security:
+        - ownerSession: []
+      responses:
+        "200":
+          description: >
+            As US-002 … US-004, plus a section `id="installation-last-check"` with
+            heading `Installation.LastCheck.Title`. With a record:
+            `installation-last-check-time` (date and time to the minute in UTC,
+            marked "UTC"), `installation-last-check-application-version`,
+            `installation-last-check-contract-version`,
+            `installation-last-check-status` (`Installation.Status.Active` /
+            `Installation.Status.Suspended`), `installation-last-check-compatibility`
+            (`Installation.Compatibility.Supported` / `.UpgradeRecommended` /
+            `.UpgradeRequired`), each with its label key. Without a record:
+            `installation-last-check-none` with `Installation.LastCheck.NotCalledYet`
+            and none of the value elements. Versions HTML-encoded.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/InstallationDetailLastCheck"
+        "302":
+          description: "No Owner account: `/setup`; no session: `/sign-in` (as US-002)."
+        "404":
+          description: "No installation with `{id}` — error page `Error.NotFound` (as US-002)."
+
+  /health/live:
+    get:
+      tags: [health]
+      operationId: getLiveness
+      summary: "Liveness"
+      x-host: ClassroomAgent.Web
+      x-port: private
+      x-anonymous: true
+      x-anonymous-list-entry: "SC-4: Liveness and readiness"
+      x-spec: [FR-013]
+      x-acceptance-criteria: [AC-014]
+      security: []
+      responses:
+        "200":
+          description: "Private port. The process runs; no dependency touched."
+          content:
+            text/plain:
+              schema:
+                type: string
+                const: Healthy
+        "404":
+          description: "Any port other than the private port, also with a forged `Host` / `X-Forwarded-Host`. Empty body."
+
+  /health/ready:
+    get:
+      tags: [health]
+      operationId: getReadiness
+      summary: "Readiness"
+      x-host: ClassroomAgent.Web
+      x-port: private
+      x-anonymous: true
+      x-anonymous-list-entry: "SC-4: Liveness and readiness"
+      x-spec: [FR-008, FR-013]
+      x-acceptance-criteria: [AC-014]
+      x-decision-order: >
+        database unreachable → Unhealthy; else read-only (not yet confirmed,
+        suspended, grace period expired) or last check since startup unsuccessful
+        → Degraded; else Healthy. Before the first check since startup completes,
+        only the stored LegitimacyState decides.
+      security: []
+      responses:
+        "200":
+          description: "Private port. `Healthy` or `Degraded`; nothing else in the body."
+          content:
+            text/plain:
+              schema:
+                type: string
+                enum: [Healthy, Degraded]
+        "503":
+          description: "Private port. Installation database unreachable."
+          content:
+            text/plain:
+              schema:
+                type: string
+                const: Unhealthy
+        "404":
+          description: "Any port other than the private port, also with a forged `Host` / `X-Forwarded-Host`. Empty body."
+
+components:
+  schemas:
+    LegitimacyCheckRequest:
+      type: object
+      description: "`ClassroomAgent.Contracts`. Unknown properties are ignored (DC-12)."
+      required: [installationId, applicationVersion, contractVersion]
+      properties:
+        installationId:
+          type: string
+          format: uuid
+        applicationVersion:
+          type: string
+          maxLength: 20
+          pattern: "^(0|[1-9][0-9]{0,5})\\.(0|[1-9][0-9]{0,5})\\.(0|[1-9][0-9]{0,5})$"
+        contractVersion:
+          type: integer
+          minimum: 1
+          maximum: 999999
+
+    LegitimacyCheckResponse:
+      type: object
+      description: "`ClassroomAgent.Contracts`. Exactly these properties; no teaching data (SC-12). The installation validates it (VR-003)."
+      required: [status, compatibility, domain, clientId]
+      properties:
+        status:
+          type: string
+          enum: [active, suspended]
+        compatibility:
+          type: string
+          enum: [supported, upgrade_recommended, upgrade_required]
+        domain:
+          type: string
+          minLength: 3
+          maxLength: 253
+        clientId:
+          type: string
+          pattern: "^[0-9]{10,32}$"
+
+    ServiceOutcome:
+      type: object
+      description: "`ClassroomAgent.Contracts`. Body of `400` and `404` on the channel; nothing else."
+      required: [outcome]
+      additionalProperties: false
+      properties:
+        outcome:
+          type: string
+          enum: [invalid_request, unknown_installation]
+
+    InstallationDetailLastCheck:
+      type: object
+      description: >
+        Addition to the `InstallationDetail` view DTO of US-002 … US-004 (AD-8):
+        `lastCheck`, null when the installation never called.
+      properties:
+        lastCheck:
+          type: [object, "null"]
+          required: [answeredAt, applicationVersion, contractVersion, status, compatibility]
+          additionalProperties: false
+          properties:
+            answeredAt: {type: string, format: date-time, description: "UTC"}
+            applicationVersion: {type: string}
+            contractVersion: {type: integer}
+            status: {type: string, enum: [active, suspended]}
+            compatibility: {type: string, enum: [supported, upgrade_recommended, upgrade_required]}
+
+    ServiceResults:
+      type: object
+      description: "Service and port results (AD-9) — not HTTP bodies."
+      properties:
+        LegitimacyCheckResult:
+          type: string
+          enum: [Known, UnknownInstallation]
+        ControlPlaneCheckReply:
+          type: string
+          description: "Answer(status, compatibility, domain, clientId) or Failure(category)."
+          enum: [Answer, Unreachable, Timeout, ErrorAnswer, UnparseableAnswer, UnknownInstallation]
+        LegitimacyModeReason:
+          type: [string, "null"]
+          enum: [NotYetConfirmed, SuspendedByOwner, GracePeriodExpired, null]
+
+    PageTextKeys:
+      type: object
+      description: >
+        New translation keys (ControlPlane.Localization, uk and en, TC-8). Status
+        labels reuse `Installation.Status.Active` / `Installation.Status.Suspended`.
+      properties:
+        Installation.LastCheck.Title: {type: string}
+        Installation.LastCheck.Time: {type: string}
+        Installation.LastCheck.ApplicationVersion: {type: string}
+        Installation.LastCheck.ContractVersion: {type: string}
+        Installation.LastCheck.Status: {type: string}
+        Installation.LastCheck.Compatibility: {type: string}
+        Installation.LastCheck.NotCalledYet: {type: string}
+        Installation.Compatibility.Supported: {type: string}
+        Installation.Compatibility.UpgradeRecommended: {type: string}
+        Installation.Compatibility.UpgradeRequired: {type: string}
+
+  securitySchemes:
+    ownerSession:
+      type: apiKey
+      in: cookie
+      name: __Host-cp-session
+      description: "Owner cookie session defined by US-001 (API-7)."

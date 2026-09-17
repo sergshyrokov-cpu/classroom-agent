@@ -4,28 +4,30 @@
 version: 1
 story: US-005
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-writer
+last_invoked_skill: db-designer
 last_result:
   verdict: PASS
-  stage: SPECIFICATION
-  recorded_at: 2026-09-17T13:26:07Z
+  stage: DB_DESIGN
+  recorded_at: 2026-09-17T13:55:10Z
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-005-spec.md
+  - type: database_design
+    path: docs/designs/database/US-005-db-design.md
     version: 1
-  - type: open_decisions
-    path: docs/decisions/US-005-open-decisions.md
+  - type: entity_model
+    path: docs/designs/database/US-005-entity-model.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "DB_DESIGN: Control Plane table instance_license_check (migration AddInstanceLicenseCheck): unique installation_id FK RESTRICT, version/status/compatibility checks; replace = load-then-insert-or-update with one retry on uq_instance_license_check_installation_id, interceptor stamps updated_at. Installation database first migration InitialLegitimacyState: legitimacy_state single row via singleton boolean unique+check, last_successful_check_at nullable, status/compatibility/domain/client_id checks; design-time DbContext factory. No audit changes. Migration tests of US-001…US-003 must account for the new table."
+  - "API_DESIGN: channel POST /service/v1/legitimacy-checks (JSON; 200 answer, 400 invalid_request, 404 unknown_installation; setup gate unchanged, 302 before setup = error answer); client classification table; private GET /health/live and /health/ready (Healthy/Degraded 200, Unhealthy 503; public port 404); installation public port 404 for everything; detail page last-check section; config keys fixed. db-designer: InstanceLicenseCheck upsert under concurrency, LegitimacyState single row, first installation migration."
   - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV at 2026-09-17T13:29:44Z: OD-001 option 1, OD-002 option 1, interpretations I-1 … I-14 accepted; specification v1 and open decisions v1 APPROVED."
   - "SPECIFICATION: OD-001 (NuGet packages for the installation projects) and OD-002 (compile-only installation skeleton at TEST_WRITING) raised; interpretations I-1 … I-14 for human review."
 started_at: 2026-09-17T13:26:07Z
-updated_at: 2026-09-17T13:29:44Z
+updated_at: 2026-09-17T13:55:10Z
 completed_at: null
