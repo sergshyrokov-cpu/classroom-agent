@@ -48,9 +48,7 @@ stories:
   - id: US-003
     epic: EPIC-8
     title: Manage AllowedAdmin entries
-    state: BACKLOG
-    blocked_by: >
-      Depends on US-002 (an Installation to attach entries to).
+    state: READY
   - id: US-004
     epic: EPIC-8
     title: Suspend and resume an Installation
@@ -83,7 +81,8 @@ stories:
     title: Admin sign-in via Google OAuth with AllowedAdmin verification
     state: BACKLOG
     blocked_by: >
-      Depends on US-003 (AllowedAdmin entries and the Admin login check).
+      Depends on US-003 (the AllowedAdmin entries it checks) and US-005 (the
+      service channel and ClassroomAgent.Contracts the Admin login check uses).
   - id: US-009
     epic: EPIC-6
     title: Configure WorkspaceConnection
