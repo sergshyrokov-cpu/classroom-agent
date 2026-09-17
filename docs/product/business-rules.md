@@ -100,6 +100,16 @@ deleted in the first version; its name may be corrected, its domain never.
 configure the installation. It does **not** stop the school from working:
 synchronization runs on the service account, and Deans keep working. *(§9)*
 
+**BR-079** An `AllowedAdmin` email must be in exactly the domain of its
+`Installation`; it is stored and compared in lower case and appears at most once
+per `Installation`. There is no limit on the number of entries and no editing: a
+wrong email is revoked and added again, and a revoked email may be added again as
+a new entry. Entries may be added and revoked whatever the `Installation` status,
+suspended included. Revoking deletes the entry with its email and requires the
+Owner's confirmation. Fewer than two entries is allowed — the last Admin may be
+revoked — but the school's page warns the Owner while there are fewer than two
+(BR-013). *(§3, §4, §9, v70)*
+
 **BR-023** Only suspending the `Installation` stops a school. That is a separate
 lever from revoking an Admin and must not be conflated with it. *(§9)*
 

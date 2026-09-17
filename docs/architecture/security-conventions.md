@@ -166,7 +166,12 @@ Admin's account (BR-015, SC-8).
 - **At least two Admins per school** are required at onboarding, so one person
   is never a single point of failure. Admins are school staff on personal domain
   administrator accounts — ideally a separate admin account, not the one used
-  for daily mail and teaching (BR-013, `trebovaniya.md` §9, v50).
+  for daily mail and teaching (BR-013, `trebovaniya.md` §9, v50). The Control
+  Plane does not enforce the minimum — revoking the last Admin is allowed — but
+  warns the Owner on the school's page while fewer than two entries exist (v70).
+- **An `AllowedAdmin` email is accepted only in the `Installation`'s own
+  domain**, stored and compared in lower case, once per `Installation` (BR-079,
+  v70). The Admin login check compares the lower-cased login email with it.
 
 ## SC-4 Authorization
 

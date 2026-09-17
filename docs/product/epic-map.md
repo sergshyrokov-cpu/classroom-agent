@@ -36,7 +36,9 @@ installation. This epic is the bootstrap.
   "active" at creation); list and detail view, correcting the name and the client ID;
   the Control Plane generates the installation id the Owner puts into the
   installation's configuration (v69)
-- US-003 Manage AllowedAdmin entries for an Installation
+- US-003 Manage AllowedAdmin entries for an Installation: list on the school's page,
+  add (email in the installation's domain), revoke with confirmation, warning while
+  fewer than two; the Admin login check itself is US-008 (v70)
 - US-004 Suspend and resume an Installation
 - US-005 Installation legitimacy check and grace period
 - US-006 Control Plane push on status change
