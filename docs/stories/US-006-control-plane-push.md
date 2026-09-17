@@ -7,7 +7,7 @@ priority: HIGH
 source:
   type: authored
 # Lifecycle status is owned by docs/catalog/stories.yaml (not this file).
-# Aligned with trebovaniya.md v76.
+# Aligned with trebovaniya.md v77.
 ---
 
 # User Story
@@ -221,8 +221,17 @@ configuration
 **When** pushes for it arrive while a check is already running, or less than one
 minute after the previous check started by a push
 
-**Then** each is answered `202` and starts no check, and none is logged; a push
-arriving later than that starts a check again (`trebovaniya.md` §8, §9, v76).
+**Then**:
+
+- each is answered `202`, starts no check at once and is not logged;
+- the installation remembers one pending check, however many such pushes arrive,
+  and runs it as soon as the running check has completed and one minute has passed
+  since the previous push-triggered check started; starting it is logged at
+  `Information`;
+- the pending check is a push-triggered check: the next minute counts from its
+  start, and no second check ever runs at the same time;
+- so the last status change reaches the school within about a minute, while push
+  checks still start at most once a minute (`trebovaniya.md` §8, §9, v76, v77).
 
 ## AC-012 A malformed push breaks nothing
 
@@ -283,7 +292,8 @@ sees the push result, a school without an address, a push for another
 installation, flood protection, which changes are pushed, and the "all
 addresses" value — were decided by the Owner and recorded in `trebovaniya.md`
 v76 (§3, §4, §5, §8, §9). The private-port address itself was decided in v75
-(section 7, question 27).
+(section 7, question 27). The pending check of a push that cannot start a check yet
+was decided in v77 (US-006 OD-001 at `HUMAN_SPEC_APPROVAL`).
 
 ---
 

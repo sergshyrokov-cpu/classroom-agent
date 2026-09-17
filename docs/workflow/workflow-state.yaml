@@ -2,33 +2,32 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-005
+story: US-006
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
+last_invoked_skill: openapi-designer
 last_result:
   verdict: PASS
-  stage: SECURITY_REVIEW
-  recorded_at: 2026-09-17T15:04:05Z
+  stage: API_DESIGN
+  recorded_at: 2026-09-17T15:42:02Z
 last_artifacts:
-  - type: security_review
-    path: docs/reviews/security/US-005-security-review.md
+  - type: api_design
+    path: docs/designs/api/US-006-api-design.md
+    version: 1
+  - type: openapi
+    path: docs/designs/api/US-006-openapi.yaml
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "HUMAN_PR_APPROVAL approved by Serhii SHYROKOV at 2026-09-17T15:09:37Z (no comment). SEC-001 carried as trebovaniya.md v74 §7 item 27 (decide before US-006)."
-  - "SECURITY_REVIEW: PASS, 0 critical / 0 major / 1 minor / 5 informational; build 0 warnings, 882/882 tests reproduced; no vulnerable packages. SEC-001 (Minor): private Kestrel endpoint binds http://*:{PrivatePort}, DC-6 requires the private interface only and no bind-address setting is approved - human decision needed before US-006 (push receiver). SEC-002: public-port baseline deferred to US-008 (I-13). SEC-003: port clash vs urls only (fails closed). SEC-004: client reads answer without size cap. SEC-005: default request body limit on the check endpoint. SEC-006: certificate validation and redirect setting verified by inspection only."
-  - "IMPLEMENTATION: build 0 warnings; 882/882 tests pass, 0 skipped; format clean; migrations AddInstanceLicenseCheck (Control Plane) and InitialLegitimacyState (installation). D-1: InstallationLastCheckTests clock advance 1 h -> 10 min (Owner idle timeout 30 min), approved by the human in the conversation. D-4: private Kestrel endpoint binds http://*:{PrivatePort}; interface restriction left to deployment (DC-6) - review at SECURITY_REVIEW. D-5: private/public port clash checked against urls only. D-3: db-design 4.2 defensive singleton retry not implemented (conflict = SaveFailed). D-6: extra category UnexpectedError and event LegitimacyCheckException (type name only)."
-  - "TEST_WRITING: 144 methods / 311 new cases; suite 882 cases, 588 pass, 294 fail for missing behaviour (291 new + 3 changed: MigrationTests fourth migration, AnonymousEndpointTests and AntiforgeryTests SC-4 legitimacy check); 568 unchanged existing pass; 15 guards + 5 seam checks pass. Compile-only skeleton of Domain/Contracts/Application/Infrastructure/Web created per OD-002. Seams fixed by test strategy §3: configuration keys, ClassroomAgent.Web.Program class, TimeProvider timers, DI-resolved IControlPlaneClient and GetLegitimacyModeQuery, log event names. Excluded: certificate validation, production redirect setting, SaveFailed, rotation. ResultChanged count asserted 2–3 (first check ambiguous)."
-  - "DB_DESIGN: Control Plane table instance_license_check (migration AddInstanceLicenseCheck): unique installation_id FK RESTRICT, version/status/compatibility checks; replace = load-then-insert-or-update with one retry on uq_instance_license_check_installation_id, interceptor stamps updated_at. Installation database first migration InitialLegitimacyState: legitimacy_state single row via singleton boolean unique+check, last_successful_check_at nullable, status/compatibility/domain/client_id checks; design-time DbContext factory. No audit changes. Migration tests of US-001…US-003 must account for the new table."
-  - "API_DESIGN: channel POST /service/v1/legitimacy-checks (JSON; 200 answer, 400 invalid_request, 404 unknown_installation; setup gate unchanged, 302 before setup = error answer); client classification table; private GET /health/live and /health/ready (Healthy/Degraded 200, Unhealthy 503; public port 404); installation public port 404 for everything; detail page last-check section; config keys fixed. db-designer: InstanceLicenseCheck upsert under concurrency, LegitimacyState single row, first installation migration."
-  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV at 2026-09-17T13:29:44Z: OD-001 option 1, OD-002 option 1, interpretations I-1 … I-14 accepted; specification v1 and open decisions v1 APPROVED."
-  - "SPECIFICATION: OD-001 (NuGet packages for the installation projects) and OD-002 (compile-only installation skeleton at TEST_WRITING) raised; interpretations I-1 … I-14 for human review."
-started_at: 2026-09-17T13:26:07Z
-updated_at: 2026-09-17T15:09:37Z
-completed_at: 2026-09-17T15:09:37Z
+  - "API_DESIGN: CP push-address page GET/POST /installations/{id}/push-address (audit installation_push_address_changed), registration gains optional pushAddress, detail row + warning; suspend/resume unchanged responses, hand-off after commit; installation POST /service/v1/status-pushes on private port (202 / 400 invalid_request / 404 unknown_installation / 413 > 4096 B); PushCheckCoordinator Started|Deferred with one pending flag; outbound push 10 s, pauses 5/30/120 s, max 4 attempts, 404 no retry; config Hosting:PrivateAddress (IP or *); log events 5011-5017, 5111-5114. db-designer: nullable push_address on installation, audit code, address read in the status-change transaction."
+  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV at 2026-09-17T15:37:50Z (no comment): specification v2 and open decisions v2 APPROVED; OD-001 option 2 (trebovaniya.md v77); interpretations I-1 … I-14 accepted."
+  - "SPECIFICATION revised to v2 (open decisions v2) before the gate: OD-001 resolved option 2 by the human (one pending check), recorded in trebovaniya.md v77 and Story AC-011; interpretations I-1 … I-14 accepted in the conversation."
+  - "SPECIFICATION: OD-001 raised (a push swallowed by the one-minute limit or a running check may leave a stale status up to 6 h; option 2 needs trebovaniya.md v77 + Story AC-011 update); interpretations I-1 … I-14 for human review."
+started_at: 2026-09-17T15:31:06Z
+updated_at: 2026-09-17T15:42:02Z
+completed_at: null

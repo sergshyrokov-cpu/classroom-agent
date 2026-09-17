@@ -1,0 +1,453 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Control Plane push on status change (US-006)
+  version: "1"
+  description: >
+    HTTP contract of US-006 across two hosts. Control Plane: the registration form
+    and detail page gain the optional push address, a new Owner-only push address
+    page, and suspend / resume (US-004) hand a push to a background sender with
+    unchanged responses. Installation: the status-change push receiver
+    `POST /service/v1/status-pushes` on the private port (anonymous, antiforgery-
+    exempt, protected by network isolation — SC-4, SC-9; not the public REST API,
+    API-7). The outbound push from the Control Plane is described in
+    `x-outbound-push`. The host-wide rules of US-001 … US-005 apply unchanged.
+    Companion document: docs/designs/api/US-006-api-design.md.
+x-story: US-006
+x-source-specification: docs/specifications/US-006-spec.md
+x-source-specification-version: 2
+x-source-open-decisions: docs/decisions/US-006-open-decisions.md
+x-source-open-decisions-version: 2
+x-requirements-version: 77
+x-produced-by: openapi-designer
+x-extends: docs/designs/api/US-005-openapi.yaml
+x-contract-version: 1
+
+servers:
+  - url: https://control-plane.internal
+    description: "Control Plane. Illustrative; private network only, HTTPS only (SC-9, DC-6)."
+  - url: http://{privateAddress}:{privatePort}
+    description: "Installation private port, plain HTTP, private network only (DC-6)."
+    variables:
+      privateAddress:
+        default: "10.0.0.5"
+        description: "Configured by `Hosting:PrivateAddress` (IP literal or `*` for listening on all addresses)."
+      privatePort:
+        default: "8081"
+        description: "Configured by `Hosting:PrivatePort`."
+
+tags:
+  - name: installations
+    description: "Control Plane pages: push address (FR-002 … FR-004), suspend / resume hand-off (FR-005)"
+  - name: service-channel
+    description: "Installation push receiver (FR-009, FR-010)"
+
+x-host-wide-rules:
+  control-plane-pages: >
+    As US-001 … US-005: setup gate, Owner policy, antiforgery on every POST, error
+    page, culture, session lifetime, `{id}` guid route, HTML encoding.
+  installation-private-port: >
+    `/service/v1/status-pushes` joins the private route group; its filter compares
+    `HttpContext.Connection.LocalPort` with `Hosting:PrivatePort` and answers `404`
+    on any other port. `Host` and `X-Forwarded-Host` play no part. Plain HTTP. The
+    private Kestrel endpoint listens on `Hosting:PrivateAddress` only (`*` = all).
+  configuration: >
+    Installation gains `Hosting:PrivateAddress` — required; an IPv4 literal, an
+    IPv6 literal (with or without brackets) or exactly `*`; missing or invalid →
+    host does not start, log names key and rule, never the value. Other settings as
+    US-005. The Control Plane gains no setting.
+  push-check-coordination: >
+    Installation `PushCheckCoordinator.Request()`: no check running and no
+    push-triggered check started within the last minute → Started (check now);
+    otherwise → Deferred (one pending flag, idempotent). The pending check starts at
+    max(completion of the running check, previous push-triggered start + 60 s),
+    clears the flag, starts a new minute, logs PendingPushCheckStarted. A scheduled
+    check does not clear the flag. After a push-triggered check the next scheduled
+    check is 6 h / 15 min after its completion. Never two checks at once.
+  logging: >
+    Control Plane 5011 StatusPushDelivered (Information), 5012
+    StatusPushAttemptFailed (Warning: InstallationId, Attempt, Category, StatusCode),
+    5013 StatusPushAbandoned (Warning), 5014 StatusPushRefused (Warning), 5015
+    StatusPushNoAddress (Warning), 5016 StatusPushHandOffFailed (Error), 5017
+    StatusPushSenderException (Error). Installation 5111 StatusPushAccepted
+    (Information), 5112 StatusPushForeignInstallation (Warning), 5113
+    StatusPushRejected (Error: Category invalid / too_large), 5114
+    PendingPushCheckStarted (Information). Never a push address, domain, client ID,
+    body or exception message.
+
+x-outbound-push:
+  from: ClassroomAgent.ControlPlane (namespace Push)
+  request: >
+    POST {pushAddress}/service/v1/status-pushes, JSON `StatusPushRequest` with the
+    Installation identifier; plain HTTP; no cookies, credentials or custom headers;
+    redirects not followed; response body never read.
+  trigger: >
+    InstallationStatusService.ChangeStatusAsync result Changed, after commit, with
+    the push address read in the same transaction. No address → StatusPushNoAddress,
+    nothing sent. Unchanged / NotFound → nothing. Responses of the suspend / resume
+    POSTs unchanged.
+  attempt-timeout-seconds: 10
+  retry-pauses-seconds: [5, 30, 120]
+  max-attempts: 4
+  classification:
+    "202": Delivered — stop
+    "404": Refused — stop, no retry
+    other-status: UnexpectedStatus — retry
+    connection-failure: ConnectionFailed — retry
+    no-status-within-timeout: Timeout — retry
+  replacement: >
+    One push in progress per Installation; a new enqueue cancels the old one
+    (in-flight attempt abandoned, not logged) and starts at attempt 1. Different
+    installations run concurrently. Host stop cancels all; nothing persisted.
+  audit: none
+
+paths:
+  /installations/new:
+    get:
+      tags: [installations]
+      operationId: getRegistrationForm
+      summary: "Registration form (changed by US-006)"
+      x-host: ClassroomAgent.ControlPlane
+      x-policy: Owner
+      x-spec: [FR-002, FR-013]
+      x-acceptance-criteria: [AC-002, AC-015]
+      x-compatibility: "US-002 form; adds an empty optional `pushAddress` field with label and hint."
+      security:
+        - ownerSession: []
+      responses:
+        "200":
+          description: "Form with `name`, `domain`, `clientId`, `pushAddress` (empty) and the token."
+          content:
+            text/html: {}
+
+  /installations:
+    post:
+      tags: [installations]
+      operationId: registerInstallation
+      summary: "Register an installation (changed by US-006)"
+      x-host: ClassroomAgent.ControlPlane
+      x-policy: Owner
+      x-antiforgery: required
+      x-audit: "installation_created only (spec I-5)"
+      x-spec: [FR-002, FR-003]
+      x-acceptance-criteria: [AC-002, AC-003]
+      x-compatibility: "US-002 operation; `pushAddress` optional; its failures join step 2; stored canonical or null."
+      security:
+        - ownerSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/RegisterInstallationRequest"
+      responses:
+        "302":
+          description: "Registered: `Location: /installations/{id}`."
+        "400":
+          description: "Antiforgery (error page) or validation (form again; push address message keys of `PushAddressRules`)."
+        "409":
+          description: "Domain or client ID taken (as US-002). The push address is never unique."
+
+  /installations/{id}:
+    parameters:
+      - $ref: "#/components/parameters/InstallationId"
+    get:
+      tags: [installations]
+      operationId: getInstallation
+      summary: "Installation detail page (changed by US-006)"
+      x-host: ClassroomAgent.ControlPlane
+      x-policy: Owner
+      x-spec: [FR-004, FR-013]
+      x-acceptance-criteria: [AC-004, AC-015]
+      x-compatibility: "US-002 … US-005 operation; adds the push address row after the client ID."
+      security:
+        - ownerSession: []
+      responses:
+        "200":
+          description: >
+            As US-002 … US-005, plus label `Installation.PushAddress.Label` and either
+            `id="installation-push-address"` with the canonical address (HTML-encoded)
+            or `id="installation-push-address-none"` (`Installation.PushAddress.NotSet`)
+            together with `id="installation-push-address-warning"`
+            (`Installation.PushAddress.MissingWarning`); in both states the link
+            `id="installation-push-address-change"` to `/installations/{id}/push-address`.
+            No push result anywhere.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/InstallationDetailPushAddress"
+        "404":
+          description: "No installation with `{id}` (as US-002)."
+
+  /installations/{id}/push-address:
+    parameters:
+      - $ref: "#/components/parameters/InstallationId"
+    get:
+      tags: [installations]
+      operationId: getPushAddressForm
+      summary: "Push address form"
+      x-host: ClassroomAgent.ControlPlane
+      x-policy: Owner
+      x-spec: [FR-002, FR-013]
+      x-acceptance-criteria: [AC-002, AC-015]
+      security:
+        - ownerSession: []
+      responses:
+        "200":
+          description: >
+            Title `Installation.PushAddress.Title`; `pushAddress` pre-filled with the
+            canonical address or empty; hint `Installation.PushAddress.Hint`; note
+            `Installation.PushAddress.ClearNote`; the token.
+          content:
+            text/html: {}
+        "302":
+          description: "No Owner account: `/setup`; no session: `/sign-in`."
+        "403":
+          description: "Principal without the `Owner` role — error page."
+        "404":
+          description: "Unknown installation — error page `Error.NotFound`."
+    post:
+      tags: [installations]
+      operationId: changePushAddress
+      summary: "Set, change or clear the push address"
+      x-host: ClassroomAgent.ControlPlane
+      x-policy: Owner
+      x-antiforgery: required
+      x-audit: "installation_push_address_changed, target installation, only when the canonical value changes; no address in the row"
+      x-spec: [FR-002, FR-003]
+      x-acceptance-criteria: [AC-002, AC-003]
+      x-processing-order: >
+        1 antiforgery (else 400 error page) → 2 installation exists (else 404) → 3
+        trim; non-empty → PushAddressRules (else 400 form again, value refilled) → 4
+        canonical value (null for empty) equals stored → 302, nothing written → 5
+        update + audit row in one transaction → 302. Any status. No push.
+      security:
+        - ownerSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ChangeInstallationPushAddressRequest"
+      responses:
+        "302":
+          description: "Changed or unchanged: `Location: /installations/{id}`. Before setup `/setup`; no session `/sign-in`."
+        "400":
+          description: "Antiforgery refusal (error page `Error.PageExpired`) or validation (form again)."
+        "403":
+          description: "Principal without the `Owner` role — error page."
+        "404":
+          description: "Unknown installation — error page `Error.NotFound`, also with an invalid value."
+
+  /installations/{id}/suspension:
+    parameters:
+      - $ref: "#/components/parameters/InstallationId"
+    post:
+      tags: [installations]
+      operationId: suspendInstallation
+      summary: "Suspend (changed by US-006: push hand-off)"
+      x-host: ClassroomAgent.ControlPlane
+      x-policy: Owner
+      x-antiforgery: required
+      x-spec: [FR-005]
+      x-acceptance-criteria: [AC-005]
+      x-compatibility: "US-004 responses unchanged; on Changed the push is handed off per `x-outbound-push`."
+      security:
+        - ownerSession: []
+      responses:
+        "302":
+          description: "As US-004. Not delayed by the push."
+        "400":
+          description: "As US-004."
+        "404":
+          description: "As US-004."
+
+  /installations/{id}/resumption:
+    parameters:
+      - $ref: "#/components/parameters/InstallationId"
+    post:
+      tags: [installations]
+      operationId: resumeInstallation
+      summary: "Resume (changed by US-006: push hand-off)"
+      x-host: ClassroomAgent.ControlPlane
+      x-policy: Owner
+      x-antiforgery: required
+      x-spec: [FR-005]
+      x-acceptance-criteria: [AC-005]
+      x-compatibility: "US-004 responses unchanged; on Changed the push is handed off per `x-outbound-push`."
+      security:
+        - ownerSession: []
+      responses:
+        "302":
+          description: "As US-004. Not delayed by the push."
+        "400":
+          description: "As US-004."
+        "404":
+          description: "As US-004."
+
+  /service/v1/status-pushes:
+    post:
+      tags: [service-channel]
+      operationId: receiveStatusPush
+      summary: "The Control Plane asks the installation to check its legitimacy now"
+      x-host: ClassroomAgent.Web
+      x-port: private
+      x-anonymous: true
+      x-anonymous-list-entry: "SC-4: Status-change push receiver"
+      x-antiforgery: exempt
+      x-audit: none
+      x-spec: [FR-008, FR-009, FR-010, FR-011, FR-012]
+      x-acceptance-criteria: [AC-009, AC-010, AC-011, AC-012, AC-013, AC-014]
+      x-processing-order: >
+        0 private port (else 404, empty) → 1 body ≤ 4096 bytes (else 413, empty,
+        StatusPushRejected too_large) → 2 JSON content type, parses,
+        installationId UUID (else 400 invalid_request, StatusPushRejected invalid,
+        body never logged) → 3 installationId equals Installation:Id (else 404
+        unknown_installation, StatusPushForeignInstallation) → 4
+        PushCheckCoordinator.Request(): Started → StatusPushAccepted; Deferred →
+        pending flag, no log → 202 empty, without waiting for the check. Writes
+        nothing itself; identical in read-only mode.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StatusPushRequest"
+            example:
+              installationId: 3f1c2a8e-5b7d-4c9e-a1f0-2d6b8e4c7a15
+      responses:
+        "202":
+          description: "Own installation id. A check started now, or one pending check is remembered. Empty body."
+        "400":
+          description: "Missing body, non-JSON content type, malformed JSON, missing or non-UUID `installationId`. No check."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceOutcome"
+              example:
+                outcome: invalid_request
+        "404":
+          description: >
+            Well-formed push for another installation id (body `unknown_installation`),
+            or any request on a port other than the private port, also with a forged
+            `Host` / `X-Forwarded-Host` (empty body). No check.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceOutcome"
+              example:
+                outcome: unknown_installation
+        "413":
+          description: "Body over 4096 bytes. Empty body. No check."
+        "500":
+          description: "Unhandled exception only. Empty body. No check."
+
+components:
+  parameters:
+    InstallationId:
+      name: id
+      in: path
+      required: true
+      description: "The installation's UUID identifier (US-002 I-5), route constraint `guid`."
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    StatusPushRequest:
+      type: object
+      description: "`ClassroomAgent.Contracts`. Exactly the installation id (SC-12). Unknown properties ignored (DC-12)."
+      required: [installationId]
+      properties:
+        installationId:
+          type: string
+          format: uuid
+
+    ServiceOutcome:
+      type: object
+      description: "`ClassroomAgent.Contracts` (US-005). Non-202 receiver bodies; never read by the Control Plane."
+      required: [outcome]
+      additionalProperties: false
+      properties:
+        outcome:
+          type: string
+          enum: [invalid_request, unknown_installation]
+
+    PushAddressRules:
+      type: string
+      description: >
+        VR-001, evaluated after trimming; empty = not set. First failing rule wins:
+        1 length ≤ 255 → `Installation.PushAddress.Length`; 2 absolute URI →
+        `.Format`; 3 scheme http → `.Scheme`; 4 no user info, query, fragment, path
+        empty or `/` → `.Extra`; 5 host DNS name (labels [A-Za-z0-9-] 1–63, no edge
+        hyphen, ≤ 253) or IPv4 or bracketed IPv6 → `.Host`; 6 explicit port 1–65535
+        → `.Port`. Canonical form: `http://` + lower-case host + `:` + port, no
+        trailing slash. Not unique.
+      maxLength: 255
+      examples: ["http://10.0.0.5:8081", "http://school-a.private:8081", "http://[fd00::5]:8081"]
+
+    RegisterInstallationRequest:
+      type: object
+      description: "US-002 request plus `pushAddress`. Nothing else bound."
+      required: [name, domain, clientId]
+      properties:
+        name: {type: string}
+        domain: {type: string}
+        clientId: {type: string}
+        pushAddress:
+          type: [string, "null"]
+          description: "Optional; `PushAddressRules`."
+
+    ChangeInstallationPushAddressRequest:
+      type: object
+      description: "Nothing else bound. Empty or whitespace-only clears the address."
+      properties:
+        pushAddress:
+          type: [string, "null"]
+          description: "`PushAddressRules`."
+
+    InstallationDetailPushAddress:
+      type: object
+      description: "Addition to `InstallationDetailDto` (AD-8): canonical push address or null."
+      properties:
+        pushAddress:
+          type: [string, "null"]
+
+    ServiceResults:
+      type: object
+      description: "Service results (AD-9) — not HTTP bodies."
+      properties:
+        ChangePushAddressResult:
+          type: string
+          enum: [NotFound, Unchanged, Changed]
+        StatusPushAttemptResult:
+          type: string
+          enum: [Delivered, Refused, UnexpectedStatus, ConnectionFailed, Timeout]
+        PushCheckRequestResult:
+          type: string
+          enum: [Started, Deferred]
+
+    PageTextKeys:
+      type: object
+      description: "New translation keys (ControlPlane.Localization, uk and en, TC-8)."
+      properties:
+        Installation.PushAddress.Label: {type: string}
+        Installation.PushAddress.Hint: {type: string}
+        Installation.PushAddress.NotSet: {type: string}
+        Installation.PushAddress.MissingWarning: {type: string}
+        Installation.PushAddress.Change: {type: string}
+        Installation.PushAddress.Title: {type: string}
+        Installation.PushAddress.ClearNote: {type: string}
+        Installation.PushAddress.Length: {type: string}
+        Installation.PushAddress.Format: {type: string}
+        Installation.PushAddress.Scheme: {type: string}
+        Installation.PushAddress.Extra: {type: string}
+        Installation.PushAddress.Host: {type: string}
+        Installation.PushAddress.Port: {type: string}
+
+  securitySchemes:
+    ownerSession:
+      type: apiKey
+      in: cookie
+      name: __Host-cp-session
+      description: "Owner cookie session defined by US-001 (API-7)."
