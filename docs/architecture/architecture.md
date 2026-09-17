@@ -121,8 +121,9 @@ separate approved decision (SC-13, BR-078).
 
 ## AD-6 Read-only mode is enforced in Application, not the UI
 
-When the installation is in read-only mode — grace period expired, or the Owner
-suspended the `Installation` — every write use case refuses except the service
+When the installation is in read-only mode — grace period expired, the Owner
+suspended the `Installation`, or no legitimacy check has succeeded yet (BR-025) —
+every write use case refuses except the service
 writes listed below. The check lives in the Application layer so it cannot be
 bypassed by calling an API endpoint directly; hiding a button in Razor is
 presentation polish, not enforcement.

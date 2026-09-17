@@ -254,7 +254,8 @@ Admin's account (BR-015, SC-8).
 
 ## SC-5 Read-only mode
 
-When the grace period has expired or the Owner has suspended the `Installation`,
+When the grace period has expired, the Owner has suspended the `Installation`, or
+no legitimacy check has succeeded yet (BR-025),
 every write use case refuses with `409` (`architecture.md` AD-6,
 `api-conventions.md` API-5). Viewing and exporting already-synced data continue
 to work, and only the closed list of service writes in BR-026 still runs. A write

@@ -79,7 +79,8 @@ contract.
 Read-only mode returns `409`, not `403`: the caller has the right, the
 installation is temporarily refusing the action — a write, or a call to Google
 such as "check access" (v39). The error `message` says so plainly and names the
-reason (grace period expired / suspended by the Owner).
+reason (grace period expired / suspended by the Owner / legitimacy never
+confirmed, BR-025).
 
 ## API-6 Error body
 

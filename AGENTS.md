@@ -150,7 +150,7 @@ These are binding.
 **Non-normative summary** of `trebovaniya.md` sections 2, 5, 6 and 9 — a cheap
 cache so routine decisions do not require opening a ~180 KB Russian document.
 `trebovaniya.md` always wins; on conflict this section is the one that gets
-corrected. **Verified against v72.** When `trebovaniya.md` moves past that
+corrected. **Verified against v73.** When `trebovaniya.md` moves past that
 version, re-verify this section and update the marker.
 
 - **Roles in the first version are Owner, Admin and Dean only.** Teacher and
@@ -170,8 +170,8 @@ version, re-verify this section and update the marker.
 - **The service-account key never reaches a school.** The Owner places it at
   deployment time and sets the *reference* to it in the installation's
   configuration; the database holds neither the key nor the reference.
-- **Read-only mode** (grace period expired, or the Owner suspended the
-  `Installation`) leaves viewing and export working and blocks everything else,
+- **Read-only mode** (grace period expired, the Owner suspended the
+  `Installation`, or no legitimacy check has ever succeeded) leaves viewing and export working and blocks everything else,
   including synchronization and Meet code linking. Only the closed list of
   service writes in BR-026 still runs — read it there, it is not restated here.
 - **The UI is Ukrainian and English — installation and Control Plane alike**

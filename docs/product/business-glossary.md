@@ -29,7 +29,7 @@ terms from `trebovaniya.md` are given so the two documents can be read together.
 | **School time zone** | A required installation setting: dates are shown, and period day boundaries set, in this zone; everything is stored in UTC (NFR-074). |
 | **UI language** | Ukrainian or English. The school's default is an installation setting; each user's choice is stored on their account (NFR-073). |
 | **Operations journal** | The Owner's record, kept outside the application, of every operational access to a school's database or keys: date, school, task, request reference (SC-12). |
-| **Read-only mode** | The state an installation enters when the grace period expires or the Owner suspends it: viewing and export keep working, everything else is blocked except a closed list of service writes (BR-026). |
+| **Read-only mode** | The state an installation is in when the grace period expires, the Owner suspends it, or no legitimacy check has ever succeeded (BR-025): viewing and export keep working, everything else is blocked except a closed list of service writes (BR-026). |
 | **Grace period** | How long an installation keeps working without a successful legitimacy check — 7 days from the last success. |
 
 ## Google Workspace

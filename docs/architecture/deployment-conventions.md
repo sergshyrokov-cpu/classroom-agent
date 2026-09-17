@@ -209,6 +209,10 @@ the previous one — the dependency is real, not stylistic
   also asks the Control Plane whether the email is in `AllowedAdmin`; while the
   channel is down, Admin logins are refused (BR-012). Both calls to the Control
   Plane are POST, and the email travels in the body (SC-4, v64).
+- The installation's configuration names the Control Plane address; like the
+  installation id, it is mandatory and the installation does not start without
+  it. The check runs at startup, then 6 hours after a success or 15 minutes after
+  a failure, with a 30-second timeout (BR-081, v73).
 
 ## DC-7 Suspending and resuming a school
 
@@ -217,8 +221,10 @@ the previous one — the dependency is real, not stylistic
   6-hourly check is the fallback if the push does not arrive.
 - Suspending and resuming each take a confirmation on the school's page; a status
   change deletes no data and keeps the `AllowedAdmin` entries (BR-080, v71).
-- An installation enters read-only mode when its `Installation` is suspended, or
-  when more than 7 days have passed since the last successful check (BR-025,
+- An installation enters read-only mode when its `Installation` is suspended,
+  when more than 7 days have passed since the last successful check, or while no
+  check has ever succeeded — so register the `Installation` and put its id into
+  the configuration before expecting a new school to work (BR-025, BR-081,
   NFR-013). Viewing and export keep working, and so does the closed list of
   service writes in BR-026; everything else stops.
 - Read-only mode is a normal operating state, not an outage: it needs no

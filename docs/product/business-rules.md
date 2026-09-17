@@ -126,9 +126,24 @@ writes nothing, audit included. *(§3, §4, §9, v71)*
 6 hours, and the Control Plane pushes status changes immediately. The periodic
 check is the fallback when a push does not arrive. *(§9)*
 
+**BR-081** An installation checks its legitimacy at startup, then 6 hours after
+a successful check, or 15 minutes after an unsuccessful one until a check
+succeeds. A check succeeds when the Control Plane answers within 30 seconds with
+a parseable answer, knows the installation id and does not answer
+`upgrade_required`; an answer "suspended" is a successful check. A successful
+check records time, status, compatibility state, domain and client ID in
+`LegitimacyState`; an unsuccessful one leaves the last success time unchanged
+(on `upgrade_required` it still records the status, compatibility state, domain
+and client ID). The Control Plane derives compatibility from the minimum
+supported and recommended application versions in its configuration and from
+the contract versions it still supports; it keeps only the last check per
+`Installation` (`InstanceLicenseCheck`) and shows it on the school's page.
+Checks are not audited. *(§3, §5, §8, §9, v73)*
+
 **BR-025** An installation enters read-only mode when more than **7 days**
-(the grace period) have passed since the last successful check, or when its
-`Installation` status is suspended. *(§9)*
+(the grace period) have passed since the last successful check, when its
+`Installation` status is suspended, or while no check has ever succeeded.
+*(§3, §9, v73)*
 
 **BR-026** In read-only mode, viewing and exporting already-synced data keep
 working and everything else is blocked for both roles — for example

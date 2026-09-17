@@ -42,7 +42,11 @@ installation. This epic is the bootstrap.
 - US-004 Suspend and resume an Installation from the school's page, each with
   confirmation; the Control Plane status only — the legitimacy check is US-005,
   the push US-006 (v71)
-- US-005 Installation legitimacy check and grace period
+- US-005 Installation legitimacy check and grace period: the first installation-side
+  Story (installation skeleton, installation id and Control Plane address); the check
+  at startup, every 6 hours, 15 minutes after a failure; `LegitimacyState` and the
+  read-only determination; compatibility; the last check on the school's page;
+  private port with liveness and readiness. Enforcing read-only is US-007 (v73)
 - US-006 Control Plane push on status change
 - US-007 Read-only mode enforcement
 
