@@ -1,0 +1,359 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent Control Plane — Suspend and resume an Installation (US-004)
+  version: "1"
+  description: >
+    HTTP contract of the Control Plane pages added or changed by US-004. No
+    `/api/v1` endpoint: every operation is a server-rendered Razor page or an HTML
+    form post, so request bodies are `application/x-www-form-urlencoded`,
+    responses are `text/html` or redirects, and errors are the host's error page —
+    never the API-6 JSON body (SC-4, AD-9, v66). The host-wide rules of
+    docs/designs/api/US-001-openapi.yaml, the `{id}` route and output-encoding
+    rules of docs/designs/api/US-002-openapi.yaml and the confirmation-page
+    pattern of docs/designs/api/US-003-openapi.yaml apply unchanged. Companion
+    document: docs/designs/api/US-004-api-design.md.
+x-story: US-004
+x-source-specification: docs/specifications/US-004-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-004-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 71
+x-produced-by: openapi-designer
+x-host: ClassroomAgent.ControlPlane
+x-extends: docs/designs/api/US-003-openapi.yaml
+x-transport: "HTTPS only; no HTTP port; no HSTS (SC-2, DC-6)"
+
+servers:
+  - url: https://control-plane.internal
+    description: "Illustrative. The Control Plane is reachable only from the Owner's private network (SC-9, DC-6)."
+
+tags:
+  - name: installation-status
+    description: "Suspend and resume an installation with confirmation (FR-001 … FR-009)"
+
+x-host-wide-rules:
+  inherited: >
+    setup-gate, fallback-authorization, antiforgery, unauthenticated-challenge,
+    forbidden, culture and session-lifetime as in US-001-openapi.yaml; id-route-
+    constraint and output-encoding as in US-002-openapi.yaml. Before setup every
+    operation answers `302 /setup`; without a session `302 /sign-in` (before
+    antiforgery); a policy denial `403` error page.
+  over-posting: >
+    Neither POST binds a model. A posted `status`, `name`, `domain`, `clientId`,
+    `identifier` or any other field is ignored; the target status is fixed by the
+    endpoint, never read from the request.
+  conditional-update: >
+    FR-003 step 3 and FR-005. The status is set by one conditional update on the
+    stored value (suspend: active → suspended; resume: suspended → active) in a
+    transaction together with the audit row; the audit row is written only when
+    the update changed one row. Zero rows changed = "unchanged": nothing written,
+    `302` with the notice. Concurrent submissions are never `409` or `500`.
+  audit: >
+    FR-006. Exactly one Control Plane audit row per status change
+    (`installation_suspended` / `installation_resumed`), same transaction; actor
+    the Owner account id and role, target type `installation` and its internal
+    id, outcome succeeded. No row for GET, cancel, `400`, `404` or "unchanged".
+    No installation name or domain in any row or log line (SC-10, SC-11).
+  untouched: >
+    Only `status` changes. Identifier, name, domain, created_at, client ID and the
+    installation's AllowedAdmin entries are unchanged; no reason or status-change
+    time is accepted or stored; nothing is sent to an installation.
+  notice: >
+    The "unchanged" message is carried as `?notice=already-suspended` or
+    `?notice=already-active` on the redirect to the detail page, and rendered only
+    when the value matches the installation's current status. Unknown or
+    mismatching values render nothing and are not an error. The value is never
+    echoed.
+
+paths:
+  /installations/{id}:
+    parameters:
+      - $ref: "#/components/parameters/InstallationId"
+    get:
+      tags: [installation-status]
+      operationId: getInstallation
+      summary: "Installation detail page (changed by US-004)"
+      x-anonymous: false
+      x-policy: Owner
+      x-spec: [FR-001, FR-004, FR-011]
+      x-acceptance-criteria: [AC-001, AC-003, AC-005, AC-006, AC-009, AC-011]
+      x-compatibility: "US-002 operation extended by US-003; everything stays, a status action and an optional notice are added."
+      parameters:
+        - $ref: "#/components/parameters/Notice"
+      responses:
+        "200":
+          description: >
+            As US-002 and US-003, plus: while active a link `Installation.Suspend`
+            to `/installations/{id}/suspension` in `id="installation-suspend"`;
+            while suspended a link `Installation.Resume` to
+            `/installations/{id}/resumption` in `id="installation-resume"`; never
+            both. When `notice` matches the current status, the key
+            `Installation.Status.AlreadySuspended` or
+            `Installation.Status.AlreadyActive` in
+            `id="installation-status-notice"`; otherwise no such element. No
+            reason and no status-change time.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/InstallationDetailPage"
+        "302":
+          $ref: "#/components/responses/GateOrChallenge"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /installations/{id}/suspension:
+    parameters:
+      - $ref: "#/components/parameters/InstallationId"
+    get:
+      tags: [installation-status]
+      operationId: getSuspendInstallationConfirmation
+      summary: "Suspend confirmation page"
+      x-anonymous: false
+      x-policy: Owner
+      x-spec: [FR-002, FR-007, FR-009]
+      x-acceptance-criteria: [AC-002, AC-006, AC-007, AC-009, AC-010]
+      responses:
+        "200":
+          description: >
+            Installation is active. Name and domain; explanation
+            `Installation.Suspend.Explanation`; a form posting to this path with
+            the antiforgery token and button `Installation.Suspend.Confirm`; link
+            `Installation.Suspend.Cancel` to `/installations/{id}`. Changes
+            nothing, audits nothing.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/InstallationStatusConfirmation"
+        "302":
+          description: >
+            Installation already suspended: `Location:
+            /installations/{id}?notice=already-suspended` (spec I-3). No Owner
+            account: `/setup`; no session: `/sign-in`.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [installation-status]
+      operationId: suspendInstallation
+      summary: "Suspend the installation"
+      x-anonymous: false
+      x-policy: Owner
+      x-antiforgery: required
+      x-spec: [FR-003, FR-004, FR-005, FR-006, FR-007, FR-012]
+      x-acceptance-criteria: [AC-003, AC-006, AC-007, AC-008, AC-010]
+      x-processing-order: >
+        1 antiforgery → 2 installation exists (else 404) → 3 in one transaction
+        update status to `suspended` where status is `active`; if one row changed,
+        insert audit row `installation_suspended`; commit → 4 redirect: changed
+        `/installations/{id}`, unchanged `/installations/{id}?notice=already-suspended`.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/EmptyStatusChangeRequest"
+      responses:
+        "302":
+          description: >
+            Suspended: `Location: /installations/{id}`. Already suspended
+            (repeat, stale page, lost race): `Location:
+            /installations/{id}?notice=already-suspended`, nothing written.
+            Without a session: `/sign-in`; before setup: `/setup`.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "400":
+          description: "Antiforgery refusal — error page `Error.PageExpired`; status unchanged."
+          content:
+            text/html: {}
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /installations/{id}/resumption:
+    parameters:
+      - $ref: "#/components/parameters/InstallationId"
+    get:
+      tags: [installation-status]
+      operationId: getResumeInstallationConfirmation
+      summary: "Resume confirmation page"
+      x-anonymous: false
+      x-policy: Owner
+      x-spec: [FR-002, FR-007, FR-009]
+      x-acceptance-criteria: [AC-004, AC-006, AC-007, AC-009, AC-010]
+      responses:
+        "200":
+          description: >
+            Installation is suspended. Name and domain; explanation
+            `Installation.Resume.Explanation`; a form posting to this path with
+            the antiforgery token and button `Installation.Resume.Confirm`; link
+            `Installation.Resume.Cancel` to `/installations/{id}`. Changes
+            nothing, audits nothing.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/InstallationStatusConfirmation"
+        "302":
+          description: >
+            Installation already active: `Location:
+            /installations/{id}?notice=already-active` (spec I-3). No Owner
+            account: `/setup`; no session: `/sign-in`.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [installation-status]
+      operationId: resumeInstallation
+      summary: "Resume the installation"
+      x-anonymous: false
+      x-policy: Owner
+      x-antiforgery: required
+      x-spec: [FR-003, FR-004, FR-005, FR-006, FR-007, FR-012]
+      x-acceptance-criteria: [AC-005, AC-006, AC-007, AC-008, AC-010]
+      x-processing-order: >
+        1 antiforgery → 2 installation exists (else 404) → 3 in one transaction
+        update status to `active` where status is `suspended`; if one row changed,
+        insert audit row `installation_resumed`; commit → 4 redirect: changed
+        `/installations/{id}`, unchanged `/installations/{id}?notice=already-active`.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/EmptyStatusChangeRequest"
+      responses:
+        "302":
+          description: >
+            Resumed: `Location: /installations/{id}`. Already active (repeat,
+            stale page, lost race): `Location:
+            /installations/{id}?notice=already-active`, nothing written. Without
+            a session: `/sign-in`; before setup: `/setup`.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "400":
+          description: "Antiforgery refusal — error page `Error.PageExpired`; status unchanged."
+          content:
+            text/html: {}
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  parameters:
+    InstallationId:
+      name: id
+      in: path
+      required: true
+      description: "The installation's UUID identifier (US-002 I-5), route constraint `guid`."
+      schema:
+        type: string
+        format: uuid
+    Notice:
+      name: notice
+      in: query
+      required: false
+      description: >
+        One-time "unchanged" notice (spec FR-004, I-2). Rendered only when it
+        matches the current status; any other value is ignored, never `400`,
+        never echoed.
+      schema:
+        type: string
+        enum: [already-suspended, already-active]
+
+  responses:
+    GateOrChallenge:
+      description: >
+        No Owner account: `Location: /setup`. No session: `Location: /sign-in`
+        (no return URL).
+      headers:
+        Location:
+          $ref: "#/components/headers/Location"
+    NotFound:
+      description: >
+        No installation with `{id}`. Error page `Error.NotFound`, identical to the
+        catch-all's response for a non-GUID path value. Nothing changed or
+        audited.
+      content:
+        text/html: {}
+
+  headers:
+    Location:
+      description: "Relative redirect target within the Control Plane; never external or query-supplied."
+      schema:
+        type: string
+        pattern: "^(/setup|/sign-in|/installations/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\\?notice=(already-suspended|already-active))?)$"
+
+  schemas:
+    EmptyStatusChangeRequest:
+      type: object
+      description: "No fields besides the antiforgery token; nothing is bound (over-posting)."
+      additionalProperties: false
+      properties: {}
+
+    InstallationDetailPage:
+      type: object
+      description: >
+        Page model of the detail page: the US-002/US-003 `InstallationDetail` DTO
+        (which already carries `status`) plus the validated notice (AD-8).
+      additionalProperties: false
+      required: [installation]
+      properties:
+        installation:
+          type: object
+          description: "Unchanged `InstallationDetail` of docs/designs/api/US-003-openapi.yaml (identifier, name, domain, status, createdAt, clientId, admins)."
+        notice:
+          type: [string, "null"]
+          enum: [already-suspended, already-active, null]
+          description: "Set only when the query value matches the current status."
+
+    InstallationStatusConfirmation:
+      type: object
+      description: "View DTO for both confirmation pages (AD-8)."
+      additionalProperties: false
+      required: [identifier, name, domain, status]
+      properties:
+        identifier: {type: string, format: uuid}
+        name: {type: string}
+        domain: {type: string}
+        status: {type: string, enum: [active, suspended]}
+
+    StatusChangeResult:
+      type: string
+      description: "Service result (AD-9), not an HTTP body."
+      enum: [NotFound, Changed, Unchanged]
+
+    PageTextKeys:
+      type: object
+      description: >
+        Fixed translation keys of this Story (ControlPlane.Localization, uk and en,
+        TC-8). Page titles and labels get their own keys at the implementor's
+        choice. Status labels reuse `Installation.Status.Active` /
+        `Installation.Status.Suspended` of US-002.
+      properties:
+        Installation.Suspend: {type: string}
+        Installation.Resume: {type: string}
+        Installation.Suspend.Explanation:
+          type: string
+          description: "Read-only mode — viewing and export keep working, synchronization and configuration stop; no data is deleted; the Admins in the list stay (trebovaniya.md §9 v71)."
+        Installation.Suspend.Confirm: {type: string}
+        Installation.Suspend.Cancel: {type: string}
+        Installation.Resume.Explanation:
+          type: string
+          description: "The school returns to normal work (trebovaniya.md §9 v71)."
+        Installation.Resume.Confirm: {type: string}
+        Installation.Resume.Cancel: {type: string}
+        Installation.Status.AlreadySuspended: {type: string}
+        Installation.Status.AlreadyActive: {type: string}
+
+  securitySchemes:
+    ownerSession:
+      type: apiKey
+      in: cookie
+      name: __Host-cp-session
+      description: "Owner cookie session defined by US-001 (API-7)."
+
+security:
+  - ownerSession: []
