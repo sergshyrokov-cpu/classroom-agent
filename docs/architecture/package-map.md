@@ -87,7 +87,7 @@ Epic 7 — do not add them speculatively.
 ### `ClassroomAgent.Contracts`
 
 Wire types for the Control Plane ↔ Data Plane channel only: the legitimacy
-check request/response, the status-change push payload, and the Admin login
+check request/response, the status-change push payload (the installation id only, v76), and the Admin login
 check request/response. No behaviour, no dependencies. Both hosts reference it
 so the contract cannot drift. It never carries teaching data or school
 statistics — only installation id, versions, status, compatibility state, the

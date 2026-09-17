@@ -184,14 +184,16 @@ the previous one — the dependency is real, not stylistic
   network interface. **The address is a required setting** (`trebovaniya.md` §5,
   §9, v75): normally the server's private network address, so the port is
   unreachable from the internet even if the firewall is wrong. Listening on all
-  addresses is allowed only through an explicit "all addresses" value — for example
+  addresses is allowed only through the explicit "all addresses" value `*` (v76) — for example
   inside a container, where publishing the port restricts access — and is never the
   default; a missing or empty value stops the installation at startup. Deployment
   checks that the private port does not answer on the school's public address
   (DC-2). The public port, and any reverse proxy in front of it, does
   not serve those paths; a test asserts that on the public port they answer
-  `404`. Otherwise anyone on the internet could post a status to the push
-  receiver — lifting a suspension or forcing read-only mode. The private routes
+  `404`. Otherwise the service port would be open to the internet: a forged push
+  cannot change the school's status — it only triggers a check whose status comes
+  from the Control Plane (v76) — but readiness would leak and a flood of forged
+  pushes would load the Control Plane with checks. The private routes
   form one route group whose filter compares the connection's actual local port
   (`HttpContext.Connection.LocalPort`) with the private port from configuration
   and answers `404` on any other port. The `Host` and `X-Forwarded-Host` headers
@@ -215,8 +217,11 @@ the previous one — the dependency is real, not stylistic
   no HTTP port, so there is nothing to redirect and no HSTS (v64).
 - The channel is bidirectional by design: the installation calls the Control
   Plane every 6 hours for the legitimacy check, and the Control Plane pushes
-  status changes to the installation's endpoint (HTTP POST, 3 retries with
-  exponential backoff) (BR-024, NFR-014). On every Admin login the installation
+  status changes to the installation's private port (HTTP POST to the push
+  address the Owner sets on the school's page; 10-second timeout, 3 retries after
+  5 s, 30 s and 2 min, held in memory) (BR-024, BR-082, NFR-014, v76). The push
+  carries the installation id only and makes the installation run its legitimacy
+  check at once; it never sets the status itself. On every Admin login the installation
   also asks the Control Plane whether the email is in `AllowedAdmin`; while the
   channel is down, Admin logins are refused (BR-012). Both calls to the Control
   Plane are POST, and the email travels in the body (SC-4, v64).
@@ -229,7 +234,9 @@ the previous one — the dependency is real, not stylistic
 
 - Suspension is performed by the Owner in the Control Plane, **without logging
   into the school's server** (§9). The push makes it effective immediately; the
-  6-hourly check is the fallback if the push does not arrive.
+  6-hourly check is the fallback if the push does not arrive. A school with no
+  push address set gets no push — its page warns the Owner that the change
+  reaches the school only with the periodic check, within 6 hours (v76).
 - Suspending and resuming each take a confirmation on the school's page; a status
   change deletes no data and keeps the `AllowedAdmin` entries (BR-080, v71).
 - An installation enters read-only mode when its `Installation` is suspended,
@@ -390,6 +397,12 @@ operating condition, not an incident (`trebovaniya.md` §8, decided in v16).
 - **An unparseable push breaks nothing**: the installation logs at `Error` and
   waits for the periodic check, which is the designed guarantee; the push is the
   optimization (NFR-014).
+- **Push logging** (v76). Control Plane: delivered — `Information` with the
+  `Installation` id; a failed attempt — `Warning` with the failure category;
+  retries exhausted, a `404` from the installation or no push address — `Warning`;
+  the push address is never logged. Installation: an accepted push that starts a
+  check — `Information`; a push with another installation's id — `Warning`; a
+  push throttled by the one-minute limit is not logged.
 
 ## DC-13 Backup and restore
 

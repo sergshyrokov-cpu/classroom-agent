@@ -339,9 +339,14 @@ pages are disabled outside local development.
 - **The installation's private port has two independent protections** (v75): it
   listens only on the address from configuration, normally the private network
   address, and deployment confirms it does not answer on the school's public
-  address. "All addresses" is allowed only as an explicit value, never as a
+  address. "All addresses" is allowed only as the explicit value `*` (v76), never as a
   default; a private endpoint bound to all interfaces without that explicit value
   is a finding (DC-6).
+- **A push never sets the status** (v76): it carries the installation id only and
+  triggers the ordinary legitimacy check, so the status always comes from the
+  Control Plane's answer. A receiver that writes `LegitimacyState` from the push
+  body, or runs checks more often than once a minute on push, is a finding. A push
+  whose id is not the installation's own is answered `404` and does nothing.
 - The domain an installation may work with comes from the Control Plane. Saving
   a `WorkspaceConnection` whose domain, or whose impersonation user's email
   domain, differs from the `Installation` domain must be refused (BR-020) —
@@ -383,7 +388,7 @@ when" — above all, who took personal data out of the system.
   setup refused for a missing or wrong one-time setup code while no Owner account
   exists (actor "anonymous", refusal category "wrong setup code"; the code, login
   and password typed are never recorded) (v67); creating an `Installation`,
-  changing its service-account client ID or its name (v69), suspending and resuming one, adding
+  changing its service-account client ID, its name (v69) or its push address (v76), suspending and resuming one, adding
   and revoking an `AllowedAdmin`.
 - **A row carries:** UTC timestamp, actor (internal account id and role —
   `AppUser` in an installation, `Owner` in the Control Plane — or `system` for
@@ -432,8 +437,9 @@ hosts and therefore can reach.
 **Application — no path exists, and that is checkable:**
 
 - `ClassroomAgent.Contracts` carries no teaching-data type. The legitimacy check
-  and the status push carry the installation id, application and contract
-  versions, status and compatibility state (DC-12), and the legitimacy check
+  carries the installation id, application and contract versions, status and
+  compatibility state (DC-12), the status push only the installation id (v76),
+  and the legitimacy check
   response also carries the `Installation`'s domain and service-account client
   ID, kept in `LegitimacyState` (v54); the Admin login check carries the
   installation id, the email being checked and a yes/no answer (SC-3) — nothing

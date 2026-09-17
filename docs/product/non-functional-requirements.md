@@ -37,7 +37,8 @@ Control Plane check before entering read-only mode. A weekend outage must not
 take a school down. *(§9)*
 
 **NFR-014** The legitimacy check runs every **6 hours**; status changes are also
-pushed immediately by the Control Plane, with 3 retries and exponential backoff.
+pushed immediately by the Control Plane, with a 10-second timeout and 3 retries
+after 5 s, 30 s and 2 min (v76).
 The periodic check is the guarantee; the push is the optimization. *(§9)*
 
 **NFR-015** Each installation writes structured logs (Serilog, JSON, one file
