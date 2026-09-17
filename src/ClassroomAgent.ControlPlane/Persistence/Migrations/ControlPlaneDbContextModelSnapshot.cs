@@ -232,6 +232,72 @@ namespace ClassroomAgent.ControlPlane.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("ClassroomAgent.ControlPlane.Persistence.InstanceLicenseCheck", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("AnsweredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("answered_at");
+
+                    b.Property<string>("AnsweredCompatibility")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
+                        .HasColumnName("answered_compatibility");
+
+                    b.Property<string>("AnsweredStatus")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("answered_status");
+
+                    b.Property<string>("ApplicationVersion")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("application_version");
+
+                    b.Property<int>("ContractVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("contract_version");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("InstallationId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("installation_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_instance_license_check");
+
+                    b.HasIndex("InstallationId")
+                        .IsUnique()
+                        .HasDatabaseName("uq_instance_license_check_installation_id");
+
+                    b.ToTable("instance_license_check", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_instance_license_check_answered_compatibility", "answered_compatibility IN ('supported', 'upgrade_recommended', 'upgrade_required')");
+
+                            t.HasCheckConstraint("ck_instance_license_check_answered_status", "answered_status IN ('active', 'suspended')");
+
+                            t.HasCheckConstraint("ck_instance_license_check_application_version", "application_version ~ '^(0|[1-9][0-9]{0,5})\\.(0|[1-9][0-9]{0,5})\\.(0|[1-9][0-9]{0,5})$'");
+
+                            t.HasCheckConstraint("ck_instance_license_check_contract_version", "contract_version BETWEEN 1 AND 999999");
+                        });
+                });
+
             modelBuilder.Entity("ClassroomAgent.ControlPlane.Persistence.Owner", b =>
                 {
                     b.Property<long>("Id")
@@ -338,6 +404,16 @@ namespace ClassroomAgent.ControlPlane.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_allowed_admin_installation");
+                });
+
+            modelBuilder.Entity("ClassroomAgent.ControlPlane.Persistence.InstanceLicenseCheck", b =>
+                {
+                    b.HasOne("ClassroomAgent.ControlPlane.Persistence.Installation", null)
+                        .WithOne()
+                        .HasForeignKey("ClassroomAgent.ControlPlane.Persistence.InstanceLicenseCheck", "InstallationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_instance_license_check_installation");
                 });
 #pragma warning restore 612, 618
         }

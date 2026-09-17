@@ -3,7 +3,7 @@ using ClassroomAgent.Tests.TestInfrastructure;
 
 namespace ClassroomAgent.Tests.ControlPlane.Security;
 
-/// <summary>AC-011: global antiforgery on every state-changing endpoint, anonymous forms included (FR-015, TC-5).</summary>
+/// <summary>AC-011: global antiforgery on every state-changing endpoint, anonymous forms included (FR-015, TC-5); the SC-4 exemption list is US-005's legitimacy check only.</summary>
 public sealed class AntiforgeryTests(PostgreSqlFixture database)
 {
     [Fact]
@@ -15,7 +15,7 @@ public sealed class AntiforgeryTests(PostgreSqlFixture database)
         var pageExpired = host.Text("Error.PageExpired", "uk");
 
         var stateChanging = HostEndpoint.All(host.Services)
-            .Where(e => !e.IsFallback && !e.IsStaticFile && e.UnsafeMethodsAccepted.Count > 0)
+            .Where(e => !e.IsFallback && !e.IsStaticFile && !IsSc4Exemption(e) && e.UnsafeMethodsAccepted.Count > 0)
             .ToList();
         Assert.Contains(stateChanging, e => e.Pattern == "setup");
         Assert.Contains(stateChanging, e => e.Pattern == "sign-in");
@@ -81,14 +81,22 @@ public sealed class AntiforgeryTests(PostgreSqlFixture database)
     }
 
     [Fact]
-    public async Task NoEndpointIsExemptFromAntiforgery()
+    public async Task OnlyTheLegitimacyCheckIsExemptFromAntiforgery()
     {
         var ct = TestContext.Current.CancellationToken;
         await using var host = await ControlPlaneTestHost.StartAsync(database, ct);
 
         var endpoints = HostEndpoint.All(host.Services);
+        var exempt = endpoints.Where(e => e.IsExemptFromAntiforgery).ToList();
 
         Assert.Contains(endpoints, e => e.Pattern == "sign-out");
-        Assert.Empty(endpoints.Where(e => e.IsExemptFromAntiforgery).Select(e => e.ToString()));
+        var check = Assert.Single(exempt);
+        Assert.True(IsSc4Exemption(check), check.ToString());
     }
+
+    /// <summary>SC-4 exemption list: the legitimacy check POST (US-005 AC-013). The Admin login check arrives with US-008.</summary>
+    private static bool IsSc4Exemption(HostEndpoint endpoint) =>
+        endpoint.Pattern == "service/v1/legitimacy-checks"
+        && endpoint.Methods is { Count: 1 } methods
+        && string.Equals(methods[0], "POST", StringComparison.OrdinalIgnoreCase);
 }

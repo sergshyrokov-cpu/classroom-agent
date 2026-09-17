@@ -45,6 +45,12 @@ public class InstallationRegistry(ControlPlaneDbContext db, TimeProvider timePro
             .Select(a => new AllowedAdminItemDto(a.Identifier, a.Email, a.CreatedAt))
             .ToListAsync(cancellationToken);
 
+        var lastCheck = await db.InstanceLicenseChecks
+            .AsNoTracking()
+            .Where(c => c.InstallationId == installation.Id)
+            .Select(c => new InstallationLastCheckDto(c.AnsweredAt, c.ApplicationVersion, c.ContractVersion, c.AnsweredStatus, c.AnsweredCompatibility))
+            .SingleOrDefaultAsync(cancellationToken);
+
         // Entries of this installation only, ordered by email in memory, independent of the collation (US-003 I-4).
         return new InstallationDetailDto(
             installation.Identifier,
@@ -53,7 +59,8 @@ public class InstallationRegistry(ControlPlaneDbContext db, TimeProvider timePro
             installation.Status,
             installation.CreatedAt,
             installation.ClientId,
-            admins.OrderBy(a => a.Email, StringComparer.Ordinal).ToList());
+            admins.OrderBy(a => a.Email, StringComparer.Ordinal).ToList(),
+            lastCheck);
     }
 
     public async Task<RegisterInstallationResult> RegisterAsync(

@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ClassroomAgent.Tests.ControlPlane.Security;
 
-/// <summary>AC-010: only the SC-4 entries of this Story are anonymous (FR-014, TC-5).</summary>
+/// <summary>AC-010: only the SC-4 entries are anonymous (FR-014, TC-5); US-005 AC-013 adds the legitimacy check POST.</summary>
 public sealed class AnonymousEndpointTests(PostgreSqlFixture database)
 {
     private static readonly string[] FormMethods = ["GET", "HEAD", "POST"];
@@ -25,6 +25,7 @@ public sealed class AnonymousEndpointTests(PostgreSqlFixture database)
         Assert.Contains(anonymous, e => e.Pattern == "sign-in");
         Assert.Contains(anonymous, e => e.Pattern == "error/{statuscode}");
         Assert.Contains(anonymous, e => e.IsFallback);
+        Assert.Contains(anonymous, e => e.Pattern == "service/v1/legitimacy-checks");
         Assert.Contains(endpoints, e => e.Pattern == string.Empty && !e.AllowsAnonymous);
         Assert.Contains(endpoints, e => e.Pattern == "sign-out" && !e.AllowsAnonymous);
 
@@ -50,6 +51,9 @@ public sealed class AnonymousEndpointTests(PostgreSqlFixture database)
         endpoint.IsFallback
         || endpoint.IsStaticFile
         || endpoint.Pattern == "error/{statuscode}"
+        || (endpoint.Pattern == "service/v1/legitimacy-checks"
+            && endpoint.Methods is { Count: 1 } checkMethods
+            && string.Equals(checkMethods[0], "POST", StringComparison.OrdinalIgnoreCase))
         || (endpoint.Pattern is "setup" or "sign-in"
             && (endpoint.Methods is null || endpoint.Methods.All(m => FormMethods.Contains(m, StringComparer.OrdinalIgnoreCase))));
 }

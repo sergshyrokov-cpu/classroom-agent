@@ -44,6 +44,32 @@
     <dt>@T["Installation.ClientId.Label"]</dt>
     <dd>@installation.ClientId</dd>
 </dl>
+<section id="installation-last-check">
+    <h2>@T["Installation.LastCheck.Title"]</h2>
+    @if (installation.LastCheck is { } lastCheck)
+    {
+        <dl>
+            <dt>@T["Installation.LastCheck.Time"]</dt>
+            <dd id="installation-last-check-time">@InstallationDisplay.UtcTime(lastCheck.AnsweredAt)</dd>
+
+            <dt>@T["Installation.LastCheck.ApplicationVersion"]</dt>
+            <dd id="installation-last-check-application-version">@lastCheck.ApplicationVersion</dd>
+
+            <dt>@T["Installation.LastCheck.ContractVersion"]</dt>
+            <dd id="installation-last-check-contract-version">@lastCheck.ContractVersion</dd>
+
+            <dt>@T["Installation.LastCheck.Status"]</dt>
+            <dd id="installation-last-check-status">@T[InstallationDisplay.StatusKey(lastCheck.Status)]</dd>
+
+            <dt>@T["Installation.LastCheck.Compatibility"]</dt>
+            <dd id="installation-last-check-compatibility">@T[InstallationDisplay.CompatibilityKey(lastCheck.Compatibility)]</dd>
+        </dl>
+    }
+    else
+    {
+        <p id="installation-last-check-none">@T["Installation.LastCheck.NotCalledYet"]</p>
+    }
+</section>
 <section>
     <h2>@T["AllowedAdmins.Title"]</h2>
     @if (installation.Admins.Count < 2)

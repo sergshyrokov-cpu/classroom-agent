@@ -122,4 +122,14 @@
   <data name="Installation.Resume.Cancel" xml:space="preserve"><value>Скасувати відновлення</value></data>
   <data name="Installation.Status.AlreadySuspended" xml:space="preserve"><value>Школа вже призупинена.</value></data>
   <data name="Installation.Status.AlreadyActive" xml:space="preserve"><value>Школа вже активна.</value></data>
+  <data name="Installation.LastCheck.Title" xml:space="preserve"><value>Остання перевірка легітимності</value></data>
+  <data name="Installation.LastCheck.Time" xml:space="preserve"><value>Час перевірки</value></data>
+  <data name="Installation.LastCheck.ApplicationVersion" xml:space="preserve"><value>Версія програми</value></data>
+  <data name="Installation.LastCheck.ContractVersion" xml:space="preserve"><value>Версія контракту</value></data>
+  <data name="Installation.LastCheck.Status" xml:space="preserve"><value>Повідомлений статус</value></data>
+  <data name="Installation.LastCheck.Compatibility" xml:space="preserve"><value>Сумісність</value></data>
+  <data name="Installation.LastCheck.NotCalledYet" xml:space="preserve"><value>Інсталяція ще не зверталася.</value></data>
+  <data name="Installation.Compatibility.Supported" xml:space="preserve"><value>підтримується</value></data>
+  <data name="Installation.Compatibility.UpgradeRecommended" xml:space="preserve"><value>рекомендовано оновлення</value></data>
+  <data name="Installation.Compatibility.UpgradeRequired" xml:space="preserve"><value>потрібне оновлення</value></data>
 </root>

@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ClassroomAgent.ControlPlane\ClassroomAgent.ControlPlane.csproj" />
+    <ProjectReference Include="..\..\src\ClassroomAgent.Web\ClassroomAgent.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>

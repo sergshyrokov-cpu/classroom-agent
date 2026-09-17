@@ -122,4 +122,14 @@
   <data name="Installation.Resume.Cancel" xml:space="preserve"><value>Cancel resumption</value></data>
   <data name="Installation.Status.AlreadySuspended" xml:space="preserve"><value>The school is already suspended.</value></data>
   <data name="Installation.Status.AlreadyActive" xml:space="preserve"><value>The school is already active.</value></data>
+  <data name="Installation.LastCheck.Title" xml:space="preserve"><value>Last legitimacy check</value></data>
+  <data name="Installation.LastCheck.Time" xml:space="preserve"><value>Checked at</value></data>
+  <data name="Installation.LastCheck.ApplicationVersion" xml:space="preserve"><value>Application version</value></data>
+  <data name="Installation.LastCheck.ContractVersion" xml:space="preserve"><value>Contract version</value></data>
+  <data name="Installation.LastCheck.Status" xml:space="preserve"><value>Status answered</value></data>
+  <data name="Installation.LastCheck.Compatibility" xml:space="preserve"><value>Compatibility</value></data>
+  <data name="Installation.LastCheck.NotCalledYet" xml:space="preserve"><value>The installation has not called yet.</value></data>
+  <data name="Installation.Compatibility.Supported" xml:space="preserve"><value>supported</value></data>
+  <data name="Installation.Compatibility.UpgradeRecommended" xml:space="preserve"><value>upgrade recommended</value></data>
+  <data name="Installation.Compatibility.UpgradeRequired" xml:space="preserve"><value>upgrade required</value></data>
 </root>

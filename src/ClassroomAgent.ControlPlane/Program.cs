@@ -20,6 +20,7 @@ var configuration = builder.Configuration;
 var connectionString = RequiredSetting(configuration, "ConnectionStrings:ControlPlane");
 var keyDirectory = RequiredSetting(configuration, "DataProtection:KeyDirectory");
 var logDirectory = RequiredSetting(configuration, "LogFile:Directory");
+var compatibilityPolicy = CompatibilityPolicy.FromConfiguration(configuration);
 
 // DC-10: one JSON object per line, a file per day, 30 days, size cap; request id from the log scope.
 builder.Services.AddSerilog(
@@ -64,6 +65,8 @@ builder.Services.AddScoped<OwnerSignInService>();
 builder.Services.AddScoped<InstallationRegistry>();
 builder.Services.AddScoped<AllowedAdminRegistry>();
 builder.Services.AddScoped<InstallationStatusService>();
+builder.Services.AddSingleton(compatibilityPolicy);
+builder.Services.AddScoped<LegitimacyCheckService>();
 builder.Services.AddHostedService<SetupCodeStartup>();
 
 builder.Services.AddControlPlaneSecurity(keyDirectory);

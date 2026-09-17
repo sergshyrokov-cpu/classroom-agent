@@ -55,11 +55,12 @@ public sealed class ControlPlaneTestHost : IAsyncDisposable
     public static async Task<ControlPlaneTestHost> StartAsync(
         PostgreSqlFixture database,
         CancellationToken cancellationToken,
-        string setupCode = TestData.SetupCode)
+        string setupCode = TestData.SetupCode,
+        IReadOnlyDictionary<string, string>? extraSettings = null)
     {
         var connectionString = await database.CreateDatabaseAsync(cancellationToken);
         await MigrateAsync(connectionString, cancellationToken);
-        var host = Start(connectionString, setupCode);
+        var host = Start(connectionString, setupCode, extraSettings);
         host._ownedDatabase = database;
         return host;
     }
@@ -77,6 +78,9 @@ public sealed class ControlPlaneTestHost : IAsyncDisposable
         }));
 
     public IServiceScope CreateScope() => Factory.Services.CreateScope();
+
+    /// <summary>An HTTP handler into the in-process Control Plane — for the installation's real client (US-005 contract tests).</summary>
+    public HttpMessageHandler CreateServerHandler() => Factory.Server.CreateHandler();
 
     /// <summary>Runs the first-run setup over HTTP and returns the signed-in client.</summary>
     public async Task<FormClient> CreateOwnerAsync(CancellationToken cancellationToken)
@@ -276,7 +280,10 @@ public sealed class ControlPlaneTestHost : IAsyncDisposable
         }
     }
 
-    private static ControlPlaneTestHost Start(string connectionString, string setupCode)
+    private static ControlPlaneTestHost Start(
+        string connectionString,
+        string setupCode,
+        IReadOnlyDictionary<string, string>? extraSettings = null)
     {
         var host = new ControlPlaneTestHost(connectionString, setupCode);
         var settings = new Dictionary<string, string>
@@ -285,6 +292,10 @@ public sealed class ControlPlaneTestHost : IAsyncDisposable
             [ConfigurationKeys.DataProtectionKeyDirectory] = host.KeyDirectory,
             [ConfigurationKeys.LogDirectory] = host.LogDirectory,
         };
+        foreach (var (key, value) in extraSettings ?? new Dictionary<string, string>())
+        {
+            settings[key] = value;
+        }
         host._factory = new ControlPlaneFactory(settings, host.Time, host.CodeGenerator, host.OperatorConsole);
         _ = host._factory.Server;
         return host;

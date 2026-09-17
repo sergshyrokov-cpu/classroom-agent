@@ -17,11 +17,14 @@ public class ControlPlaneDbContext(DbContextOptions<ControlPlaneDbContext> optio
 
     public DbSet<AllowedAdmin> AllowedAdmins => Set<AllowedAdmin>();
 
+    public DbSet<InstanceLicenseCheck> InstanceLicenseChecks => Set<InstanceLicenseCheck>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new OwnerConfiguration());
         modelBuilder.ApplyConfiguration(new AuditEventConfiguration());
         modelBuilder.ApplyConfiguration(new InstallationConfiguration());
         modelBuilder.ApplyConfiguration(new AllowedAdminConfiguration());
+        modelBuilder.ApplyConfiguration(new InstanceLicenseCheckConfiguration());
     }
 }
