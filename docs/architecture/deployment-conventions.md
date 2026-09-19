@@ -46,7 +46,11 @@ the previous one — the dependency is real, not stylistic
    (`docs/stories/US-001-owner-first-run-setup.md`). Until it exists nothing
    else is configurable.
 3. Owner creates the school's service account in the Owner's Cloud project, which
-   lives outside every school's domain (DC-5).
+   lives outside every school's domain (DC-5). In the same project the Owner also
+   creates that school's **OAuth web client** for the Admin sign-in (SC-7, v78):
+   user type "External", identity scopes only, and the redirect URI built from
+   the school's public base address — step 6 needs its client id and puts its
+   secret in the secret store.
 4. Owner registers the school as an `Installation`: name, Google Workspace
    domain, status, and that service account's client ID — required
    (`trebovaniya.md` §3, v43). The status is "active" at creation. Copy the
@@ -61,8 +65,10 @@ the previous one — the dependency is real, not stylistic
    roles (BR-015) — the Owner cannot do either step (BR-032).
 6. Deploy the installation: its database, its migrations, its configuration
    (DC-3) — including the installation id from step 4, the retention period
-   agreed with the school and the school's time zone, all required — and the service-account key placed in
-   the secret store (DC-5). Create its Data Protection key directory on a
+   agreed with the school, the school's time zone, the public base address and the
+   OAuth client id from step 3, all required — and the service-account key and the
+   OAuth client secret placed in
+   the secret store (DC-5, SC-7). Create its Data Protection key directory on a
    persistent volume. If the Control Plane certificate comes from the internal
    certificate authority, add that authority's root certificate to the trusted
    roots of the installation's server (DC-6). Set the private port's address
@@ -85,11 +91,22 @@ the previous one — the dependency is real, not stylistic
   secret-store reference for its service-account key, the Data Protection key
   directory (SC-7), the retention period N (PC-11), and the school's time zone
   (an IANA id such as `Europe/Kyiv`, PC-6), and the private port with the address
-  it listens on (DC-6). The installation id, the Control Plane address, the private
-  port and its address, the retention period and the time zone are required: an
+  it listens on (DC-6), and — for the Admin's Google sign-in (v78) — the school's
+  public base address, the installation's OAuth client id and the secret-store
+  reference for its OAuth client secret. The installation id, the Control Plane
+  address, the private
+  port and its address, the retention period, the time zone, the public base
+  address, the OAuth client id and the OAuth client secret reference are required: an
   installation without any of them refuses to start (`trebovaniya.md` §5, v73,
-  v75). Optional:
+  v75, v78). Optional:
   the school's default UI language (`uk` or `en`, `uk` if unset — NFR-073).
+- **The public base address is configuration, not a request header** (v78). The
+  Google redirect URI is built from it, so deriving it from the incoming request's
+  host or forwarded headers — which a reverse proxy makes forgeable — is a
+  finding.
+- **The OAuth client id is not a secret** and may sit in configuration directly.
+  The **client secret never does**: it lives in the secret store, with only the
+  reference in configuration, exactly like the service-account key (SC-7, v78).
 - The Control Plane's own configuration includes its Data Protection key
   directory as well (SC-7).
 - Trust in the Control Plane's certificate is server configuration, not

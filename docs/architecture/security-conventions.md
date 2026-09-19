@@ -293,6 +293,24 @@ pages are disabled outside local development.
 - One Cloud project owned by the Owner, **a separate service account per
   school** (`trebovaniya.md` section 6). A key leak must compromise one school,
   not all of them.
+- **A separate OAuth web client per school, in the same project** (v78), for the
+  Admin's Google sign-in — the same isolation rule and the same reason: a leaked
+  client secret must compromise one school, and the secret is rotated per school
+  without touching the others. The client is of Google's "External" user type; an
+  "Internal" client would admit only the Owner's own Workspace domain, never a
+  school's Admin. A single OAuth client shared by all installations is a finding.
+  - The **client secret** lives in the configured secret store with only the
+    *reference* in configuration, exactly like the service-account key: never in
+    the database, never in the repository, never in a log, and never in the UI
+    (DC-3). The **client id** is not a secret and may sit in configuration.
+  - The sign-in requests identity scopes only — `openid`, `email`, `profile`.
+    Requesting any Classroom or Reports scope on this channel is a Critical
+    finding: OAuth authenticates a person, and teaching data is read solely
+    through the service account (SC-8, NFR-021).
+  - The account-picker hint carrying the school's domain is a convenience, not a
+    control: it is sent when `LegitimacyState` knows the domain and omitted while
+    no legitimacy check has ever succeeded. Treating it as the access decision, in
+    place of or in addition to the `AllowedAdmin` check, is a finding (SC-3, v78).
 - Never commit a key, a client secret, a connection string with a password, or a
   token. The prototype's committed-looking artifacts
   (`dac-classroom-agent-*.json`, `google_credentials.json`) are git-ignored and
