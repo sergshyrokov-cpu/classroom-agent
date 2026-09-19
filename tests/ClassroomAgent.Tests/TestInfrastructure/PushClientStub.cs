@@ -53,7 +53,16 @@ public sealed class PushClientStub(TimeProvider time) : HttpMessageHandler
             return new HttpResponseMessage(HttpStatusCode.Accepted);
         });
 
-    /// <summary>Waits (real time, bounded) until at least that many attempts have been made.</summary>
+    /// <summary>
+    /// Waits (real time, bounded) until at least that many attempts have <em>arrived</em>. It deliberately
+    /// returns before the answer is sent, so that <see cref="NeverAnswer"/> can be waited for at all.
+    /// </summary>
+    /// <remarks>
+    /// This is not a wait for the sender to have finished with the attempt: when it returns, the dispatcher
+    /// has not yet classified the answer or written its log line. A test that asserts on the log must wait
+    /// for the log event itself (<c>ControlPlaneTestHost.WaitForLogEventAsync</c>) — reading the log stops
+    /// the host, and a cancelled push logs nothing (US-006 spec I-9).
+    /// </remarks>
     public async Task WaitForAttemptsAsync(int count, CancellationToken cancellationToken)
     {
         using var limit = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);

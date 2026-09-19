@@ -22,7 +22,7 @@ public sealed class StatusPushLoggingTests(PostgreSqlFixture database)
         await PushAsync(host, ct, host.InstallationId);
         await host.ControlPlane.WaitForCallsAsync(2, ct);
 
-        var events = await host.ReadLogEventsAsync(ct);
+        var events = await host.WaitForLogEventAsync("StatusPushAccepted", ct);
         var accepted = Assert.Single(events, e => e.EventName == "StatusPushAccepted");
         Assert.Equal("Information", accepted.Level);
     }
@@ -99,7 +99,7 @@ public sealed class StatusPushLoggingTests(PostgreSqlFixture database)
         host.Time.Advance(TimeSpan.FromSeconds(50));
         await host.ControlPlane.WaitForCallsAsync(3, ct);
 
-        var events = await host.ReadLogEventsAsync(ct);
+        var events = await host.WaitForLogEventAsync("PendingPushCheckStarted", ct);
         var accepted = Assert.Single(events, e => e.EventName == "StatusPushAccepted");
         Assert.Equal("Information", accepted.Level);
         var pending = Assert.Single(events, e => e.EventName == "PendingPushCheckStarted");

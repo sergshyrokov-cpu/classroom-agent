@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using ClassroomAgent.Tests.TestInfrastructure;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,9 +27,8 @@ public sealed class StatusPushLoggingTests(PostgreSqlFixture database)
         var internalId = (await host.InstallationAsync(installation, ct))!.Id;
 
         await owner.SuspendInstallationAsync(installation, ct);
-        await stub.WaitForAttemptsAsync(1, ct);
 
-        var events = await host.ReadLogEventsAsync(ct);
+        var events = await host.WaitForLogEventAsync("StatusPushDelivered", ct);
         var delivered = Assert.Single(events, e => e.EventName == "StatusPushDelivered");
         Assert.Equal("Information", delivered.Level);
         Assert.Equal(internalId.ToString(System.Globalization.CultureInfo.InvariantCulture), delivered.Property("InstallationId"));
@@ -46,8 +45,9 @@ public sealed class StatusPushLoggingTests(PostgreSqlFixture database)
         var installation = await host.RegisterInstallationWithPushAddressAsync(owner, ct);
 
         await owner.SuspendInstallationAsync(installation, ct);
-        await stub.WaitForAttemptsAsync(1, ct);
+        await host.WaitForLogEventAsync("StatusPushRefused", ct);
         clock.Advance(ThirdPause);
+        await stub.AssertNoAttemptAsync(ct, expected: 1);
 
         var events = await host.ReadLogEventsAsync(ct);
         var refused = Assert.Single(events, e => e.EventName == "StatusPushRefused");
@@ -67,15 +67,14 @@ public sealed class StatusPushLoggingTests(PostgreSqlFixture database)
         var installation = await host.RegisterInstallationWithPushAddressAsync(owner, ct);
 
         await owner.SuspendInstallationAsync(installation, ct);
-        await stub.WaitForAttemptsAsync(1, ct);
-        clock.Advance(FirstPause);
-        await stub.WaitForAttemptsAsync(2, ct);
-        clock.Advance(SecondPause);
-        await stub.WaitForAttemptsAsync(3, ct);
-        clock.Advance(ThirdPause);
-        await stub.WaitForAttemptsAsync(4, ct);
+        await host.WaitForLogEventAsync("StatusPushAttemptFailed", ct);
+        await clock.AdvanceWhenDueAsync(FirstPause, ct);
+        await host.WaitForLogEventAsync("StatusPushAttemptFailed", ct, count: 2);
+        await clock.AdvanceWhenDueAsync(SecondPause, ct);
+        await host.WaitForLogEventAsync("StatusPushAttemptFailed", ct, count: 3);
+        await clock.AdvanceWhenDueAsync(ThirdPause, ct);
 
-        var events = await host.ReadLogEventsAsync(ct);
+        var events = await host.WaitForLogEventAsync("StatusPushAbandoned", ct);
         var failed = events.Where(e => e.EventName == "StatusPushAttemptFailed").ToList();
         Assert.Equal(4, failed.Count);
         Assert.All(failed, e =>
@@ -100,9 +99,8 @@ public sealed class StatusPushLoggingTests(PostgreSqlFixture database)
         var installation = await host.RegisterInstallationWithPushAddressAsync(owner, ct);
 
         await owner.SuspendInstallationAsync(installation, ct);
-        await stub.WaitForAttemptsAsync(1, ct);
 
-        var events = await host.ReadLogEventsAsync(ct);
+        var events = await host.WaitForLogEventAsync("StatusPushAttemptFailed", ct);
         var failed = Assert.Single(events, e => e.EventName == "StatusPushAttemptFailed");
         Assert.Equal("ConnectionFailed", failed.Property("Category"));
         Assert.True(failed.Property("StatusCode") is null or "null");
@@ -119,6 +117,7 @@ public sealed class StatusPushLoggingTests(PostgreSqlFixture database)
         var internalId = (await host.InstallationAsync(installation, ct))!.Id;
 
         await owner.SuspendInstallationAsync(installation, ct);
+        await host.WaitForLogEventAsync("StatusPushNoAddress", ct);
         await stub.AssertNoAttemptAsync(ct);
 
         var events = await host.ReadLogEventsAsync(ct);
@@ -138,9 +137,11 @@ public sealed class StatusPushLoggingTests(PostgreSqlFixture database)
         var installation = await host.RegisterInstallationWithPushAddressAsync(owner, ct);
 
         await owner.SuspendInstallationAsync(installation, ct);
-        await stub.WaitForAttemptsAsync(1, ct);
-        clock.Advance(FirstPause);
-        await stub.WaitForAttemptsAsync(2, ct);
+        await host.WaitForLogEventAsync("StatusPushAttemptFailed", ct);
+        await clock.AdvanceWhenDueAsync(FirstPause, ct);
+
+        // The wait is the assertion's anchor: without lines to inspect, "the address is absent" is vacuous.
+        await host.WaitForLogEventAsync("StatusPushAttemptFailed", ct, count: 2);
 
         var logs = await host.ReadLogFilesAsync(ct);
         Assert.DoesNotContain(logs, log => log.Contains(PushTestData.Address, StringComparison.OrdinalIgnoreCase));

@@ -78,7 +78,15 @@ public sealed class FakeControlPlaneClient(TimeProvider time) : IControlPlaneCli
         return await reply!(cancellationToken);
     }
 
-    /// <summary>Waits (real time, bounded) until at least that many calls have started.</summary>
+    /// <summary>
+    /// Waits (real time, bounded) until at least that many calls have <em>started</em> — it returns before the
+    /// answer is given, so a scripted reply that never answers can be waited for too.
+    /// </summary>
+    /// <remarks>
+    /// The caller has not finished handling the call when this returns. A test that asserts on the log must
+    /// wait for the log event itself (<c>InstallationTestHost.WaitForLogEventAsync</c>), because reading the
+    /// log stops the host and cancels whatever was still running.
+    /// </remarks>
     public async Task WaitForCallsAsync(int count, CancellationToken cancellationToken)
     {
         using var limit = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);

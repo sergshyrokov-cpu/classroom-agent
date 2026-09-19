@@ -241,7 +241,11 @@ public sealed class ControlPlaneTestHost : IAsyncDisposable
         }
     }
 
-    /// <summary>Stops the host and returns every log line as a parsed event (DC-10).</summary>
+    /// <summary>
+    /// Stops the host and returns every log line as a parsed event (DC-10). Use
+    /// <see cref="WaitForLogEventAsync"/> instead when the line is written by a background activity: the stop
+    /// cancels the sender, and a cancelled push logs nothing (US-006 spec I-9).
+    /// </summary>
     public async Task<IReadOnlyList<LogEvent>> ReadLogEventsAsync(CancellationToken cancellationToken) =>
         LogEvent.Parse(await ReadLogFilesAsync(cancellationToken));
 
@@ -249,20 +253,22 @@ public sealed class ControlPlaneTestHost : IAsyncDisposable
     public async Task<IReadOnlyList<string>> ReadLogFilesAsync(CancellationToken cancellationToken)
     {
         await StopAsync();
-        var contents = new List<string>();
-        foreach (var file in Directory.EnumerateFiles(LogDirectory, "*", SearchOption.AllDirectories))
-        {
-            await using var stream = new FileStream(
-                file,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.ReadWrite | FileShare.Delete);
-            using var reader = new StreamReader(stream);
-            contents.Add(await reader.ReadToEndAsync(cancellationToken));
-        }
-
-        return contents;
+        return await HostLogs.ReadFilesAsync(LogDirectory, cancellationToken);
     }
+
+    /// <summary>
+    /// Waits until the running host has logged that event the expected number of times, then returns every
+    /// event written so far. The host keeps running, so a background sender is never cancelled mid-attempt.
+    /// </summary>
+    public Task<IReadOnlyList<LogEvent>> WaitForLogEventAsync(
+        string eventName,
+        CancellationToken cancellationToken,
+        int count = 1) =>
+        HostLogs.WaitForEventAsync(LogDirectory, eventName, count, cancellationToken);
+
+    /// <summary>The text of every log file of the running host, without stopping it.</summary>
+    public Task<IReadOnlyList<string>> ReadLogFilesWhileRunningAsync(CancellationToken cancellationToken) =>
+        HostLogs.ReadFilesAsync(LogDirectory, cancellationToken);
 
     public async ValueTask DisposeAsync()
     {

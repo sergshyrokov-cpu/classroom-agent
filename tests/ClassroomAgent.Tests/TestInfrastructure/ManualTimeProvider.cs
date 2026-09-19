@@ -83,6 +83,21 @@ public sealed class ManualTimeProvider(DateTimeOffset start) : TimeProvider
     public Task WaitForTimerAtAsync(DateTimeOffset dueAt, CancellationToken cancellationToken) =>
         WaitUntilAsync(() => PendingDueTimes.Contains(dueAt), $"a timer due at {dueAt:O}", cancellationToken);
 
+    /// <summary>
+    /// Waits until a timer is scheduled to fall due within the step, then takes it. Advancing without that
+    /// wait is a race: the code under test may not have reached its <c>Task.Delay</c> yet, and time moved
+    /// past the instant it is about to ask for leaves it waiting for a moment that never comes again.
+    /// </summary>
+    public async Task AdvanceWhenDueAsync(TimeSpan by, CancellationToken cancellationToken)
+    {
+        var target = GetUtcNow() + by;
+        await WaitUntilAsync(
+            () => PendingDueTimes.Any(due => due <= target),
+            $"a timer due at or before {target:O}",
+            cancellationToken);
+        Advance(by);
+    }
+
     /// <summary>Waits (in real time, bounded) until the condition holds; fails the test otherwise.</summary>
     public async Task WaitUntilAsync(Func<bool> condition, string description, CancellationToken cancellationToken)
     {

@@ -194,11 +194,11 @@ public sealed class StatusPushDeliveryTests(PostgreSqlFixture database)
 
         await owner.SuspendInstallationAsync(installation, ct);
         await stub.WaitForAttemptsAsync(1, ct);
-        clock.Advance(FirstPause);
+        await clock.AdvanceWhenDueAsync(FirstPause, ct);
         await stub.WaitForAttemptsAsync(2, ct);
-        clock.Advance(SecondPause);
+        await clock.AdvanceWhenDueAsync(SecondPause, ct);
         await stub.WaitForAttemptsAsync(3, ct);
-        clock.Advance(ThirdPause);
+        await clock.AdvanceWhenDueAsync(ThirdPause, ct);
         await stub.WaitForAttemptsAsync(4, ct);
         clock.Advance(ThirdPause + ThirdPause);
 
@@ -220,7 +220,7 @@ public sealed class StatusPushDeliveryTests(PostgreSqlFixture database)
 
         await owner.SuspendInstallationAsync(installation, ct);
         await stub.WaitForAttemptsAsync(1, ct);
-        clock.Advance(FirstPause);
+        await clock.AdvanceWhenDueAsync(FirstPause, ct);
         await stub.WaitForAttemptsAsync(2, ct);
         clock.Advance(ThirdPause);
 
@@ -239,8 +239,8 @@ public sealed class StatusPushDeliveryTests(PostgreSqlFixture database)
 
         await owner.SuspendInstallationAsync(installation, ct);
         await stub.WaitForAttemptsAsync(1, ct);
-        clock.Advance(AttemptTimeout);
-        clock.Advance(FirstPause);
+        await clock.AdvanceWhenDueAsync(AttemptTimeout, ct);
+        await clock.AdvanceWhenDueAsync(FirstPause, ct);
 
         await stub.WaitForAttemptsAsync(2, ct);
     }
@@ -255,12 +255,17 @@ public sealed class StatusPushDeliveryTests(PostgreSqlFixture database)
         using var owner = await host.CreateOwnerAsync(ct);
         var installation = await host.RegisterInstallationWithPushAddressAsync(owner, ct);
 
+        var start = clock.GetUtcNow();
         await owner.SuspendInstallationAsync(installation, ct);
         await stub.WaitForAttemptsAsync(1, ct);
         await owner.ResumeInstallationAsync(installation, ct);
         await stub.WaitForAttemptsAsync(2, ct);
-        clock.Advance(FirstPause);
+        await clock.AdvanceWhenDueAsync(FirstPause, ct);
         await stub.WaitForAttemptsAsync(3, ct);
+
+        // Stop short of the fourth attempt's instant, but only once it is actually scheduled: otherwise
+        // "no fourth attempt" would also hold while the sender simply had not got there yet.
+        await clock.WaitForTimerAtAsync(start + FirstPause + SecondPause, ct);
         clock.Advance(SecondPause - FirstPause);
 
         // The replacement restarted the schedule: after 5 s there is a third attempt, and the
@@ -339,7 +344,9 @@ public sealed class StatusPushDeliveryTests(PostgreSqlFixture database)
         using var owner = await host.CreateOwnerAsync(ct);
         var installation = await host.RegisterInstallationWithPushAddressAsync(owner, ct);
         await owner.SuspendInstallationAsync(installation, ct);
-        await stub.WaitForAttemptsAsync(1, ct);
+
+        // The wait is the assertion's anchor: without lines to inspect, "the address is absent" is vacuous.
+        await host.WaitForLogEventAsync("StatusPushAttemptFailed", ct);
 
         var logs = await host.ReadLogFilesAsync(ct);
 
