@@ -4,44 +4,37 @@
 version: 1
 story: US-007
 workflow: story-delivery
-current_stage: IMPLEMENTATION
-previous_stage: TEST_WRITING
-last_completed_stage: TEST_WRITING
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: test-writer
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: TEST_WRITING
-  recorded_at: 2026-09-19T13:08:51Z
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_PR_APPROVAL
+  recorded_at: 2026-09-19T13:56:01Z
 last_artifacts:
-  - type: test_strategy
-    path: docs/tests/US-007-test-strategy.md
-    version: 2
-  - type: ac_test_matrix
-    path: docs/tests/US-007-ac-test-matrix.md
-    version: 2
-  - type: test_generation_report
-    path: docs/evidence/US-007-test-generation-report.md
-    version: 2
-  - type: open_decisions
-    path: docs/decisions/US-007-open-decisions.md
-    version: 4
+  - type: implementation_report
+    path: docs/evidence/US-007-implementation-report.md
+    version: 1
+  - type: security_review
+    path: docs/reviews/security/US-007-security-review.md
+    version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "TEST_WRITING: red phase verified on real PostgreSQL (Docker 29.8.0, Testcontainers). Whole suite: total 1165, passed 1115, failed 50, skipped 0. All 50 failures are in the ten new US-007 classes; nothing outside US-007 fails, so US-001 ... US-006 stay green and unchanged. dotnet build: 0 errors, 0 warnings."
-  - "TEST_WRITING: every failure is a missing-behaviour failure in one of four shapes - NotImplementedException from the skeleton (8), unresolved IReadOnlyModeGuard or ServiceWriteScope in DI (14), the guard throwing the wrong exception type because it is not written (23), and no exception thrown where the backstop must refuse (5, which is exactly AC-004). No syntax error, no broken test host, no invalid fixture."
-  - "TEST_WRITING: OD-003 resolved as option 1, so the stage created a compile-only skeleton of eight files in src/ClassroomAgent.Application (guard interface and class, ReadOnlyModeException, PermittedServiceWrite, PermittedServiceWrites, ServiceWriteScope, ReadOnlyModeUnitOfWork, IGoogleDataPort). IMPLEMENTATION owns those files from now on and may reshape them with the tests. ClassroomAgent.Application still references no NuGet package, so the US-005 test FrameworkFreeProjects_ReferenceNoPackage passes unchanged - what OD-002 option 3 was chosen to preserve."
-  - "TEST_WRITING: two skeleton files carry data rather than a throwing member, because the tests name their identifiers - the four PermittedServiceWrite members and the three ReadOnlyModeException properties. Two tests therefore pass before implementation; their value is as drift guards against BR-026 and AD-9, not as proof of implementation (report sections 3 and 5)."
-  - "TEST_WRITING: 30 tests pass before implementation, each investigated in report section 5 - the rule-detection proof (9, which is the point of AC-007), reads unaffected (10, the AC-005 guarantee), the permitted legitimacy write (3), normal operation unchanged (1), layering guarantees (3), the marker shape (2) and the two drift guards."
-  - "TEST_WRITING: two existing test-infrastructure files were extended and nothing was removed, disabled or weakened - InstallationFactory gained an optional configureServices hook and InstallationTestHost the property feeding it."
-  - "TEST_WRITING: IMPLEMENTATION must implement the eight skeleton members, add the FR-011 wiring (guard, ServiceWriteScope and the ReadOnlyModeUnitOfWork in front of the Infrastructure UnitOfWork, all scoped, behind the FR-009 logging decorators), add the two Infrastructure logging decorators with the ReadOnlyWriteRefused event the logging tests look for, and register CheckLegitimacyUseCase in PermittedServiceWrites with a declaration scope around its commit (report section 9)."
-  - "DB_DESIGN: NOT_APPLICABLE; no entity-model artifact, deliberately. The Story touches the commit path, not the schema."
-  - "API_DESIGN: NOT_APPLICABLE; no OpenAPI contract, deliberately. Recorded for US-008 - ReadOnlyModeException maps to HTTP 409 with the API-6 body, and the message is built from the reason carried as data (NFR-073, AC-002)."
-  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-19T12:17:40Z: specification v2 and open decisions v2 APPROVED; OD-002 resolved as option 3; interpretations I-1 ... I-12 accepted."
-  - "SPECIFICATION: OD-001 resolved by the Owner on 2026-09-19 (option 1). API-5 is NOT satisfied end to end after this Story - the HTTP 409 mapping arrives with US-008."
-  - "SPECIFICATION: the enforcement mechanism is two-layered - IReadOnlyModeGuard in Application as the primary point plus the IUnitOfWork commit backstop that refuses in read-only mode any commit no use case declared a permitted service write. The BR-026 list is one enum of four members with a static registry; the structural test enumerates write paths and Google paths and is proven against synthetic violations."
+  - "HUMAN_PR_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-19T13:56:01Z (no comment): implementation report v1 and security review v1 accepted; automated verdict PASS with no blocking findings. The Story is approved; it is Done only once the final commit lands on master (AGENTS.md Definition of Done item 10)."
+  - "SECURITY_REVIEW: PASS - 0 critical, 0 major, 2 minor, 3 informational. runtime_checks FULL (Docker 29.8.0); dotnet list package --vulnerable reports nothing in any of the seven projects. The central SC-5 questions were answered by reading every SaveChanges call site in src/: the installation has exactly two, both inside the enforced path, and the only IUnitOfWork registration is the decorated chain LoggingUnitOfWork -> ReadOnlyModeUnitOfWork -> UnitOfWork. The BR-026 closed list was not widened - four enum members and one registry entry, both test-locked."
+  - "SECURITY_REVIEW F-1 (Minor, READ_ONLY_MODE, SC-5): InstallationServices registers the bare ReadOnlyModeGuard and UnitOfWork as services so the decorator factories can resolve them, so a Web type could inject UnitOfWork and commit past the backstop, and the structural rule - which by approved FR-010 enumerates Application.UseCases only - would stay silent. Not reachable today: Application cannot reference Infrastructure, Web holds no business logic (AD-3) and no such code exists. Correction: construct both inside the factory closures and drop the two bare registrations; suitable for US-008, which next touches InstallationServices. Not blocking."
+  - "SECURITY_REVIEW F-2 (Minor, ERROR_HANDLING, SC-5): CheckLegitimacyUseCase converts any exception from its commit into CheckOutcome.Failed(SaveFailed). Its declaration means ReadOnlyModeException cannot arise there today, but removing the declaration would silently downgrade a refusal into an ordinary save failure. Correction: catch (ReadOnlyModeException) { throw; } before the general handler, mirroring the existing OperationCanceledException filter. Not blocking."
+  - "SECURITY_REVIEW F-3 (Informational, LOGGING, DC-10): the request identifier on the refusal line cannot be verified until the installation has an endpoint (US-008). Recorded so it is not mistaken for a verified control."
+  - "SECURITY_REVIEW F-4 (Informational, READ_ONLY_MODE): only LegitimacyCheckState of the four BR-026 members has a live use case; AuditEvent, SignInBookkeeping and RetentionPurge are asserted as list membership only (US-008, US-012, EPIC-10)."
+  - "SECURITY_REVIEW F-5 (Informational, GOOGLE_ACCESS, SC-8): AC-006 is proven on a synthetic port marked IGoogleDataPort because no real Google port exists; the first Story adding one must prove its own refusal there."
+  - "SECURITY_REVIEW: the three implementation deviations were reviewed and accepted - the new Infrastructure.ReadOnly namespace with its package-map.md row, the corrected test fixture (a test-only type; no assertion, no matrix row and no production behaviour changed, and without it three cases could not fail), and the narrowed interpretation I-5."
+  - "IMPLEMENTATION: build 0 errors 0 warnings, dotnet format clean, whole suite 1165 passed 0 failed 0 skipped - down from the 50 failures of the verified red-phase baseline. No migration, no entity, no endpoint, no configuration key."
+  - "SPECIFICATION: API-5 is NOT satisfied end to end after this Story by OD-001 - the refusal stops at Application and the HTTP 409 mapping with the translated message arrives with US-008."
+  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-19T12:17:40Z; OD-002 resolved as option 3; interpretations I-1 ... I-12 accepted. OD-003 resolved as option 1 on 2026-09-19 (the compile-only skeleton)."
 started_at: 2026-09-19T12:15:12Z
-updated_at: 2026-09-19T13:08:51Z
-completed_at: null
+updated_at: 2026-09-19T13:56:01Z
+completed_at: 2026-09-19T13:56:01Z

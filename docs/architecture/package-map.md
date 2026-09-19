@@ -72,6 +72,7 @@ Epic 7 — do not add them speculatively.
 | `Secrets` | `IWorkspaceCredentialProvider` implementation | reads the service-account key from the configured secret store, never from the database |
 | `ControlPlane` | `IControlPlaneClient` implementation | uses `Contracts` types |
 | `Export` | `IReportRenderer` implementation | ClosedXML/EPPlus, OpenXML/DocX |
+| `ReadOnly` | the decorators that log a read-only refusal and rethrow it (US-007 spec FR-009) | they observe the refusal; the rule itself stays in `Application` (AD-6) |
 
 ### `ClassroomAgent.Web` (Data Plane host)
 

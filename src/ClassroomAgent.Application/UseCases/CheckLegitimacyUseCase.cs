@@ -9,13 +9,16 @@ namespace ClassroomAgent.Application.UseCases;
 /// One legitimacy check (US-005 spec FR-007; db-design §4.2): asks the Control Plane, records the answer in
 /// <see cref="LegitimacyState"/> and reports the outcome. A successful check moves the last success; an
 /// <c>upgrade_required</c> answer records everything else; any other failure writes nothing. Writing
-/// <see cref="LegitimacyState"/> is on the BR-026 closed list, so no read-only guard applies. Failures are
-/// outcomes, not exceptions (AD-9); only the caller's cancellation propagates.
+/// <see cref="LegitimacyState"/> is on the BR-026 closed list, so no read-only guard applies: the use case
+/// declares it through <see cref="ServiceWriteScope"/> instead, and is registered in
+/// <see cref="PermittedServiceWrites"/> (US-007 spec FR-005). Failures are outcomes, not exceptions (AD-9);
+/// only the caller's cancellation propagates.
 /// </summary>
 public sealed class CheckLegitimacyUseCase(
     IControlPlaneClient controlPlane,
     ILegitimacyStateRepository states,
     IUnitOfWork unitOfWork,
+    ServiceWriteScope writeScope,
     InstallationIdentity identity,
     TimeProvider timeProvider)
 {
@@ -80,7 +83,11 @@ public sealed class CheckLegitimacyUseCase(
                 }
             }
 
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            // Permitted in read-only mode; without it the installation could never leave the mode (BR-026).
+            using (writeScope.Declare(PermittedServiceWrite.LegitimacyCheckState))
+            {
+                await unitOfWork.SaveChangesAsync(cancellationToken);
+            }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

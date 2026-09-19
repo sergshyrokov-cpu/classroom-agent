@@ -5,6 +5,7 @@ using ClassroomAgent.Contracts;
 using ClassroomAgent.Infrastructure.ControlPlane;
 using ClassroomAgent.Infrastructure.Persistence;
 using ClassroomAgent.Infrastructure.Persistence.Repositories;
+using ClassroomAgent.Infrastructure.ReadOnly;
 using ClassroomAgent.Web.BackgroundServices;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -30,7 +31,22 @@ public static class InstallationServices
             options.AddInterceptors(provider.GetRequiredService<TimestampInterceptor>());
         });
         services.AddScoped<ILegitimacyStateRepository, LegitimacyStateRepository>();
-        services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        // US-007 FR-011: the enforcement point and the commit backstop, each behind the decorator that
+        // logs a refusal (FR-009). Scoped, never singleton: a singleton would outlive the DbContext it
+        // reads through and invite the cached mode AC-008 forbids.
+        services.AddScoped<ServiceWriteScope>();
+        services.AddScoped<ReadOnlyModeGuard>();
+        services.AddScoped<IReadOnlyModeGuard>(provider => new LoggingReadOnlyModeGuard(
+            provider.GetRequiredService<ReadOnlyModeGuard>(),
+            provider.GetRequiredService<ILogger<LoggingReadOnlyModeGuard>>()));
+        services.AddScoped<UnitOfWork>();
+        services.AddScoped<IUnitOfWork>(provider => new LoggingUnitOfWork(
+            new ReadOnlyModeUnitOfWork(
+                provider.GetRequiredService<UnitOfWork>(),
+                provider.GetRequiredService<GetLegitimacyModeQuery>(),
+                provider.GetRequiredService<ServiceWriteScope>()),
+            provider.GetRequiredService<ILogger<LoggingUnitOfWork>>()));
 
         // The only outbound destination: the configured Control Plane address (SC-13). Redirects are not
         // followed and no cookie is kept (api-design §6); the certificate is validated by the platform (S-05).

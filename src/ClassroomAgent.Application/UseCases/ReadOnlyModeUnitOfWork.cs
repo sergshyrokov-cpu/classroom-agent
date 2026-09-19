@@ -1,3 +1,4 @@
+using ClassroomAgent.Application.Exceptions;
 using ClassroomAgent.Application.Ports;
 
 namespace ClassroomAgent.Application.UseCases;
@@ -16,12 +17,18 @@ public sealed class ReadOnlyModeUnitOfWork(
     /// <summary>The operation name the backstop's own refusal carries (spec FR-006).</summary>
     public const string Operation = "UnitOfWork.SaveChanges";
 
-    public Task SaveChangesAsync(CancellationToken cancellationToken)
+    public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
-        // Skeleton declared at TEST_WRITING (US-007 OD-003, option 1); IMPLEMENTATION owns this file.
-        _ = inner;
-        _ = mode;
-        _ = writeScope;
-        throw new NotImplementedException();
+        // A declared write of the BR-026 closed list commits whatever the mode is (AC-003).
+        if (writeScope.Current is null)
+        {
+            var current = await mode.ExecuteAsync(cancellationToken);
+            if (current is { IsReadOnly: true, Reason: { } reason })
+            {
+                throw new ReadOnlyModeException(reason, current.LastSuccessfulCheckAt, Operation);
+            }
+        }
+
+        await inner.SaveChangesAsync(cancellationToken);
     }
 }

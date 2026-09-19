@@ -28,31 +28,29 @@ public sealed class SyntheticWriteUseCase(
         await WriteAsync(states, unitOfWork, checkedAt, cancellationToken);
     }
 
-    /// <summary>Stages the marker row - creating it or moving the existing one - and commits.</summary>
+    /// <summary>
+    /// Stages the marker row - creating it or moving the existing one - and commits. It writes only the
+    /// domain, through <c>RecordUpgradeRequired</c>, so the write never moves the last successful check or
+    /// the status: a fixture that changed those would change the very mode the test is judging.
+    /// </summary>
     internal static async Task WriteAsync(
         ILegitimacyStateRepository states,
         IUnitOfWork unitOfWork,
         DateTimeOffset checkedAt,
         CancellationToken cancellationToken)
     {
+        _ = checkedAt;
         var state = await states.GetAsync(cancellationToken);
         if (state is null)
         {
-            states.Add(LegitimacyState.FromSuccess(
-                checkedAt,
+            states.Add(LegitimacyState.FromUpgradeRequired(
                 InstallationStatus.Active,
-                CompatibilityState.Supported,
                 MarkerDomain,
                 InstallationTestData.ClientId));
         }
         else
         {
-            state.RecordSuccess(
-                checkedAt,
-                InstallationStatus.Active,
-                CompatibilityState.Supported,
-                MarkerDomain,
-                InstallationTestData.ClientId);
+            state.RecordUpgradeRequired(state.Status, MarkerDomain, InstallationTestData.ClientId);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
