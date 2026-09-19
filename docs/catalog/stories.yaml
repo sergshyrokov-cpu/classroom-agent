@@ -67,9 +67,10 @@ stories:
   - id: US-007
     epic: EPIC-8
     title: Read-only mode enforcement
-    state: BACKLOG
-    blocked_by: >
-      Depends on US-005 (LegitimacyState decides read-only mode).
+    state: READY
+    # Depended on US-005 (COMPLETED), whose LegitimacyState decides read-only
+    # mode; this Story enforces it. OD-001 resolved before activation: the
+    # refusal stops at Application, the HTTP 409 mapping arrives with US-008.
 
   # --- EPIC-6: Program settings / Admin panel ------------------------------
   - id: US-008
