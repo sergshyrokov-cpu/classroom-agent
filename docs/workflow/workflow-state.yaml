@@ -2,39 +2,38 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-007
+story: US-008
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: spec-writer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_PR_APPROVAL
-  recorded_at: 2026-09-19T13:56:01Z
+  verdict: PASS
+  stage: SPECIFICATION
+  recorded_at: 2026-09-19T17:21:40Z
 last_artifacts:
-  - type: implementation_report
-    path: docs/evidence/US-007-implementation-report.md
-    version: 1
-  - type: security_review
-    path: docs/reviews/security/US-007-security-review.md
-    version: 1
+  - type: specification
+    path: docs/specifications/US-008-spec.md
+    version: 2
+  - type: open_decisions
+    path: docs/decisions/US-008-open-decisions.md
+    version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "HUMAN_PR_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-19T13:56:01Z (no comment): implementation report v1 and security review v1 accepted; automated verdict PASS with no blocking findings. The Story is approved; it is Done only once the final commit lands on master (AGENTS.md Definition of Done item 10)."
-  - "SECURITY_REVIEW: PASS - 0 critical, 0 major, 2 minor, 3 informational. runtime_checks FULL (Docker 29.8.0); dotnet list package --vulnerable reports nothing in any of the seven projects. The central SC-5 questions were answered by reading every SaveChanges call site in src/: the installation has exactly two, both inside the enforced path, and the only IUnitOfWork registration is the decorated chain LoggingUnitOfWork -> ReadOnlyModeUnitOfWork -> UnitOfWork. The BR-026 closed list was not widened - four enum members and one registry entry, both test-locked."
-  - "SECURITY_REVIEW F-1 (Minor, READ_ONLY_MODE, SC-5): InstallationServices registers the bare ReadOnlyModeGuard and UnitOfWork as services so the decorator factories can resolve them, so a Web type could inject UnitOfWork and commit past the backstop, and the structural rule - which by approved FR-010 enumerates Application.UseCases only - would stay silent. Not reachable today: Application cannot reference Infrastructure, Web holds no business logic (AD-3) and no such code exists. Correction: construct both inside the factory closures and drop the two bare registrations; suitable for US-008, which next touches InstallationServices. Not blocking."
-  - "SECURITY_REVIEW F-2 (Minor, ERROR_HANDLING, SC-5): CheckLegitimacyUseCase converts any exception from its commit into CheckOutcome.Failed(SaveFailed). Its declaration means ReadOnlyModeException cannot arise there today, but removing the declaration would silently downgrade a refusal into an ordinary save failure. Correction: catch (ReadOnlyModeException) { throw; } before the general handler, mirroring the existing OperationCanceledException filter. Not blocking."
-  - "SECURITY_REVIEW F-3 (Informational, LOGGING, DC-10): the request identifier on the refusal line cannot be verified until the installation has an endpoint (US-008). Recorded so it is not mistaken for a verified control."
-  - "SECURITY_REVIEW F-4 (Informational, READ_ONLY_MODE): only LegitimacyCheckState of the four BR-026 members has a live use case; AuditEvent, SignInBookkeeping and RetentionPurge are asserted as list membership only (US-008, US-012, EPIC-10)."
-  - "SECURITY_REVIEW F-5 (Informational, GOOGLE_ACCESS, SC-8): AC-006 is proven on a synthetic port marked IGoogleDataPort because no real Google port exists; the first Story adding one must prove its own refusal there."
-  - "SECURITY_REVIEW: the three implementation deviations were reviewed and accepted - the new Infrastructure.ReadOnly namespace with its package-map.md row, the corrected test fixture (a test-only type; no assertion, no matrix row and no production behaviour changed, and without it three cases could not fail), and the narrowed interpretation I-5."
-  - "IMPLEMENTATION: build 0 errors 0 warnings, dotnet format clean, whole suite 1165 passed 0 failed 0 skipped - down from the 50 failures of the verified red-phase baseline. No migration, no entity, no endpoint, no configuration key."
-  - "SPECIFICATION: API-5 is NOT satisfied end to end after this Story by OD-001 - the refusal stops at Application and the HTTP 409 mapping with the translated message arrives with US-008."
-  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-19T12:17:40Z; OD-002 resolved as option 3; interpretations I-1 ... I-12 accepted. OD-003 resolved as option 1 on 2026-09-19 (the compile-only skeleton)."
-started_at: 2026-09-19T12:15:12Z
-updated_at: 2026-09-19T13:56:01Z
-completed_at: 2026-09-19T13:56:01Z
+  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-19T17:50:34Z (no comment): Specification v2 and open decisions v2 accepted; automated verdict PASS with no blocking findings. OD-001, OD-002 and OD-003 all resolved; interpretations I-1 ... I-14 accepted, including I-1 (one sign-in page, the Dean password form joins it in US-012), I-5 (OAuth credentials are not verified against Google at start-up), I-6 (an unverified Google email is a failed callback, not an AllowedAdmin refusal), I-9 (the disabled-account check is written now although only US-012 can disable), I-13 (sign-out writes no audit row) and I-14 (Accept-Language is not consulted)."
+  - "SPECIFICATION: PASS. 21 functional requirements, 7 validation rules, 20 security requirements, interpretations I-1 ... I-14, every one of the Story's 18 Acceptance Criteria traced. No automated spec reviewer exists in this variant, so HUMAN_SPEC_APPROVAL is the only check that the Specification reflects trebovaniya.md v78 faithfully."
+  - "SPECIFICATION raised OD-003 and the Owner resolved it on 2026-09-19 (option 1): no project referenced a Google or OIDC authentication handler, and all three candidates are standalone NuGet packages outside the ASP.NET Core shared framework, so AGENTS.md required an approved Open Decision. Microsoft.AspNetCore.Authentication.Google is added to ClassroomAgent.Web only, pinned to the framework major version, with its scope set stated explicitly rather than inherited. It is the Story's one dependency change (FR-021)."
+  - "SPECIFICATION I-2 reuses the US-001 precedent instead of re-deciding it: UserManager in .NET 10 has no injectable clock (US-001 implementation report 7.1), so AppUser is a plain Domain entity on the shared-framework Identity components - no Identity EF store, no UserManager, no SignInManager, no Identity NuGet package, and Domain keeps zero package references (AD-3)."
+  - "SPECIFICATION FR-013: AC-011 is met without widening the BR-026 closed list - the sign-in use case registers against the existing SignInBookkeeping and AuditEvent members and PermittedServiceWrite keeps exactly its four members, test-locked as US-007 established."
+  - "SPECIFICATION FR-014 closes US-007 OD-001: ReadOnlyModeException maps to HTTP 409 with the API-6 body under /api/v1 and the translated error page elsewhere. API-5 is satisfied end to end from this Story onwards."
+  - "Carried from the US-007 security review, to be corrected by this Story because it is the next to touch these files: F-1 (Minor, SC-5) construct ReadOnlyModeGuard and UnitOfWork inside the decorator factory closures in InstallationServices and drop the two bare registrations; F-2 (Minor, SC-5) rethrow ReadOnlyModeException ahead of the general handler in CheckLegitimacyUseCase instead of folding it into SaveFailed."
+  - "US-007 security review F-5 (Informational, SC-8) stays open: US-008 adds no real Google data port - OAuth authenticates a person and touches neither Classroom nor Reports - so the first Story adding one (US-011) must prove its own read-only refusal there."
+  - "US-008 OD-001 resolved by the Owner on 2026-09-19 as option 2 (one OAuth web client per school in the Owner's Cloud project, External user type, client secret in the secret store with only its reference in configuration, redirect URI from a configured public base address). Landed in trebovaniya.md v78 with DC-3, SC-7 and DC-2, commit 0e31e50, before this activation."
+  - "US-008 OD-002 resolved by the Owner on 2026-09-19 as option 1 (the account-picker hint carries the school's domain when LegitimacyState knows it, none while no legitimacy check has ever succeeded; the hint is never the access decision - AllowedAdmin stays the gate)."
+started_at: 2026-09-19T17:13:12Z
+updated_at: 2026-09-19T17:50:34Z
+completed_at: null
