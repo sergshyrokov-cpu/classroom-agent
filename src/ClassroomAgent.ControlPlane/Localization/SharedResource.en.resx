@@ -132,4 +132,17 @@
   <data name="Installation.Compatibility.Supported" xml:space="preserve"><value>supported</value></data>
   <data name="Installation.Compatibility.UpgradeRecommended" xml:space="preserve"><value>upgrade recommended</value></data>
   <data name="Installation.Compatibility.UpgradeRequired" xml:space="preserve"><value>upgrade required</value></data>
+  <data name="Installation.PushAddress.Label" xml:space="preserve"><value>Installation push address</value></data>
+  <data name="Installation.PushAddress.Hint" xml:space="preserve"><value>The address of the installation's private port as http://host:port — for example http://10.0.0.5:8081. No path, query or credentials.</value></data>
+  <data name="Installation.PushAddress.NotSet" xml:space="preserve"><value>not set</value></data>
+  <data name="Installation.PushAddress.MissingWarning" xml:space="preserve"><value>While no address is set, a status change reaches the school only with the periodic check — within 6 hours.</value></data>
+  <data name="Installation.PushAddress.Change" xml:space="preserve"><value>Change the push address</value></data>
+  <data name="Installation.PushAddress.Title" xml:space="preserve"><value>School push address</value></data>
+  <data name="Installation.PushAddress.ClearNote" xml:space="preserve"><value>An empty value clears the address: a status change then reaches the school only with the periodic check, within 6 hours.</value></data>
+  <data name="Installation.PushAddress.Length" xml:space="preserve"><value>The push address may contain at most 255 characters.</value></data>
+  <data name="Installation.PushAddress.Format" xml:space="preserve"><value>Enter the whole address including its scheme — for example http://10.0.0.5:8081.</value></data>
+  <data name="Installation.PushAddress.Scheme" xml:space="preserve"><value>The push address must start with http:// — the private port runs without TLS.</value></data>
+  <data name="Installation.PushAddress.Extra" xml:space="preserve"><value>The push address may not contain a path, a query, a fragment or credentials.</value></data>
+  <data name="Installation.PushAddress.Host" xml:space="preserve"><value>The host of the push address must be a name, an IPv4 address or an IPv6 address in square brackets.</value></data>
+  <data name="Installation.PushAddress.Port" xml:space="preserve"><value>Give the port of the push address — a number from 1 to 65535.</value></data>
 </root>

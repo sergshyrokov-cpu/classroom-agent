@@ -28,6 +28,18 @@ public static partial class Html
     /// <summary>The body with every Data Protection token value (antiforgery) replaced by a placeholder.</summary>
     public static string WithoutProtectedTokens(string html) => ProtectedToken().Replace(html, "{token}");
 
+    /// <summary>The decoded, trimmed text directly inside the element with that id; null when there is none.</summary>
+    public static string? ElementText(string html, string id)
+    {
+        var match = Regex.Match(
+            html,
+            @"<[a-z0-9]+[^>]*\bid=""" + Regex.Escape(id) + @"""[^>]*>(?<text>[^<]*)<",
+            RegexOptions.IgnoreCase);
+        return match.Success
+            ? WhiteSpace().Replace(WebUtility.HtmlDecode(match.Groups["text"].Value), " ").Trim()
+            : null;
+    }
+
     private static string? Attribute(string tag, string attribute)
     {
         var match = Regex.Match(
@@ -42,4 +54,7 @@ public static partial class Html
 
     [GeneratedRegex(@"CfDJ8[A-Za-z0-9_\-]+")]
     private static partial Regex ProtectedToken();
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex WhiteSpace();
 }

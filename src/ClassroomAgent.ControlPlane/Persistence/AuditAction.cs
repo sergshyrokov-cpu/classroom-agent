@@ -8,6 +8,7 @@ public enum AuditAction
     InstallationCreated,
     InstallationRenamed,
     InstallationClientIdChanged,
+    InstallationPushAddressChanged,
     AllowedAdminAdded,
     AllowedAdminRevoked,
     InstallationSuspended,

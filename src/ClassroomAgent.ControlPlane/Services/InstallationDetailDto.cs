@@ -14,5 +14,6 @@ public sealed record InstallationDetailDto(
     InstallationStatus Status,
     DateTimeOffset CreatedAt,
     string ClientId,
+    string? PushAddress,
     IReadOnlyList<AllowedAdminItemDto> Admins,
     InstallationLastCheckDto? LastCheck);

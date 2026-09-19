@@ -132,4 +132,17 @@
   <data name="Installation.Compatibility.Supported" xml:space="preserve"><value>підтримується</value></data>
   <data name="Installation.Compatibility.UpgradeRecommended" xml:space="preserve"><value>рекомендовано оновлення</value></data>
   <data name="Installation.Compatibility.UpgradeRequired" xml:space="preserve"><value>потрібне оновлення</value></data>
+  <data name="Installation.PushAddress.Label" xml:space="preserve"><value>Адреса push інсталяції</value></data>
+  <data name="Installation.PushAddress.Hint" xml:space="preserve"><value>Адреса приватного порту інсталяції у вигляді http://хост:порт — наприклад http://10.0.0.5:8081. Без шляху, параметрів і облікових даних.</value></data>
+  <data name="Installation.PushAddress.NotSet" xml:space="preserve"><value>не задано</value></data>
+  <data name="Installation.PushAddress.MissingWarning" xml:space="preserve"><value>Поки адресу не задано, зміна статусу дійде до школи лише з періодичною перевіркою — протягом 6 годин.</value></data>
+  <data name="Installation.PushAddress.Change" xml:space="preserve"><value>Змінити адресу push</value></data>
+  <data name="Installation.PushAddress.Title" xml:space="preserve"><value>Адреса push школи</value></data>
+  <data name="Installation.PushAddress.ClearNote" xml:space="preserve"><value>Порожнє значення прибирає адресу: тоді зміна статусу дійде до школи лише з періодичною перевіркою, протягом 6 годин.</value></data>
+  <data name="Installation.PushAddress.Length" xml:space="preserve"><value>Адреса push має містити не більше 255 символів.</value></data>
+  <data name="Installation.PushAddress.Format" xml:space="preserve"><value>Введіть адресу повністю, разом зі схемою — наприклад http://10.0.0.5:8081.</value></data>
+  <data name="Installation.PushAddress.Scheme" xml:space="preserve"><value>Адреса push має починатися з http:// — приватний порт працює без TLS.</value></data>
+  <data name="Installation.PushAddress.Extra" xml:space="preserve"><value>Адреса push не може містити шлях, параметри запиту, якір чи облікові дані.</value></data>
+  <data name="Installation.PushAddress.Host" xml:space="preserve"><value>Хост в адресі push має бути іменем, адресою IPv4 або адресою IPv6 у квадратних дужках.</value></data>
+  <data name="Installation.PushAddress.Port" xml:space="preserve"><value>Вкажіть порт в адресі push — число від 1 до 65535.</value></data>
 </root>

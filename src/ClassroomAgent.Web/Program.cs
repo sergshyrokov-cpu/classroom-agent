@@ -38,11 +38,12 @@ public sealed class Program
             (_, logger) => InstallationLogging.Configure(logger, logDirectory, isDevelopment),
             preserveStaticLogger: true);
 
-        // A second endpoint for the private port, plain HTTP (DC-6); the public endpoints stay as configured.
+        // A second endpoint for the private port, plain HTTP (DC-6), bound to the configured address only
+        // (US-006 spec FR-001); the public endpoints stay as configured.
         builder.WebHost.UseUrls(
         [
             .. InstallationSettingsReader.PublicUrls(builder.Configuration),
-            string.Create(CultureInfo.InvariantCulture, $"http://*:{settings.PrivatePort}"),
+            string.Create(CultureInfo.InvariantCulture, $"http://{settings.PrivateAddress}:{settings.PrivatePort}"),
         ]);
 
         builder.Services.AddInstallation(settings);

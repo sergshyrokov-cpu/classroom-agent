@@ -16,6 +16,10 @@
     <input id="clientId" name="clientId" type="text" inputmode="numeric" value="@Model.ClientId" />
     @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "clientId")
 
+    <label for="pushAddress">@T["Installation.PushAddress.Label"]</label>
+    <input id="pushAddress" name="pushAddress" type="text" value="@Model.PushAddress" />
+    @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "pushAddress")
+
     <button type="submit">@T["Installation.New.Submit"]</button>
 </form>
 <p><a href="/installations">@T["Installation.BackToList"]</a></p>

@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using ClassroomAgent.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +32,7 @@ public sealed class InstallationTestHost : IAsyncDisposable
             [InstallationConfigurationKeys.InstallationId] = installationId.ToString("D"),
             [InstallationConfigurationKeys.ControlPlaneAddress] = InstallationConfigurationKeys.ControlPlaneAddressValue,
             [InstallationConfigurationKeys.PrivatePort] = InstallationConfigurationKeys.PrivatePortValue.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            [PushTestData.PrivateAddressKey] = InstallationConfigurationKeys.PrivateAddressValue,
             [InstallationConfigurationKeys.ConnectionString] = connectionString,
             [InstallationConfigurationKeys.LogDirectory] = LogDirectory,
         };
@@ -108,16 +109,20 @@ public sealed class InstallationTestHost : IAsyncDisposable
         string method,
         string path,
         CancellationToken cancellationToken,
-        IReadOnlyDictionary<string, string>? headers = null) =>
-        SendAsync(method, path, InstallationConfigurationKeys.PrivatePortValue, cancellationToken, headers);
+        IReadOnlyDictionary<string, string>? headers = null,
+        string? body = null,
+        string? contentType = null) =>
+        SendAsync(method, path, InstallationConfigurationKeys.PrivatePortValue, cancellationToken, headers, body, contentType);
 
     /// <summary>Sends a request as if it arrived on the public HTTPS port.</summary>
     public Task<RawResponse> SendPublicAsync(
         string method,
         string path,
         CancellationToken cancellationToken,
-        IReadOnlyDictionary<string, string>? headers = null) =>
-        SendAsync(method, path, 443, cancellationToken, headers);
+        IReadOnlyDictionary<string, string>? headers = null,
+        string? body = null,
+        string? contentType = null) =>
+        SendAsync(method, path, 443, cancellationToken, headers, body, contentType);
 
     /// <summary>Waits until the check finished and scheduled the next one at that instant.</summary>
     public Task WaitForNextCheckAtAsync(DateTimeOffset dueAt, CancellationToken cancellationToken) =>
@@ -259,7 +264,9 @@ public sealed class InstallationTestHost : IAsyncDisposable
         string path,
         int localPort,
         CancellationToken cancellationToken,
-        IReadOnlyDictionary<string, string>? headers)
+        IReadOnlyDictionary<string, string>? headers,
+        string? body = null,
+        string? contentType = null)
     {
         var context = await Factory.Server.SendAsync(
             c =>
@@ -269,6 +276,14 @@ public sealed class InstallationTestHost : IAsyncDisposable
                 c.Request.Host = new HostString("localhost", localPort);
                 c.Request.Path = path;
                 c.Connection.LocalPort = localPort;
+                if (body is not null)
+                {
+                    var bytes = System.Text.Encoding.UTF8.GetBytes(body);
+                    c.Request.Body = new MemoryStream(bytes);
+                    c.Request.ContentLength = bytes.Length;
+                    c.Request.ContentType = contentType ?? "application/json; charset=utf-8";
+                }
+
                 foreach (var (name, value) in headers ?? new Dictionary<string, string>())
                 {
                     c.Request.Headers[name] = value;
@@ -276,9 +291,9 @@ public sealed class InstallationTestHost : IAsyncDisposable
             },
             cancellationToken);
         using var reader = new StreamReader(context.Response.Body);
-        var body = await reader.ReadToEndAsync(cancellationToken);
+        var responseBody = await reader.ReadToEndAsync(cancellationToken);
         var responseHeaders = context.Response.Headers.ToDictionary(h => h.Key, h => h.Value.ToString(), StringComparer.OrdinalIgnoreCase);
-        return new RawResponse((HttpStatusCode)context.Response.StatusCode, context.Response.ContentType, body, responseHeaders);
+        return new RawResponse((HttpStatusCode)context.Response.StatusCode, context.Response.ContentType, responseBody, responseHeaders);
     }
 
     private static async Task MigrateAsync(string connectionString, CancellationToken cancellationToken)

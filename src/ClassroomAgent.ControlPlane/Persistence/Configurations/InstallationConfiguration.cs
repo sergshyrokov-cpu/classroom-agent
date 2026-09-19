@@ -13,6 +13,16 @@ public sealed class InstallationConfiguration : IEntityTypeConfiguration<Install
 
     public const string ClientIdUniqueIndex = "uq_installation_client_id";
 
+    /// <summary>
+    /// US-006 db-design §3.1: the canonical push address shape — <c>http://</c>, a lower-case DNS name,
+    /// IPv4 literal or bracketed IPv6 literal, an explicit port without leading zeros, nothing else. The
+    /// finer rules (length, port range, label structure) stay in the request validation (VR-001).
+    /// </summary>
+    public const string PushAddressFormatCheck = "ck_installation_push_address_format";
+
+    public const string PushAddressFormatExpression =
+        "push_address IS NULL OR push_address ~ '^http://(\\[[0-9a-f:.]+\\]|[a-z0-9.-]{1,253}):[1-9][0-9]{0,4}$'";
+
     public void Configure(EntityTypeBuilder<Installation> builder)
     {
         builder.ToTable("installation", table =>
@@ -24,6 +34,7 @@ public sealed class InstallationConfiguration : IEntityTypeConfiguration<Install
                 "domain ~ '^[a-z0-9.-]{3,253}$' AND position('.' in domain) > 0");
             table.HasCheckConstraint("ck_installation_client_id_format", "client_id ~ '^[0-9]{10,32}$'");
             table.HasCheckConstraint("ck_installation_status", "status IN ('active', 'suspended')");
+            table.HasCheckConstraint(PushAddressFormatCheck, PushAddressFormatExpression);
         });
 
         builder.HasKey(i => i.Id).HasName("pk_installation");
@@ -36,6 +47,7 @@ public sealed class InstallationConfiguration : IEntityTypeConfiguration<Install
             .HasMaxLength(16)
             .IsRequired()
             .HasConversion(v => StatusCode(v), code => StatusFromCode(code));
+        builder.Property(i => i.PushAddress).HasMaxLength(255);
         builder.Property(i => i.CreatedAt).IsRequired();
         builder.Property(i => i.UpdatedAt).IsRequired();
 

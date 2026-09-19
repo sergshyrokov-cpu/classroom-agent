@@ -21,6 +21,7 @@ public static class InstallationServices
             ReleaseVersion.Of(typeof(InstallationServices).Assembly),
             ContractVersion.Current));
         services.AddSingleton<LegitimacyCheckMemory>();
+        services.AddSingleton<PushCheckCoordinator>();
 
         services.AddSingleton<TimestampInterceptor>();
         services.AddDbContext<ClassroomAgentDbContext>((provider, options) =>

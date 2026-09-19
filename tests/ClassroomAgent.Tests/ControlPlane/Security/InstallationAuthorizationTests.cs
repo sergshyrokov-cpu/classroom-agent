@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using ClassroomAgent.Tests.TestInfrastructure;
 
 namespace ClassroomAgent.Tests.ControlPlane.Security;
@@ -16,6 +16,8 @@ public sealed class InstallationAuthorizationTests(PostgreSqlFixture database)
         { "POST", "/installations/{id}/name" },
         { "GET", "/installations/{id}/client-id" },
         { "POST", "/installations/{id}/client-id" },
+        { "GET", "/installations/{id}/push-address" },
+        { "POST", "/installations/{id}/push-address" },
     };
 
     public static TheoryData<string> Pages => new()
@@ -25,6 +27,7 @@ public sealed class InstallationAuthorizationTests(PostgreSqlFixture database)
         "/installations/{id}",
         "/installations/{id}/name",
         "/installations/{id}/client-id",
+        "/installations/{id}/push-address",
     };
 
     [Theory]
@@ -135,7 +138,15 @@ public sealed class InstallationAuthorizationTests(PostgreSqlFixture database)
 
         var patterns = installationEndpoints.Select(e => e.Pattern).Distinct().Order(StringComparer.Ordinal).ToList();
         Assert.Equal(
-            new[] { "installations", "installations/new", "installations/{id}", "installations/{id}/client-id", "installations/{id}/name" },
+            new[]
+            {
+                "installations",
+                "installations/new",
+                "installations/{id}",
+                "installations/{id}/client-id",
+                "installations/{id}/name",
+                "installations/{id}/push-address",
+            },
             patterns);
         Assert.DoesNotContain(installationEndpoints, e => e.AllowsAnonymous);
         Assert.DoesNotContain(

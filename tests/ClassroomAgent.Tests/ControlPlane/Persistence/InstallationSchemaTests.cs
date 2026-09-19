@@ -29,6 +29,8 @@ public sealed class InstallationSchemaTests(PostgreSqlFixture database)
                 "id bigint - NO -",
                 "identifier uuid - NO -",
                 "name character varying 200 NO -",
+                // US-006 db-design §3.1: the nullable push address joins the table.
+                "push_address character varying 255 YES -",
                 "status character varying 16 NO -",
                 "updated_at timestamp with time zone - NO -",
             },
@@ -115,6 +117,7 @@ public sealed class InstallationSchemaTests(PostgreSqlFixture database)
                 "ck_installation_domain_format",
                 "ck_installation_domain_lower",
                 "ck_installation_name_length",
+                "ck_installation_push_address_format",
                 "ck_installation_status",
             },
             constraints);

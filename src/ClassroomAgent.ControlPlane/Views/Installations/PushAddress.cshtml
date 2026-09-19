@@ -1,0 +1,16 @@
+@model ChangeInstallationPushAddressPageModel
+@{
+    ViewData["Title"] = T["Installation.PushAddress.Title"];
+    var detailPath = "/installations/" + Model.Identifier.ToString("D");
+}
+<p class="note">@T["Installation.PushAddress.Hint"]</p>
+<p class="note">@T["Installation.PushAddress.ClearNote"]</p>
+<form method="post" action="@(detailPath + "/push-address")" autocomplete="off">
+    @Html.AntiForgeryToken()
+    <label for="pushAddress">@T["Installation.PushAddress.Label"]</label>
+    <input id="pushAddress" name="pushAddress" type="text" value="@Model.PushAddress" />
+    @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "pushAddress")
+
+    <button type="submit">@T["Installation.Save"]</button>
+</form>
+<p><a href="@detailPath">@T["Installation.BackToDetail"]</a></p>

@@ -22,12 +22,15 @@ public class Installation
 
     public InstallationStatus Status { get; private set; }
 
+    /// <summary>Where the Control Plane pushes a status change, canonical <c>http://host:port</c>, or null when not set (US-006 entity model §2.1).</summary>
+    public string? PushAddress { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
 
     /// <summary>A new active installation; the values are already validated by the request rules.</summary>
-    public static Installation Register(string name, string domain, string clientId) =>
+    public static Installation Register(string name, string domain, string clientId, string? pushAddress = null) =>
         new()
         {
             Identifier = Guid.NewGuid(),
@@ -35,9 +38,13 @@ public class Installation
             Domain = domain.ToLowerInvariant(),
             ClientId = clientId,
             Status = InstallationStatus.Active,
+            PushAddress = pushAddress,
         };
 
     public void Rename(string name) => Name = name;
 
     public void ChangeClientId(string clientId) => ClientId = clientId;
+
+    /// <summary>Sets, changes or clears the push address; the value is already validated and canonical.</summary>
+    public void ChangePushAddress(string? pushAddress) => PushAddress = pushAddress;
 }

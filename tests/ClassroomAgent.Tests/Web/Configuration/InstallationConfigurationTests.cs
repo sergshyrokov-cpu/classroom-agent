@@ -25,7 +25,7 @@ public sealed class InstallationConfigurationTests(PostgreSqlFixture database)
     {
         var ct = TestContext.Current.CancellationToken;
         await using var host = await InstallationTestHost.CreateAsync(database, ct);
-        Assert.Equal(5, host.Settings.Count);
+        Assert.Equal(6, host.Settings.Count);
 
         host.Start();
 

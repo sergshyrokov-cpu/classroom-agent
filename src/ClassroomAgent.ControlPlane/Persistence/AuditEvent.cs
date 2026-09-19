@@ -76,6 +76,14 @@ public class AuditEvent
         string? requestId) =>
         OwnerActsOnInstallation(AuditAction.InstallationClientIdChanged, ownerId, installationId, occurredAt, requestId);
 
+    /// <summary>The push address was set, changed or cleared; the row carries neither value (US-006 db-design §3.3).</summary>
+    public static AuditEvent InstallationPushAddressChanged(
+        long ownerId,
+        long installationId,
+        DateTimeOffset occurredAt,
+        string? requestId) =>
+        OwnerActsOnInstallation(AuditAction.InstallationPushAddressChanged, ownerId, installationId, occurredAt, requestId);
+
     public static AuditEvent InstallationSuspended(long ownerId, long installationId, DateTimeOffset occurredAt, string? requestId) =>
         OwnerActsOnInstallation(AuditAction.InstallationSuspended, ownerId, installationId, occurredAt, requestId);
 

@@ -19,18 +19,19 @@ public sealed class InstallationsController(InstallationRegistry registry) : Con
     private const string DetailView = "~/Views/Installations/Detail.cshtml";
     private const string NameView = "~/Views/Installations/Name.cshtml";
     private const string ClientIdView = "~/Views/Installations/ClientId.cshtml";
+    private const string PushAddressView = "~/Views/Installations/PushAddress.cshtml";
 
     [HttpGet]
     public async Task<IActionResult> List(CancellationToken cancellationToken) =>
         View(ListView, await registry.ListAsync(cancellationToken));
 
     [HttpGet("new")]
-    public IActionResult New() => View(NewView, new RegisterInstallationPageModel(null, null, null));
+    public IActionResult New() => View(NewView, new RegisterInstallationPageModel(null, null, null, null));
 
     [HttpPost]
     public async Task<IActionResult> Register([FromForm] RegisterInstallationRequest request, CancellationToken cancellationToken)
     {
-        var page = new RegisterInstallationPageModel(request.Name, request.Domain, request.ClientId);
+        var page = new RegisterInstallationPageModel(request.Name, request.Domain, request.ClientId, request.PushAddress);
         if (!ModelState.IsValid)
         {
             return Form(NewView, page, StatusCodes.Status400BadRequest);
@@ -41,10 +42,14 @@ public sealed class InstallationsController(InstallationRegistry registry) : Con
             return Forbid();
         }
 
+        // Already validated by VR-001; the canonical form or null for "not set" is what is stored.
+        PushAddressRules.Validate(request.PushAddress, out var pushAddress);
+
         var result = await registry.RegisterAsync(
             request.Name!,
             request.Domain!,
             request.ClientId!,
+            pushAddress,
             ownerId,
             HttpContext.TraceIdentifier,
             cancellationToken);
@@ -146,6 +151,42 @@ public sealed class InstallationsController(InstallationRegistry registry) : Con
             default:
                 return Redirect(DetailPath(id));
         }
+    }
+
+    [HttpGet("{id:guid}/push-address")]
+    public async Task<IActionResult> PushAddressForm(Guid id, CancellationToken cancellationToken) =>
+        await registry.GetAsync(id, cancellationToken) is { } installation
+            ? View(PushAddressView, new ChangeInstallationPushAddressPageModel(id, installation.PushAddress))
+            : NotFound();
+
+    [HttpPost("{id:guid}/push-address")]
+    public async Task<IActionResult> ChangePushAddress(
+        Guid id,
+        [FromForm] ChangeInstallationPushAddressRequest request,
+        CancellationToken cancellationToken)
+    {
+        // An unknown installation is 404 even when the submitted address is invalid (US-006 api-design §7).
+        if (await registry.GetAsync(id, cancellationToken) is null)
+        {
+            return NotFound();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return Form(
+                PushAddressView,
+                new ChangeInstallationPushAddressPageModel(id, request.PushAddress),
+                StatusCodes.Status400BadRequest);
+        }
+
+        if (OwnerSession.OwnerId(User) is not { } ownerId)
+        {
+            return Forbid();
+        }
+
+        PushAddressRules.Validate(request.PushAddress, out var pushAddress);
+        var result = await registry.ChangePushAddressAsync(id, pushAddress, ownerId, HttpContext.TraceIdentifier, cancellationToken);
+        return result == ChangePushAddressResult.NotFound ? NotFound() : Redirect(DetailPath(id));
     }
 
     private static string DetailPath(Guid identifier) => $"/installations/{identifier:D}";

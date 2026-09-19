@@ -43,6 +43,20 @@
 
     <dt>@T["Installation.ClientId.Label"]</dt>
     <dd>@installation.ClientId</dd>
+
+    <dt>@T["Installation.PushAddress.Label"]</dt>
+    <dd>
+        @if (installation.PushAddress is { } pushAddress)
+        {
+            <code id="installation-push-address">@pushAddress</code>
+        }
+        else
+        {
+            <span id="installation-push-address-none">@T["Installation.PushAddress.NotSet"]</span>
+            <p class="warning" id="installation-push-address-warning">@T["Installation.PushAddress.MissingWarning"]</p>
+        }
+        <span id="installation-push-address-change"><a href="@(detailPath + "/push-address")">@T["Installation.PushAddress.Change"]</a></span>
+    </dd>
 </dl>
 <section id="installation-last-check">
     <h2>@T["Installation.LastCheck.Title"]</h2>

@@ -28,5 +28,8 @@ public static class InstallationConfigurationKeys
 
     public const int PrivatePortValue = 8081;
 
+    /// <summary>The address the private port listens on in tests (US-006 spec FR-001).</summary>
+    public const string PrivateAddressValue = "127.0.0.1";
+
     public const string ControlPlaneAddressValue = "https://control-plane.test";
 }

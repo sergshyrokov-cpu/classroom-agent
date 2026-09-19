@@ -15,7 +15,8 @@ public sealed class ControlPlaneFactory(
     IReadOnlyDictionary<string, string> settings,
     TimeProvider timeProvider,
     ISetupCodeGenerator setupCodeGenerator,
-    IOperatorConsole operatorConsole) : WebApplicationFactory<Program>
+    IOperatorConsole operatorConsole,
+    Action<IServiceCollection>? configureServices = null) : WebApplicationFactory<Program>
 {
     /// <summary>Not <c>Development</c>: the developer exception page must not be in play (S-17).</summary>
     public const string EnvironmentName = "Test";
@@ -36,6 +37,7 @@ public sealed class ControlPlaneFactory(
             services.AddSingleton(setupCodeGenerator);
             services.RemoveAll<IOperatorConsole>();
             services.AddSingleton(operatorConsole);
+            configureServices?.Invoke(services);
         });
     }
 }

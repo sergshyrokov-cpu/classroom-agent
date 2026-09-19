@@ -19,4 +19,8 @@ public sealed class RegisterInstallationRequest
     [Required(AllowEmptyStrings = true, ErrorMessage = "Installation.ClientId.Required")]
     [InstallationClientId(ErrorMessage = "Installation.ClientId.Format")]
     public string? ClientId { get; set; }
+
+    /// <summary>Optional at registration (US-006 spec FR-002); empty means "not set".</summary>
+    [InstallationPushAddress]
+    public string? PushAddress { get; set; }
 }

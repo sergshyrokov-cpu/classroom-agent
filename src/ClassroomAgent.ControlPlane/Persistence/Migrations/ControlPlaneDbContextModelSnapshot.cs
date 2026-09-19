@@ -193,6 +193,11 @@ namespace ClassroomAgent.ControlPlane.Persistence.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("name");
 
+                    b.Property<string>("PushAddress")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("push_address");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(16)
@@ -227,6 +232,8 @@ namespace ClassroomAgent.ControlPlane.Persistence.Migrations
                             t.HasCheckConstraint("ck_installation_domain_lower", "domain = lower(domain)");
 
                             t.HasCheckConstraint("ck_installation_name_length", "char_length(name) BETWEEN 1 AND 200");
+
+                            t.HasCheckConstraint("ck_installation_push_address_format", "push_address IS NULL OR push_address ~ '^http://(\\[[0-9a-f:.]+\\]|[a-z0-9.-]{1,253}):[1-9][0-9]{0,4}$'");
 
                             t.HasCheckConstraint("ck_installation_status", "status IN ('active', 'suspended')");
                         });

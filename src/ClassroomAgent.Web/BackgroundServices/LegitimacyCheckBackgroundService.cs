@@ -13,6 +13,7 @@ namespace ClassroomAgent.Web.BackgroundServices;
 public sealed partial class LegitimacyCheckBackgroundService(
     IServiceScopeFactory scopes,
     LegitimacyCheckMemory memory,
+    PushCheckCoordinator pushChecks,
     TimeProvider timeProvider,
     ILogger<LegitimacyCheckBackgroundService> logger) : BackgroundService
 {
@@ -25,15 +26,67 @@ public sealed partial class LegitimacyCheckBackgroundService(
         try
         {
             await EvaluateModeAsync(stoppingToken);
+            pushChecks.TryStartScheduledCheck();
+            var succeeded = await CheckOnceAsync(stoppingToken);
             while (true)
             {
-                var succeeded = await CheckOnceAsync(stoppingToken);
-                await Task.Delay(succeeded ? AfterSuccess : AfterFailure, timeProvider, stoppingToken);
+                // The wait restarts from the completion of every check, a push-triggered one included
+                // (US-006 spec FR-010).
+                var dueAt = timeProvider.GetUtcNow() + (succeeded ? AfterSuccess : AfterFailure);
+                await WaitForNextCheckAsync(dueAt, stoppingToken);
+                succeeded = await CheckOnceAsync(stoppingToken);
             }
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
             // Host shutdown: no new check starts.
+        }
+    }
+
+    /// <summary>
+    /// Waits until the next check may start: the scheduled instant, a push that began one, or the remembered
+    /// pending check becoming eligible (US-006 api-design §5). Returns with the check already begun in the
+    /// coordinator, so no second check can start beside it.
+    /// </summary>
+    private async Task WaitForNextCheckAsync(DateTimeOffset dueAt, CancellationToken stoppingToken)
+    {
+        while (true)
+        {
+            stoppingToken.ThrowIfCancellationRequested();
+            if (pushChecks.TryTakeStartedCheck())
+            {
+                return;
+            }
+
+            if (pushChecks.TryStartPendingCheck())
+            {
+                LogPendingPushCheckStarted(logger);
+                return;
+            }
+
+            if (timeProvider.GetUtcNow() >= dueAt && pushChecks.TryStartScheduledCheck())
+            {
+                return;
+            }
+
+            var changed = pushChecks.Changed;
+            var wakeAt = pushChecks.PendingDueAt is { } pendingDueAt && pendingDueAt < dueAt ? pendingDueAt : dueAt;
+            var remaining = wakeAt - timeProvider.GetUtcNow();
+            if (remaining <= TimeSpan.Zero)
+            {
+                continue;
+            }
+
+            // Cancelled on the way out so the timer leaves the clock: a stale one would fire a later advance.
+            using var wait = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+            try
+            {
+                await Task.WhenAny(changed, Task.Delay(remaining, timeProvider, wait.Token));
+            }
+            finally
+            {
+                await wait.CancelAsync();
+            }
         }
     }
 
@@ -54,6 +107,11 @@ public sealed partial class LegitimacyCheckBackgroundService(
             // Only the type: a message may carry remote detail (SC-10).
             LogCheckException(logger, exception.GetType().Name);
             outcome = CheckOutcome.Failed(LegitimacyCheckFailure.UnexpectedError);
+        }
+        finally
+        {
+            // Whatever the outcome, no check is running any more: a push may start the next one.
+            pushChecks.CheckCompleted();
         }
 
         LogOutcome(outcome, memory.RememberOutcome(outcome));
@@ -129,6 +187,13 @@ public sealed partial class LegitimacyCheckBackgroundService(
 
     [LoggerMessage(EventId = 5105, EventName = "ReadOnlyModeLeft", Level = LogLevel.Information, Message = "The installation left read-only mode")]
     private static partial void LogReadOnlyModeLeft(ILogger logger);
+
+    [LoggerMessage(
+        EventId = 5114,
+        EventName = "PendingPushCheckStarted",
+        Level = LogLevel.Information,
+        Message = "The pending push legitimacy check started")]
+    private static partial void LogPendingPushCheckStarted(ILogger logger);
 
     [LoggerMessage(EventId = 5106, EventName = "LegitimacyCheckException", Level = LogLevel.Error, Message = "Legitimacy check failed with an unexpected {ExceptionType}")]
     private static partial void LogCheckException(ILogger logger, string exceptionType);

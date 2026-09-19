@@ -3,6 +3,7 @@ using System.Resources;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using ClassroomAgent.ControlPlane.Persistence;
+using ClassroomAgent.ControlPlane.Push;
 using ClassroomAgent.ControlPlane.Security;
 using ClassroomAgent.ControlPlane.Services;
 using Microsoft.AspNetCore.Identity;
@@ -67,6 +68,14 @@ builder.Services.AddScoped<AllowedAdminRegistry>();
 builder.Services.AddScoped<InstallationStatusService>();
 builder.Services.AddSingleton(compatibilityPolicy);
 builder.Services.AddScoped<LegitimacyCheckService>();
+
+// The status-change push (US-006 spec FR-006; api-design §6): plain HTTP to the school's private port,
+// no redirects and no cookies; the 10-second attempt timeout and the retry pauses are in the sender.
+builder.Services.AddHttpClient(StatusPushClient.HttpClientName)
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect = false, UseCookies = false })
+    .RemoveAllLoggers();
+builder.Services.AddSingleton<IStatusPushClient, StatusPushClient>();
+builder.Services.AddSingleton<StatusPushDispatcher>();
 builder.Services.AddHostedService<SetupCodeStartup>();
 
 builder.Services.AddControlPlaneSecurity(keyDirectory);

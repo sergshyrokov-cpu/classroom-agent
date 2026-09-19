@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Net;
+using System.Net.Sockets;
 
 namespace ClassroomAgent.Web.Configuration;
 
@@ -14,6 +16,12 @@ public static class InstallationSettingsReader
 
     public const string PrivatePortKey = "Hosting:PrivatePort";
 
+    /// <summary>The address the private port listens on: an IP literal, or <c>*</c> for all addresses (US-006 VR-003).</summary>
+    public const string PrivateAddressKey = "Hosting:PrivateAddress";
+
+    /// <summary>The documented "all addresses" value; no other wildcard is accepted (spec I-1).</summary>
+    public const string AllAddresses = "*";
+
     public const string ConnectionStringKey = "ConnectionStrings:Installation";
 
     /// <summary>The ASP.NET Core public endpoint addresses, <c>;</c>-separated.</summary>
@@ -25,6 +33,7 @@ public static class InstallationSettingsReader
             InstallationId(configuration),
             ControlPlaneAddress(configuration),
             PrivatePort(configuration),
+            PrivateAddress(configuration),
             Required(configuration, ConnectionStringKey));
 
     /// <summary>The configured public endpoint addresses; empty when none is configured.</summary>
@@ -68,6 +77,39 @@ public static class InstallationSettingsReader
 
         return port;
     }
+
+    /// <summary>
+    /// VR-003: an IPv4 or IPv6 literal (brackets optional), or exactly <c>*</c>. A host name is refused —
+    /// Kestrel binds addresses and resolving a name at startup would make the binding depend on DNS (spec I-1).
+    /// </summary>
+    private static string PrivateAddress(IConfiguration configuration)
+    {
+        var address = Required(configuration, PrivateAddressKey);
+        if (address == AllAddresses)
+        {
+            return address;
+        }
+
+        if (Literal(address) is not { } literal)
+        {
+            throw InstallationSettingException.Invalid(
+                PrivateAddressKey,
+                "expected an IPv4 or IPv6 address literal, or * for all addresses");
+        }
+
+        return Bind(literal);
+    }
+
+    /// <summary>The parsed IP literal, with the brackets of an IPv6 address removed; null when it is none.</summary>
+    private static IPAddress? Literal(string address)
+    {
+        var bare = address.StartsWith('[') && address.EndsWith(']') ? address[1..^1] : address;
+        return IPAddress.TryParse(bare, out var literal) ? literal : null;
+    }
+
+    /// <summary>The literal as Kestrel writes it in a URL: IPv6 in brackets.</summary>
+    private static string Bind(IPAddress literal) =>
+        literal.AddressFamily == AddressFamily.InterNetworkV6 ? "[" + literal.ToString() + "]" : literal.ToString();
 
     private static int? PortOf(string url)
     {

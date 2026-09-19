@@ -4,30 +4,38 @@
 version: 1
 story: US-006
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: API_DESIGN
-  recorded_at: 2026-09-17T15:42:02Z
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_PR_APPROVAL
+  recorded_at: 2026-09-19T09:52:00Z
 last_artifacts:
-  - type: api_design
-    path: docs/designs/api/US-006-api-design.md
-    version: 1
-  - type: openapi
-    path: docs/designs/api/US-006-openapi.yaml
+  - type: security_review
+    path: docs/reviews/security/US-006-security-review.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "API_DESIGN: CP push-address page GET/POST /installations/{id}/push-address (audit installation_push_address_changed), registration gains optional pushAddress, detail row + warning; suspend/resume unchanged responses, hand-off after commit; installation POST /service/v1/status-pushes on private port (202 / 400 invalid_request / 404 unknown_installation / 413 > 4096 B); PushCheckCoordinator Started|Deferred with one pending flag; outbound push 10 s, pauses 5/30/120 s, max 4 attempts, 404 no retry; config Hosting:PrivateAddress (IP or *); log events 5011-5017, 5111-5114. db-designer: nullable push_address on installation, audit code, address read in the status-change transaction."
-  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV at 2026-09-17T15:37:50Z (no comment): specification v2 and open decisions v2 APPROVED; OD-001 option 2 (trebovaniya.md v77); interpretations I-1 … I-14 accepted."
-  - "SPECIFICATION revised to v2 (open decisions v2) before the gate: OD-001 resolved option 2 by the human (one pending check), recorded in trebovaniya.md v77 and Story AC-011; interpretations I-1 … I-14 accepted in the conversation."
-  - "SPECIFICATION: OD-001 raised (a push swallowed by the one-minute limit or a running check may leave a stale status up to 6 h; option 2 needs trebovaniya.md v77 + Story AC-011 update); interpretations I-1 … I-14 for human review."
+  - "HUMAN_PR_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-19T09:52:00Z (no comment): implementation report v2 and security review v1 accepted; automated verdict PASS with no blocking findings. The Story is approved; it is Done only once the final commit lands on master (AGENTS.md Definition of Done item 10)."
+  - "SECURITY_REVIEW: PASS - 0 critical, 0 major, 2 minor, 2 informational. Build and the whole suite re-run for the review: 1085 passed, 0 failed, 0 skipped; dotnet list package --vulnerable reports nothing in any of the seven projects. The two new security surfaces were already on the closed lists of security-conventions.md: the push receiver is on the SC-4 anonymous list and on the SC-4 antiforgery exemption list, and the outbound push is the Control Plane -> installation direction of the SC-9 service channel. No list was widened."
+  - "SECURITY_REVIEW F-1 (Minor, LOGGING, SC-10): the push address is kept out of the log by RemoveAllLoggers() on the named 'status-push' client, but the Control Plane's Serilog configuration has no MinimumLevel.Override('System.Net.Http', Warning) as the installation host does. The control is correct but local - the next outbound client added to the Control Plane would log its URI at Information by default. Correction suggested for the next Story touching Program.cs; not blocking."
+  - "SECURITY_REVIEW F-2 (Minor, INPUT_VALIDATION, VR-002): when a push carries no Content-Length the size limit is re-checked as the decoded string's character count against a limit expressed in bytes. The reader caps at 4097 bytes so the memory bound holds; only the refusal code could differ (400 instead of 413) for a multi-byte body. Correction: return the byte count from the reader. Not blocking."
+  - "SECURITY_REVIEW F-3 (Informational, OUTBOUND_DATA): the Owner supplies the push address and the Control Plane posts to it - a request-forgery surface by design (trebovaniya.md v76). Reviewed and found narrow: http://host:port only, a fixed one-UUID body, no redirects followed, no cookies or credentials, and the response body never read, so there is no read-back channel. No change recommended."
+  - "SECURITY_REVIEW F-4 (Informational, TEST_COVERAGE): that Kestrel binds the private endpoint to Hosting:PrivateAddress alone cannot be observed under TestServer, which has no listening socket. Every invalid value is proved to refuse startup; the binding itself stays the DC-2 deployment check (spec section 10). Recorded so it is not mistaken for a verified control."
+  - "IMPLEMENTATION: US-006 implemented in full against the approved artifacts. Build 0 errors 0 warnings, dotnet format clean, EF Core migration AddInstallationPushAddress generated (the fifth Control Plane migration). Whole suite: total 1085, passed 1085, failed 0, skipped 0 - down from the 176 failures of the verified red-phase baseline."
+  - "IMPLEMENTATION: four story-level cases contradicted an approved artifact and were corrected on the human's decision of 2026-09-19; no production behaviour was changed to make them pass, and trebovaniya.md stays at v77. Three AC-011 cases counted the one-minute window from the startup check while trebovaniya.md v77 section 9, Story AC-011 and specification I-11 count it from the start of the previous PUSH-TRIGGERED check; the fourth drove the page language with Accept-Language, which the Control Plane ignores by design (US-001 FR-019). ac-test-matrix is v2 with those four rows rewritten."
+  - "IMPLEMENTATION: one more story-level test file was changed - ControlPlane/Persistence/InstallationSchemaTests.cs, the US-002 guard that enumerates the installation table exactly, so the new push_address column and ck_installation_push_address_format constraint had to join the two enumerations. Nothing was weakened: both entries are asserted with their exact type, length and nullability."
+  - "IMPLEMENTATION: IHttpClientFactory logged 'Start processing HTTP request POST {Uri}' at Information, which put the school's push address into the Control Plane log (SC-10, S-13). Fixed by registering the named 'status-push' client with RemoveAllLoggers(); see SECURITY_REVIEW F-1 for the follow-up."
+  - "IMPLEMENTATION: ControlPlane.Push.StatusPushLoggingTests.ConnectionFailure_IsLoggedWithItsCategory_AndNoStatusCode is race-prone - it stops the host as soon as the stub has recorded the attempt, before the sender has classified and logged it. It failed once under parallel load and has passed in every run since. Not blocking; a wait on the next attempt would make it deterministic."
+  - "IMPLEMENTATION: the retry schedule had the same shape of race and it was removed in the implementation - StatusPushDispatcher derives each retry instant from the clock read BEFORE the attempt plus the attempt's known duration (zero, or exactly the 10 s timeout)."
+  - "TEST_WRITING: red phase verified on a running Docker daemon (Docker Desktop 29.8.0, Testcontainers + PostgreSQL): total 1085, failed 176, passed 909, skipped 0, all 176 failures traced to US-006. The tests exercise the real StatusPushClient, because the stub replaces the named client's primary HTTP handler - that closes the test strategy section 6 concern about the client being untested."
+  - "WORKFLOW: the TEST_WRITING BLOCKED event of 2026-09-19T10:05:00Z carries a timestamp later than the true UTC time of the transitions recorded after it; that earlier value looks like local time recorded with a Z suffix, so history.jsonl is not monotonic across those lines."
+  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV at 2026-09-17T15:37:50Z (no comment): specification v2 and open decisions v2 APPROVED; OD-001 option 2 (trebovaniya.md v77); interpretations I-1 ... I-14 accepted."
 started_at: 2026-09-17T15:31:06Z
-updated_at: 2026-09-17T15:42:02Z
-completed_at: null
+updated_at: 2026-09-19T09:52:00Z
+completed_at: 2026-09-19T09:52:00Z

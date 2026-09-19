@@ -1,4 +1,4 @@
-using ClassroomAgent.ControlPlane.Persistence;
+﻿using ClassroomAgent.ControlPlane.Persistence;
 using ClassroomAgent.Tests.TestInfrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,11 +29,14 @@ public sealed class MigrationTests(PostgreSqlFixture database)
             ct);
 
         Assert.Equal(new[] { "__EFMigrationsHistory", "allowed_admin", "audit_event", "installation", "instance_license_check", "owner" }, tables.Order(StringComparer.Ordinal));
-        Assert.Equal(4, migrations.Count);
+        Assert.Equal(5, migrations.Count);
         Assert.EndsWith("_InitialOwnerAndAudit", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_AddInstallation", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_AddAllowedAdmin", migrations[2], StringComparison.Ordinal);
         Assert.EndsWith("_AddInstanceLicenseCheck", migrations[3], StringComparison.Ordinal);
+
+        // US-006 db-design §5: the push address column and its check constraint.
+        Assert.EndsWith("_AddInstallationPushAddress", migrations[4], StringComparison.Ordinal);
         Assert.Equal("trg_audit_event_immutable", trigger);
     }
 

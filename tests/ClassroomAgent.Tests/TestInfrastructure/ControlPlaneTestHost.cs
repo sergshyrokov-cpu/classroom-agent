@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Net;
 using ClassroomAgent.ControlPlane.Localization;
 using ClassroomAgent.ControlPlane.Persistence;
@@ -24,8 +24,9 @@ public sealed class ControlPlaneTestHost : IAsyncDisposable
     /// <summary>Set on the host that created the database; only that host drops it on disposal.</summary>
     private PostgreSqlFixture? _ownedDatabase;
 
-    private ControlPlaneTestHost(string connectionString, string setupCode)
+    private ControlPlaneTestHost(string connectionString, string setupCode, ManualTimeProvider? manualTime)
     {
+        ManualTime = manualTime;
         var now = DateTimeOffset.UtcNow;
         ConnectionString = connectionString;
         Time = new TestTimeProvider(new DateTimeOffset(now.Ticks - (now.Ticks % TimeSpan.TicksPerSecond), TimeSpan.Zero));
@@ -38,6 +39,12 @@ public sealed class ControlPlaneTestHost : IAsyncDisposable
     public string ConnectionString { get; }
 
     public TestTimeProvider Time { get; }
+
+    /// <summary>Set when the test needs timers on a clock it controls (US-006 push retries).</summary>
+    public ManualTimeProvider? ManualTime { get; }
+
+    /// <summary>The clock the host runs on: the manual one when a test asked for it.</summary>
+    public TimeProvider Clock => ManualTime ?? (TimeProvider)Time;
 
     public FixedSetupCodeGenerator CodeGenerator { get; }
 
@@ -56,11 +63,13 @@ public sealed class ControlPlaneTestHost : IAsyncDisposable
         PostgreSqlFixture database,
         CancellationToken cancellationToken,
         string setupCode = TestData.SetupCode,
-        IReadOnlyDictionary<string, string>? extraSettings = null)
+        IReadOnlyDictionary<string, string>? extraSettings = null,
+        ManualTimeProvider? manualTime = null,
+        Action<IServiceCollection>? configureServices = null)
     {
         var connectionString = await database.CreateDatabaseAsync(cancellationToken);
         await MigrateAsync(connectionString, cancellationToken);
-        var host = Start(connectionString, setupCode, extraSettings);
+        var host = Start(connectionString, setupCode, extraSettings, manualTime, configureServices);
         host._ownedDatabase = database;
         return host;
     }
@@ -232,6 +241,10 @@ public sealed class ControlPlaneTestHost : IAsyncDisposable
         }
     }
 
+    /// <summary>Stops the host and returns every log line as a parsed event (DC-10).</summary>
+    public async Task<IReadOnlyList<LogEvent>> ReadLogEventsAsync(CancellationToken cancellationToken) =>
+        LogEvent.Parse(await ReadLogFilesAsync(cancellationToken));
+
     /// <summary>Stops the host and returns the text of every file in its log directory.</summary>
     public async Task<IReadOnlyList<string>> ReadLogFilesAsync(CancellationToken cancellationToken)
     {
@@ -283,9 +296,11 @@ public sealed class ControlPlaneTestHost : IAsyncDisposable
     private static ControlPlaneTestHost Start(
         string connectionString,
         string setupCode,
-        IReadOnlyDictionary<string, string>? extraSettings = null)
+        IReadOnlyDictionary<string, string>? extraSettings = null,
+        ManualTimeProvider? manualTime = null,
+        Action<IServiceCollection>? configureServices = null)
     {
-        var host = new ControlPlaneTestHost(connectionString, setupCode);
+        var host = new ControlPlaneTestHost(connectionString, setupCode, manualTime);
         var settings = new Dictionary<string, string>
         {
             [ConfigurationKeys.ConnectionString] = connectionString,
@@ -296,7 +311,7 @@ public sealed class ControlPlaneTestHost : IAsyncDisposable
         {
             settings[key] = value;
         }
-        host._factory = new ControlPlaneFactory(settings, host.Time, host.CodeGenerator, host.OperatorConsole);
+        host._factory = new ControlPlaneFactory(settings, host.Clock, host.CodeGenerator, host.OperatorConsole, configureServices);
         _ = host._factory.Server;
         return host;
     }

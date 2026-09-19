@@ -60,7 +60,7 @@ stories:
   - id: US-006
     epic: EPIC-8
     title: Control Plane push on status change
-    state: IN_PROGRESS
+    state: COMPLETED
     # Depended on US-004 and US-005 (both COMPLETED). Push semantics and the push
     # address decided in trebovaniya.md v76; also introduces the required
     # private-port address setting (v75, §5, §9).

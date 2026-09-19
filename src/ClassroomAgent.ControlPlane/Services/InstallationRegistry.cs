@@ -32,7 +32,7 @@ public class InstallationRegistry(ControlPlaneDbContext db, TimeProvider timePro
         var installation = await db.Installations
             .AsNoTracking()
             .Where(i => i.Identifier == identifier)
-            .Select(i => new { i.Id, i.Identifier, i.Name, i.Domain, i.Status, i.CreatedAt, i.ClientId })
+            .Select(i => new { i.Id, i.Identifier, i.Name, i.Domain, i.Status, i.CreatedAt, i.ClientId, i.PushAddress })
             .SingleOrDefaultAsync(cancellationToken);
         if (installation is null)
         {
@@ -59,6 +59,7 @@ public class InstallationRegistry(ControlPlaneDbContext db, TimeProvider timePro
             installation.Status,
             installation.CreatedAt,
             installation.ClientId,
+            installation.PushAddress,
             admins.OrderBy(a => a.Email, StringComparer.Ordinal).ToList(),
             lastCheck);
     }
@@ -67,11 +68,12 @@ public class InstallationRegistry(ControlPlaneDbContext db, TimeProvider timePro
         string name,
         string domain,
         string clientId,
+        string? pushAddress,
         long ownerId,
         string? requestId,
         CancellationToken cancellationToken)
     {
-        var installation = Installation.Register(name, domain, clientId);
+        var installation = Installation.Register(name, domain, clientId, pushAddress);
 
         var (domainTaken, clientIdTaken) = await TakenAsync(installation.Domain, installation.ClientId, cancellationToken);
         if (domainTaken || clientIdTaken)
@@ -170,6 +172,36 @@ public class InstallationRegistry(ControlPlaneDbContext db, TimeProvider timePro
         }
 
         return ChangeClientIdResult.Changed;
+    }
+
+    /// <summary>
+    /// Sets, changes or clears the push address (US-006 spec FR-002, FR-003; db-design §4.2). The value is
+    /// already canonical, or null for "not set"; an unchanged submission writes nothing and audits nothing.
+    /// </summary>
+    public async Task<ChangePushAddressResult> ChangePushAddressAsync(
+        Guid identifier,
+        string? pushAddress,
+        long ownerId,
+        string? requestId,
+        CancellationToken cancellationToken)
+    {
+        var installation = await db.Installations.SingleOrDefaultAsync(i => i.Identifier == identifier, cancellationToken);
+        if (installation is null)
+        {
+            return ChangePushAddressResult.NotFound;
+        }
+
+        if (string.Equals(installation.PushAddress, pushAddress, StringComparison.Ordinal))
+        {
+            return ChangePushAddressResult.Unchanged;
+        }
+
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        installation.ChangePushAddress(pushAddress);
+        db.AuditEvents.Add(AuditEvent.InstallationPushAddressChanged(ownerId, installation.Id, timeProvider.GetUtcNow(), requestId));
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return ChangePushAddressResult.Changed;
     }
 
     private async Task<(bool DomainTaken, bool ClientIdTaken)> TakenAsync(
