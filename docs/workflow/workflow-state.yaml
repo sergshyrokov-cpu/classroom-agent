@@ -4,26 +4,31 @@
 version: 1
 story: US-008
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-writer
+last_invoked_skill: openapi-designer
 last_result:
   verdict: PASS
-  stage: SPECIFICATION
-  recorded_at: 2026-09-19T17:21:40Z
+  stage: API_DESIGN
+  recorded_at: 2026-09-19T18:01:17Z
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-008-spec.md
-    version: 2
-  - type: open_decisions
-    path: docs/decisions/US-008-open-decisions.md
-    version: 2
+  - type: openapi
+    path: docs/designs/api/US-008-openapi.yaml
+    version: 1
+  - type: api_design
+    path: docs/designs/api/US-008-api-design.md
+    version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "API_DESIGN: PASS. Control Plane gains one operation (POST /service/v1/admin-login-checks); the installation gains its whole public-port surface - six operations plus nine host-wide rules later Stories inherit. The private port is untouched. Additive only: ContractVersion stays 1 (DC-12), ServiceOutcome is reused, and the SC-4 anonymous list gains an endpoint but no entry because the existing entry already reads 'Legitimacy check and Admin login check'."
+  - "API_DESIGN resolved spec I-7: the Admin login check is a second method on IControlPlaneClient, not a separate port - one external system, one port (AD-4), sharing the base address, the HttpClient registration, the timeout (I-8) and the outcome classification."
+  - "API_DESIGN decision, security-relevant: a refused callback redirects to /sign-in carrying only a category in TempData (Data-Protection-protected), never a query parameter - a parameter would let anyone craft a link rendering arbitrary text on the school's own sign-in page."
+  - "API_DESIGN classification rule for TEST_WRITING: a 404 WITHOUT the unknown_installation body - what a Control Plane too old to route the new path returns - is Unavailable, never NotAllowed. Both refuse the sign-in, but the audit categories differ and an operator must not read a failed deployment as a revocation."
+  - "API_DESIGN: US-005's host-wide rule 'the installation public port answers 404 to everything' is replaced here, as US-005 wrote it expecting. No /api/v1 operation exists yet, so the 409 read-only mapping is configured host-wide and proven by a test-only probe endpoint in the test host - stated in the contract so the absent path is not read as an untested mapping."
   - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-19T17:50:34Z (no comment): Specification v2 and open decisions v2 accepted; automated verdict PASS with no blocking findings. OD-001, OD-002 and OD-003 all resolved; interpretations I-1 ... I-14 accepted, including I-1 (one sign-in page, the Dean password form joins it in US-012), I-5 (OAuth credentials are not verified against Google at start-up), I-6 (an unverified Google email is a failed callback, not an AllowedAdmin refusal), I-9 (the disabled-account check is written now although only US-012 can disable), I-13 (sign-out writes no audit row) and I-14 (Accept-Language is not consulted)."
   - "SPECIFICATION: PASS. 21 functional requirements, 7 validation rules, 20 security requirements, interpretations I-1 ... I-14, every one of the Story's 18 Acceptance Criteria traced. No automated spec reviewer exists in this variant, so HUMAN_SPEC_APPROVAL is the only check that the Specification reflects trebovaniya.md v78 faithfully."
   - "SPECIFICATION raised OD-003 and the Owner resolved it on 2026-09-19 (option 1): no project referenced a Google or OIDC authentication handler, and all three candidates are standalone NuGet packages outside the ASP.NET Core shared framework, so AGENTS.md required an approved Open Decision. Microsoft.AspNetCore.Authentication.Google is added to ClassroomAgent.Web only, pinned to the framework major version, with its scope set stated explicitly rather than inherited. It is the Story's one dependency change (FR-021)."
@@ -35,5 +40,5 @@ non_blocking_findings:
   - "US-008 OD-001 resolved by the Owner on 2026-09-19 as option 2 (one OAuth web client per school in the Owner's Cloud project, External user type, client secret in the secret store with only its reference in configuration, redirect URI from a configured public base address). Landed in trebovaniya.md v78 with DC-3, SC-7 and DC-2, commit 0e31e50, before this activation."
   - "US-008 OD-002 resolved by the Owner on 2026-09-19 as option 1 (the account-picker hint carries the school's domain when LegitimacyState knows it, none while no legitimacy check has ever succeeded; the hint is never the access decision - AllowedAdmin stays the gate)."
 started_at: 2026-09-19T17:13:12Z
-updated_at: 2026-09-19T17:50:34Z
+updated_at: 2026-09-19T18:01:17Z
 completed_at: null

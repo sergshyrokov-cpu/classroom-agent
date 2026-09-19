@@ -1,0 +1,677 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Admin sign-in via Google OAuth with AllowedAdmin verification (US-008)
+  version: "1"
+  description: >
+    HTTP contract of US-008 across two hosts. Control Plane: one new
+    service-channel endpoint `POST /service/v1/admin-login-checks` (JSON,
+    anonymous, antiforgery-exempt, protected by network isolation — SC-4, SC-9;
+    not the public REST API, API-7). Installation: the **first public-port
+    surface** — the sign-in page, the Google sign-in start, the OAuth callback,
+    the landing page, sign-out, the error page and the 404 catch-all — plus the
+    host-wide rules every later installation Story inherits. The Control Plane
+    host-wide rules of docs/designs/api/US-001-openapi.yaml and the service
+    channel of docs/designs/api/US-005-openapi.yaml apply unchanged; the
+    installation private port of US-005 and US-006 is untouched. Companion
+    document: docs/designs/api/US-008-api-design.md.
+x-story: US-008
+x-source-specification: docs/specifications/US-008-spec.md
+x-source-specification-version: 2
+x-source-open-decisions: docs/decisions/US-008-open-decisions.md
+x-source-open-decisions-version: 2
+x-requirements-version: 78
+x-produced-by: openapi-designer
+x-extends: docs/designs/api/US-006-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. Adding an
+  endpoint and two wire types is additive (DC-12): no existing request or
+  response changes shape, and no property is removed or repurposed. The
+  installation therefore keeps reporting contract version 1 on the legitimacy
+  check, and the Control Plane's compatibility rule (US-005 FR-005) is unchanged.
+
+servers:
+  - url: https://control-plane.internal
+    description: "Control Plane. Illustrative; private network only, HTTPS only (SC-9, DC-6)."
+  - url: https://school.example
+    description: "Installation public port. Illustrative; the real value is the configured public base address (FR-001)."
+  - url: http://installation.private:{privatePort}
+    description: "Installation private port, plain HTTP — unchanged by this Story (DC-6)."
+    variables:
+      privatePort:
+        default: "8081"
+
+tags:
+  - name: service-channel
+    description: "Control Plane ↔ installation Admin login check (spec FR-009)"
+  - name: sign-in
+    description: "Installation sign-in, OAuth start and callback, sign-out (spec FR-006, FR-007, FR-010, FR-016)"
+  - name: pages
+    description: "Installation landing page and error page (spec FR-018, FR-019)"
+
+x-host-wide-rules:
+
+  control-plane-channel: >
+    `POST /service/v1/admin-login-checks` is the **second** anonymous,
+    antiforgery-exempt POST of the Control Plane, and joins
+    `/service/v1/legitimacy-checks` under the single SC-4 entry "Legitimacy check
+    and Admin login check". It is not cookie-authenticated. The US-001 setup gate
+    applies unchanged: before the Owner account exists it answers `302 /setup`,
+    which the installation classifies as an error answer. Other methods on the
+    path answer `404` or `405`. **Nothing is written** — no audit row, no
+    `InstanceLicenseCheck`, no last-seen stamp (spec FR-009, S-17). Log lines
+    carry the `Installation` id and the outcome only, never the email (SC-10).
+
+  installation-public-port: >
+    Replaces the US-005 rule "every method and path answers `404`". The public
+    port now serves this contract. HTTPS redirection and HSTS are on; the
+    pipeline order is spec FR-002. Every response is HTML except an `/api/v1`
+    error body (none exists yet, see `api-v1-reserved`). Static files are served
+    only from the application's own static-files directory (SC-4).
+
+  installation-private-port: >
+    Unchanged from US-005 and US-006. `/health/live`, `/health/ready` and the
+    status-push receiver keep their private route group and its port filter; this
+    Story adds nothing to it and no cookie, session or antiforgery applies there.
+
+  fallback-authorization: >
+    SC-4, API-9. A fallback policy requires an authenticated user. Operations
+    marked `x-anonymous: true` are the only anonymous ones and each maps to an
+    SC-4 entry; an enumeration test fails on any other anonymous endpoint
+    (spec FR-004).
+
+  antiforgery: >
+    SC-4, API-7. Validated globally on every POST/PUT/PATCH/DELETE of the public
+    port by one rule, not per action. The installation's public-port exemption
+    list is **empty** — the OAuth callback needs no exemption because it is a GET
+    (trebovaniya.md §8, v64). A missing or invalid token answers `400`: a Razor
+    form gets the error page with `Error.PageExpired` and a link back to the same
+    page, with nothing preserved; an `/api/v1` call would get the API-6 body.
+
+  unauthenticated-challenge: >
+    A request without a session to an authenticated operation answers `302` with
+    `Location: /sign-in`. No return-URL query parameter is emitted or honoured,
+    as US-001 decided for the Control Plane (US-001 spec I-6): a return URL on an
+    anonymous page is an open-redirect surface for no gain here.
+
+  forbidden: >
+    The cookie authentication AccessDenied path is `/error/403`; a signed-in
+    request denied by a policy answers `403` with the error page (SC-4, v66).
+
+  culture: >
+    NFR-073, spec FR-017. The culture is the signed-in user's `UiLanguage`,
+    otherwise the school default from configuration, otherwise Ukrainian (`uk`).
+    `Accept-Language`, the query string and cookies do not select it (spec I-14).
+    US-039 adds the user's choice.
+
+  session-lifetime: >
+    NFR-072, spec FR-015. `__Host-ca-session` carries no `Expires` or `Max-Age`
+    (not persistent). A request more than **60 minutes** after the previous
+    authenticated request, or more than **8 hours** after sign-in, is treated as
+    unauthenticated (`302 /sign-in`). No "remember me". Both limits are driven by
+    the injectable clock.
+
+  read-only-mode: >
+    spec FR-014, API-5, API-6. `ReadOnlyModeException` from `Application` maps to
+    **409** in the single `IExceptionHandler` (AD-9, API-10): the API-6 body under
+    `/api/v1`, the error page elsewhere, with the reason — grace period expired
+    (naming the last successful check), suspended by the Owner, or legitimacy
+    never confirmed — resolved from translation keys in the user's language. No
+    operation of *this* contract can raise it: the sign-in path writes only BR-026
+    service writes (spec FR-013). The rule is stated here because it is host-wide
+    from this Story onwards and every later Story inherits it.
+
+  api-v1-reserved: >
+    This Story adds **no** `/api/v1` operation — the installation has no REST
+    resource yet. The `/api/v1` prefix, its API-6 error body and the `409`
+    mapping are nevertheless configured host-wide, and are proven by a test-only
+    probe endpoint registered in the test host (spec FR-014). The probe is not
+    part of this contract and ships in no environment.
+
+  error-page: >
+    spec FR-018. One page serves `400`, `403`, `404` and `500`, each with its own
+    translated text. Translated text only — no exception message, stack trace,
+    request body or personal datum (SC-10, NFR-023). The developer exception page
+    is enabled only in local development (SC-6, DC-3).
+
+paths:
+
+  /service/v1/admin-login-checks:
+    post:
+      tags: [service-channel]
+      operationId: checkAdminLogin
+      summary: "An installation asks whether a login email is an approved Admin"
+      x-host: ClassroomAgent.ControlPlane
+      x-anonymous: true
+      x-sc4-entry: "Legitimacy check and Admin login check"
+      x-antiforgery: exempt
+      x-audit: none
+      x-writes: none
+      x-spec: [FR-008, FR-009]
+      x-acceptance-criteria: [AC-004, AC-005, AC-006]
+      x-processing-order: >
+        1 read and validate the body explicitly, not by model binding — wrong
+        content type, malformed JSON, missing property, wrong type or a broken
+        rule of `AdminLoginCheckRequest` all give the same `400
+        invalid_request`, and the body is never logged or echoed (VR-006, SC-10)
+        → 2 find the `Installation` by `installationId`; none → `404
+        unknown_installation`, `Warning` with the received id, nothing else
+        revealed → 3 look for an `AllowedAdmin` of **that** `Installation` whose
+        stored lower-cased email equals the lower-cased `email` → 4 `200` with
+        `allowed` true or false; `Information` log with the `Installation` id and
+        the outcome, never the email. The `Installation`'s status plays no part:
+        a suspended school is answered exactly like an active one (spec FR-009).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginCheckRequest"
+            example:
+              installationId: 3f1c2a8e-5b7d-4c9e-a1f0-2d6b8e4c7a15
+              email: admin@school.example
+      responses:
+        "200":
+          description: >
+            Known `Installation`, answered whether an `AllowedAdmin` entry with
+            this email exists for it. Exactly one property — no entry id, no
+            list, no other school's data, and no hint about whether the email
+            exists elsewhere (SC-12, S-14).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLoginCheckResponse"
+              example:
+                allowed: true
+        "302":
+          description: "No Owner account yet: `Location: /setup` (US-001 setup gate). The installation classifies this as an error answer."
+          headers:
+            Location:
+              schema:
+                type: string
+                const: /setup
+        "400":
+          description: >
+            Missing body, non-JSON content type, malformed JSON, missing
+            property, wrong type, or a rule of `AdminLoginCheckRequest` broken.
+            Nothing recorded; the body is never logged or echoed (SC-10).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceOutcome"
+              example:
+                outcome: invalid_request
+        "404":
+          description: >
+            Well-formed request, no `Installation` with that id. Nothing
+            recorded; `Warning` with the received id. Carries no answer about any
+            email.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceOutcome"
+              example:
+                outcome: unknown_installation
+        "500":
+          description: "Unhandled exception only. Empty body; nothing recorded."
+
+  /sign-in:
+    get:
+      tags: [sign-in]
+      operationId: getSignInPage
+      summary: "Installation sign-in page"
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: true
+      x-sc4-entry: "Dean sign-in page"
+      x-sc4-note: >
+        spec I-1: one sign-in page serves the host. In this Story it carries only
+        the Google start form; US-012 adds the Dean password form to this same
+        page rather than opening a second anonymous one.
+      x-spec: [FR-004, FR-006, FR-017, FR-018]
+      x-acceptance-criteria: [AC-002, AC-003, AC-015]
+      security: []
+      responses:
+        "200":
+          description: >
+            A form posting to `/sign-in/google` with the antiforgery token in a
+            hidden field. When the previous callback refused a sign-in, the
+            translated refusal message is rendered from the category carried in
+            TempData (see `/signin-google`), never from a query parameter. The
+            page reads and writes nothing.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/SignInPageModel"
+        "302":
+          description: "An already signed-in user is sent to `/`."
+          headers:
+            Location:
+              schema:
+                type: string
+                const: /
+
+  /sign-in/google:
+    post:
+      tags: [sign-in]
+      operationId: startGoogleSignIn
+      summary: "Start the Google sign-in"
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: true
+      x-sc4-entry: "Google OAuth start and callback"
+      x-antiforgery: required
+      x-spec: [FR-005, FR-006]
+      x-acceptance-criteria: [AC-003, AC-013]
+      x-method-note: >
+        POST, not GET: starting a sign-in sets the correlation cookie and the
+        `state`, so it changes state (trebovaniya.md §8). A GET to this path
+        answers `405`.
+      x-authorization-request: >
+        scope exactly `openid email profile` — stated explicitly, never inherited
+        from the handler default, so a future default cannot widen consent
+        (spec FR-021, S-06); `redirect_uri` built from the configured public base
+        address, never from `Host` or `X-Forwarded-*` (FR-001); `state` and the
+        correlation cookie set by the handler; the account-picker domain hint
+        carried **only** when `LegitimacyState` knows the installation's domain,
+        omitted while no legitimacy check has ever succeeded (OD-002, FR-006).
+        The hint is never the access decision (S-07).
+      security: []
+      responses:
+        "302":
+          description: "Redirect to Google's authorization endpoint; `Set-Cookie` for the OAuth correlation cookie."
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+                description: "Google authorization endpoint with the parameters above."
+        "400":
+          description: "Missing or invalid antiforgery token — error page, `Error.PageExpired`. Nothing is started."
+        "405":
+          description: "Any method other than POST."
+
+  /signin-google:
+    get:
+      tags: [sign-in]
+      operationId: completeGoogleSignIn
+      summary: "Google OAuth callback — the one GET permitted to change state"
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: true
+      x-sc4-entry: "Google OAuth start and callback"
+      x-antiforgery: "not applicable — GET (trebovaniya.md §8, v64)"
+      x-audit: "always: success or refusal (spec FR-012)"
+      x-spec: [FR-007, FR-008, FR-010, FR-011, FR-012, FR-013]
+      x-acceptance-criteria: [AC-003, AC-004, AC-007, AC-008, AC-009, AC-010, AC-011]
+      x-processing-order: >
+        1 the handler verifies `state` and the correlation cookie; a missing,
+        unknown, expired or replayed `state`, or no correlation cookie, refuses
+        here — nothing created, no call to the Control Plane (VR-007) → 2 the
+        email must be present, syntactically valid and flagged verified by Google;
+        otherwise the same refusal (VR-005, spec I-6) → 3 lower-case the email
+        (BR-079) → 4 ask the Control Plane (`checkAdminLogin`); the reply is one
+        of Allowed / NotAllowed / UnknownInstallation / Unavailable, never a
+        cached or remembered answer (S-02, S-03) → 5 Allowed: find or create the
+        `AppUser` (role Admin, sign-in method Google, `PasswordHash` null), stamp
+        `LastSuccessfulSignInAt`, write the success audit row, issue the session →
+        6 otherwise write the refusal audit row with its category and issue no
+        session. Steps 5 and 6 write in read-only mode through the existing
+        BR-026 members `SignInBookkeeping` and `AuditEvent`; the closed list is
+        not widened (FR-013).
+      x-refusal-transport: >
+        A refusal redirects to `/sign-in` and carries **only a category** in
+        TempData, protected by the Data Protection key ring (FR-001). It is
+        deliberately not a query parameter: a query parameter would let anyone
+        craft a link that renders an arbitrary message on the school's own
+        sign-in page. The page turns the category into a translated message; the
+        categories that refuse are not distinguished to the visitor beyond what
+        the text keys below say (S-14).
+      security: []
+      parameters:
+        - name: code
+          in: query
+          required: false
+          schema: {type: string}
+          description: "Google's authorization code. Consumed by the handler; never logged (SC-10)."
+        - name: state
+          in: query
+          required: false
+          schema: {type: string}
+          description: "Verified against the correlation cookie before anything else. Never logged."
+        - name: error
+          in: query
+          required: false
+          schema: {type: string}
+          description: "Set when the user cancelled or Google refused; treated as a failed callback."
+      responses:
+        "302":
+          description: >
+            Success — `Location: /`, `Set-Cookie: __Host-ca-session`. Refusal —
+            `Location: /sign-in` with the category in TempData and no session
+            cookie. In both cases the OAuth correlation cookie is cleared.
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: ["/", "/sign-in"]
+            Set-Cookie:
+              schema: {type: string}
+              description: "On success only; see `components.securitySchemes.installationSession`."
+
+  /:
+    get:
+      tags: [pages]
+      operationId: getLandingPage
+      summary: "Landing page: who is signed in, and the installation's legitimacy status"
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: "Admin or Dean (trebovaniya.md §2 permission matrix — «Просмотр статуса легитимности»)"
+      x-spec: [FR-019]
+      x-acceptance-criteria: [AC-002, AC-017]
+      x-reads: "GetLegitimacyModeQuery (US-005) through Application; never recomputed in the view (AD-3, AD-6)."
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: >
+            The signed-in user's email as stored and their role; the legitimacy
+            status — whether the installation is in read-only mode and, when it
+            is, the reason and the time of the last successful check. A DTO view
+            model, never a domain entity (AD-8). No teaching data — none exists.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/LandingPageModel"
+        "302":
+          description: "No session, idle beyond 60 minutes, or beyond 8 hours from sign-in: `Location: /sign-in`."
+
+  /sign-out:
+    post:
+      tags: [sign-in]
+      operationId: signOut
+      summary: "End the session"
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: "any authenticated user"
+      x-antiforgery: required
+      x-audit: "none (spec I-13 — trebovaniya.md §5 audits sign-in and refused sign-in, and the list is closed)"
+      x-spec: [FR-016]
+      x-acceptance-criteria: [AC-014]
+      security:
+        - installationSession: []
+      responses:
+        "302":
+          description: >
+            `Location: /sign-in`; the session cookie is cleared and a request
+            replaying the previous cookie is no longer authenticated.
+        "400":
+          description: "Missing or invalid antiforgery token — error page; the session is untouched."
+        "405":
+          description: "GET does not sign anyone out (trebovaniya.md §8)."
+
+  /error/{statusCode}:
+    parameters:
+      - name: statusCode
+        in: path
+        required: true
+        schema:
+          type: integer
+          enum: [400, 403, 404, 500]
+    get:
+      tags: [pages]
+      operationId: getErrorPage
+      summary: "The host's single error page"
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: true
+      x-sc4-entry: "Error page, and the fallback catch-all that answers 404"
+      x-spec: [FR-018]
+      x-acceptance-criteria: [AC-016]
+      security: []
+      responses:
+        "200":
+          description: >
+            Translated text for the requested status, rendered with that status
+            code. `400` carries `Error.PageExpired` and a link back to the page
+            the form came from. Reads and writes nothing; shows no exception
+            message, stack trace, request body or personal datum.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ErrorPageModel"
+
+components:
+
+  schemas:
+
+    AdminLoginCheckRequest:
+      type: object
+      description: >
+        `ClassroomAgent.Contracts`. The email travels in the body, never in the
+        address (trebovaniya.md §8, v64). Unknown properties are ignored (DC-12).
+      required: [installationId, email]
+      properties:
+        installationId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          minLength: 3
+          maxLength: 254
+          description: >
+            Compared lower-cased against the stored lower-cased `AllowedAdmin`
+            email (BR-079, SC-3). Syntactically validated before any database
+            access (VR-006).
+
+    AdminLoginCheckResponse:
+      type: object
+      description: >
+        `ClassroomAgent.Contracts`. Exactly one property. No entry id, no list,
+        no other school's data, no teaching data (SC-12, S-16).
+      required: [allowed]
+      additionalProperties: false
+      properties:
+        allowed:
+          type: boolean
+
+    ServiceOutcome:
+      type: object
+      description: "`ClassroomAgent.Contracts`, unchanged from US-005. Body of `400` and `404` on the channel."
+      required: [outcome]
+      additionalProperties: false
+      properties:
+        outcome:
+          type: string
+          enum: [invalid_request, unknown_installation]
+
+    ApiError:
+      type: object
+      description: >
+        The API-6 error body. **No operation of this contract returns it** — the
+        installation has no `/api/v1` resource yet. It is defined here because
+        the host configures the shape now and the `409` read-only mapping is
+        proven against it (spec FR-014, `x-host-wide-rules.api-v1-reserved`).
+      required: [timestamp, status, error, message, path]
+      properties:
+        timestamp: {type: string, format: date-time}
+        status: {type: integer}
+        error: {type: string}
+        message:
+          type: string
+          description: >
+            Safe to show a Dean or Admin, in the requesting user's language
+            (NFR-073). Never a stack trace, SQL, type name, path, Google error or
+            secret.
+        path: {type: string}
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field: {type: string}
+              message: {type: string}
+
+    SignInPageModel:
+      type: object
+      description: "View DTO (AD-8)."
+      additionalProperties: false
+      properties:
+        refusal:
+          type: [string, "null"]
+          description: "Translation key of the previous refusal, from TempData; null on a first visit."
+          enum:
+            - SignIn.Refused.NotApproved
+            - SignIn.Refused.CouldNotConfirm
+            - SignIn.Refused.SignInFailed
+            - SignIn.Refused.AccountDisabled
+            - null
+
+    LandingPageModel:
+      type: object
+      description: "View DTO (AD-8). No domain entity, no teaching data."
+      required: [email, role, isReadOnly]
+      additionalProperties: false
+      properties:
+        email: {type: string, description: "As stored; data from Google, shown as is, never translated (FR-017)."}
+        role: {type: string, enum: [Admin, Dean]}
+        isReadOnly: {type: boolean}
+        readOnlyReason:
+          type: [string, "null"]
+          enum: [NotYetConfirmed, SuspendedByOwner, GracePeriodExpired, null]
+        lastSuccessfulCheckAt:
+          type: [string, "null"]
+          format: date-time
+          description: "UTC. The school time zone is not a setting yet (spec I-12)."
+
+    ErrorPageModel:
+      type: object
+      additionalProperties: false
+      required: [statusCode, textKey]
+      properties:
+        statusCode: {type: integer, enum: [400, 403, 404, 500]}
+        textKey:
+          type: string
+          enum: [Error.PageExpired, Error.Forbidden, Error.NotFound, Error.Unexpected]
+        returnPath:
+          type: [string, "null"]
+          description: "Only for `400`: a link back to the page the form came from. A local path, never an absolute URL."
+
+    ServiceResults:
+      type: object
+      description: "Application-level results (AD-9) — not HTTP bodies."
+      properties:
+        AdminLoginCheckReply:
+          type: string
+          description: "The port's closed set of outcomes (spec FR-008). Only `Allowed` admits the user."
+          enum: [Allowed, NotAllowed, UnknownInstallation, Unavailable]
+        SignInRefusalCategory:
+          type: string
+          description: "Audit refusal categories added by this Story (spec FR-012)."
+          enum:
+            - NotInAllowedAdmin
+            - ControlPlaneUnavailable
+            - UnknownInstallation
+            - CallbackFailed
+            - AccountDisabled
+
+    ClientClassification:
+      type: object
+      description: >
+        How `IControlPlaneClient` turns an HTTP outcome of `checkAdminLogin` into
+        an `AdminLoginCheckReply`. Only the outcome leaves the client; the body is
+        never logged (SC-10). Mirrors the US-005 classification, with one addition.
+      properties:
+        rules:
+          type: array
+          items: {type: string}
+          examples:
+            - - "connection / DNS / TLS failure → Unavailable"
+              - "no complete answer within the US-005 service-channel timeout (spec I-8) → Unavailable"
+              - "200 with a valid AdminLoginCheckResponse → Allowed or NotAllowed by `allowed`"
+              - "200 with anything else → Unavailable"
+              - "404 with {\"outcome\":\"unknown_installation\"} → UnknownInstallation"
+              - "404 WITHOUT that body (e.g. a Control Plane too old to route this path) → Unavailable, never NotAllowed"
+              - "any other status, including 3xx which is not followed → Unavailable"
+
+    PageTextKeys:
+      type: object
+      description: >
+        New translation keys (`Application.Localization`, `uk` and `en`). A test
+        asserts both sets have the same keys with no empty value (spec FR-017).
+      properties:
+        SignIn.Title: {type: string}
+        SignIn.Google.Button: {type: string}
+        SignIn.Refused.NotApproved:
+          type: string
+          description: "Reveals nothing about the school's records (S-14)."
+        SignIn.Refused.CouldNotConfirm:
+          type: string
+          description: "The Control Plane could not be asked; try again later."
+        SignIn.Refused.SignInFailed: {type: string}
+        SignIn.Refused.AccountDisabled: {type: string}
+        Landing.Title: {type: string}
+        Landing.SignedInAs: {type: string}
+        Landing.Role.Admin: {type: string}
+        Landing.Role.Dean: {type: string}
+        Landing.SignOut: {type: string}
+        Landing.ReadOnly.Title: {type: string}
+        Landing.ReadOnly.NotYetConfirmed: {type: string}
+        Landing.ReadOnly.SuspendedByOwner: {type: string}
+        Landing.ReadOnly.GracePeriodExpired: {type: string}
+        Landing.ReadOnly.LastSuccessfulCheck: {type: string}
+        Landing.Legitimacy.Ok: {type: string}
+        Error.PageExpired: {type: string}
+        Error.Forbidden: {type: string}
+        Error.NotFound: {type: string}
+        Error.Unexpected: {type: string}
+        ReadOnly.Refused.NotYetConfirmed:
+          type: string
+          description: "The `409` message of FR-014; used from this Story onwards."
+        ReadOnly.Refused.SuspendedByOwner: {type: string}
+        ReadOnly.Refused.GracePeriodExpired: {type: string}
+
+    Configuration:
+      type: object
+      description: "Installation settings added by this Story (spec FR-001, VR-001 … VR-004; DC-3, v78). All required except the language."
+      properties:
+        DataProtection:KeyDirectory:
+          type: string
+          description: "A directory the process can create and write to. Required."
+        Installation:PublicBaseAddress:
+          type: string
+          format: uri
+          description: "Absolute `https://`, host and optional port, no path beyond `/`, no query, fragment or user info. Required. The redirect URI is built from it (VR-001)."
+        GoogleOAuth:ClientId:
+          type: string
+          description: "Non-empty after trimming. Not a secret. Never logged. Required."
+        GoogleOAuth:ClientSecretReference:
+          type: string
+          description: "A reference into the secret store, never the secret. Never logged. Required (SC-7, OD-001)."
+        Ui:DefaultLanguage:
+          type: string
+          enum: [uk, en]
+          description: "Optional; Ukrainian when absent. Any other value stops the start (VR-004)."
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: __Host-ca-session
+      description: >
+        `__Host-ca-session=…; Path=/; Secure; HttpOnly; SameSite=Lax` — no
+        `Expires`, no `Max-Age`, no `Domain`. `Lax` is required, not preferred:
+        `Strict` would leave the first page after the return from Google without
+        a session (trebovaniya.md §8, v64). Idle 60 minutes, absolute 8 hours
+        (NFR-072). The antiforgery cookie is `__Host-ca-antiforgery=…; Path=/;
+        Secure; HttpOnly; SameSite=Strict`. The OAuth correlation cookie keeps the
+        handler's defaults plus `Secure`, and is cleared at the callback.
+    ownerSession:
+      type: apiKey
+      in: cookie
+      name: __Host-cp-session
+      description: "Owner cookie session defined by US-001 (API-7). Unchanged; no Control Plane page changes in this Story."
