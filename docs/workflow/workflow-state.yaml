@@ -4,26 +4,32 @@
 version: 1
 story: US-008
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: PASS
-  stage: API_DESIGN
-  recorded_at: 2026-09-19T18:01:17Z
+  stage: DB_DESIGN
+  recorded_at: 2026-09-19T18:34:47Z
 last_artifacts:
-  - type: openapi
-    path: docs/designs/api/US-008-openapi.yaml
+  - type: database_design
+    path: docs/designs/database/US-008-db-design.md
     version: 1
-  - type: api_design
-    path: docs/designs/api/US-008-api-design.md
+  - type: entity_model
+    path: docs/designs/database/US-008-entity-model.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "DB_DESIGN: PASS. Two installation tables in one migration (InitialAppUserAndAuditEvent): app_user with 8 check constraints and one unique index, audit_event with 10 check constraints and no index. The Control Plane schema is deliberately unchanged - its login check reads AllowedAdmin and writes nothing, so a migration there would itself be a defect."
+  - "DB_DESIGN enforces S-04 in the DATABASE, not only in the entity: ck_app_user_role_sign_in_method with ck_app_user_password_hash make an Admin row carrying any password_hash - empty string included - impossible, and AppUser.CreateAdmin takes no password parameter. Knowingly accepted cost: both constraints encode a first-version truth and change by migration if Epic 7 adds a role whose sign-in method differs, or if US-012 ever needs a Dean without a hash."
+  - "DB_DESIGN: audit_event immutability on two levels - private setters and factories (the Control Plane precedent) plus ck_audit_event_immutable (updated_at = created_at), derived from PC-6 which already states that equality. Its limit is documented rather than over-claimed: it catches updates through EF Core because TimestampInterceptor stamps Modified entities, not a raw UPDATE that also rewrites updated_at. An UPDATE trigger was considered and rejected as a divergent mechanism no requirement asks for; SECURITY_REVIEW may still ask for it as a one-statement migration."
+  - "DB_DESIGN omitted two indexes on purpose, with the reason recorded: app_user.last_successful_sign_in_at and audit_event.occurred_at. PC-7 asks for indexes on columns a repository query uses as a lookup key and neither query exists yet - they belong to the retention purge (EPIC-10) and the audit viewer (EPIC-9). audit_event is write-only in this Story."
+  - "DB_DESIGN: audit_event.actor_id carries NO foreign key to app_user (PC-9), and the reason is load-bearing - PC-11 deletes an AppUser N years after its last sign-in while a refused-sign-in row naming it may be newer, so a foreign key would block the deletion or cascade the evidence away."
+  - "DB_DESIGN: UiLanguage is duplicated between Domain.Enums and ControlPlane.Persistence rather than shared, because ControlPlane may not reference Domain (package-map.md). Recorded so a later reader does not 'fix' it."
   - "API_DESIGN: PASS. Control Plane gains one operation (POST /service/v1/admin-login-checks); the installation gains its whole public-port surface - six operations plus nine host-wide rules later Stories inherit. The private port is untouched. Additive only: ContractVersion stays 1 (DC-12), ServiceOutcome is reused, and the SC-4 anonymous list gains an endpoint but no entry because the existing entry already reads 'Legitimacy check and Admin login check'."
   - "API_DESIGN resolved spec I-7: the Admin login check is a second method on IControlPlaneClient, not a separate port - one external system, one port (AD-4), sharing the base address, the HttpClient registration, the timeout (I-8) and the outcome classification."
   - "API_DESIGN decision, security-relevant: a refused callback redirects to /sign-in carrying only a category in TempData (Data-Protection-protected), never a query parameter - a parameter would let anyone craft a link rendering arbitrary text on the school's own sign-in page."
@@ -40,5 +46,5 @@ non_blocking_findings:
   - "US-008 OD-001 resolved by the Owner on 2026-09-19 as option 2 (one OAuth web client per school in the Owner's Cloud project, External user type, client secret in the secret store with only its reference in configuration, redirect URI from a configured public base address). Landed in trebovaniya.md v78 with DC-3, SC-7 and DC-2, commit 0e31e50, before this activation."
   - "US-008 OD-002 resolved by the Owner on 2026-09-19 as option 1 (the account-picker hint carries the school's domain when LegitimacyState knows it, none while no legitimacy check has ever succeeded; the hint is never the access decision - AllowedAdmin stays the gate)."
 started_at: 2026-09-19T17:13:12Z
-updated_at: 2026-09-19T18:01:17Z
+updated_at: 2026-09-19T18:34:47Z
 completed_at: null
