@@ -14,7 +14,8 @@ namespace ClassroomAgent.Tests.TestInfrastructure;
 public sealed class InstallationFactory(
     IReadOnlyDictionary<string, string?> settings,
     TimeProvider timeProvider,
-    IControlPlaneClient controlPlaneClient) : WebApplicationFactory<ClassroomAgent.Web.Program>
+    IControlPlaneClient controlPlaneClient,
+    Action<IServiceCollection>? configureServices = null) : WebApplicationFactory<ClassroomAgent.Web.Program>
 {
     public const string EnvironmentName = "Test";
 
@@ -32,6 +33,9 @@ public sealed class InstallationFactory(
             services.AddSingleton(timeProvider);
             services.RemoveAll<IControlPlaneClient>();
             services.AddSingleton(controlPlaneClient);
+
+            // US-007: the synthetic write and Google use cases the enforcement is proven on (test strategy §3).
+            configureServices?.Invoke(services);
         });
     }
 }

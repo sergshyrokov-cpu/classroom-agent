@@ -1,16 +1,18 @@
 ---
 artifact_type: open_decisions
 story: US-007
-version: 2
-status: APPROVED
+version: 4
+status: DRAFT
 created_at: 2026-09-19T11:54:48Z
-updated_at: 2026-09-19T12:17:40Z
+updated_at: 2026-09-19T12:54:04Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-007-read-only-mode.md
     version: null
   - path: trebovaniya.md
     version: 77
+  - path: docs/specifications/US-007-spec.md
+    version: 2
 supersedes: null
 ---
 
@@ -32,6 +34,7 @@ Status summary:
 |---|---|---|---|
 | OD-001 | Where the HTTP `409` mapping and the user-visible message belong | RESOLVED (2026-09-19): option 1 | FR-004, section 8, AC-002 |
 | OD-002 | How `Application` writes the refusal log line without a NuGet package | RESOLVED (2026-09-19): option 3 | FR-009, AC-010, S-03 |
+| OD-003 | How the red phase compiles when every new type is in `Application` | RESOLVED (2026-09-19): option 1 | TEST_WRITING (all Acceptance Criteria) |
 
 ---
 
@@ -132,6 +135,75 @@ unchanged and the US-005 architecture test
 unchanged, as Story AC-011 requires. The Specification must keep the test that the
 decorators are registered in front of the guard and the unit of work (FR-010), so
 "every refusal is logged" is asserted rather than assumed.*
+
+## Raised by TEST_WRITING
+
+### OD-003 — How the red phase compiles when every new type lives in `Application`
+
+**Status: RESOLVED.**
+
+**Gap.** `TEST_WRITING` runs before `IMPLEMENTATION` and must leave tests that
+**compile** and fail only for missing production behaviour; a suite that does not
+compile is explicitly not an acceptable red phase. Every scenario of the approved
+test strategy names a type that does not exist yet — `IReadOnlyModeGuard`,
+`ReadOnlyModeException`, `PermittedServiceWrite`, `PermittedServiceWrites`,
+`ServiceWriteScope`, `ReadOnlyModeUnitOfWork`, `IGoogleDataPort`. The `test-writer`
+Skill may not create or modify production source files on its own judgement.
+
+Earlier Stories did not hit this. US-005 created whole projects and resolved it as
+its own OD-002; US-006 was asserted entirely through black-box seams that already
+existed — HTTP endpoints, database rows, log lines and settings — so its tests
+compiled against nothing new. **US-007 has no such seam**: it adds no endpoint, no
+table, no setting and no screen, and every Acceptance Criterion is about types
+inside `Application`. Nothing in `AGENTS.md` or the workflow documents generalises
+the US-001 OD-007 / US-005 OD-002 resolutions to later Stories, so the question is
+open again rather than settled.
+
+**Impact.** Mandatory coverage is affected: all eleven Acceptance Criteria. Until
+it is resolved, `docs/tests/US-007-test-strategy.md` and
+`docs/tests/US-007-ac-test-matrix.md` are complete as a design, and no executable
+test source exists.
+
+**Options.**
+
+1. *(Recommended)* **A compile-only skeleton, as US-005 OD-002 decided for its own
+   Story.** `TEST_WRITING` declares only the types the tests reference — the guard
+   interface and its class, the exception, the enum, the registry, the scope, the
+   unit-of-work decorator and the `IGoogleDataPort` marker — with members throwing
+   `NotImplementedException` and nothing registered in DI. The tests then compile
+   and fail with `NotImplementedException`, which is a missing-behaviour failure.
+   `IMPLEMENTATION` owns those files from then on and may reshape them together
+   with the tests. Cost: the stage touches `src/`, which this Skill does not do
+   unasked; the exception has to be recorded, as it was for US-005.
+2. **Write the tests through reflection.** The test project locates the types by
+   name and invokes them dynamically, so nothing is referenced at compile time.
+   The suite compiles today and fails with "type not found". Cost: these tests are
+   the Story's only verification (there is no `IMPLEMENTATION_VERIFICATION` stage),
+   and a reflection-only suite is weak evidence, brittle under renaming, and
+   unreadable as the specification of a security rule — which is exactly what
+   AC-007 asks these tests to be.
+3. **Let `IMPLEMENTATION` write the tests first, inside its own stage.** Honest
+   about the constraint, but it abandons the order the project's Testing Strategy
+   fixes ("tests are written against the approved Specification, never against
+   finished code") for this Story, and that order is precisely what keeps AC-007
+   from being written to match whatever the implementation happened to do.
+4. **Generalise the rule once, in `AGENTS.md`**: any Story whose behaviour has no
+   pre-existing black-box seam may create a compile-only skeleton at
+   `TEST_WRITING`, under the US-005 conditions. Same effect as option 1 for this
+   Story, and no later Story has to ask again. Cost: it is a change to a canonical
+   document, so it is a decision about the harness and not only about US-007.
+
+**Resolution:** *Resolved 2026-09-19 by the human (the Owner): option 1.
+`TEST_WRITING` declares a compile-only skeleton in `src/` — only the types the
+tests reference (`IReadOnlyModeGuard`, `ReadOnlyModeGuard`,
+`ReadOnlyModeException`, `PermittedServiceWrite`, `PermittedServiceWrites`,
+`ServiceWriteScope`, `ReadOnlyModeUnitOfWork`, `IGoogleDataPort`) with members
+throwing `NotImplementedException` and nothing registered in DI. The tests then
+compile and fail with a missing-behaviour failure. `IMPLEMENTATION` owns those
+files from then on and may reshape them together with the tests. The exception to
+"the test-writer does not modify production source files" is recorded here, as it
+was for US-005 OD-002; it is scoped to this Story, exactly like that one. Option 4
+(writing the rule into `AGENTS.md` for every later Story) was not taken.*
 
 ## Interpretations
 

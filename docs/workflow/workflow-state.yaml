@@ -4,32 +4,44 @@
 version: 1
 story: US-007
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: IMPLEMENTATION
+previous_stage: TEST_WRITING
+last_completed_stage: TEST_WRITING
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: test-writer
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: 2026-09-19T12:25:46Z
+  verdict: PASS
+  stage: TEST_WRITING
+  recorded_at: 2026-09-19T13:08:51Z
 last_artifacts:
-  - type: api_design
-    path: docs/designs/api/US-007-api-design.md
-    version: 1
+  - type: test_strategy
+    path: docs/tests/US-007-test-strategy.md
+    version: 2
+  - type: ac_test_matrix
+    path: docs/tests/US-007-ac-test-matrix.md
+    version: 2
+  - type: test_generation_report
+    path: docs/evidence/US-007-test-generation-report.md
+    version: 2
+  - type: open_decisions
+    path: docs/decisions/US-007-open-decisions.md
+    version: 4
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "API_DESIGN: NOT_APPLICABLE, optional_when met. The approved Specification v2 states in sections 1, 7 (S-08), 8 and 10 that US-007 adds no endpoint and that the refusal carries no HTTP concept; the HTTP 409 mapping of API-5 is deferred to US-008 by OD-001 (resolved). The decision and its reason are recorded in docs/designs/api/US-007-api-design.md (v1)."
-  - "API_DESIGN: no docs/designs/api/US-007-openapi.yaml exists, deliberately - a contract describing zero operations would assert a surface this Story does not have. DB_DESIGN lists `openapi` among its inputs; that input's answer lives in the api_design document. Its absence is a recorded decision, not a missing artifact, and must not be read as one."
-  - "API_DESIGN: recorded for US-008 - ReadOnlyModeException maps to HTTP 409 with the API-6 body, and the user-visible message is built from the reason carried as data, never by parsing the fixed English Message (NFR-073, AC-002)."
-  - "API_DESIGN: existing contracts confirmed unchanged - the installation's private port (liveness, readiness in read-only mode still HTTP 200 'degraded', the push receiver), the legitimacy-check service channel, the status push, the Control Plane pages, and the installation's public port that still answers 404."
-  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-19T12:17:40Z: specification v2 and open decisions v2 APPROVED. OD-002 resolved as option 3 - Application throws and Infrastructure registers the decorators around IReadOnlyModeGuard and IUnitOfWork that write the Warning line and rethrow; no NuGet package is added to Application, no logging port is introduced, package-map.md is unchanged and the US-005 test ProjectReferenceTests.FrameworkFreeProjects_ReferenceNoPackage keeps passing unchanged (Story AC-011). Interpretations I-1 ... I-12 accepted."
-  - "SPECIFICATION: OD-001 carried from the Story keeping its id, resolved by the Owner on 2026-09-19 (option 1). API-5 is NOT satisfied end to end after this Story - the refusal stops at Application and the HTTP 409 mapping with the translated message arrives with US-008."
-  - "SPECIFICATION: the enforcement mechanism is two-layered - IReadOnlyModeGuard in Application as the primary point (refusal before any repository, port or transaction, AC-001/AC-006) plus a commit backstop, an IUnitOfWork decorator in Application that refuses in read-only mode any commit no use case declared a permitted service write (AC-004). The BR-026 list is one enum of four members with a static registry of the use cases performing them; the structural test enumerates write paths and Google paths and is proven against synthetic violations (AC-007)."
-  - "SPECIFICATION: this is a mechanism Story - no endpoint, no screen, no entity and no migration. DB_DESIGN should expect the same answer API_DESIGN gave, and must not add an entity or a migration to fill the stage."
-  - "SPECIFICATION: trebovaniya.md section 7 has no open item this Story depends on - items 10 and 14 are Google questions, item 26 is documentation."
+  - "TEST_WRITING: red phase verified on real PostgreSQL (Docker 29.8.0, Testcontainers). Whole suite: total 1165, passed 1115, failed 50, skipped 0. All 50 failures are in the ten new US-007 classes; nothing outside US-007 fails, so US-001 ... US-006 stay green and unchanged. dotnet build: 0 errors, 0 warnings."
+  - "TEST_WRITING: every failure is a missing-behaviour failure in one of four shapes - NotImplementedException from the skeleton (8), unresolved IReadOnlyModeGuard or ServiceWriteScope in DI (14), the guard throwing the wrong exception type because it is not written (23), and no exception thrown where the backstop must refuse (5, which is exactly AC-004). No syntax error, no broken test host, no invalid fixture."
+  - "TEST_WRITING: OD-003 resolved as option 1, so the stage created a compile-only skeleton of eight files in src/ClassroomAgent.Application (guard interface and class, ReadOnlyModeException, PermittedServiceWrite, PermittedServiceWrites, ServiceWriteScope, ReadOnlyModeUnitOfWork, IGoogleDataPort). IMPLEMENTATION owns those files from now on and may reshape them with the tests. ClassroomAgent.Application still references no NuGet package, so the US-005 test FrameworkFreeProjects_ReferenceNoPackage passes unchanged - what OD-002 option 3 was chosen to preserve."
+  - "TEST_WRITING: two skeleton files carry data rather than a throwing member, because the tests name their identifiers - the four PermittedServiceWrite members and the three ReadOnlyModeException properties. Two tests therefore pass before implementation; their value is as drift guards against BR-026 and AD-9, not as proof of implementation (report sections 3 and 5)."
+  - "TEST_WRITING: 30 tests pass before implementation, each investigated in report section 5 - the rule-detection proof (9, which is the point of AC-007), reads unaffected (10, the AC-005 guarantee), the permitted legitimacy write (3), normal operation unchanged (1), layering guarantees (3), the marker shape (2) and the two drift guards."
+  - "TEST_WRITING: two existing test-infrastructure files were extended and nothing was removed, disabled or weakened - InstallationFactory gained an optional configureServices hook and InstallationTestHost the property feeding it."
+  - "TEST_WRITING: IMPLEMENTATION must implement the eight skeleton members, add the FR-011 wiring (guard, ServiceWriteScope and the ReadOnlyModeUnitOfWork in front of the Infrastructure UnitOfWork, all scoped, behind the FR-009 logging decorators), add the two Infrastructure logging decorators with the ReadOnlyWriteRefused event the logging tests look for, and register CheckLegitimacyUseCase in PermittedServiceWrites with a declaration scope around its commit (report section 9)."
+  - "DB_DESIGN: NOT_APPLICABLE; no entity-model artifact, deliberately. The Story touches the commit path, not the schema."
+  - "API_DESIGN: NOT_APPLICABLE; no OpenAPI contract, deliberately. Recorded for US-008 - ReadOnlyModeException maps to HTTP 409 with the API-6 body, and the message is built from the reason carried as data (NFR-073, AC-002)."
+  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-19T12:17:40Z: specification v2 and open decisions v2 APPROVED; OD-002 resolved as option 3; interpretations I-1 ... I-12 accepted."
+  - "SPECIFICATION: OD-001 resolved by the Owner on 2026-09-19 (option 1). API-5 is NOT satisfied end to end after this Story - the HTTP 409 mapping arrives with US-008."
+  - "SPECIFICATION: the enforcement mechanism is two-layered - IReadOnlyModeGuard in Application as the primary point plus the IUnitOfWork commit backstop that refuses in read-only mode any commit no use case declared a permitted service write. The BR-026 list is one enum of four members with a static registry; the structural test enumerates write paths and Google paths and is proven against synthetic violations."
 started_at: 2026-09-19T12:15:12Z
-updated_at: 2026-09-19T12:25:46Z
+updated_at: 2026-09-19T13:08:51Z
 completed_at: null

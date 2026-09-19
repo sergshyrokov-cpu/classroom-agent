@@ -54,6 +54,9 @@ public sealed class InstallationTestHost : IAsyncDisposable
     /// <summary>Settings passed to the host; a test may change or remove one before <see cref="Start"/>.</summary>
     public Dictionary<string, string?> Settings { get; }
 
+    /// <summary>Extra test-only registrations, applied last (US-007 test strategy §3); set before <see cref="Start"/>.</summary>
+    public Action<Microsoft.Extensions.DependencyInjection.IServiceCollection>? ConfigureServices { get; set; }
+
     public IServiceProvider Services => Factory.Services;
 
     private InstallationFactory Factory => _factory ?? throw new InvalidOperationException("The host is not started.");
@@ -89,7 +92,7 @@ public sealed class InstallationTestHost : IAsyncDisposable
     /// <summary>Builds and starts the host; throws when the host refuses to start (AC-001).</summary>
     public void Start()
     {
-        _factory = new InstallationFactory(Settings, Time, ControlPlane);
+        _factory = new InstallationFactory(Settings, Time, ControlPlane, ConfigureServices);
         try
         {
             _ = _factory.Server;
