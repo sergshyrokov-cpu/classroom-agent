@@ -114,4 +114,69 @@ public sealed class AuditEvent
             RefusalCategory = category,
             RequestId = requestId,
         };
+
+    /// <summary>
+    /// A saved or changed <c>WorkspaceConnection</c> (US-009 spec FR-009; db-design §4.2). One action serves
+    /// both, naming the connection row the save produced.
+    /// </summary>
+    public static AuditEvent WorkspaceConnectionSaved(
+        long appUserId,
+        long connectionId,
+        DateTimeOffset occurredAt,
+        string? requestId) =>
+        new()
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = appUserId,
+            ActorRole = AppRole.Admin,
+            Action = AuditAction.WorkspaceConnectionSaved,
+            TargetType = AuditTargetType.WorkspaceConnection,
+            TargetId = connectionId,
+            Outcome = AuditOutcome.Succeeded,
+            RefusalCategory = null,
+            RequestId = requestId,
+        };
+
+    /// <summary>
+    /// A refused save (US-009 spec FR-009, I-1): the kind of object is named, the identifier is not, because no
+    /// connection was created or changed (db-design §4.1).
+    /// </summary>
+    public static AuditEvent WorkspaceConnectionSaveRefused(
+        long appUserId,
+        AuditRefusalCategory category,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        if (!SaveRefusals.Contains(category))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(category),
+                category,
+                "A refused connection save carries a category of its own action, never one of the sign-in path.");
+        }
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = appUserId,
+            ActorRole = AppRole.Admin,
+            Action = AuditAction.WorkspaceConnectionSaved,
+            TargetType = AuditTargetType.WorkspaceConnection,
+            TargetId = null,
+            Outcome = AuditOutcome.Refused,
+            RefusalCategory = category,
+            RequestId = requestId,
+        };
+    }
+
+    /// <summary>The categories a refused connection save may carry (US-009 db-design §4.2).</summary>
+    private static readonly AuditRefusalCategory[] SaveRefusals =
+    [
+        AuditRefusalCategory.DomainMismatch,
+        AuditRefusalCategory.ImpersonationDomainMismatch,
+        AuditRefusalCategory.DomainNotConfirmed,
+        AuditRefusalCategory.ReadOnlyMode,
+    ];
 }

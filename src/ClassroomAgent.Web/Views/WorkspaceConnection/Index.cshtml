@@ -1,0 +1,64 @@
+@model WorkspaceConnectionPageModel
+@{
+    ViewData["Title"] = T[WorkspaceConnectionTextKeys.Title];
+}
+
+@if (Model.IsReadOnly)
+{
+    <section class="notice">
+        <h2>@T["Landing.ReadOnly.Title"]</h2>
+        <p>@T[ReasonKey(Model.ReadOnlyReason)]</p>
+    </section>
+}
+
+<p>
+    @T[WorkspaceConnectionTextKeys.DomainLabel]:
+    <span id="installation-domain">@(Model.InstallationDomain ?? T[WorkspaceConnectionTextKeys.DomainUnknown].Value)</span>
+</p>
+
+<p id="connection-state">@T[StateKey(Model.State)]</p>
+
+@if (Model.SavedImpersonationUserEmail is { } saved)
+{
+    <p id="saved-impersonation-user">@saved</p>
+}
+
+@if (Model.MessageKey is not null)
+{
+    <p class="form-message">@T[Model.MessageKey]</p>
+}
+
+@foreach (var error in Model.FieldErrorKeys)
+{
+    <p class="form-error">@T[error]</p>
+}
+
+<p>@T[WorkspaceConnectionTextKeys.TechnicalAccountHint]</p>
+<p>@T[WorkspaceConnectionTextKeys.CheckAccessHint]</p>
+
+<form method="post" action="@SignInRoutes.WorkspaceConnection">
+    @Html.AntiForgeryToken()
+    <label for="impersonationUserEmail">@T[WorkspaceConnectionTextKeys.ImpersonationUserLabel]</label>
+    <input type="email"
+           id="impersonationUserEmail"
+           name="impersonationUserEmail"
+           value="@Model.TypedImpersonationUserEmail" />
+    <button type="submit">@T[WorkspaceConnectionTextKeys.SaveButton]</button>
+</form>
+
+@functions {
+    private static string ReasonKey(LegitimacyModeReason? reason) => reason switch
+    {
+        LegitimacyModeReason.NotYetConfirmed => "Landing.ReadOnly.NotYetConfirmed",
+        LegitimacyModeReason.SuspendedByOwner => "Landing.ReadOnly.SuspendedByOwner",
+        LegitimacyModeReason.GracePeriodExpired => "Landing.ReadOnly.GracePeriodExpired",
+        _ => "Landing.ReadOnly.Title",
+    };
+
+    private static string StateKey(WorkspaceConnectionState state) => state switch
+    {
+        WorkspaceConnectionState.Configured => WorkspaceConnectionTextKeys.StateConfigured,
+        WorkspaceConnectionState.DomainMismatch => WorkspaceConnectionTextKeys.StateDomainMismatch,
+        _ => WorkspaceConnectionTextKeys.StateNotConfigured,
+    };
+}

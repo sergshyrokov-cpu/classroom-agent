@@ -85,6 +85,7 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
                 "ck_audit_event_refusal_category",
                 "ck_audit_event_refusal_category_value",
                 "ck_audit_event_target",
+                "ck_audit_event_target_type_value",
             },
             checks.Where(c => c.StartsWith("ck_audit_event", StringComparison.Ordinal)));
     }

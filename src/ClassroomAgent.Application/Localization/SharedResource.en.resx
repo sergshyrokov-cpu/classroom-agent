@@ -39,4 +39,23 @@
   <data name="ReadOnly.Refused.NotYetConfirmed" xml:space="preserve"><value>The action cannot run: the installation has not been confirmed yet.</value></data>
   <data name="ReadOnly.Refused.SuspendedByOwner" xml:space="preserve"><value>The action cannot run: the installation was suspended by the service owner.</value></data>
   <data name="ReadOnly.Refused.GracePeriodExpired" xml:space="preserve"><value>The action cannot run: the waiting period for a confirmation has run out.</value></data>
+  <data name="WorkspaceConnection.Title" xml:space="preserve"><value>Google Workspace connection</value></data>
+  <data name="WorkspaceConnection.Domain.Label" xml:space="preserve"><value>The school's domain</value></data>
+  <data name="WorkspaceConnection.Domain.Unknown" xml:space="preserve"><value>The domain is not known yet: the installation's legitimacy has not been confirmed.</value></data>
+  <data name="WorkspaceConnection.ImpersonationUser.Label" xml:space="preserve"><value>The school's technical account</value></data>
+  <data name="WorkspaceConnection.ImpersonationUser.Hint" xml:space="preserve"><value>The technical account is created by the school's super-admin. It is neither your own account nor a super-admin: no person stands behind it, and it holds read-only roles.</value></data>
+  <data name="WorkspaceConnection.CheckAccess.Hint" xml:space="preserve"><value>Saving only records the account. Checking access is a separate action.</value></data>
+  <data name="WorkspaceConnection.State.NotConfigured" xml:space="preserve"><value>The connection is not configured yet.</value></data>
+  <data name="WorkspaceConnection.State.Configured" xml:space="preserve"><value>The connection is configured.</value></data>
+  <data name="WorkspaceConnection.State.DomainMismatch" xml:space="preserve"><value>The saved domain no longer matches the one the service Owner records. Save the connection again.</value></data>
+  <data name="WorkspaceConnection.Save.Button" xml:space="preserve"><value>Save</value></data>
+  <data name="WorkspaceConnection.Saved" xml:space="preserve"><value>The connection has been saved.</value></data>
+  <data name="WorkspaceConnection.Refused.DomainMismatch" xml:space="preserve"><value>The connection domain does not match the school's domain.</value></data>
+  <data name="WorkspaceConnection.Refused.ImpersonationDomainMismatch" xml:space="preserve"><value>The technical account must be in the school's domain.</value></data>
+  <data name="WorkspaceConnection.Refused.DomainNotConfirmed" xml:space="preserve"><value>The installation's legitimacy has not been confirmed yet, so the allowed domain is unknown.</value></data>
+  <data name="WorkspaceConnection.Validation.Required" xml:space="preserve"><value>Enter the address of the technical account.</value></data>
+  <data name="WorkspaceConnection.Validation.Email" xml:space="preserve"><value>This does not look like an email address.</value></data>
+  <data name="WorkspaceConnection.Validation.Domain" xml:space="preserve"><value>This does not look like a domain.</value></data>
+  <data name="WorkspaceConnection.Validation.TooLong" xml:space="preserve"><value>The address is too long.</value></data>
+  <data name="Landing.Settings.WorkspaceConnection" xml:space="preserve"><value>Google Workspace connection</value></data>
 </root>

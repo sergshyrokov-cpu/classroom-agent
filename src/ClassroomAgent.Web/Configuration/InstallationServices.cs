@@ -35,6 +35,7 @@ public static class InstallationServices
         services.AddScoped<ILegitimacyStateRepository, LegitimacyStateRepository>();
         services.AddScoped<IAppUserRepository, AppUserRepository>();
         services.AddScoped<IAuditEventRepository, AuditEventRepository>();
+        services.AddScoped<IWorkspaceConnectionRepository, WorkspaceConnectionRepository>();
 
         // US-008 spec FR-011, FR-017: the school-wide defaults a new account inherits.
         services.AddSingleton(new SchoolDefaults(settings.DefaultUiLanguage));
@@ -68,6 +69,10 @@ public static class InstallationServices
         services.AddScoped<AccountSessionService>();
         services.AddScoped<GetLegitimacyModeQuery>();
         services.AddScoped<GetReadinessQuery>();
+
+        // US-009 spec FR-015: the connection query and the guarded save of the settings screen.
+        services.AddScoped<GetWorkspaceConnectionQuery>();
+        services.AddScoped<SaveWorkspaceConnectionUseCase>();
         services.AddHostedService<LegitimacyCheckBackgroundService>();
         return services;
     }

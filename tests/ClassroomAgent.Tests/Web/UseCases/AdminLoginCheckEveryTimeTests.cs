@@ -101,7 +101,7 @@ public sealed class AdminLoginCheckEveryTimeTests(PostgreSqlFixture database)
 
         var tables = await host.TableNamesAsync(ct);
         Assert.Equal(
-            new[] { "__EFMigrationsHistory", "app_user", "audit_event", "legitimacy_state" },
+            new[] { "__EFMigrationsHistory", "app_user", "audit_event", "legitimacy_state", "workspace_connection" },
             tables.Order(StringComparer.Ordinal));
         Assert.DoesNotContain(tables, t => t.Contains("allowed", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(tables, t => t.Contains("admin", StringComparison.OrdinalIgnoreCase));

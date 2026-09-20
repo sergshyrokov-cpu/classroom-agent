@@ -44,6 +44,13 @@ public sealed class InstallationExceptionHandler(
         var textKey = ReasonKey(refusal.Reason);
         httpContext.Response.StatusCode = StatusCodes.Status409Conflict;
 
+        // US-009: restore the request's culture before any string is resolved. This handler runs in the outermost
+        // middleware, and the culture the localization middleware set deeper in the pipeline does not flow back
+        // out of that scope — without this the refusal would be rendered in the server's culture, not the user's
+        // (NFR-073). The feature itself does survive on HttpContext, so the decision of AccountCultureProvider is
+        // reused rather than made a second time.
+        using var culture = RequestCultureScope.Apply(httpContext);
+
         if (httpContext.Request.Path.StartsWithSegments(ApiPrefix, StringComparison.OrdinalIgnoreCase))
         {
             await WriteApiErrorAsync(httpContext, textKey, cancellationToken);

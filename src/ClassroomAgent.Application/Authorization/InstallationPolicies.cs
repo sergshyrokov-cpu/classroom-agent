@@ -12,4 +12,9 @@ public static class InstallationPolicies
 
     /// <summary>Any authenticated account of the installation; sign-out needs nothing more.</summary>
     public const string AuthenticatedUser = "AuthenticatedUser";
+
+    /// <summary>
+    /// "Настройка `WorkspaceConnection` (домен, impersonation)" — ✔ Admin, ✘ Dean (US-009 spec FR-010).
+    /// </summary>
+    public const string ConfigureWorkspaceConnection = "ConfigureWorkspaceConnection";
 }

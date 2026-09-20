@@ -21,6 +21,13 @@ else
     <p>@T["Landing.Legitimacy.Ok"]</p>
 }
 
+@if (User.IsInRole("Admin"))
+{
+    <nav id="admin-settings">
+        <a href="@SignInRoutes.WorkspaceConnection">@T[WorkspaceConnectionTextKeys.NavigationEntry]</a>
+    </nav>
+}
+
 <form method="post" action="@SignInRoutes.SignOut">
     @Html.AntiForgeryToken()
     <button type="submit">@T["Landing.SignOut"]</button>

@@ -1,0 +1,26 @@
+using ClassroomAgent.Application.Models;
+
+namespace ClassroomAgent.Web.Controllers;
+
+/// <summary>
+/// View DTO of the connection settings (US-009 openapi <c>WorkspaceConnectionPageModel</c>; AD-8). Every
+/// message is a translation <b>key</b>, never a rendered sentence: <c>Application</c> holds no user-visible
+/// string (AD-6, NFR-073). The domain and the address are data and are rendered as stored.
+/// </summary>
+/// <param name="State">The connection state (spec FR-002).</param>
+/// <param name="InstallationDomain">The domain from <c>LegitimacyState</c>, or null while none is known.</param>
+/// <param name="SavedImpersonationUserEmail">The stored technical account, or null when none is stored.</param>
+/// <param name="TypedImpersonationUserEmail">What the Admin typed, kept after a refusal so it can be corrected.</param>
+/// <param name="IsReadOnly">Whether the installation is in read-only mode (US-007).</param>
+/// <param name="ReadOnlyReason">Why, when it is (BR-025).</param>
+/// <param name="MessageKey">The confirmation of a save, or the refusal of a `409`.</param>
+/// <param name="FieldErrorKeys">Per-field validation messages of a `400`, by field name.</param>
+public sealed record WorkspaceConnectionPageModel(
+    WorkspaceConnectionState State,
+    string? InstallationDomain,
+    string? SavedImpersonationUserEmail,
+    string TypedImpersonationUserEmail,
+    bool IsReadOnly,
+    LegitimacyModeReason? ReadOnlyReason,
+    string? MessageKey,
+    IReadOnlyList<string> FieldErrorKeys);

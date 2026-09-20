@@ -85,7 +85,7 @@ stories:
   - id: US-009
     epic: EPIC-6
     title: Configure WorkspaceConnection
-    state: IN_PROGRESS
+    state: COMPLETED
     # Depended on US-008 (a signed-in Admin) and US-005 (the Installation domain,
     # delivered by the legitimacy check and kept in LegitimacyState, that the
     # connection is checked against); both COMPLETED. Story file authored:

@@ -335,6 +335,28 @@ Whichever is chosen, the stored connection keeps its own domain column: the
 entity is what §3 describes, and the check compares two stored values rather
 than trusting a form.
 
+**Resolution:** option 1, decided by the Owner on 2026-09-20. The connection
+domain is **displayed** from `LegitimacyState`, not typed: the Admin enters the
+technical account alone. The only domain a save could ever carry is the one the
+Owner recorded, so a domain field would exist solely to be mistyped.
+
+Three things this resolution does **not** relax:
+
+- the BR-020 check stays in `Application` and is tested exactly as AC-004
+  requires. It is the Owner's control, not a form convenience, and a save
+  arriving with a domain that differs — a crafted request, a later API client —
+  is refused, not corrected. AC-004's cases are reached by constructing the
+  request, not by typing in the form;
+- `WorkspaceConnection` keeps its own domain column and the value is written
+  from `LegitimacyState` at the moment of the save, so the record states which
+  domain it was saved for and OD-002 has something to compare;
+- AC-005 is unaffected: the impersonation user's email domain is typed by the
+  Admin and is the field a person can get wrong, so its refusal is the one
+  people will actually see.
+
+The page still shows the domain plainly — the Admin must be able to see which
+school the installation is bound to before entering an account in it.
+
 ## OD-002 What happens to a saved connection if the Installation domain ever changes
 
 BR-021 says an `Installation` domain never changes — a school moving domains
@@ -358,6 +380,27 @@ Options:
 
 This has to be decided now rather than later because EPIC-1 reads Google on
 whatever this record says.
+
+**Resolution:** option 1, decided by the Owner on 2026-09-20. A saved connection
+whose domain differs from the `Installation` domain in `LegitimacyState` is
+treated as **invalid**: it is not used, and the settings page states that the
+saved domain no longer matches the one the Owner records and that the connection
+must be saved again. Nothing is deleted and nothing is corrected automatically.
+
+- The mismatch is a **state the program reports**, not a silent repair: an
+  automatic rewrite would hide a Control Plane defect or a restored wrong
+  database, which are exactly the situations this exists for.
+- "Not used" means every later reader of the connection sees it as absent:
+  synchronization does not start on it (EPIC-1) and "check access" does not run
+  against it (US-011). Those Stories consume the invalid state; this Story
+  defines it and proves it at the Application level.
+- A save while the state is invalid follows the ordinary rules: the domain
+  written is the one `LegitimacyState` holds now (OD-001), so saving again is
+  what clears the mismatch.
+- The comparison uses the same domain rule as AC-004 and AC-005, so case and a
+  trailing dot never manufacture a mismatch.
+- The Specification carries this as an Acceptance Criterion of its own, with the
+  invalid state visible in `Application` rather than in the view (AD-6).
 
 ---
 

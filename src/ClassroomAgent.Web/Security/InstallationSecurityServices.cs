@@ -44,6 +44,13 @@ public static class InstallationSecurityServices
                 InstallationPolicies.AuthenticatedUser,
                 policy => policy.RequireAuthenticatedUser());
 
+            // US-009 spec FR-010: the connection settings are the Admin's cell of the §2 matrix, and no other
+            // cell is implemented speculatively (SC-1).
+            options.AddPolicy(
+                InstallationPolicies.ConfigureWorkspaceConnection,
+                policy => policy.RequireAuthenticatedUser().RequireRole(
+                    InstallationSession.RoleName(AppRole.Admin)));
+
             // Deny by default: an endpoint whose author forgot an attribute closes rather than opens (SC-4, API-9).
             options.FallbackPolicy = options.GetPolicy(InstallationPolicies.AuthenticatedUser);
         });

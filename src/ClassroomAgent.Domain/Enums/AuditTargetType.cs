@@ -1,9 +1,11 @@
 namespace ClassroomAgent.Domain.Enums;
 
 /// <summary>
-/// What an audited action acted upon. Deliberately empty in US-008: the two sign-in rows have no target, and
-/// a member is added by the Story that first needs one (entity model §2.3; spec I-11).
+/// What an audited action acted upon. US-008 left it empty and recorded that the Story adding the first target
+/// would fill it; US-009 is that Story (US-008 entity model §2.3, spec I-11).
 /// </summary>
 public enum AuditTargetType
 {
+    /// <summary>The installation's connection to its Workspace domain (US-009 db-design §4).</summary>
+    WorkspaceConnection,
 }

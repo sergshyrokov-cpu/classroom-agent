@@ -23,12 +23,14 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
             r => r.GetString(0),
             ct);
 
+        // US-009 adds workspace_connection in its own migration, as its db-design §7.1 fixes.
         Assert.Equal(
-            new[] { "__EFMigrationsHistory", "app_user", "audit_event", "legitimacy_state" },
+            new[] { "__EFMigrationsHistory", "app_user", "audit_event", "legitimacy_state", "workspace_connection" },
             tables.Order(StringComparer.Ordinal));
-        Assert.Equal(2, migrations.Count);
+        Assert.Equal(3, migrations.Count);
         Assert.EndsWith("_InitialLegitimacyState", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_InitialAppUserAndAuditEvent", migrations[1], StringComparison.Ordinal);
+        Assert.EndsWith("_AddWorkspaceConnection", migrations[2], StringComparison.Ordinal);
     }
 
     /// <summary>db-design 7.1: the migration seeds nothing — the first account appears when a person signs in.</summary>

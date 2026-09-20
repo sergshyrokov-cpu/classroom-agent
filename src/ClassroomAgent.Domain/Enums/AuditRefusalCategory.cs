@@ -20,4 +20,16 @@ public enum AuditRefusalCategory
 
     /// <summary>The account exists but is disabled (spec I-9; only US-012 disables one).</summary>
     AccountDisabled,
+
+    /// <summary>US-009: the domain to be written differs from the <c>Installation</c> domain (BR-020).</summary>
+    DomainMismatch,
+
+    /// <summary>US-009: the technical account's email domain differs from the <c>Installation</c> domain (BR-020).</summary>
+    ImpersonationDomainMismatch,
+
+    /// <summary>US-009: no legitimacy check has ever succeeded, so the allowed domain is unknown.</summary>
+    DomainNotConfirmed,
+
+    /// <summary>US-009: the installation is in read-only mode, where connection settings may not be saved (BR-026).</summary>
+    ReadOnlyMode,
 }

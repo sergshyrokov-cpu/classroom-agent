@@ -1,0 +1,288 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Configure WorkspaceConnection (US-009)
+  version: "1"
+  description: >
+    HTTP contract of US-009 on the installation's public port: the connection
+    settings page and the save that records the school's Google Workspace domain
+    and its technical account (`trebovaniya.md` §3, BR-015, BR-020). Two
+    server-rendered operations, no JSON API — §8 keeps screens on Razor and
+    reserves `/api/v1` for what a client consumes as data, and this Story adds no
+    such client. The Control Plane is untouched: a school's connection is never
+    reported to it (spec S-11). The installation's host-wide rules of
+    docs/designs/api/US-008-openapi.yaml apply unchanged — deny by default,
+    global antiforgery, the single error page, the anonymous catch-all, the
+    session policy and the `409` read-only mapping. The private port of US-005
+    and US-006 is untouched. Companion document:
+    docs/designs/api/US-009-api-design.md.
+x-story: US-009
+x-source-specification: docs/specifications/US-009-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-009-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 79
+x-produced-by: openapi-designer
+x-extends: docs/designs/api/US-008-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. This Story adds
+  no wire type and changes none: the service channel, the legitimacy check and
+  the push are untouched, and the two operations below are the installation's own
+  screens, which the contract version does not describe (DC-12).
+
+servers:
+  - url: https://school.example
+    description: >
+      Installation public port. Illustrative; the real value is the configured
+      public base address (US-008 spec FR-001).
+
+tags:
+  - name: settings
+    description: "The admin panel's connection settings (spec FR-004, FR-005, FR-013)"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 configured host-wide applies to both operations and is not
+    restated per operation: HTTPS redirection and HSTS on the public port, the
+    deny-by-default fallback policy (SC-4, API-9), the global antiforgery filter
+    on every state-changing request, the single error page, the anonymous
+    catch-all `404`, the non-persistent session cookie with its 60-minute idle
+    and 8-hour absolute limits, and the exception handler that turns a
+    `ReadOnlyModeException` into `409` — the API-6 body under `/api/v1`, the
+    translated error page everywhere else (US-008 spec FR-002, FR-004, FR-005,
+    FR-014, FR-015, FR-018).
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list of anonymous endpoints gains **nothing**. Both
+    operations below require an authenticated Admin, and the US-008 endpoint
+    enumeration test passes unchanged (spec FR-010, S-01).
+
+  no-api-v1-operation: >
+    This Story adds no `/api/v1` path. The `409` read-only mapping it relies on
+    is the host-wide one US-008 configured and proved; nothing here re-declares
+    or re-maps it (spec FR-008).
+
+  nothing-leaves-the-installation: >
+    Neither operation calls Google, the Control Plane or any other outside
+    service. The only external destination reachable from this Story's code is
+    the installation's own database (spec S-10, S-11; SC-13).
+
+paths:
+
+  /settings/workspace-connection:
+
+    get:
+      tags: [settings]
+      operationId: getWorkspaceConnectionSettings
+      summary: "The connection settings page"
+      description: >
+        Shows the school's domain as the last successful legitimacy check
+        reported it, the connection state, the saved technical account when one
+        exists, and the form of the `POST` below. Reading the page writes
+        nothing — not even when the saved connection's domain no longer matches
+        (OD-002, spec I-5).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ConfigureWorkspaceConnection
+      x-permission-matrix-row: "Настройка WorkspaceConnection (домен, impersonation) — Admin ✔, Dean ✘"
+      x-spec: [FR-002, FR-003, FR-004, FR-010, FR-011, FR-013]
+      x-acceptance-criteria: [AC-001, AC-002, AC-009, AC-010, AC-011]
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: >
+            The settings page, in the user's language. In read-only mode it is
+            served unchanged with the reason named — viewing keeps working
+            (BR-026) — and the form is neither hidden nor disabled, because the
+            refusal is enforced in `Application` (AD-6, TC-5).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/WorkspaceConnectionPageModel"
+        "302":
+          description: "Not signed in: the challenge sends the visitor to `/sign-in` (US-008)."
+          headers:
+            Location:
+              schema:
+                type: string
+                const: /sign-in
+        "403":
+          description: >
+            Signed in as a Dean: the translated error page. The cell is `✘` in
+            the permission matrix, and the page reveals nothing about the
+            connection.
+          content:
+            text/html: {}
+
+    post:
+      tags: [settings]
+      operationId: saveWorkspaceConnection
+      summary: "Save the school's technical account"
+      description: >
+        Records the impersonation user and binds the connection to the
+        `Installation` domain that `LegitimacyState` holds. The domain is **not**
+        a field of this request: it is read server-side at the moment of the save
+        (OD-001, spec FR-003, FR-005, VR-003). The save neither calls Google nor
+        verifies the account — that is "check access" (US-011).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ConfigureWorkspaceConnection
+      x-antiforgery: required
+      x-spec: [FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-014]
+      x-acceptance-criteria: [AC-001, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010]
+      security:
+        - installationSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/SaveWorkspaceConnectionForm"
+      responses:
+        "302":
+          description: >
+            Saved. Post-Redirect-Get back to the page, which renders the stored
+            values and the confirmation carried in TempData — never in a query
+            parameter (the US-008 rule). One audit row is written in the same
+            transaction as the connection (spec FR-009).
+          headers:
+            Location:
+              schema:
+                type: string
+                const: /settings/workspace-connection
+        "400":
+          description: >
+            The request is malformed: a missing or empty field, an address that
+            fails VR-001 or whose domain part fails VR-002, or a missing or
+            invalid antiforgery token. The page is re-rendered with a per-field
+            message and the typed address preserved so it can be corrected.
+            Nothing is written and the rejected value is never logged (SC-10).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/WorkspaceConnectionPageModel"
+        "403":
+          description: "Signed in as a Dean: the translated error page. Nothing is written."
+          content:
+            text/html: {}
+        "409":
+          description: >
+            The request is well formed and the installation's state refuses it
+            (API-5). Four cases, each with its own translated message and its own
+            audit refusal category, and none of them writes the connection:
+            the impersonation user's email domain differs from the `Installation`
+            domain (`ImpersonationDomainMismatch`); the domain to be written
+            differs from it (`DomainMismatch`, reachable only by a crafted
+            request — see OD-001); no legitimacy check has ever succeeded, so the
+            allowed domain is unknown (`DomainNotConfirmed`); or the installation
+            is in read-only mode (`ReadOnlyMode`), which the host-wide US-008
+            handler renders. The first three re-render the page with the typed
+            address preserved; the read-only one renders the error page.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/WorkspaceConnectionPageModel"
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: __Host-ca-session
+      description: >
+        The installation's own session cookie (US-008 spec FR-015): httpOnly,
+        Secure, SameSite=Lax, non-persistent, checked against the account's
+        security stamp on every request. No Google token is ever presented to
+        this host.
+
+  schemas:
+
+    SaveWorkspaceConnectionForm:
+      type: object
+      additionalProperties: false
+      required: [impersonationUserEmail]
+      description: >
+        The whole request body. It has exactly one field: per OD-001 the domain
+        is displayed, not typed, so a domain arriving under any name has no
+        property to bind to and is ignored (spec VR-003).
+      properties:
+        impersonationUserEmail:
+          type: string
+          minLength: 3
+          maxLength: 254
+          description: >
+            The school's technical account — not the Admin's own account and not
+            a super-admin (BR-015). Trimmed and lower-cased before use; exactly
+            one `@`; non-empty name and domain parts; no whitespace; the domain
+            part must satisfy VR-002 and must equal the `Installation` domain
+            (BR-020).
+          examples: ["classroom-agent@school.example"]
+
+    WorkspaceConnectionPageModel:
+      type: object
+      additionalProperties: false
+      description: >
+        The view model of both HTML responses — a DTO built in `Application`,
+        never a domain entity (AD-8). It carries no key, no secret and no
+        reference to either (SC-7, PC-9).
+      required: [state, connectionUsable]
+      properties:
+        state:
+          $ref: "#/components/schemas/WorkspaceConnectionState"
+        connectionUsable:
+          type: boolean
+          description: >
+            True only in `Configured`. One boolean so a later caller — EPIC-1,
+            US-011 — cannot forget a case (spec FR-002, OD-002).
+        installationDomain:
+          type: [string, "null"]
+          description: >
+            The domain from `LegitimacyState`, or null while no legitimacy check
+            has ever succeeded (spec FR-003). Data, never translated.
+        savedDomain:
+          type: [string, "null"]
+          description: "The domain the stored connection was saved for, or null when none is stored."
+        savedImpersonationUserEmail:
+          type: [string, "null"]
+          description: "The stored technical account, or null when none is stored."
+        readOnly:
+          type: boolean
+          description: "Whether the installation is in read-only mode (US-007)."
+        readOnlyReasonKey:
+          type: [string, "null"]
+          description: >
+            A translation key for BR-025's reason, never a rendered sentence:
+            `Application` holds no user-visible string (AD-6, NFR-073).
+        messageKey:
+          type: [string, "null"]
+          description: >
+            The confirmation after a save, or the refusal of a `409`, as a
+            translation key. Never a value the Admin typed.
+        fieldErrors:
+          type: array
+          description: "Per-field validation messages of a `400`, by field name and translation key."
+          items:
+            type: object
+            additionalProperties: false
+            required: [field, messageKey]
+            properties:
+              field:
+                type: string
+              messageKey:
+                type: string
+
+    WorkspaceConnectionState:
+      type: string
+      description: >
+        The connection state `Application` produces (spec FR-002). `DomainUnknown`
+        and `DomainMismatch` both mean the connection must not be used.
+      enum:
+        - NotConfigured
+        - Configured
+        - DomainMismatch
+        - DomainUnknown

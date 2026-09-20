@@ -23,8 +23,17 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
             table.HasCheckConstraint(
                 "ck_audit_event_actor_role_value",
                 "actor_role IS NULL OR actor_role IN ('admin', 'dean')");
-            table.HasCheckConstraint("ck_audit_event_action", "action IN ('admin_sign_in')");
-            table.HasCheckConstraint("ck_audit_event_target", "(target_type IS NULL) = (target_id IS NULL)");
+            table.HasCheckConstraint(
+                "ck_audit_event_action",
+                "action IN ('admin_sign_in', 'workspace_connection_saved')");
+
+            // US-009 db-design §4.1: a refused action names WHAT was refused without naming a row that was never
+            // created, so a target type without an id is now legal. An id without a type — an identifier belonging
+            // to nothing — is still forbidden.
+            table.HasCheckConstraint("ck_audit_event_target", "target_id IS NULL OR target_type IS NOT NULL");
+            table.HasCheckConstraint(
+                "ck_audit_event_target_type_value",
+                "target_type IS NULL OR target_type IN ('workspace_connection')");
             table.HasCheckConstraint("ck_audit_event_outcome", "outcome IN ('succeeded', 'refused')");
             table.HasCheckConstraint(
                 "ck_audit_event_refusal_category",
@@ -32,7 +41,8 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
             table.HasCheckConstraint(
                 "ck_audit_event_refusal_category_value",
                 "refusal_category IS NULL OR refusal_category IN ('not_in_allowed_admin', 'control_plane_unavailable', "
-                + "'unknown_installation', 'callback_failed', 'account_disabled')");
+                + "'unknown_installation', 'callback_failed', 'account_disabled', 'domain_mismatch', "
+                + "'impersonation_domain_mismatch', 'domain_not_confirmed', 'read_only_mode')");
 
             // PC-6 states the equality as a property of the table; turning it into a CHECK costs nothing and
             // catches an update that passes through EF Core, because the interceptor stamps updated_at on a
@@ -122,21 +132,29 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
     private static string ActionCode(AuditAction value) => value switch
     {
         AuditAction.AdminSignIn => "admin_sign_in",
+        AuditAction.WorkspaceConnectionSaved => "workspace_connection_saved",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
     private static AuditAction ActionFromCode(string code) => code switch
     {
         "admin_sign_in" => AuditAction.AdminSignIn,
+        "workspace_connection_saved" => AuditAction.WorkspaceConnectionSaved,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 
-    /// <summary><see cref="AuditTargetType"/> has no member in this Story, so no value is ever converted.</summary>
-    private static string TargetTypeCode(AuditTargetType value) =>
-        throw new ArgumentOutOfRangeException(nameof(value), value, "No target type exists in US-008.");
+    /// <summary>US-009 gives <see cref="AuditTargetType"/> its first member (US-008 spec I-11).</summary>
+    private static string TargetTypeCode(AuditTargetType value) => value switch
+    {
+        AuditTargetType.WorkspaceConnection => "workspace_connection",
+        _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
+    };
 
-    private static AuditTargetType TargetTypeFromCode(string code) =>
-        throw new ArgumentOutOfRangeException(nameof(code), code, "No target type exists in US-008.");
+    private static AuditTargetType TargetTypeFromCode(string code) => code switch
+    {
+        "workspace_connection" => AuditTargetType.WorkspaceConnection,
+        _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
+    };
 
     private static string OutcomeCode(AuditOutcome value) => value switch
     {
@@ -159,6 +177,10 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         AuditRefusalCategory.UnknownInstallation => "unknown_installation",
         AuditRefusalCategory.CallbackFailed => "callback_failed",
         AuditRefusalCategory.AccountDisabled => "account_disabled",
+        AuditRefusalCategory.DomainMismatch => "domain_mismatch",
+        AuditRefusalCategory.ImpersonationDomainMismatch => "impersonation_domain_mismatch",
+        AuditRefusalCategory.DomainNotConfirmed => "domain_not_confirmed",
+        AuditRefusalCategory.ReadOnlyMode => "read_only_mode",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -169,6 +191,10 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         "unknown_installation" => AuditRefusalCategory.UnknownInstallation,
         "callback_failed" => AuditRefusalCategory.CallbackFailed,
         "account_disabled" => AuditRefusalCategory.AccountDisabled,
+        "domain_mismatch" => AuditRefusalCategory.DomainMismatch,
+        "impersonation_domain_mismatch" => AuditRefusalCategory.ImpersonationDomainMismatch,
+        "domain_not_confirmed" => AuditRefusalCategory.DomainNotConfirmed,
+        "read_only_mode" => AuditRefusalCategory.ReadOnlyMode,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 }

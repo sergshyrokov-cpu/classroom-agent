@@ -204,7 +204,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                     b.ToTable("audit_event", null, t =>
                         {
-                            t.HasCheckConstraint("ck_audit_event_action", "action IN ('admin_sign_in')");
+                            t.HasCheckConstraint("ck_audit_event_action", "action IN ('admin_sign_in', 'workspace_connection_saved')");
 
                             t.HasCheckConstraint("ck_audit_event_actor_id", "(actor_type = 'app_user') = (actor_id IS NOT NULL)");
 
@@ -220,9 +220,11 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_audit_event_refusal_category", "(outcome = 'refused') = (refusal_category IS NOT NULL)");
 
-                            t.HasCheckConstraint("ck_audit_event_refusal_category_value", "refusal_category IS NULL OR refusal_category IN ('not_in_allowed_admin', 'control_plane_unavailable', 'unknown_installation', 'callback_failed', 'account_disabled')");
+                            t.HasCheckConstraint("ck_audit_event_refusal_category_value", "refusal_category IS NULL OR refusal_category IN ('not_in_allowed_admin', 'control_plane_unavailable', 'unknown_installation', 'callback_failed', 'account_disabled', 'domain_mismatch', 'impersonation_domain_mismatch', 'domain_not_confirmed', 'read_only_mode')");
 
-                            t.HasCheckConstraint("ck_audit_event_target", "(target_type IS NULL) = (target_id IS NULL)");
+                            t.HasCheckConstraint("ck_audit_event_target", "target_id IS NULL OR target_type IS NOT NULL");
+
+                            t.HasCheckConstraint("ck_audit_event_target_type_value", "target_type IS NULL OR target_type IN ('workspace_connection')");
                         });
                 });
 
@@ -295,6 +297,68 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_legitimacy_state_singleton", "singleton");
 
                             t.HasCheckConstraint("ck_legitimacy_state_status", "status IN ('active', 'suspended')");
+                        });
+                });
+
+            modelBuilder.Entity("ClassroomAgent.Domain.Entities.WorkspaceConnection", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Domain")
+                        .IsRequired()
+                        .HasMaxLength(253)
+                        .HasColumnType("character varying(253)")
+                        .HasColumnName("domain");
+
+                    b.Property<string>("ImpersonationUserEmail")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("impersonation_user_email");
+
+                    b.Property<bool>("Singleton")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("singleton");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_workspace_connection");
+
+                    b.HasIndex("Singleton")
+                        .IsUnique()
+                        .HasDatabaseName("uq_workspace_connection_singleton");
+
+                    b.ToTable("workspace_connection", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_workspace_connection_domain_format", "domain ~ '^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$'");
+
+                            t.HasCheckConstraint("ck_workspace_connection_domain_length", "char_length(domain) BETWEEN 3 AND 253");
+
+                            t.HasCheckConstraint("ck_workspace_connection_domain_lowercase", "domain = lower(domain)");
+
+                            t.HasCheckConstraint("ck_workspace_connection_email_domain", "split_part(impersonation_user_email, '@', 2) = domain");
+
+                            t.HasCheckConstraint("ck_workspace_connection_email_format", "impersonation_user_email ~ '^[^@[:space:]]+@[^@[:space:]]+$'");
+
+                            t.HasCheckConstraint("ck_workspace_connection_email_length", "char_length(impersonation_user_email) BETWEEN 3 AND 254");
+
+                            t.HasCheckConstraint("ck_workspace_connection_email_lowercase", "impersonation_user_email = lower(impersonation_user_email)");
+
+                            t.HasCheckConstraint("ck_workspace_connection_singleton", "singleton");
                         });
                 });
 #pragma warning restore 612, 618

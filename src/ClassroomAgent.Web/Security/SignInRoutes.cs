@@ -16,6 +16,9 @@ public static class SignInRoutes
 
     public const string Landing = "/";
 
+    /// <summary>US-009 openapi: the connection settings page and its save share one path.</summary>
+    public const string WorkspaceConnection = "/settings/workspace-connection";
+
     /// <summary>The key the refusal category travels under in TempData (api-design §2.2). Never a query parameter.</summary>
     public const string RefusalTempDataKey = "SignInRefusal";
 
