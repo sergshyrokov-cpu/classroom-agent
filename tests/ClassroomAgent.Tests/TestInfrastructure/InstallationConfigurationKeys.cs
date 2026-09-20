@@ -26,7 +26,31 @@ public static class InstallationConfigurationKeys
     /// <summary>Control Plane: optional recommended installation version (spec FR-005).</summary>
     public const string RecommendedVersion = "Compatibility:RecommendedVersion";
 
+    /// <summary>US-008 spec FR-001, VR-003: the Data Protection key ring directory. Required from US-008 on.</summary>
+    public const string DataProtectionKeyDirectory = "DataProtection:KeyDirectory";
+
+    /// <summary>US-008 spec FR-001, VR-001: the school's public base address; the redirect URI is built from it.</summary>
+    public const string PublicBaseAddress = "Installation:PublicBaseAddress";
+
+    /// <summary>US-008 spec FR-001, VR-002: the installation's OAuth client id. Not a secret; never logged.</summary>
+    public const string OAuthClientId = "GoogleOAuth:ClientId";
+
+    /// <summary>US-008 spec FR-001, VR-002: a reference into the secret store, never the secret itself (SC-7).</summary>
+    public const string OAuthClientSecretReference = "GoogleOAuth:ClientSecretReference";
+
+    /// <summary>US-008 spec FR-001, VR-004: optional; Ukrainian when absent (NFR-073).</summary>
+    public const string DefaultLanguage = "Ui:DefaultLanguage";
+
     public const int PrivatePortValue = 8081;
+
+    /// <summary>The school's public address in tests — synthetic, matching <see cref="InstallationTestData.Domain"/> (TC-4).</summary>
+    public const string PublicBaseAddressValue = "https://school-one.example.test";
+
+    /// <summary>A synthetic OAuth client id, shaped like Google's but belonging to no project (TC-4).</summary>
+    public const string OAuthClientIdValue = "100000000000-abcdefghijklmnopqrstuvwxyz012345.apps.googleusercontent.com";
+
+    /// <summary>A reference, not a secret: naming a secret that only the test environment would hold (SC-7).</summary>
+    public const string OAuthClientSecretReferenceValue = "installation-oauth-client-secret";
 
     /// <summary>The address the private port listens on in tests (US-006 spec FR-001).</summary>
     public const string PrivateAddressValue = "127.0.0.1";

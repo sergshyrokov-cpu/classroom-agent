@@ -94,9 +94,9 @@ public sealed class AntiforgeryTests(PostgreSqlFixture database)
         Assert.True(IsSc4Exemption(check), check.ToString());
     }
 
-    /// <summary>SC-4 exemption list: the legitimacy check POST (US-005 AC-013). The Admin login check arrives with US-008.</summary>
+    /// <summary>SC-4 exemption list: the legitimacy check POST (US-005 AC-013) and the Admin login check POST (US-008 AC-006).</summary>
     private static bool IsSc4Exemption(HostEndpoint endpoint) =>
-        endpoint.Pattern == "service/v1/legitimacy-checks"
+        endpoint.Pattern is "service/v1/legitimacy-checks" or "service/v1/admin-login-checks"
         && endpoint.Methods is { Count: 1 } methods
         && string.Equals(methods[0], "POST", StringComparison.OrdinalIgnoreCase);
 }

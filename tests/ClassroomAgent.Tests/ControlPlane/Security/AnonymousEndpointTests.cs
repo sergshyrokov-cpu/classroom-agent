@@ -51,7 +51,8 @@ public sealed class AnonymousEndpointTests(PostgreSqlFixture database)
         endpoint.IsFallback
         || endpoint.IsStaticFile
         || endpoint.Pattern == "error/{statuscode}"
-        || (endpoint.Pattern == "service/v1/legitimacy-checks"
+        // One SC-4 entry, two endpoints: "Legitimacy check and Admin login check" (US-005, US-008).
+        || (endpoint.Pattern is "service/v1/legitimacy-checks" or "service/v1/admin-login-checks"
             && endpoint.Methods is { Count: 1 } checkMethods
             && string.Equals(checkMethods[0], "POST", StringComparison.OrdinalIgnoreCase))
         || (endpoint.Pattern is "setup" or "sign-in"

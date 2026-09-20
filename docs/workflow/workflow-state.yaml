@@ -4,26 +4,41 @@
 version: 1
 story: US-008
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
+current_stage: IMPLEMENTATION
+previous_stage: TEST_WRITING
+last_completed_stage: TEST_WRITING
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: test-writer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: 2026-09-19T18:34:47Z
+  stage: TEST_WRITING
+  recorded_at: 2026-09-20T07:40:19Z
 last_artifacts:
-  - type: database_design
-    path: docs/designs/database/US-008-db-design.md
-    version: 1
-  - type: entity_model
-    path: docs/designs/database/US-008-entity-model.md
-    version: 1
+  - type: test_strategy
+    path: docs/tests/US-008-test-strategy.md
+    version: 2
+  - type: ac_test_matrix
+    path: docs/tests/US-008-ac-test-matrix.md
+    version: 2
+  - type: test_generation_report
+    path: docs/evidence/US-008-test-generation-report.md
+    version: 2
+  - type: open_decisions
+    path: docs/decisions/US-008-open-decisions.md
+    version: 4
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "OD-004 (raised by TEST_WRITING, RESOLVED by the Owner on 2026-09-20 as option 1 - the reference names an environment variable, resolved once at start-up through Infrastructure/Secrets; an absent or empty variable stops the start, a wrong secret does not, which is spec I-5. Needed no trebovaniya.md version and no Specification amendment: section 5 already lists environment variables among the stores, and FR-001's wording is about placement. Three cases were added on the resolution.) Original gap: FR-001 reads the OAuth client secret from the secret store 'by the same Infrastructure/Secrets mechanism the service-account key uses', but that mechanism does not exist - no Infrastructure/Secrets namespace is in the solution, because the service-account key arrives with US-009. trebovaniya.md deliberately leaves the store open (secrets / Key Vault / environment variable; the reference is 'a secret name or a path'), so one configuration string has to be interpreted and no artifact says how. TEST_WRITING is not blocked - everything the requirements fix about the reference is tested and no test needs the secret's value (TC-4 forbids a real token exchange). IMPLEMENTATION is blocked: the host must hand the Google handler a real client secret. Three options and a recommendation are in docs/decisions/US-008-open-decisions.md v3. Resolved only by the Owner." 
+  - "TEST_WRITING: PASS. 24 test classes, 334 cases, 0 build errors and 0 warnings, red phase verified on real PostgreSQL. Whole suite total 1499, passed 1209, failed 290, skipped 0; all 290 failures are in the new US-008 classes and every one names missing production behaviour. No regression: the 1165 US-001 ... US-007 cases are green. All 18 Acceptance Criteria are mapped, and after OD-004 was resolved no clause of one is left unexercised."
+  - "TEST_WRITING created NO production source file, unlike US-005 (OD-002) and US-007 (OD-003) which each needed an Open Decision for a compile-only skeleton. Two seams made it unnecessary: the Control Plane question is asked through the installation's REAL client over a scripted HttpMessageHandler (so api-design 2.4's classification table, including the 404-without-body row, is proven on production code), and the translations are addressed by resource base name and assembly as strings rather than by a marker type. Application still references no NuGet package and Domain keeps zero package dependencies."
+  - "TEST_WRITING drives the REAL Google authentication handler offline rather than substituting it with a stub scheme: the state parameter and the correlation cookie are the handler's own behaviour, and a stub validating state would only test the stub (AC-003). GoogleSignInStub reaches the handler's options by resolving the options type BY NAME, so the test project keeps no reference to the package - OD-003 put it in ClassroomAgent.Web and nowhere else, and that stays true. The reflection is confined to one fixture; no assertion uses it."
+  - "TEST_WRITING deviated from api-design 2.5 on ONE point, deliberately and recorded: the 409 read-only mapping is not proven by a test-only probe endpoint, because that is unachievable from outside the host - FR-002's anonymous catch-all matches every unmatched path, so an appended test middleware never runs, and one inserted ahead of the pipeline would sit outside the exception handler under test. The tests hand the exception to the host's registered IExceptionHandler directly: same production code, nothing simulated. SECURITY_REVIEW may ask for it differently."
+  - "TEST_WRITING known limitation: no unit test names CompleteGoogleSignInUseCase, because naming it would mean this stage creating it. Every branch of FR-010 is covered at the integration level with the reply scripted and the clock manual - deterministic, but one level coarser than TC-1's preferred shape. IMPLEMENTATION may add a direct unit test."
+  - "TEST_WRITING rewrote one of its own tests during the stage: AReadOnlyRefusal_IsNotDowngradedIntoASaveFailure originally asserted the US-007 backstop and so passed for the wrong reason. It now constructs CheckLegitimacyUseCase with a refusing unit of work and fails exactly as US-007 finding F-2 predicts."
+  - "TEST_WRITING modified three existing test files and all three stay green: the two Control Plane SC-4 whitelists gain a pattern no endpoint matches yet, and InstallationConfigurationTests' required-settings count goes 6 to 10 because FR-001 makes four more required. Nothing was removed, disabled or weakened."
+  - "TEST_WRITING interpretation to correct at implementation if wrong: the account-picker hint is asserted as the 'hd' query parameter. The artifacts say 'the hint carries the school's domain'; hd is Google's only parameter with that meaning. If IMPLEMENTATION uses another mechanism the test is corrected, never the requirement."
   - "DB_DESIGN: PASS. Two installation tables in one migration (InitialAppUserAndAuditEvent): app_user with 8 check constraints and one unique index, audit_event with 10 check constraints and no index. The Control Plane schema is deliberately unchanged - its login check reads AllowedAdmin and writes nothing, so a migration there would itself be a defect."
   - "DB_DESIGN enforces S-04 in the DATABASE, not only in the entity: ck_app_user_role_sign_in_method with ck_app_user_password_hash make an Admin row carrying any password_hash - empty string included - impossible, and AppUser.CreateAdmin takes no password parameter. Knowingly accepted cost: both constraints encode a first-version truth and change by migration if Epic 7 adds a role whose sign-in method differs, or if US-012 ever needs a Dean without a hash."
   - "DB_DESIGN: audit_event immutability on two levels - private setters and factories (the Control Plane precedent) plus ck_audit_event_immutable (updated_at = created_at), derived from PC-6 which already states that equality. Its limit is documented rather than over-claimed: it catches updates through EF Core because TimestampInterceptor stamps Modified entities, not a raw UPDATE that also rewrites updated_at. An UPDATE trigger was considered and rejected as a divergent mechanism no requirement asks for; SECURITY_REVIEW may still ask for it as a one-statement migration."
@@ -46,5 +61,5 @@ non_blocking_findings:
   - "US-008 OD-001 resolved by the Owner on 2026-09-19 as option 2 (one OAuth web client per school in the Owner's Cloud project, External user type, client secret in the secret store with only its reference in configuration, redirect URI from a configured public base address). Landed in trebovaniya.md v78 with DC-3, SC-7 and DC-2, commit 0e31e50, before this activation."
   - "US-008 OD-002 resolved by the Owner on 2026-09-19 as option 1 (the account-picker hint carries the school's domain when LegitimacyState knows it, none while no legitimacy check has ever succeeded; the hint is never the access decision - AllowedAdmin stays the gate)."
 started_at: 2026-09-19T17:13:12Z
-updated_at: 2026-09-19T18:34:47Z
+updated_at: 2026-09-20T07:40:19Z
 completed_at: null
