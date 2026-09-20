@@ -79,3 +79,4 @@
 {"timestamp":"2026-09-20T12:45:00Z","story":"US-008","from_stage":"IMPLEMENTATION","to_stage":"SECURITY_REVIEW","skill":"dotnet-implementor","verdict":"PASS","artifacts":["docs/evidence/US-008-implementation-report.md"],"attempt":2}
 {"timestamp":"2026-09-20T12:50:00Z","story":"US-008","from_stage":"SECURITY_REVIEW","to_stage":"HUMAN_PR_APPROVAL","skill":"security-reviewer","verdict":"PASS","artifacts":["docs/reviews/security/US-008-security-review.md"],"attempt":2}
 {"timestamp":"2026-09-20T12:51:00Z","story":"US-008","from_stage":"HUMAN_PR_APPROVAL","to_stage":"COMPLETED","skill":null,"verdict":"HUMAN_APPROVED","artifacts":["docs/evidence/US-008-implementation-report.md","docs/reviews/security/US-008-security-review.md"],"attempt":2}
+{"timestamp":"2026-09-20T13:01:02Z","story":"US-009","from_stage":null,"to_stage":"SPECIFICATION","skill":null,"verdict":"ACTIVATED","artifacts":["docs/stories/US-009-configure-workspace-connection.md"],"attempt":1}

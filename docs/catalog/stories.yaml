@@ -85,11 +85,14 @@ stories:
   - id: US-009
     epic: EPIC-6
     title: Configure WorkspaceConnection
-    state: BACKLOG
-    blocked_by: >
-      Depends on US-008 (a signed-in Admin) and US-005 (the Installation domain,
-      delivered by the legitimacy check and kept in LegitimacyState, that the
-      connection is checked against).
+    state: IN_PROGRESS
+    # Depended on US-008 (a signed-in Admin) and US-005 (the Installation domain,
+    # delivered by the legitimacy check and kept in LegitimacyState, that the
+    # connection is checked against); both COMPLETED. Story file authored:
+    # docs/stories/US-009-configure-workspace-connection.md. OD-001 (whether the
+    # Admin types the domain at all) and OD-002 (a saved connection whose domain
+    # no longer matches the Installation) are raised in the Story and resolved by
+    # the Owner at the latest during SPECIFICATION.
   - id: US-010
     epic: EPIC-6
     title: Connection instructions for the school super-admin
