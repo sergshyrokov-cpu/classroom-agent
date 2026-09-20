@@ -4,23 +4,38 @@
 version: 1
 story: US-008
 workflow: story-delivery
-current_stage: SECURITY_REVIEW
-previous_stage: IMPLEMENTATION
-last_completed_stage: IMPLEMENTATION
-status: IN_PROGRESS
-attempt: 1
-last_invoked_skill: dotnet-implementor
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
+attempt: 2
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: IMPLEMENTATION
-  recorded_at: 2026-09-20T12:10:59Z
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_PR_APPROVAL
+  recorded_at: 2026-09-20T12:51:00Z
 last_artifacts:
   - type: implementation_report
     path: docs/evidence/US-008-implementation-report.md
-    version: 1
+    version: 2
+  - type: security_review
+    path: docs/reviews/security/US-008-security-review.md
+    version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "HUMAN_PR_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-20T12:51:00Z (no comment): implementation report v2 and security review v2 accepted; automated verdict PASS with no blocking findings. F-1 was resolved by trebovaniya.md v79 in its own commit d5a9260, F-2 / F-3 / F-4 are fixed and covered by tests, and F-5 stays open as Minor with no security impact - a wrong method on /sign-in/google or /sign-out answers 404 where the contract documents 405, for the contract's next revision. COMPLETED is reached; the Story is Done once the final commit lands on master (AGENTS.md Definition of Done, item 10)."
+  - "SECURITY_REVIEW attempt 2: PASS. 0 Critical, 0 Major, 1 Minor, 3 Informational. F-1 was resolved where its root cause lay - trebovaniya.md v79 adds the sign-out security-stamp rotation to the closed list of service writes in section 2, in its own commit d5a9260, with business-rules.md BR-026 and the PermittedServiceWrite.SignInBookkeeping comment mirroring it. The closed list therefore grew by amending the requirement rather than by a registration in code, which is the path BR-026 prescribes, so the control is stronger after the correction than before it."
+  - "SECURITY_REVIEW attempt 2: F-2 fixed - sign-out is covered in all three BR-025 read-only causes, asserting that the stamp moved, that a replayed cookie no longer authenticates, and that no audit row is written (I-13). F-3 fixed - CallbackMethodMiddleware answers 405 to any method other than GET or HEAD on the callback path, so the authentication handler's writing path is unreachable by POST; now runtime-verified, which v1 could only reason about. F-4 fixed - the per-request session check reads the stamp and the disabled flag untracked through AccountSessionState."
+  - "SECURITY_REVIEW attempt 2: F-5 remains the only open finding, Minor with no security impact - a wrong method on /sign-in/google or /sign-out answers 404 where the openapi documents 405, because the anonymous catch-all FR-002 requires matches first. For the contract's next revision, not for this Story."
+  - "SECURITY_REVIEW carried two implementation choices forward as security-POSITIVE rather than merely acceptable: the transaction on IUnitOfWork, which makes an account without its audit row impossible, and the scoping of HSTS and HTTPS redirection to the public port, which keeps the private channel working as SC-2 requires."
+  - "SECURITY_REVIEW limitations to carry into HUMAN_PR_APPROVAL: the reviewer did not re-execute the whole suite independently (it observed the corrected classes and the reported total), no penetration testing or fuzzing was performed, and the vulnerability scan is a point-in-time nuget.org result. runtime_checks: PARTIAL."
+  - "SECURITY_REVIEW: 1 Critical, 1 Major, 3 Minor, 3 Informational. Everything this Story exists to establish was independently verified: AllowedAdmin asked every sign-in with no cache and no fallback, an Admin unable to hold a password at the database level, deny-by-default with an anonymous list matching SC-4 exactly, identity scopes only with no token persisted, the client secret never in configuration / the database / a log and InstallationSettings not registered in DI, one audit row per attempt with no personal datum, no vulnerable package, Application package-free and Domain dependency-free. Runtime checks PARTIAL: the suite was not re-executed by the review."
+  - "SECURITY_REVIEW F-3 (Minor, SC-4): the OAuth callback path is claimed by the authentication handler for ANY http method - OAuthHandler reads the code and state from the query - and being outside MVC it is not covered by the global antiforgery filter, so a POST /signin-google?code=..&state=.. reaches the same writing path. Not a CSRF path: it still needs a state matching the victim's own correlation cookie. What is wrong is that a method the contract does not describe reaches a writing path. Constrain the callback to GET, or document the exception with a test. NOT runtime-verified - reasoned from the framework contract."
+  - "SECURITY_REVIEW F-4 (Minor, defence in depth): AppUserRepository.FindByIdAsync returns a tracked entity and is used by the per-request session check, which only compares a stamp; a later SaveChangesAsync in the same request would flush it. Read untracked for the check."
+  - "SECURITY_REVIEW F-5 (Minor, no security impact): a GET to /sign-in/google or /sign-out answers 404 where the openapi documents 405, because the anonymous catch-all matches first (implementation D-6). Align the contract at its next revision."
+  - "SECURITY_REVIEW assessed all eight implementation deviations. D-1 (transaction on IUnitOfWork) is accepted and security-POSITIVE: it makes db-design 4.4 literally true, so a successful sign-in cannot leave an account without its audit row. D-7 (HSTS and HTTPS redirection scoped to the public port) is accepted and security-positive: host-wide they broke the private port, which SC-2 forbids. D-3, D-4, D-5 accepted; D-6 is F-5; D-8 informational. D-2's mechanism matches the US-001 Owner-session precedent - its authorisation is F-1."
+  - "SECURITY_REVIEW I-2: SC-5's blanket 'in read-only mode no call to Google is made at all' is narrowed by AC-011 and FR-013 to Google DATA calls - a sign-in in read-only mode necessarily performs the OAuth token exchange. Documented in the Specification; no contradiction, but the SC-5 sentence reads broader than it is."
   - "IMPLEMENTATION: PASS. Build 0 errors and 0 warnings, whole suite 1498 passed / 0 failed / 0 skipped, dotnet format clean. Progress across the stage: 290 red tests -> 48 -> 52 -> 2 -> 0. All 18 Acceptance Criteria implemented and green; one EF Core migration (InitialAppUserAndAuditEvent) creates app_user and audit_event and the Control Plane schema is untouched."
   - "IMPLEMENTATION D-1 (for SECURITY_REVIEW): IUnitOfWork gained ExecuteInTransactionAsync. db-design 4.4 requires the app_user change and its audit_event row in one transaction while FR-012 requires the row to carry the id the insert generates; with no foreign key (PC-9) EF Core cannot fix that value up, so a single SaveChanges cannot do both. The two US-007 decorators pass the method through and Infrastructure.UnitOfWork opens one transaction."
   - "IMPLEMENTATION D-2 (security-relevant, for SECURITY_REVIEW): sign-out rotates the account's security stamp, and the cookie handler compares the stamp on every request. AC-014 requires that the previous cookie no longer authenticates, which cookie authentication alone cannot give. This is the Owner-session mechanism of US-001, registered in PermittedServiceWrites as SignInBookkeeping so sign-out also works in read-only mode. Cost: one primary-key read per authenticated request, as the Control Plane already pays."
@@ -64,5 +79,5 @@ non_blocking_findings:
   - "US-008 OD-001 resolved by the Owner on 2026-09-19 as option 2 (one OAuth web client per school in the Owner's Cloud project, External user type, client secret in the secret store with only its reference in configuration, redirect URI from a configured public base address). Landed in trebovaniya.md v78 with DC-3, SC-7 and DC-2, commit 0e31e50, before this activation."
   - "US-008 OD-002 resolved by the Owner on 2026-09-19 as option 1 (the account-picker hint carries the school's domain when LegitimacyState knows it, none while no legitimacy check has ever succeeded; the hint is never the access decision - AllowedAdmin stays the gate)."
 started_at: 2026-09-19T17:13:12Z
-updated_at: 2026-09-20T12:10:59Z
-completed_at: null
+updated_at: 2026-09-20T12:51:00Z
+completed_at: 2026-09-20T12:51:00Z

@@ -14,7 +14,10 @@ public enum PermittedServiceWrite
     /// <summary>
     /// BR-026: Identity failed-attempt counting and lockout, the time of the last successful sign-in,
     /// creating the <c>AppUser</c> of an approved Admin at first sign-in, a Dean changing their own
-    /// password, and a user choosing their UI language.
+    /// password, a user choosing their UI language, and rotating an account's security stamp at sign-out
+    /// (<c>trebovaniya.md</c> v79) — the session cookie is checked against it on every request, so without the
+    /// rotation a captured cookie would stay valid until its own expiry, and without the permission a user of a
+    /// suspended school could not end a session.
     /// </summary>
     SignInBookkeeping,
 

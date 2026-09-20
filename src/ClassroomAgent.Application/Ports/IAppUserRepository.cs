@@ -1,3 +1,4 @@
+using ClassroomAgent.Application.Models;
 using ClassroomAgent.Domain.Entities;
 
 namespace ClassroomAgent.Application.Ports;
@@ -13,6 +14,13 @@ public interface IAppUserRepository
 
     /// <summary>The account with that id, tracked for an update; null when none exists (US-008 AC-014).</summary>
     Task<AppUser?> FindByIdAsync(long id, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The security stamp and disabled flag of that account, read untracked; null when no such account exists.
+    /// The per-request session check needs nothing else, and reading it untracked keeps a later commit in the same
+    /// request from flushing an entity nobody meant to change (US-008 security review F-4).
+    /// </summary>
+    Task<AccountSessionState?> GetSessionStateAsync(long id, CancellationToken cancellationToken);
 
     void Add(AppUser user);
 

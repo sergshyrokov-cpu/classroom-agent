@@ -1,4 +1,5 @@
 using ClassroomAgent.Application.Ports;
+using ClassroomAgent.Application.Models;
 using ClassroomAgent.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,9 +15,17 @@ public sealed class AppUserRepository(ClassroomAgentDbContext db) : IAppUserRepo
     public Task<AppUser?> FindByNormalizedEmailAsync(string normalizedEmail, CancellationToken cancellationToken) =>
         db.AppUsers.FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken);
 
-    /// <summary>Tracked: the session check may rotate the stamp it reads (US-008 AC-014).</summary>
+    /// <summary>Tracked: the caller rotates the stamp it reads (US-008 AC-014).</summary>
     public Task<AppUser?> FindByIdAsync(long id, CancellationToken cancellationToken) =>
         db.AppUsers.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+
+    /// <summary>Untracked: the session check only compares (US-008 security review F-4).</summary>
+    public Task<AccountSessionState?> GetSessionStateAsync(long id, CancellationToken cancellationToken) =>
+        db.AppUsers
+            .AsNoTracking()
+            .Where(u => u.Id == id)
+            .Select(u => new AccountSessionState(u.SecurityStamp, u.IsDisabled))
+            .FirstOrDefaultAsync(cancellationToken);
 
     public void Add(AppUser user) => db.AppUsers.Add(user);
 

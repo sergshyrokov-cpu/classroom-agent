@@ -18,11 +18,14 @@ public sealed class AccountSessionService(
     IUnitOfWork unitOfWork,
     ServiceWriteScope writeScope)
 {
-    /// <summary>True when the account exists, is not disabled, and still carries that stamp.</summary>
+    /// <summary>
+    /// True when the account exists, is not disabled, and still carries that stamp. Read untracked: this runs on
+    /// every authenticated request and changes nothing (security review F-4).
+    /// </summary>
     public async Task<bool> IsCurrentAsync(long accountId, string securityStamp, CancellationToken cancellationToken)
     {
-        var user = await users.FindByIdAsync(accountId, cancellationToken);
-        return user is { IsDisabled: false } && string.Equals(user.SecurityStamp, securityStamp, StringComparison.Ordinal);
+        var state = await users.GetSessionStateAsync(accountId, cancellationToken);
+        return state is { IsDisabled: false } && string.Equals(state.SecurityStamp, securityStamp, StringComparison.Ordinal);
     }
 
     /// <summary>Ends every session of the account by rotating its stamp (AC-014).</summary>

@@ -117,6 +117,59 @@ public sealed class SignInInReadOnlyModeTests(PostgreSqlFixture database)
             write => Assert.Contains(write, Enum.GetValues<PermittedServiceWrite>()));
     }
 
+    /// <summary>
+    /// AC-014, BR-026 (trebovaniya.md v79): signing out rotates the account's security stamp, and that write is on
+    /// the closed list, so it runs in every read-only cause — otherwise a user of a suspended school could not end
+    /// a session. Raised as security-review finding F-2.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(ReadOnlyCauses))]
+    public async Task InReadOnlyMode_SigningOutEndsTheSession(ReadOnlyModeHost.Cause cause)
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var channel = Allowed();
+        await using var host = await InstallationTestHost.StartWithControlPlaneHttpAsync(database, channel, ct, cause);
+        var (client, _) = await host.SignInWithGoogleAsync(ct);
+        await client.GetAsync(SignInTestData.LandingPath, ct);
+        var stampBefore = (await host.AppUsersAsync(ct)).Single();
+        var cookies = client.Cookies;
+
+        var signOut = await client.PostFormAsync(SignInTestData.SignOutPath, [], ct);
+
+        Assert.Equal(HttpStatusCode.Redirect, signOut.Status);
+        Assert.Equal(SignInTestData.SignInPath, signOut.LocationPath);
+
+        // The write ran: the stamp moved, so the cookie someone kept a copy of no longer authenticates.
+        var after = Assert.Single(await host.AppUsersAsync(ct));
+        Assert.NotEqual(stampBefore.CreatedAt, default);
+        using var replay = host.CreateClient();
+        replay.ReplaceCookies(cookies);
+        var replayed = await replay.GetAsync(SignInTestData.LandingPath, ct);
+        Assert.Equal(HttpStatusCode.Redirect, replayed.Status);
+        Assert.Equal(SignInTestData.SignInPath, replayed.LocationPath);
+        Assert.Equal(stampBefore.Id, after.Id);
+    }
+
+    /// <summary>AC-011, I-13: signing out in read-only mode still writes no audit row.</summary>
+    [Fact]
+    public async Task InReadOnlyMode_SigningOutWritesNoAuditRow()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var channel = Allowed();
+        await using var host = await InstallationTestHost.StartWithControlPlaneHttpAsync(
+            database,
+            channel,
+            ct,
+            ReadOnlyModeHost.Cause.Suspended);
+        var (client, _) = await host.SignInWithGoogleAsync(ct);
+        await client.GetAsync(SignInTestData.LandingPath, ct);
+        var before = await host.AuditRowsAsync(ct);
+
+        await client.PostFormAsync(SignInTestData.SignOutPath, [], ct);
+
+        Assert.Equal(before, await host.AuditRowsAsync(ct));
+    }
+
     /// <summary>AC-011: nothing else this Story adds writes in read-only mode — the legitimacy state is untouched.</summary>
     [Fact]
     public async Task InReadOnlyMode_NothingElseIsWritten()

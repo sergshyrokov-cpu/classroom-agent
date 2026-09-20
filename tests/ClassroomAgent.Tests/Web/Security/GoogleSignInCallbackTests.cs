@@ -230,6 +230,39 @@ public sealed class GoogleSignInCallbackTests(PostgreSqlFixture database)
         Assert.DoesNotContain(SignInTestData.AdminEmail, log, StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// AC-003, SC-4 (security review F-3): the authentication handler claims its callback path for any method and
+    /// reads the code and state from the query, so a POST is refused before it can reach the one writing path of
+    /// the sign-in. The callback stays the only GET that writes (trebovaniya.md section 8, v64).
+    /// </summary>
+    [Theory]
+    [InlineData("POST")]
+    [InlineData("PUT")]
+    [InlineData("DELETE")]
+    public async Task TheCallback_RefusesAnyMethodOtherThanGet_AndWritesNothing(string method)
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var channel = Allowed();
+        await using var host = await InstallationTestHost.StartWithControlPlaneHttpAsync(database, channel, ct);
+        host.UseGoogleStub();
+        using var client = host.CreateClient();
+        var start = await client.StartGoogleSignInAsync(ct);
+        var state = InstallationSignInExtensions.StateOf(start);
+
+        var response = await client.SendAsync(
+            new HttpMethod(method),
+            SignInTestData.CallbackPath + "?code=" + InstallationSignInExtensions.AuthorizationCode
+                + "&state=" + Uri.EscapeDataString(state),
+            content: null,
+            ct);
+
+        Assert.Equal(HttpStatusCode.MethodNotAllowed, response.Status);
+        Assert.Null(response.SetCookie(SignInTestData.SessionCookieName));
+        Assert.Empty(channel.AdminLoginCheckRequests);
+        Assert.Empty(await host.AppUsersAsync(ct));
+        Assert.Empty(await host.AuditRowsAsync(ct));
+    }
+
     /// <summary>A refusal goes back to the sign-in page with no session and no message in the address (api-design 2.2).</summary>
     private static void AssertRefused(PageResponse callback)
     {

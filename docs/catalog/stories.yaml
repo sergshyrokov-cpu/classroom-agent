@@ -76,7 +76,7 @@ stories:
   - id: US-008
     epic: EPIC-6
     title: Admin sign-in via Google OAuth with AllowedAdmin verification
-    state: IN_PROGRESS
+    state: COMPLETED
     # Depended on US-003 (the AllowedAdmin entries it checks) and US-005 (the
     # service channel and ClassroomAgent.Contracts the Admin login check uses);
     # both COMPLETED. OD-001 and OD-002 resolved before activation and carried

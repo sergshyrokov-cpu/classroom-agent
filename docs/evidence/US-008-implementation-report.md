@@ -1,10 +1,10 @@
 ---
 artifact_type: implementation_report
 story: US-008
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-09-20T09:30:00Z
-updated_at: 2026-09-20T09:30:00Z
+updated_at: 2026-09-20T12:45:00Z
 produced_by: dotnet-implementor
 inputs:
   - path: docs/stories/US-008-admin-google-sign-in.md
@@ -26,13 +26,13 @@ inputs:
   - path: docs/tests/US-008-ac-test-matrix.md
     version: 2
   - path: trebovaniya.md
-    version: 78
+    version: 79
 supersedes: null
 tests_status: PASS
 build_status: PASS
 format_status: PASS
 security_sensitive: true
-attempt: 1
+attempt: 2
 ---
 
 # US-008 Implementation Report
@@ -50,8 +50,11 @@ localization baseline, the session and cookie policy and the Data Protection key
 ring. The `409` mapping of a read-only refusal closes US-007 OD-001, so **API-5 is
 satisfied end to end from this Story onwards**.
 
-**Validation: build PASS (0 errors, 0 warnings), tests PASS (1498 passed, 0 failed,
+**Validation: build PASS (0 errors, 0 warnings), tests PASS (1505 passed, 0 failed,
 0 skipped), `dotnet format --verify-no-changes` PASS.**
+
+**Attempt 2** closes the findings of the first Security Review (v1: 1 Critical, 1
+Major, 3 Minor). See section 23.
 
 Limitations to know about, each detailed in section 7: two additions the approved
 designs did not name but require (a transaction on `IUnitOfWork`, and security-stamp
@@ -71,7 +74,7 @@ answers `404` where the contract implies `405`.
 | Entity model | `docs/designs/database/US-008-entity-model.md` | 1 |
 | Test strategy | `docs/tests/US-008-test-strategy.md` | 2 |
 | AC test matrix | `docs/tests/US-008-ac-test-matrix.md` | 2 |
-| Requirements | `trebovaniya.md` | 78 |
+| Requirements | `trebovaniya.md` | 79 (v79 adds the sign-out stamp rotation to BR-026 — see section 23) |
 
 ## 3. Implemented Acceptance Criteria
 
@@ -312,3 +315,39 @@ result differs from an approved contract, and it is recorded rather than hidden.
 `ClassroomAgent.Application` still references no NuGet package and `ClassroomAgent.Domain`
 still has zero package references: the US-005 architecture test
 `FrameworkFreeProjects_ReferenceNoPackage` passes unchanged.
+
+## 23. Attempt 2 — the Security Review findings
+
+The first Security Review returned BLOCKED on **F-1**: signing out rotates
+`app_user.security_stamp`, and that write was registered as a BR-026
+`SignInBookkeeping` service write although BR-026's closed list did not contain it.
+The Owner chose option 1 — extend the requirement.
+
+| Finding | Severity | Resolution |
+|---|---|---|
+| **F-1** | Critical | **Resolved upstream.** `trebovaniya.md` **v79** adds the sign-out stamp rotation to the closed list of service writes in §2, in its own commit (`d5a9260`), with `docs/product/business-rules.md` BR-026 mirrored. `PermittedServiceWrite.SignInBookkeeping`'s comment now quotes it, so the code and the requirement agree. No behaviour changed: the write was already what AC-014 needs, and it is now authorised |
+| **F-2** | Major | **Fixed.** `SignInInReadOnlyModeTests.InReadOnlyMode_SigningOutEndsTheSession` covers all three BR-025 causes — sign-out succeeds, the stamp moves, and a replayed cookie no longer authenticates — and `InReadOnlyMode_SigningOutWritesNoAuditRow` keeps I-13 true in that mode |
+| **F-3** | Minor | **Fixed.** `Web/Security/CallbackMethodMiddleware` answers `405` to any method other than GET or HEAD on the callback path, so the authentication handler can no longer be reached by a POST. `GoogleSignInCallbackTests.TheCallback_RefusesAnyMethodOtherThanGet_AndWritesNothing` proves POST, PUT and DELETE are refused with nothing created, nothing audited and no channel call |
+| **F-4** | Minor | **Fixed.** `IAppUserRepository.GetSessionStateAsync` reads the stamp and the disabled flag untracked into `AccountSessionState`; the tracked `FindByIdAsync` is now used only by the rotation |
+| **F-5** | Minor | **Documented, no code change.** A `GET` to `/sign-in/google` or `/sign-out` answers `404` rather than the contract's `405`, because the anonymous catch-all FR-002 requires matches first. No security impact; the contract can be aligned at its next revision |
+
+### Additional change set for attempt 2
+
+| File | Trace |
+|---|---|
+| `trebovaniya.md`, `docs/product/business-rules.md` | F-1; **committed separately** as the requirements change v79 (`d5a9260`), never inside a Story commit |
+| `src/ClassroomAgent.Application/UseCases/PermittedServiceWrite.cs` | F-1 — the comment mirrors v79 |
+| `src/ClassroomAgent.Web/Security/CallbackMethodMiddleware.cs` (created), `Program.cs` | F-3 |
+| `src/ClassroomAgent.Application/Models/AccountSessionState.cs` (created), `Ports/IAppUserRepository.cs`, `UseCases/AccountSessionService.cs`, `Infrastructure/Persistence/Repositories/AppUserRepository.cs` | F-4 |
+| `tests/.../Web/UseCases/SignInInReadOnlyModeTests.cs`, `tests/.../Web/Security/GoogleSignInCallbackTests.cs` | F-2, F-3 |
+
+### Attempt 2 validation
+
+| Command | Exit | Result |
+|---|---|---|
+| `dotnet build ClassroomAgent.sln` | 0 | **0 errors, 0 warnings** |
+| `ClassroomAgent.Tests.exe` (whole suite) | 0 | **Total 1505, passed 1505, failed 0, skipped 0**, 68.9 s |
+| `dotnet format ClassroomAgent.sln --verify-no-changes` | 0 | clean |
+
+Seven cases were added and none removed: three read-only sign-out causes, one
+no-audit-row case, and three refused callback methods.

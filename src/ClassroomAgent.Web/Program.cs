@@ -104,6 +104,7 @@ public sealed class Program
 
                 publicPort.UseHttpsRedirection();
                 publicPort.UseMiddleware<PublicBaseAddressMiddleware>(settings.PublicBaseAddress);
+                publicPort.UseMiddleware<CallbackMethodMiddleware>();
                 publicPort.UseExceptionHandler(new ExceptionHandlerOptions { ExceptionHandlingPath = "/error/500" });
                 publicPort.UseStatusCodePagesWithReExecute("/error/{0}");
             });
