@@ -22,6 +22,210 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("ClassroomAgent.Domain.Entities.AppUser", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("AccessFailedCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("access_failed_count");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("concurrency_stamp");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("email");
+
+                    b.Property<bool>("IsDisabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_disabled");
+
+                    b.Property<DateTimeOffset?>("LastSuccessfulSignInAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_successful_sign_in_at");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lockout_end");
+
+                    b.Property<string>("NormalizedEmail")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("normalized_email");
+
+                    b.Property<string>("PasswordHash")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("password_hash");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("role");
+
+                    b.Property<string>("SecurityStamp")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("security_stamp");
+
+                    b.Property<string>("SignInMethod")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("sign_in_method");
+
+                    b.Property<string>("UiLanguage")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("ui_language");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_app_user");
+
+                    b.HasIndex("NormalizedEmail")
+                        .IsUnique()
+                        .HasDatabaseName("uq_app_user_normalized_email");
+
+                    b.ToTable("app_user", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_app_user_access_failed_count", "access_failed_count >= 0");
+
+                            t.HasCheckConstraint("ck_app_user_email_lowercase", "email = lower(email) AND normalized_email = lower(normalized_email)");
+
+                            t.HasCheckConstraint("ck_app_user_password_hash", "(sign_in_method = 'password') = (password_hash IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_app_user_role", "role IN ('admin', 'dean')");
+
+                            t.HasCheckConstraint("ck_app_user_role_sign_in_method", "(role = 'admin') = (sign_in_method = 'google')");
+
+                            t.HasCheckConstraint("ck_app_user_sign_in_method", "sign_in_method IN ('google', 'password')");
+
+                            t.HasCheckConstraint("ck_app_user_ui_language", "ui_language IN ('uk', 'en')");
+                        });
+                });
+
+            modelBuilder.Entity("ClassroomAgent.Domain.Entities.AuditEvent", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("action");
+
+                    b.Property<long?>("ActorId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("actor_id");
+
+                    b.Property<string>("ActorRole")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("actor_role");
+
+                    b.Property<string>("ActorType")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("actor_type");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("outcome");
+
+                    b.Property<string>("RefusalCategory")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("refusal_category");
+
+                    b.Property<string>("RequestId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("request_id");
+
+                    b.Property<long?>("TargetId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("target_id");
+
+                    b.Property<string>("TargetType")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("target_type");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_audit_event");
+
+                    b.ToTable("audit_event", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_audit_event_action", "action IN ('admin_sign_in')");
+
+                            t.HasCheckConstraint("ck_audit_event_actor_id", "(actor_type = 'app_user') = (actor_id IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_audit_event_actor_role", "(actor_type = 'app_user') = (actor_role IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_audit_event_actor_role_value", "actor_role IS NULL OR actor_role IN ('admin', 'dean')");
+
+                            t.HasCheckConstraint("ck_audit_event_actor_type", "actor_type IN ('app_user', 'anonymous', 'system')");
+
+                            t.HasCheckConstraint("ck_audit_event_immutable", "updated_at = created_at");
+
+                            t.HasCheckConstraint("ck_audit_event_outcome", "outcome IN ('succeeded', 'refused')");
+
+                            t.HasCheckConstraint("ck_audit_event_refusal_category", "(outcome = 'refused') = (refusal_category IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_audit_event_refusal_category_value", "refusal_category IS NULL OR refusal_category IN ('not_in_allowed_admin', 'control_plane_unavailable', 'unknown_installation', 'callback_failed', 'account_disabled')");
+
+                            t.HasCheckConstraint("ck_audit_event_target", "(target_type IS NULL) = (target_id IS NULL)");
+                        });
+                });
+
             modelBuilder.Entity("ClassroomAgent.Domain.Entities.LegitimacyState", b =>
                 {
                     b.Property<long>("Id")

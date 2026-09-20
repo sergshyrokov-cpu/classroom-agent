@@ -1,0 +1,12 @@
+@model SignInPageModel
+@{
+    ViewData["Title"] = T["SignIn.Title"];
+}
+@if (Model.RefusalKey is not null)
+{
+    <p class="form-error">@T[Model.RefusalKey]</p>
+}
+<form method="post" action="@SignInRoutes.Start">
+    @Html.AntiForgeryToken()
+    <button type="submit">@T["SignIn.Google.Button"]</button>
+</form>

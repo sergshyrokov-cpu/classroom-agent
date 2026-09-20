@@ -123,6 +123,9 @@ public sealed class SignInWiringTests(PostgreSqlFixture database)
                 LegitimacyModeReason.SuspendedByOwner,
                 InstallationTestHost.DefaultStart,
                 "legitimacy-check");
+
+        public Task ExecuteInTransactionAsync(Func<CancellationToken, Task> work, CancellationToken cancellationToken) =>
+            work(cancellationToken);
     }
 
     /// <summary>A commit that fails for an ordinary reason — the database refused the row.</summary>
@@ -130,6 +133,9 @@ public sealed class SignInWiringTests(PostgreSqlFixture database)
     {
         public Task SaveChangesAsync(CancellationToken cancellationToken) =>
             throw new InvalidOperationException("The database refused the row.");
+
+        public Task ExecuteInTransactionAsync(Func<CancellationToken, Task> work, CancellationToken cancellationToken) =>
+            work(cancellationToken);
     }
 
     /// <summary>FR-021: the port of the Control Plane channel stays a single port for a single external system (AD-4).</summary>

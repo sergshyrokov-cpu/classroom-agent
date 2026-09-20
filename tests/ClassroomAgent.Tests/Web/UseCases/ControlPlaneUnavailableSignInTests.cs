@@ -48,7 +48,7 @@ public sealed class ControlPlaneUnavailableSignInTests(PostgreSqlFixture databas
     public async Task A404WithTheOutcomeBody_IsTheUnknownInstallationCategory()
     {
         var ct = TestContext.Current.CancellationToken;
-        var channel = ScriptedHttpHandler.Json(
+        var channel = ScriptedHttpHandler.AdminLoginCheckJson(
             HttpStatusCode.NotFound,
             AdminLoginCheckTestData.OutcomeJson("unknown_installation"));
         await using var host = await InstallationTestHost.StartWithControlPlaneHttpAsync(database, channel, ct);
@@ -69,8 +69,8 @@ public sealed class ControlPlaneUnavailableSignInTests(PostgreSqlFixture databas
     public async Task ABare404_IsNeverReadAsNotApproved()
     {
         var ct = TestContext.Current.CancellationToken;
-        var channel = new ScriptedHttpHandler((_, _) =>
-            Task.FromResult(ScriptedHttpHandler.EmptyResponse(HttpStatusCode.NotFound)));
+        var channel = ScriptedHttpHandler.AdminLoginCheck(
+            _ => ScriptedHttpHandler.EmptyResponse(HttpStatusCode.NotFound));
         await using var host = await InstallationTestHost.StartWithControlPlaneHttpAsync(database, channel, ct);
 
         await host.SignInWithGoogleAsync(ct);
@@ -86,7 +86,8 @@ public sealed class ControlPlaneUnavailableSignInTests(PostgreSqlFixture databas
     {
         var ct = TestContext.Current.CancellationToken;
         var answers = new Queue<string>(["allowed", "connection"]);
-        var channel = new ScriptedHttpHandler((request, token) => Answer(answers.Dequeue(), request, token));
+        var channel = ScriptedHttpHandler.AdminLoginCheck(
+            request => Answer(answers.Dequeue(), request, CancellationToken.None).GetAwaiter().GetResult());
         await using var host = await InstallationTestHost.StartWithControlPlaneHttpAsync(database, channel, ct);
 
         var (_, first) = await host.SignInWithGoogleAsync(ct);
@@ -126,7 +127,9 @@ public sealed class ControlPlaneUnavailableSignInTests(PostgreSqlFixture databas
     {
         var ct = TestContext.Current.CancellationToken;
         const string marker = "canary-body-of-the-control-plane-answer";
-        var channel = ScriptedHttpHandler.Json(HttpStatusCode.InternalServerError, $$"""{"detail":"{{marker}}"}""");
+        var channel = ScriptedHttpHandler.AdminLoginCheckJson(
+            HttpStatusCode.InternalServerError,
+            $"{{\"detail\":\"{marker}\"}}");
         await using var host = await InstallationTestHost.StartWithControlPlaneHttpAsync(database, channel, ct);
 
         await host.SignInWithGoogleAsync(ct);
@@ -153,7 +156,7 @@ public sealed class ControlPlaneUnavailableSignInTests(PostgreSqlFixture databas
     }
 
     private static ScriptedHttpHandler Answering(string shape) =>
-        new((request, token) => Answer(shape, request, token));
+        ScriptedHttpHandler.AdminLoginCheck(request => Answer(shape, request, CancellationToken.None).GetAwaiter().GetResult());
 
     private static Task<HttpResponseMessage> Answer(string shape, HttpRequestMessage request, CancellationToken cancellationToken)
     {

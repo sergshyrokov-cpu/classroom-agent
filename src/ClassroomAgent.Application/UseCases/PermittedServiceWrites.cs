@@ -14,5 +14,14 @@ public static class PermittedServiceWrites
         {
             // US-005: without it the installation could never leave read-only mode (AC-003, AC-009).
             [typeof(CheckLegitimacyUseCase)] = PermittedServiceWrite.LegitimacyCheckState,
+
+            // US-008: creating the Admin's account at first sign-in, stamping the sign-in time and writing the
+            // sign-in audit row. Registered against the existing members - the BR-026 list is not widened
+            // (US-008 spec FR-013).
+            [typeof(CompleteGoogleSignInUseCase)] = PermittedServiceWrite.SignInBookkeeping,
+
+            // US-008 spec FR-016, AC-014: signing out rotates the account's security stamp so the previous cookie
+            // stops authenticating. That is sign-in bookkeeping, so it works in read-only mode as well.
+            [typeof(AccountSessionService)] = PermittedServiceWrite.SignInBookkeeping,
         };
 }

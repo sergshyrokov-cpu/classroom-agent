@@ -11,7 +11,7 @@ namespace ClassroomAgent.Tests.Web.UseCases;
 public sealed class AdminSignInAuditTests(PostgreSqlFixture database)
 {
     private static ScriptedHttpHandler Allowed() =>
-        ScriptedHttpHandler.Json(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
+        ScriptedHttpHandler.AdminLoginCheckJson(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
 
     [Fact]
     public async Task ASuccessfulSignIn_WritesOneSucceededRow()
@@ -42,8 +42,8 @@ public sealed class AdminSignInAuditTests(PostgreSqlFixture database)
     {
         var ct = TestContext.Current.CancellationToken;
         var answers = new Queue<bool>([true, false, true]);
-        var channel = new ScriptedHttpHandler((_, _) => Task.FromResult(
-            ScriptedHttpHandler.JsonResponse(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(answers.Dequeue()))));
+        var channel = ScriptedHttpHandler.AdminLoginCheck(
+            _ => ScriptedHttpHandler.JsonResponse(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(answers.Dequeue())));
         await using var host = await InstallationTestHost.StartWithControlPlaneHttpAsync(database, channel, ct);
 
         await host.SignInWithGoogleAsync(ct);
@@ -76,8 +76,8 @@ public sealed class AdminSignInAuditTests(PostgreSqlFixture database)
     {
         var ct = TestContext.Current.CancellationToken;
         var answers = new Queue<bool>([true, false]);
-        var channel = new ScriptedHttpHandler((_, _) => Task.FromResult(
-            ScriptedHttpHandler.JsonResponse(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(answers.Dequeue()))));
+        var channel = ScriptedHttpHandler.AdminLoginCheck(
+            _ => ScriptedHttpHandler.JsonResponse(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(answers.Dequeue())));
         await using var host = await InstallationTestHost.StartWithControlPlaneHttpAsync(database, channel, ct);
         await host.SignInWithGoogleAsync(ct);
         await host.SignInWithGoogleAsync(ct);
@@ -152,8 +152,8 @@ public sealed class AdminSignInAuditTests(PostgreSqlFixture database)
     {
         var ct = TestContext.Current.CancellationToken;
         var answers = new Queue<bool>([true, false]);
-        var channel = new ScriptedHttpHandler((_, _) => Task.FromResult(
-            ScriptedHttpHandler.JsonResponse(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(answers.Dequeue()))));
+        var channel = ScriptedHttpHandler.AdminLoginCheck(
+            _ => ScriptedHttpHandler.JsonResponse(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(answers.Dequeue())));
         await using var host = await InstallationTestHost.StartWithControlPlaneHttpAsync(database, channel, ct);
         var (client, _) = await host.SignInWithGoogleAsync(ct);
         await client.GetAsync(SignInTestData.LandingPath, ct);

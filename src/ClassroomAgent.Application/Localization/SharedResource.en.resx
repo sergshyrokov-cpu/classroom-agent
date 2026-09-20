@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Layout.AppName" xml:space="preserve"><value>Teaching monitor</value></data>
+  <data name="SignIn.Title" xml:space="preserve"><value>Sign in</value></data>
+  <data name="SignIn.Google.Button" xml:space="preserve"><value>Sign in with Google</value></data>
+  <data name="SignIn.Refused.NotApproved" xml:space="preserve"><value>Signing in is not possible. Contact the service owner.</value></data>
+  <data name="SignIn.Refused.CouldNotConfirm" xml:space="preserve"><value>The approval could not be confirmed. Try again later.</value></data>
+  <data name="SignIn.Refused.SignInFailed" xml:space="preserve"><value>The sign-in did not complete. Start again.</value></data>
+  <data name="SignIn.Refused.AccountDisabled" xml:space="preserve"><value>The account is disabled. Contact your school administrator.</value></data>
+  <data name="Landing.Title" xml:space="preserve"><value>Your account</value></data>
+  <data name="Landing.SignedInAs" xml:space="preserve"><value>Signed in as</value></data>
+  <data name="Landing.Role.Admin" xml:space="preserve"><value>School administrator</value></data>
+  <data name="Landing.Role.Dean" xml:space="preserve"><value>Dean</value></data>
+  <data name="Landing.SignOut" xml:space="preserve"><value>Sign out</value></data>
+  <data name="Landing.ReadOnly.Title" xml:space="preserve"><value>Read-only mode</value></data>
+  <data name="Landing.ReadOnly.NotYetConfirmed" xml:space="preserve"><value>The installation has not been confirmed yet.</value></data>
+  <data name="Landing.ReadOnly.SuspendedByOwner" xml:space="preserve"><value>The installation was suspended by the service owner.</value></data>
+  <data name="Landing.ReadOnly.GracePeriodExpired" xml:space="preserve"><value>The waiting period for a confirmation has run out.</value></data>
+  <data name="Landing.ReadOnly.LastSuccessfulCheck" xml:space="preserve"><value>Last successful check</value></data>
+  <data name="Landing.Legitimacy.Ok" xml:space="preserve"><value>The installation is working normally.</value></data>
+  <data name="Error.Title" xml:space="preserve"><value>Something went wrong</value></data>
+  <data name="Error.BackLink" xml:space="preserve"><value>Back to the page</value></data>
+  <data name="Error.PageExpired" xml:space="preserve"><value>This page is out of date. Reload it and try again.</value></data>
+  <data name="Error.Forbidden" xml:space="preserve"><value>This action is not available to you.</value></data>
+  <data name="Error.NotFound" xml:space="preserve"><value>That page was not found.</value></data>
+  <data name="Error.Unexpected" xml:space="preserve"><value>An unforeseen failure happened. Try again later.</value></data>
+  <data name="ReadOnly.Refused.NotYetConfirmed" xml:space="preserve"><value>The action cannot run: the installation has not been confirmed yet.</value></data>
+  <data name="ReadOnly.Refused.SuspendedByOwner" xml:space="preserve"><value>The action cannot run: the installation was suspended by the service owner.</value></data>
+  <data name="ReadOnly.Refused.GracePeriodExpired" xml:space="preserve"><value>The action cannot run: the waiting period for a confirmation has run out.</value></data>
+</root>

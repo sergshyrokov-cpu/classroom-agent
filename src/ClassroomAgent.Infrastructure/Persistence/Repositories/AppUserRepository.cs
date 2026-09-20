@@ -1,0 +1,24 @@
+using ClassroomAgent.Application.Ports;
+using ClassroomAgent.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace ClassroomAgent.Infrastructure.Persistence.Repositories;
+
+/// <summary>
+/// The accounts of the installation (US-008 entity model §3.4). Stages changes only; the use case commits
+/// through <see cref="IUnitOfWork"/> (AD-7, package-map).
+/// </summary>
+public sealed class AppUserRepository(ClassroomAgentDbContext db) : IAppUserRepository
+{
+    /// <summary>Tracked, because a successful sign-in updates the row it finds (db-design §3.4).</summary>
+    public Task<AppUser?> FindByNormalizedEmailAsync(string normalizedEmail, CancellationToken cancellationToken) =>
+        db.AppUsers.FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken);
+
+    /// <summary>Tracked: the session check may rotate the stamp it reads (US-008 AC-014).</summary>
+    public Task<AppUser?> FindByIdAsync(long id, CancellationToken cancellationToken) =>
+        db.AppUsers.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+
+    public void Add(AppUser user) => db.AppUsers.Add(user);
+
+    public void Forget(AppUser user) => db.Entry(user).State = EntityState.Detached;
+}

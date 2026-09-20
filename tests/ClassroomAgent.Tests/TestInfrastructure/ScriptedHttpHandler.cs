@@ -23,6 +23,46 @@ public sealed class ScriptedHttpHandler(Func<HttpRequestMessage, CancellationTok
         }
     }
 
+    /// <summary>
+    /// Every request this transport carried. The installation's one typed client serves the whole service channel,
+    /// so a legitimacy check of the background service is recorded here too; assert on
+    /// <see cref="AdminLoginCheckRequests"/> when the subject is the sign-in.
+    /// </summary>
+    public IReadOnlyList<RecordedRequest> AdminLoginCheckRequests =>
+        Requests.Where(r => r.Uri?.AbsolutePath.EndsWith(AdminLoginCheckTestData.Path, StringComparison.Ordinal) == true)
+            .ToList();
+
+    /// <summary>
+    /// Scripts the Admin login check only, and answers everything else — the background legitimacy check — with a
+    /// bare <c>503</c>, which that client classifies as an error answer and which changes nothing it has not already
+    /// seen. Without this the two calls would share one script and consume each other's answers.
+    /// </summary>
+    public static ScriptedHttpHandler AdminLoginCheck(Func<HttpRequestMessage, HttpResponseMessage> respond)
+    {
+        ArgumentNullException.ThrowIfNull(respond);
+        return new ScriptedHttpHandler((request, _) =>
+        {
+            if (request.RequestUri?.AbsolutePath.EndsWith(AdminLoginCheckTestData.Path, StringComparison.Ordinal) != true)
+            {
+                return Task.FromResult(EmptyResponse(System.Net.HttpStatusCode.ServiceUnavailable));
+            }
+
+            try
+            {
+                return Task.FromResult(respond(request));
+            }
+            catch (HttpRequestException failure)
+            {
+                // A scripted connection failure of the channel, raised where the transport would raise it.
+                return Task.FromException<HttpResponseMessage>(failure);
+            }
+        });
+    }
+
+    /// <summary>Answers every Admin login check with that status and JSON body; other paths get a bare 503.</summary>
+    public static ScriptedHttpHandler AdminLoginCheckJson(System.Net.HttpStatusCode status, string body) =>
+        AdminLoginCheck(_ => JsonResponse(status, body));
+
     /// <summary>Answers every request with that status and JSON body.</summary>
     public static ScriptedHttpHandler Json(System.Net.HttpStatusCode status, string body) =>
         new((_, _) => Task.FromResult(JsonResponse(status, body)));

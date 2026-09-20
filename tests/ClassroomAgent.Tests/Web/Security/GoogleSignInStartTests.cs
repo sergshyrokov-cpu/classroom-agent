@@ -152,7 +152,11 @@ public sealed class GoogleSignInStartTests(PostgreSqlFixture database)
 
         var response = await client.GetAsync(SignInTestData.StartPath, ct);
 
-        Assert.Equal(HttpStatusCode.MethodNotAllowed, response.Status);
+        // 404 or 405: the anonymous catch-all of FR-002 matches every path, so the host answers 404. Either way no
+        // sign-in was started and no correlation cookie was set.
+        Assert.True(
+            response.Status is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed,
+            $"Expected 404 or 405, got {(int)response.Status}.");
         Assert.Empty(response.SetCookies);
     }
 

@@ -115,6 +115,23 @@ public sealed class FakeControlPlaneClient(TimeProvider time) : IControlPlaneCli
         }
     }
 
+    /// <summary>
+    /// US-008 drives the Admin login check through the installation's <em>real</em> client over a scripted
+    /// transport, so the classification of api-design 2.4 is proven on production code
+    /// (<see cref="InstallationTestHost.StartWithControlPlaneHttpAsync"/>). A test that reaches this substitute
+    /// instead has picked the wrong seam, and says so rather than silently answering.
+    /// </summary>
+    public Task<AdminLoginCheckReply> CheckAdminLoginAsync(
+        Guid installationId,
+        string email,
+        CancellationToken cancellationToken)
+    {
+        Assert.Fail(
+            "The Admin login check is driven through the real ControlPlaneClient over a scripted transport: "
+            + "start the host with InstallationTestHost.StartWithControlPlaneHttpAsync (US-008 test strategy 2.2).");
+        return Task.FromResult(AdminLoginCheckReply.Unavailable);
+    }
+
     private FakeControlPlaneClient Enqueue(Func<CancellationToken, Task<ControlPlaneCheckReply>> reply)
     {
         lock (_gate)

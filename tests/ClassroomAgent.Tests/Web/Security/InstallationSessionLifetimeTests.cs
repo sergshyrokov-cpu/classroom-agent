@@ -11,7 +11,7 @@ namespace ClassroomAgent.Tests.Web.Security;
 public sealed class InstallationSessionLifetimeTests(PostgreSqlFixture database)
 {
     private static ScriptedHttpHandler Allowed() =>
-        ScriptedHttpHandler.Json(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
+        ScriptedHttpHandler.AdminLoginCheckJson(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
 
     [Fact]
     public async Task SixtyMinutesWithoutARequest_TheSessionExpires()

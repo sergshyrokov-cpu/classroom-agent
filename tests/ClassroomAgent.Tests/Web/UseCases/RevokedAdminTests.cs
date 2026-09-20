@@ -11,7 +11,7 @@ namespace ClassroomAgent.Tests.Web.UseCases;
 public sealed class RevokedAdminTests(PostgreSqlFixture database)
 {
     private static ScriptedHttpHandler NotAllowed() =>
-        ScriptedHttpHandler.Json(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(false));
+        ScriptedHttpHandler.AdminLoginCheckJson(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(false));
 
     [Fact]
     public async Task RevokedAdmin_IsRefused_AndKeepsTheirRowUnchanged()
@@ -46,7 +46,7 @@ public sealed class RevokedAdminTests(PostgreSqlFixture database)
         await host.SignInWithGoogleAsync(ct);
 
         Assert.Single(await host.AppUsersAsync(ct));
-        Assert.Equal(3, channel.Requests.Count);
+        Assert.Equal(3, channel.AdminLoginCheckRequests.Count);
     }
 
     /// <summary>AC-008, AC-010: the refusal names the existing account as the actor, never the email entered.</summary>

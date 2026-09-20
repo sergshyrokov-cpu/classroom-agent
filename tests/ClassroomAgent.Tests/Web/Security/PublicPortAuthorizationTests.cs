@@ -40,12 +40,33 @@ public sealed class PublicPortAuthorizationTests(PostgreSqlFixture database)
 
         Assert.Contains(anonymous, e => e.Pattern == "sign-in");
         Assert.Contains(anonymous, e => e.Pattern == "sign-in/google");
-        Assert.Contains(anonymous, e => e.Pattern == "signin-google");
         Assert.Contains(anonymous, e => e.Pattern == "error/{statuscode}");
         Assert.Contains(anonymous, e => e.IsFallback);
 
+        // The OAuth callback has no routed endpoint: the authentication handler serves that path itself, so it
+        // carries no policy to enumerate. Its anonymity is proven by behaviour in TheCallbackIsReachableAnonymously.
+        Assert.DoesNotContain(endpoints, e => e.Pattern == "signin-google");
+
         var notOnTheList = anonymous.Where(e => !IsSc4Entry(e)).Select(e => e.ToString()).ToList();
         Assert.Empty(notOnTheList);
+    }
+
+    /// <summary>
+    /// AC-002, AC-003: the callback is reachable anonymously — it is the SC-4 "Google OAuth start and callback"
+    /// entry — and being a GET it carries no antiforgery token (v64). The handler refuses it on its own terms
+    /// (state and the correlation cookie), never with a sign-in challenge.
+    /// </summary>
+    [Fact]
+    public async Task TheCallbackIsReachableAnonymously_AndIsNotChallenged()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var host = await InstallationTestHost.StartAsync(database, ct);
+        using var client = host.CreateClient();
+
+        var response = await client.GetAsync(SignInTestData.CallbackPath, ct);
+
+        Assert.NotEqual(HttpStatusCode.Unauthorized, response.Status);
+        Assert.Equal(SignInTestData.SignInPath, response.LocationPath);
     }
 
     /// <summary>AC-002: the landing page and sign-out are not anonymous.</summary>
@@ -138,9 +159,6 @@ public sealed class PublicPortAuthorizationTests(PostgreSqlFixture database)
         || (endpoint.Pattern == "sign-in/google"
             && endpoint.Methods is { Count: 1 } startMethods
             && string.Equals(startMethods[0], "POST", StringComparison.OrdinalIgnoreCase))
-        || (endpoint.Pattern == "signin-google"
-            && endpoint.Methods is not null
-            && endpoint.Methods.All(m => m is "GET" or "HEAD"))
 
         // US-005 and US-006, on the private port and filtered to it.
         || endpoint.Pattern is "health/live" or "health/ready" or "service/v1/status-pushes";

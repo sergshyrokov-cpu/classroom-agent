@@ -52,6 +52,17 @@ public static class InstallationConfigurationKeys
     /// <summary>A reference, not a secret: naming a secret that only the test environment would hold (SC-7).</summary>
     public const string OAuthClientSecretReferenceValue = "installation-oauth-client-secret";
 
+    /// <summary>
+    /// The synthetic secret the default reference resolves to. OD-004 (option 1) makes the reference the name of an
+    /// environment variable and an absent one stop the start, so the fixture places it — once for the whole test
+    /// process, with the same name and value everywhere, so tests running in parallel cannot disagree.
+    /// </summary>
+    public const string OAuthClientSecretValue = "synthetic-oauth-client-secret-for-tests";
+
+    /// <summary>Places <see cref="OAuthClientSecretValue"/> under <see cref="OAuthClientSecretReferenceValue"/>.</summary>
+    public static void PlaceDefaultOAuthSecret() =>
+        Environment.SetEnvironmentVariable(OAuthClientSecretReferenceValue, OAuthClientSecretValue);
+
     /// <summary>The address the private port listens on in tests (US-006 spec FR-001).</summary>
     public const string PrivateAddressValue = "127.0.0.1";
 

@@ -1,0 +1,105 @@
+using System.Globalization;
+using System.Security.Claims;
+using ClassroomAgent.Application.Models;
+using ClassroomAgent.Domain.Enums;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+
+namespace ClassroomAgent.Web.Security;
+
+/// <summary>
+/// Issues and validates the installation's session cookie (US-008 spec FR-015; NFR-072): not persistent, 60
+/// minutes of sliding idle expiry, and 8 hours absolute from the sign-in. There is no "remember me".
+/// </summary>
+public static class InstallationSession
+{
+    public const string SessionCookieName = "__Host-ca-session";
+
+    public const string AntiforgeryCookieName = "__Host-ca-antiforgery";
+
+    public static readonly TimeSpan IdleTimeout = TimeSpan.FromMinutes(60);
+
+    public static readonly TimeSpan AbsoluteLimit = TimeSpan.FromHours(8);
+
+    /// <summary>Issues the session for an account the use case admitted (spec FR-010: never before that).</summary>
+    public static Task SignInAsync(HttpContext context, SignedInUser user, TimeProvider timeProvider)
+    {
+        var signedInAt = timeProvider.GetUtcNow().ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture);
+        var identity = new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString(CultureInfo.InvariantCulture)),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, RoleName(user.Role)),
+                new Claim(InstallationClaimTypes.UiLanguage, LanguageCode(user.UiLanguage)),
+                new Claim(InstallationClaimTypes.SignedInAt, signedInAt),
+                new Claim(InstallationClaimTypes.SecurityStamp, user.SecurityStamp),
+            ],
+            CookieAuthenticationDefaults.AuthenticationScheme);
+
+        return context.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(identity),
+            new AuthenticationProperties { IsPersistent = false, AllowRefresh = true });
+    }
+
+    public static string RoleName(AppRole role) => role switch
+    {
+        AppRole.Admin => nameof(AppRole.Admin),
+        AppRole.Dean => nameof(AppRole.Dean),
+        _ => throw new ArgumentOutOfRangeException(nameof(role), role, null),
+    };
+
+    public static string LanguageCode(UiLanguage language) => language switch
+    {
+        UiLanguage.Uk => "uk",
+        UiLanguage.En => "en",
+        _ => throw new ArgumentOutOfRangeException(nameof(language), language, null),
+    };
+
+    /// <summary>
+    /// Rejects a principal past the 8-hour absolute limit (NFR-072) or carrying a stamp the account no longer has —
+    /// which is how a signed-out cookie stops authenticating, even when someone kept a copy of it (AC-014). The
+    /// idle limit is the cookie's own.
+    /// </summary>
+    public static async Task ValidatePrincipalAsync(CookieValidatePrincipalContext context)
+    {
+        var principal = context.Principal;
+        var signedInAt = principal?.FindFirstValue(InstallationClaimTypes.SignedInAt);
+        var services = context.HttpContext.RequestServices;
+        var now = services.GetRequiredService<TimeProvider>().GetUtcNow();
+
+        var valid = long.TryParse(signedInAt, NumberStyles.None, CultureInfo.InvariantCulture, out var seconds)
+            && now - DateTimeOffset.FromUnixTimeSeconds(seconds) <= AbsoluteLimit
+            && await IsStampCurrentAsync(context, principal!);
+
+        if (!valid)
+        {
+            context.RejectPrincipal();
+            await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        }
+    }
+
+    /// <summary>The account id of a signed-in principal, or null.</summary>
+    public static long? AccountId(System.Security.Claims.ClaimsPrincipal principal) =>
+        long.TryParse(
+            principal.FindFirstValue(ClaimTypes.NameIdentifier),
+            NumberStyles.None,
+            CultureInfo.InvariantCulture,
+            out var id)
+            ? id
+            : null;
+
+    private static async Task<bool> IsStampCurrentAsync(
+        CookieValidatePrincipalContext context,
+        System.Security.Claims.ClaimsPrincipal principal)
+    {
+        if (AccountId(principal) is not { } accountId
+            || principal.FindFirstValue(InstallationClaimTypes.SecurityStamp) is not { } stamp)
+        {
+            return false;
+        }
+
+        var sessions = context.HttpContext.RequestServices.GetRequiredService<ClassroomAgent.Application.UseCases.AccountSessionService>();
+        return await sessions.IsCurrentAsync(accountId, stamp, context.HttpContext.RequestAborted);
+    }
+}

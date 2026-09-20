@@ -87,11 +87,8 @@ public sealed class ReadOnlyRefusalLoggingTests(PostgreSqlFixture database)
 
         Assert.Equal(before, await host.LegitimacyStatesAsync(ct));
 
-        // SC-11: a refused write is not an audited action, and this Story creates no AuditEvent table.
-        var auditTables = await host.ScalarAsync<long>(
-            "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'audit_event'",
-            ct);
-        Assert.Equal(0, auditTables);
+        // SC-11: a refused write is not an audited action. US-008 created the table; a refusal still writes no row.
+        Assert.Empty(await host.AuditRowsAsync(ct));
     }
 
     private static async Task<IReadOnlyList<LogEvent>> RefusalsAsync(

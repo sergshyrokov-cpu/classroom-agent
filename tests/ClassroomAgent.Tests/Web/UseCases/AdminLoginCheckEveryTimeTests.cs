@@ -12,7 +12,7 @@ namespace ClassroomAgent.Tests.Web.UseCases;
 public sealed class AdminLoginCheckEveryTimeTests(PostgreSqlFixture database)
 {
     private static ScriptedHttpHandler Allowed() =>
-        ScriptedHttpHandler.Json(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
+        ScriptedHttpHandler.AdminLoginCheckJson(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
 
     /// <summary>AC-004, S-02: the second sign-in of a known Admin calls again.</summary>
     [Fact]
@@ -27,7 +27,7 @@ public sealed class AdminLoginCheckEveryTimeTests(PostgreSqlFixture database)
 
         Assert.Equal(SignInTestData.LandingPath, first.LocationPath);
         Assert.Equal(SignInTestData.LandingPath, second.LocationPath);
-        Assert.Equal(2, channel.Requests.Count);
+        Assert.Equal(2, channel.AdminLoginCheckRequests.Count);
     }
 
     /// <summary>AC-004, S-02: a revocation between two sign-ins takes effect at once — nothing is remembered.</summary>
@@ -36,8 +36,8 @@ public sealed class AdminLoginCheckEveryTimeTests(PostgreSqlFixture database)
     {
         var ct = TestContext.Current.CancellationToken;
         var answers = new Queue<bool>([true, false]);
-        var channel = new ScriptedHttpHandler((_, _) => Task.FromResult(
-            ScriptedHttpHandler.JsonResponse(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(answers.Dequeue()))));
+        var channel = ScriptedHttpHandler.AdminLoginCheck(
+            _ => ScriptedHttpHandler.JsonResponse(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(answers.Dequeue())));
         await using var host = await InstallationTestHost.StartWithControlPlaneHttpAsync(database, channel, ct);
 
         var (_, allowed) = await host.SignInWithGoogleAsync(ct);
@@ -46,7 +46,7 @@ public sealed class AdminLoginCheckEveryTimeTests(PostgreSqlFixture database)
         Assert.Equal(SignInTestData.LandingPath, allowed.LocationPath);
         Assert.Equal(SignInTestData.SignInPath, revoked.LocationPath);
         Assert.Null(revoked.SetCookie(SignInTestData.SessionCookieName));
-        Assert.Equal(2, channel.Requests.Count);
+        Assert.Equal(2, channel.AdminLoginCheckRequests.Count);
     }
 
     /// <summary>AC-004: the installation id and the email travel in the body of a POST, never in the address.</summary>
@@ -59,7 +59,7 @@ public sealed class AdminLoginCheckEveryTimeTests(PostgreSqlFixture database)
 
         await host.SignInWithGoogleAsync(ct);
 
-        var request = Assert.Single(channel.Requests);
+        var request = Assert.Single(channel.AdminLoginCheckRequests);
         Assert.Equal(HttpMethod.Post, request.Method);
         Assert.Equal(
             InstallationConfigurationKeys.ControlPlaneAddressValue + AdminLoginCheckTestData.Path,
@@ -84,7 +84,7 @@ public sealed class AdminLoginCheckEveryTimeTests(PostgreSqlFixture database)
 
         await host.SignInWithGoogleAsync(ct);
 
-        var request = Assert.Single(channel.Requests);
+        var request = Assert.Single(channel.AdminLoginCheckRequests);
         Assert.False(request.Headers.ContainsKey("Cookie"));
         Assert.False(request.Headers.ContainsKey("Authorization"));
     }
@@ -123,7 +123,7 @@ public sealed class AdminLoginCheckEveryTimeTests(PostgreSqlFixture database)
         Assert.Equal(SignInTestData.LandingPath, again.LocationPath);
 
         // Browsing with a session asks nobody; a new sign-in always does.
-        Assert.Equal(2, channel.Requests.Count);
+        Assert.Equal(2, channel.AdminLoginCheckRequests.Count);
     }
 
     /// <summary>AC-004, S-02: a restart cannot resurrect an earlier answer — the row exists, the question is asked again.</summary>
@@ -136,7 +136,7 @@ public sealed class AdminLoginCheckEveryTimeTests(PostgreSqlFixture database)
         await first.SignInWithGoogleAsync(ct);
         await first.StopAsync();
 
-        var secondChannel = ScriptedHttpHandler.Json(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(false));
+        var secondChannel = ScriptedHttpHandler.AdminLoginCheckJson(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(false));
         await using var restarted = InstallationTestHost.Restart(first, InstallationTestHost.DefaultStart);
         restarted.ControlPlaneHandler = secondChannel;
         restarted.Start();
@@ -144,7 +144,7 @@ public sealed class AdminLoginCheckEveryTimeTests(PostgreSqlFixture database)
         var (_, refused) = await restarted.SignInWithGoogleAsync(ct);
 
         Assert.Equal(SignInTestData.SignInPath, refused.LocationPath);
-        Assert.Single(secondChannel.Requests);
+        Assert.Single(secondChannel.AdminLoginCheckRequests);
         Assert.Single(await restarted.AppUsersAsync(ct));
     }
 }

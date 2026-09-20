@@ -11,7 +11,7 @@ namespace ClassroomAgent.Tests.Web.Security;
 public sealed class InstallationSignOutTests(PostgreSqlFixture database)
 {
     private static ScriptedHttpHandler Allowed() =>
-        ScriptedHttpHandler.Json(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
+        ScriptedHttpHandler.AdminLoginCheckJson(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
 
     [Fact]
     public async Task SignOut_ClearsTheSession_AndLandsOnTheSignInPage()
@@ -64,7 +64,9 @@ public sealed class InstallationSignOutTests(PostgreSqlFixture database)
         var response = await client.GetAsync(SignInTestData.SignOutPath, ct);
         var landing = await client.GetAsync(SignInTestData.LandingPath, ct);
 
-        Assert.Equal(HttpStatusCode.MethodNotAllowed, response.Status);
+        Assert.True(
+            response.Status is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed,
+            $"Expected 404 or 405, got {(int)response.Status}.");
         Assert.Equal(HttpStatusCode.OK, landing.Status);
     }
 

@@ -13,6 +13,16 @@ public sealed class ClassroomAgentDbContext(DbContextOptions<ClassroomAgentDbCon
 {
     public DbSet<LegitimacyState> LegitimacyStates => Set<LegitimacyState>();
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder) =>
+    /// <summary>US-008 entity model §3.3: the installation's accounts.</summary>
+    public DbSet<AppUser> AppUsers => Set<AppUser>();
+
+    /// <summary>US-008 entity model §3.3: the installation's own audit trail.</summary>
+    public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
         modelBuilder.ApplyConfiguration(new LegitimacyStateConfiguration());
+        modelBuilder.ApplyConfiguration(new AppUserConfiguration());
+        modelBuilder.ApplyConfiguration(new AuditEventConfiguration());
+    }
 }

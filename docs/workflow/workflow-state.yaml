@@ -4,32 +4,35 @@
 version: 1
 story: US-008
 workflow: story-delivery
-current_stage: IMPLEMENTATION
-previous_stage: TEST_WRITING
-last_completed_stage: TEST_WRITING
+current_stage: SECURITY_REVIEW
+previous_stage: IMPLEMENTATION
+last_completed_stage: IMPLEMENTATION
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: test-writer
+last_invoked_skill: dotnet-implementor
 last_result:
   verdict: PASS
-  stage: TEST_WRITING
-  recorded_at: 2026-09-20T07:40:19Z
+  stage: IMPLEMENTATION
+  recorded_at: 2026-09-20T12:10:59Z
 last_artifacts:
-  - type: test_strategy
-    path: docs/tests/US-008-test-strategy.md
-    version: 2
-  - type: ac_test_matrix
-    path: docs/tests/US-008-ac-test-matrix.md
-    version: 2
-  - type: test_generation_report
-    path: docs/evidence/US-008-test-generation-report.md
-    version: 2
-  - type: open_decisions
-    path: docs/decisions/US-008-open-decisions.md
-    version: 4
+  - type: implementation_report
+    path: docs/evidence/US-008-implementation-report.md
+    version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "IMPLEMENTATION: PASS. Build 0 errors and 0 warnings, whole suite 1498 passed / 0 failed / 0 skipped, dotnet format clean. Progress across the stage: 290 red tests -> 48 -> 52 -> 2 -> 0. All 18 Acceptance Criteria implemented and green; one EF Core migration (InitialAppUserAndAuditEvent) creates app_user and audit_event and the Control Plane schema is untouched."
+  - "IMPLEMENTATION D-1 (for SECURITY_REVIEW): IUnitOfWork gained ExecuteInTransactionAsync. db-design 4.4 requires the app_user change and its audit_event row in one transaction while FR-012 requires the row to carry the id the insert generates; with no foreign key (PC-9) EF Core cannot fix that value up, so a single SaveChanges cannot do both. The two US-007 decorators pass the method through and Infrastructure.UnitOfWork opens one transaction."
+  - "IMPLEMENTATION D-2 (security-relevant, for SECURITY_REVIEW): sign-out rotates the account's security stamp, and the cookie handler compares the stamp on every request. AC-014 requires that the previous cookie no longer authenticates, which cookie authentication alone cannot give. This is the Owner-session mechanism of US-001, registered in PermittedServiceWrites as SignInBookkeeping so sign-out also works in read-only mode. Cost: one primary-key read per authenticated request, as the Control Plane already pays."
+  - "IMPLEMENTATION D-3: PublicPortMiddleware was inverted rather than deleted. US-005 gave it 'everything not on the private port answers 404'; US-008 replaces that rule (api-design 7), so it now only keeps the private port to the private paths. The inverse stays with PrivatePortEndpointFilter."
+  - "IMPLEMENTATION D-4: the 409 page is rendered by executing Views/Error/Index.cshtml from the exception handler, not through the probe endpoint api-design 2.5 suggested - the anonymous catch-all of FR-002 matches every unmatched path, so a test-only endpoint is unreachable from outside the host (test strategy 3.1). The API-6 body is written directly under /api/v1."
+  - "IMPLEMENTATION D-5: the login check validates the email by VR-006's rule only (one @, non-empty parts, no whitespace) in ServiceChannelEmailAttribute. US-003's AllowedAdminEmailAttribute is stricter (64-character name part, closed character set) and would answer 400 for an address the Control Plane is merely being asked about; VR-006 fixes only the two rules, so an address no entry could have is answered allowed:false."
+  - "IMPLEMENTATION D-6, the one literal mismatch with an approved contract: a GET to /sign-in/google or /sign-out answers 404 where the openapi documents 405. FR-002 requires an anonymous catch-all last in the pipeline, and because it matches every path ASP.NET Core never reaches the method-mismatch branch; the Control Plane behaves the same and its US-001 tests accept either. What trebovaniya.md section 8 requires - a GET starts no sign-in and signs nobody out - holds and is asserted."
+  - "IMPLEMENTATION D-7: HSTS and HTTPS redirection are scoped to the public port. Host-wide they made the private port answer 308 to the status push and broke 40 US-005/US-006 tests; SC-2 is explicit that the private port stays plain HTTP."
+  - "IMPLEMENTATION D-8: AuditTargetType is an empty enum, as the entity model asks. Its converter throws on any value, which is unreachable while no member exists."
+  - "IMPLEMENTATION corrected 15 test files, none of them by weakening an assertion. Six are prior-Story tests US-008 replaces, as US-005 wrote them expecting (api-design 7): the public port no longer answers 404 to everything, the installation has three tables, PermittedServiceWrites has three entries, the Control Plane exemption list has two, and audit_event now exists. The rest were corrections to the US-008 tests' own fixtures - above all that the installation's single typed client serves the whole service channel, so the background legitimacy check was consuming the scripted login-check answers until ScriptedHttpHandler became path-scoped."
+  - "IMPLEMENTATION: the sign-in path logs through Web/Security/SignInLog at the FR-020 levels (success Information with the account id, not-approved and callback-failed Warning, could-not-confirm Error), each line carrying the request id that ties it to its audit row (SC-11). TEST_WRITING had asserted these levels; nothing logged them until this stage."
+  - "IMPLEMENTATION: Application still references no NuGet package and Domain still has zero package references - the US-005 test FrameworkFreeProjects_ReferenceNoPackage passes unchanged. The Story's one dependency change is Microsoft.AspNetCore.Authentication.Google 10.0.12 in ClassroomAgent.Web alone (FR-021, OD-003)."
   - "OD-004 (raised by TEST_WRITING, RESOLVED by the Owner on 2026-09-20 as option 1 - the reference names an environment variable, resolved once at start-up through Infrastructure/Secrets; an absent or empty variable stops the start, a wrong secret does not, which is spec I-5. Needed no trebovaniya.md version and no Specification amendment: section 5 already lists environment variables among the stores, and FR-001's wording is about placement. Three cases were added on the resolution.) Original gap: FR-001 reads the OAuth client secret from the secret store 'by the same Infrastructure/Secrets mechanism the service-account key uses', but that mechanism does not exist - no Infrastructure/Secrets namespace is in the solution, because the service-account key arrives with US-009. trebovaniya.md deliberately leaves the store open (secrets / Key Vault / environment variable; the reference is 'a secret name or a path'), so one configuration string has to be interpreted and no artifact says how. TEST_WRITING is not blocked - everything the requirements fix about the reference is tested and no test needs the secret's value (TC-4 forbids a real token exchange). IMPLEMENTATION is blocked: the host must hand the Google handler a real client secret. Three options and a recommendation are in docs/decisions/US-008-open-decisions.md v3. Resolved only by the Owner." 
   - "TEST_WRITING: PASS. 24 test classes, 334 cases, 0 build errors and 0 warnings, red phase verified on real PostgreSQL. Whole suite total 1499, passed 1209, failed 290, skipped 0; all 290 failures are in the new US-008 classes and every one names missing production behaviour. No regression: the 1165 US-001 ... US-007 cases are green. All 18 Acceptance Criteria are mapped, and after OD-004 was resolved no clause of one is left unexercised."
   - "TEST_WRITING created NO production source file, unlike US-005 (OD-002) and US-007 (OD-003) which each needed an Open Decision for a compile-only skeleton. Two seams made it unnecessary: the Control Plane question is asked through the installation's REAL client over a scripted HttpMessageHandler (so api-design 2.4's classification table, including the 404-without-body row, is proven on production code), and the translations are addressed by resource base name and assembly as strings rather than by a marker type. Application still references no NuGet package and Domain keeps zero package dependencies."
@@ -61,5 +64,5 @@ non_blocking_findings:
   - "US-008 OD-001 resolved by the Owner on 2026-09-19 as option 2 (one OAuth web client per school in the Owner's Cloud project, External user type, client secret in the secret store with only its reference in configuration, redirect URI from a configured public base address). Landed in trebovaniya.md v78 with DC-3, SC-7 and DC-2, commit 0e31e50, before this activation."
   - "US-008 OD-002 resolved by the Owner on 2026-09-19 as option 1 (the account-picker hint carries the school's domain when LegitimacyState knows it, none while no legitimacy check has ever succeeded; the hint is never the access decision - AllowedAdmin stays the gate)."
 started_at: 2026-09-19T17:13:12Z
-updated_at: 2026-09-20T07:40:19Z
+updated_at: 2026-09-20T12:10:59Z
 completed_at: null

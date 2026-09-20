@@ -12,7 +12,7 @@ namespace ClassroomAgent.Tests.Web.Security;
 public sealed class GoogleSignInCallbackTests(PostgreSqlFixture database)
 {
     private static ScriptedHttpHandler Allowed() =>
-        ScriptedHttpHandler.Json(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
+        ScriptedHttpHandler.AdminLoginCheckJson(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
 
     [Fact]
     public async Task ValidCallback_SignsIn_AndIssuesTheSessionCookie()
@@ -42,7 +42,7 @@ public sealed class GoogleSignInCallbackTests(PostgreSqlFixture database)
         var callback = await client.CompleteGoogleCallbackAsync(state: null, ct);
 
         AssertRefused(callback);
-        Assert.Empty(channel.Requests);
+        Assert.Empty(channel.AdminLoginCheckRequests);
         Assert.Empty(await host.AppUsersAsync(ct));
     }
 
@@ -60,7 +60,7 @@ public sealed class GoogleSignInCallbackTests(PostgreSqlFixture database)
         var callback = await client.CompleteGoogleCallbackAsync("a-state-nobody-issued", ct);
 
         AssertRefused(callback);
-        Assert.Empty(channel.Requests);
+        Assert.Empty(channel.AdminLoginCheckRequests);
         Assert.Empty(await host.AppUsersAsync(ct));
     }
 
@@ -81,7 +81,7 @@ public sealed class GoogleSignInCallbackTests(PostgreSqlFixture database)
         var callback = await withoutCookie.CompleteGoogleCallbackAsync(state, ct);
 
         AssertRefused(callback);
-        Assert.Empty(channel.Requests);
+        Assert.Empty(channel.AdminLoginCheckRequests);
         Assert.Empty(await host.AppUsersAsync(ct));
     }
 
@@ -117,7 +117,7 @@ public sealed class GoogleSignInCallbackTests(PostgreSqlFixture database)
         var (_, callback) = await host.SignInWithGoogleAsync(ct);
 
         AssertRefused(callback);
-        Assert.Empty(channel.Requests);
+        Assert.Empty(channel.AdminLoginCheckRequests);
         Assert.Empty(await host.AppUsersAsync(ct));
         var audit = Assert.Single(await host.AuditRowsAsync(ct));
         Assert.Equal(SignInTestData.RefusalCategories.CallbackFailed, audit.RefusalCategory);
@@ -135,7 +135,7 @@ public sealed class GoogleSignInCallbackTests(PostgreSqlFixture database)
         var (_, callback) = await host.SignInWithGoogleAsync(ct);
 
         AssertRefused(callback);
-        Assert.Empty(channel.Requests);
+        Assert.Empty(channel.AdminLoginCheckRequests);
         Assert.Empty(await host.AppUsersAsync(ct));
         var audit = Assert.Single(await host.AuditRowsAsync(ct));
         Assert.Equal(SignInTestData.RefusalCategories.CallbackFailed, audit.RefusalCategory);
@@ -153,7 +153,7 @@ public sealed class GoogleSignInCallbackTests(PostgreSqlFixture database)
         var (_, callback) = await host.SignInWithGoogleAsync(ct);
 
         Assert.Equal(SignInTestData.LandingPath, callback.LocationPath);
-        var request = Assert.Single(channel.Requests);
+        var request = Assert.Single(channel.AdminLoginCheckRequests);
         Assert.Contains(SignInTestData.AdminEmail, request.Body, StringComparison.Ordinal);
         Assert.DoesNotContain(SignInTestData.AdminEmailMixedCase, request.Body, StringComparison.Ordinal);
         var user = Assert.Single(await host.AppUsersAsync(ct));
@@ -185,19 +185,28 @@ public sealed class GoogleSignInCallbackTests(PostgreSqlFixture database)
         Assert.All(rows, row => Assert.DoesNotContain(host.Google.Subject, row, StringComparison.Ordinal));
     }
 
-    /// <summary>AC-003, SC-4: the callback is a GET and therefore carries no antiforgery token (v64).</summary>
+    /// <summary>
+    /// AC-003, SC-4: the callback is a GET and therefore carries no antiforgery token (v64). It is served by the
+    /// authentication handler rather than by a routed endpoint, so this is asserted as behaviour: a POST to the
+    /// path is not treated as a callback, and the GET needs no token.
+    /// </summary>
     [Fact]
     public async Task TheCallback_NeedsNoAntiforgeryToken()
     {
         var ct = TestContext.Current.CancellationToken;
         var channel = Allowed();
         await using var host = await InstallationTestHost.StartWithControlPlaneHttpAsync(database, channel, ct);
+        host.UseGoogleStub();
+        using var client = host.CreateClient();
+        var start = await client.StartGoogleSignInAsync(ct);
 
-        var callback = HostEndpoint.All(host.Services).Single(e => e.Pattern == "signin-google");
+        // No token is sent or needed, and the sign-in completes.
+        var callback = await client.CompleteGoogleCallbackAsync(InstallationSignInExtensions.StateOf(start), ct);
 
-        Assert.NotNull(callback.Methods);
-        Assert.All(callback.Methods!, m => Assert.Contains(m, new[] { "GET", "HEAD" }));
-        Assert.Empty(callback.UnsafeMethodsAccepted);
+        Assert.Equal(SignInTestData.LandingPath, callback.LocationPath);
+        Assert.DoesNotContain(
+            HostEndpoint.All(host.Services),
+            e => e.Pattern == "signin-google" && e.UnsafeMethodsAccepted.Count > 0);
     }
 
     /// <summary>AC-003, AC-018, SC-10: the code and the state never reach the log.</summary>

@@ -18,8 +18,13 @@ public sealed class InstallationDatabaseTests(PostgreSqlFixture database)
         VALUES (now(), @status, @compatibility, @domain, @clientId, now(), now())
         """;
 
+    /// <summary>
+    /// US-008 adds <c>app_user</c> and <c>audit_event</c> in its own migration, so this asserts that
+    /// <c>legitimacy_state</c> is still created empty by the first one. The full table list of the installation is
+    /// <c>AppUserMigrationTests</c>'s.
+    /// </summary>
     [Fact]
-    public async Task Migration_CreatesOnlyLegitimacyState_WithNoRow()
+    public async Task Migration_CreatesLegitimacyState_WithNoRow()
     {
         var ct = TestContext.Current.CancellationToken;
         await using var host = await InstallationTestHost.CreateAsync(database, ct);
@@ -33,9 +38,8 @@ public sealed class InstallationDatabaseTests(PostgreSqlFixture database)
             r => r.GetString(0),
             ct);
 
-        Assert.Equal(new[] { "__EFMigrationsHistory", "legitimacy_state" }, tables.Order(StringComparer.Ordinal));
-        var migration = Assert.Single(migrations);
-        Assert.EndsWith("_InitialLegitimacyState", migration, StringComparison.Ordinal);
+        Assert.Contains("legitimacy_state", tables);
+        Assert.EndsWith("_InitialLegitimacyState", migrations[0], StringComparison.Ordinal);
         Assert.Empty(await host.LegitimacyStatesAsync(ct));
     }
 

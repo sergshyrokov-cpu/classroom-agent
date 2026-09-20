@@ -31,4 +31,8 @@ public sealed class ReadOnlyModeUnitOfWork(
 
         await inner.SaveChangesAsync(cancellationToken);
     }
+
+    /// <summary>Passed through: every commit inside the transaction still goes through this backstop.</summary>
+    public Task ExecuteInTransactionAsync(Func<CancellationToken, Task> work, CancellationToken cancellationToken) =>
+        inner.ExecuteInTransactionAsync(work, cancellationToken);
 }

@@ -36,7 +36,9 @@ public sealed class TimestampInterceptor(TimeProvider timeProvider) : SaveChange
         var now = timeProvider.GetUtcNow();
         foreach (var entry in context.ChangeTracker.Entries())
         {
-            if (entry.Entity is not LegitimacyState)
+            // US-008 db-design §7.1: the two new entities are stamped by the same interceptor. An audit row is
+            // never Modified, so ck_audit_event_immutable holds (§4.2).
+            if (entry.Entity is not (LegitimacyState or AppUser or AuditEvent))
             {
                 continue;
             }

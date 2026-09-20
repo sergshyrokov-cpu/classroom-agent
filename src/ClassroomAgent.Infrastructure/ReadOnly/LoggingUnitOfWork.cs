@@ -22,4 +22,8 @@ public sealed class LoggingUnitOfWork(IUnitOfWork inner, ILogger<LoggingUnitOfWo
             throw;
         }
     }
+
+    /// <summary>Passed through: a refusal inside the transaction is logged by the commit that raised it.</summary>
+    public Task ExecuteInTransactionAsync(Func<CancellationToken, Task> work, CancellationToken cancellationToken) =>
+        inner.ExecuteInTransactionAsync(work, cancellationToken);
 }

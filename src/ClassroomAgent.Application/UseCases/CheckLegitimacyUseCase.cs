@@ -93,6 +93,12 @@ public sealed class CheckLegitimacyUseCase(
         {
             throw;
         }
+        catch (Exceptions.ReadOnlyModeException)
+        {
+            // US-008 FR-021 corrects US-007 security-review finding F-2: a read-only refusal is never downgraded
+            // into an ordinary save failure, so the caller sees a refusal for what it is (S-20, SC-5).
+            throw;
+        }
         catch (Exception)
         {
             // The database is unavailable or refused the row: the stored state stays as it was (FR-007).

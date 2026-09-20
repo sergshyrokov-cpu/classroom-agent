@@ -290,6 +290,9 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
         Assert.Equal("system", Assert.Single(await host.AuditRowsAsync(ct)).ActorType);
     }
 
+    /// <summary>Asks for the category that matches the outcome; a caller that states one — null included — wins.</summary>
+    private const string DerivedCategory = "<derived from the outcome>";
+
     private static Task<int> InsertAsync(
         InstallationTestHost host,
         CancellationToken cancellationToken,
@@ -300,7 +303,7 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
         string? targetType = null,
         long? targetId = null,
         string outcome = "refused",
-        string? refusalCategory = "not_in_allowed_admin") =>
+        string? refusalCategory = DerivedCategory) =>
         host.ExecuteAsync(
             Insert,
             cancellationToken,
@@ -311,7 +314,9 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
             ("targetType", targetType),
             ("targetId", targetId),
             ("outcome", outcome),
-            ("refusalCategory", refusalCategory));
+            ("refusalCategory", refusalCategory == DerivedCategory
+                ? outcome == "refused" ? "not_in_allowed_admin" : null
+                : refusalCategory));
 
     private static string Text(Exception exception)
     {

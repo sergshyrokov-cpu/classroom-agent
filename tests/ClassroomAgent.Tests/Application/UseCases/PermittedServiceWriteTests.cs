@@ -54,13 +54,19 @@ public sealed class PermittedServiceWriteTests(PostgreSqlFixture database)
     }
 
     [Fact]
-    public void TheRegistry_DeclaresNothingElse()
+    public void TheRegistry_DeclaresOnlyWritesOnTheClosedList()
     {
         // Every entry is a use case of the Application layer performing a write of the BR-026 list; a
-        // registry that grew silently is exactly what AC-004 forbids.
+        // registry that grew silently is exactly what AC-004 forbids. US-008 added the two sign-in entries
+        // (spec FR-013, FR-016), so the registry is named here rather than counted.
         Assert.All(
             PermittedServiceWrites.Declarations,
             entry => Assert.Equal(typeof(GetLegitimacyModeQuery).Namespace, entry.Key.Namespace));
-        Assert.Single(PermittedServiceWrites.Declarations);
+        Assert.All(
+            PermittedServiceWrites.Declarations,
+            entry => Assert.Contains(entry.Value, Enum.GetValues<PermittedServiceWrite>()));
+        Assert.Equal(
+            new[] { "AccountSessionService", "CheckLegitimacyUseCase", "CompleteGoogleSignInUseCase" },
+            PermittedServiceWrites.Declarations.Keys.Select(k => k.Name).Order(StringComparer.Ordinal));
     }
 }

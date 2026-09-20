@@ -11,7 +11,7 @@ namespace ClassroomAgent.Tests.Web.Security;
 public sealed class InstallationCookieTests(PostgreSqlFixture database)
 {
     private static ScriptedHttpHandler Allowed() =>
-        ScriptedHttpHandler.Json(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
+        ScriptedHttpHandler.AdminLoginCheckJson(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
 
     /// <summary>AC-013: the session cookie is httpOnly, Secure and Lax — Lax is required, not preferred.</summary>
     [Fact]
@@ -28,7 +28,7 @@ public sealed class InstallationCookieTests(PostgreSqlFixture database)
         var cookie = SetCookieHeader.Parse(header!);
         Assert.True(cookie.Has("secure"), header);
         Assert.True(cookie.Has("httponly"), header);
-        Assert.Equal("Lax", cookie.Get("samesite"));
+        Assert.Equal("lax", cookie.Get("samesite"), ignoreCase: true);
         Assert.Equal("/", cookie.Get("path"));
         Assert.False(cookie.Has("domain"), header);
     }
@@ -65,7 +65,7 @@ public sealed class InstallationCookieTests(PostgreSqlFixture database)
         var cookie = SetCookieHeader.Parse(header!);
         Assert.True(cookie.Has("secure"), header);
         Assert.True(cookie.Has("httponly"), header);
-        Assert.Equal("Strict", cookie.Get("samesite"));
+        Assert.Equal("strict", cookie.Get("samesite"), ignoreCase: true);
     }
 
     /// <summary>AC-013, SC-2 v64: every cookie of the sign-in flow is Secure, the correlation cookie included.</summary>

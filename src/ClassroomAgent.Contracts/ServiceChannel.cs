@@ -12,6 +12,12 @@ public static class ServiceChannel
     public const string StatusPushPath = "service/v1/status-pushes";
 
     /// <summary>
+    /// The Admin login check endpoint, relative to the Control Plane address (US-008 api-design §3). The third
+    /// request of the service channel, and the only one that asks about a person.
+    /// </summary>
+    public const string AdminLoginCheckPath = "service/v1/admin-login-checks";
+
+    /// <summary>
     /// camelCase property names, case-sensitive, numbers never read from strings; unknown properties are
     /// ignored so the contract can grow additively. Read-only.
     /// </summary>

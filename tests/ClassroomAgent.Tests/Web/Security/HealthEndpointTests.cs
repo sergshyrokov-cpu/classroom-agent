@@ -159,7 +159,10 @@ public sealed class HealthEndpointTests(PostgreSqlFixture database)
         var response = await host.SendPublicAsync("GET", path, ct);
 
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
-        Assert.Equal(string.Empty, response.Body);
+        // US-008: the public port renders the error page for an unserved address; what matters is that the
+        // health state is not on it (DC-6).
+        Assert.DoesNotContain("Healthy", response.Body, StringComparison.Ordinal);
+        Assert.DoesNotContain("Unhealthy", response.Body, StringComparison.Ordinal);
     }
 
     [Theory]

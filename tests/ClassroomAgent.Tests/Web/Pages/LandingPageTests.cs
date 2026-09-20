@@ -12,7 +12,7 @@ namespace ClassroomAgent.Tests.Web.Pages;
 public sealed class LandingPageTests(PostgreSqlFixture database)
 {
     private static ScriptedHttpHandler Allowed() =>
-        ScriptedHttpHandler.Json(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
+        ScriptedHttpHandler.AdminLoginCheckJson(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
 
     [Fact]
     public async Task ThePage_ShowsTheEmailAsStoredAndTheRole()

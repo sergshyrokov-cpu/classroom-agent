@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Layout.AppName" xml:space="preserve"><value>Моніторинг навчання</value></data>
+  <data name="SignIn.Title" xml:space="preserve"><value>Вхід</value></data>
+  <data name="SignIn.Google.Button" xml:space="preserve"><value>Увійти через Google</value></data>
+  <data name="SignIn.Refused.NotApproved" xml:space="preserve"><value>Вхід неможливий. Зверніться до власника сервісу.</value></data>
+  <data name="SignIn.Refused.CouldNotConfirm" xml:space="preserve"><value>Не вдалося підтвердити дозвіл на вхід. Спробуйте пізніше.</value></data>
+  <data name="SignIn.Refused.SignInFailed" xml:space="preserve"><value>Вхід не завершився. Почніть спочатку.</value></data>
+  <data name="SignIn.Refused.AccountDisabled" xml:space="preserve"><value>Обліковий запис вимкнено. Зверніться до адміністратора школи.</value></data>
+  <data name="Landing.Title" xml:space="preserve"><value>Ваш обліковий запис</value></data>
+  <data name="Landing.SignedInAs" xml:space="preserve"><value>Ви увійшли як</value></data>
+  <data name="Landing.Role.Admin" xml:space="preserve"><value>Адміністратор школи</value></data>
+  <data name="Landing.Role.Dean" xml:space="preserve"><value>Декан</value></data>
+  <data name="Landing.SignOut" xml:space="preserve"><value>Вийти</value></data>
+  <data name="Landing.ReadOnly.Title" xml:space="preserve"><value>Режим лише для читання</value></data>
+  <data name="Landing.ReadOnly.NotYetConfirmed" xml:space="preserve"><value>Правомірність інсталяції ще не підтверджено.</value></data>
+  <data name="Landing.ReadOnly.SuspendedByOwner" xml:space="preserve"><value>Роботу інсталяції припинено власником сервісу.</value></data>
+  <data name="Landing.ReadOnly.GracePeriodExpired" xml:space="preserve"><value>Термін очікування підтвердження правомірності вичерпано.</value></data>
+  <data name="Landing.ReadOnly.LastSuccessfulCheck" xml:space="preserve"><value>Остання успішна перевірка</value></data>
+  <data name="Landing.Legitimacy.Ok" xml:space="preserve"><value>Інсталяція працює у звичайному режимі.</value></data>
+  <data name="Error.Title" xml:space="preserve"><value>Помилка</value></data>
+  <data name="Error.BackLink" xml:space="preserve"><value>Повернутися до сторінки</value></data>
+  <data name="Error.PageExpired" xml:space="preserve"><value>Сторінка застаріла. Оновіть її та повторіть дію.</value></data>
+  <data name="Error.Forbidden" xml:space="preserve"><value>Ця дія вам недоступна.</value></data>
+  <data name="Error.NotFound" xml:space="preserve"><value>Сторінку не знайдено.</value></data>
+  <data name="Error.Unexpected" xml:space="preserve"><value>Сталася непередбачена помилка. Спробуйте пізніше.</value></data>
+  <data name="ReadOnly.Refused.NotYetConfirmed" xml:space="preserve"><value>Дію неможливо виконати: правомірність інсталяції ще не підтверджено.</value></data>
+  <data name="ReadOnly.Refused.SuspendedByOwner" xml:space="preserve"><value>Дію неможливо виконати: роботу інсталяції припинено власником сервісу.</value></data>
+  <data name="ReadOnly.Refused.GracePeriodExpired" xml:space="preserve"><value>Дію неможливо виконати: термін очікування підтвердження правомірності вичерпано.</value></data>
+</root>

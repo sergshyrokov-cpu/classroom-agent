@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
+using ClassroomAgent.Application.Ports;
+using ClassroomAgent.Domain.Enums;
 
 namespace ClassroomAgent.Web.Configuration;
 
@@ -27,14 +29,117 @@ public static class InstallationSettingsReader
     /// <summary>The ASP.NET Core public endpoint addresses, <c>;</c>-separated.</summary>
     public const string UrlsKey = "urls";
 
+    /// <summary>US-008 spec FR-001, VR-003: the Data Protection key ring directory (SC-7, S-18).</summary>
+    public const string DataProtectionKeyDirectoryKey = "DataProtection:KeyDirectory";
+
+    /// <summary>US-008 spec FR-001, VR-001: the school public base address; the redirect URI is built from it.</summary>
+    public const string PublicBaseAddressKey = "Installation:PublicBaseAddress";
+
+    /// <summary>US-008 spec FR-001, VR-002: the OAuth client id. Not a secret, never logged.</summary>
+    public const string OAuthClientIdKey = "GoogleOAuth:ClientId";
+
+    /// <summary>US-008 spec FR-001, VR-002: the name of the secret holding the OAuth client secret (OD-004).</summary>
+    public const string OAuthClientSecretReferenceKey = "GoogleOAuth:ClientSecretReference";
+
+    /// <summary>US-008 spec FR-001, VR-004: optional; Ukrainian when absent (NFR-073).</summary>
+    public const string DefaultLanguageKey = "Ui:DefaultLanguage";
+
     /// <exception cref="InstallationSettingException">A setting is missing or breaks its rule.</exception>
-    public static InstallationSettings Read(IConfiguration configuration) =>
+    public static InstallationSettings Read(IConfiguration configuration, ISecretStore secretStore) =>
         new(
             InstallationId(configuration),
             ControlPlaneAddress(configuration),
             PrivatePort(configuration),
             PrivateAddress(configuration),
-            Required(configuration, ConnectionStringKey));
+            Required(configuration, ConnectionStringKey),
+            KeyDirectory(configuration),
+            PublicBaseAddress(configuration),
+            Required(configuration, OAuthClientIdKey).Trim(),
+            OAuthClientSecret(configuration, secretStore),
+            DefaultLanguage(configuration));
+
+    /// <summary>
+    /// VR-003: a path the process can create if absent and write to. A file where a directory belongs, or a path
+    /// the process cannot create, stops the start.
+    /// </summary>
+    private static string KeyDirectory(IConfiguration configuration)
+    {
+        var directory = Required(configuration, DataProtectionKeyDirectoryKey).Trim();
+        if (File.Exists(directory))
+        {
+            throw InstallationSettingException.Invalid(
+                DataProtectionKeyDirectoryKey,
+                "expected a directory, but a file exists at that path");
+        }
+
+        try
+        {
+            System.IO.Directory.CreateDirectory(directory);
+        }
+        catch (Exception failure)
+            when (failure is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            throw InstallationSettingException.Invalid(
+                DataProtectionKeyDirectoryKey,
+                "expected a directory path the process can create and write to");
+        }
+
+        return directory;
+    }
+
+    /// <summary>
+    /// VR-001: absolute <c>https</c>, a host, an optional port, and nothing else - no path, no query, no
+    /// fragment, no user info. The Google redirect URI is built from it, so a forgeable source is a finding (v78).
+    /// </summary>
+    private static Uri PublicBaseAddress(IConfiguration configuration)
+    {
+        if (!Uri.TryCreate(Required(configuration, PublicBaseAddressKey), UriKind.Absolute, out var address)
+            || address.Scheme != Uri.UriSchemeHttps
+            || string.IsNullOrEmpty(address.Host)
+            || address.UserInfo.Length > 0
+            || address.Query.Length > 0
+            || address.Fragment.Length > 0
+            || address.AbsolutePath != "/")
+        {
+            throw InstallationSettingException.Invalid(
+                PublicBaseAddressKey,
+                "expected an absolute https address with a host and no path, query, fragment or user info");
+        }
+
+        return address;
+    }
+
+    /// <summary>
+    /// OD-004, option 1: the configured reference names an environment variable, and the secret is read from it
+    /// once at start-up. A reference naming nothing stops the start - fail fast on a missing secret, which FR-001
+    /// permits. A reference naming a <em>wrong</em> secret does not: that surfaces as a failed sign-in, so a
+    /// mistyped secret cannot take the school read-only views down with it (spec I-5). Neither the reference nor
+    /// the secret is ever logged (SC-7, SC-10).
+    /// </summary>
+    private static string OAuthClientSecret(IConfiguration configuration, ISecretStore secretStore)
+    {
+        var reference = Required(configuration, OAuthClientSecretReferenceKey).Trim();
+        return secretStore.Resolve(reference)
+            ?? throw InstallationSettingException.Invalid(
+                OAuthClientSecretReferenceKey,
+                "the configured secret store holds no secret under that reference");
+    }
+
+    /// <summary>VR-004: <c>uk</c> or <c>en</c>, case-insensitive, or absent - Ukrainian when absent.</summary>
+    private static UiLanguage DefaultLanguage(IConfiguration configuration)
+    {
+        if (configuration[DefaultLanguageKey] is not { } configured)
+        {
+            return UiLanguage.Uk;
+        }
+
+        return configured.Trim().ToLowerInvariant() switch
+        {
+            "uk" => UiLanguage.Uk,
+            "en" => UiLanguage.En,
+            _ => throw InstallationSettingException.Invalid(DefaultLanguageKey, "expected uk or en"),
+        };
+    }
 
     /// <summary>The configured public endpoint addresses; empty when none is configured.</summary>
     public static IReadOnlyList<string> PublicUrls(IConfiguration configuration) =>

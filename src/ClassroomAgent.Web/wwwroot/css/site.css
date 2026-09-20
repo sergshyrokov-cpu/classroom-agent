@@ -1,0 +1,26 @@
+:root { color-scheme: light dark; }
+
+body {
+    font-family: system-ui, sans-serif;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.page {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.form-error { color: #b00020; }
+
+.notice {
+    border: 1px solid currentColor;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+}
+
+button {
+    font: inherit;
+    padding: 0.5rem 1rem;
+}

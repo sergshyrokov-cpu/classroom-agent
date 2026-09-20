@@ -28,6 +28,7 @@ public sealed class InstallationTestHost : IAsyncDisposable
         _root = Path.Combine(Path.GetTempPath(), "classroom-agent-tests", Guid.NewGuid().ToString("N"));
         LogDirectory = Directory.CreateDirectory(Path.Combine(_root, "logs")).FullName;
         KeyDirectory = Path.Combine(_root, "keys");
+        InstallationConfigurationKeys.PlaceDefaultOAuthSecret();
         Settings = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
             [InstallationConfigurationKeys.InstallationId] = installationId.ToString("D"),
@@ -483,7 +484,12 @@ public sealed class InstallationTestHost : IAsyncDisposable
             {
                 c.Request.Method = method;
                 c.Request.Scheme = localPort == InstallationConfigurationKeys.PrivatePortValue ? "http" : "https";
-                c.Request.Host = new HostString("localhost", localPort);
+
+                // The public port is addressed by the school's own host: the HSTS middleware skips localhost by
+                // design, and US-008 AC-013 asks for the header the school's visitors would receive.
+                c.Request.Host = localPort == InstallationConfigurationKeys.PrivatePortValue
+                    ? new HostString("localhost", localPort)
+                    : new HostString("school-one.example.test", localPort);
                 c.Request.Path = path;
                 c.Connection.LocalPort = localPort;
                 if (body is not null)

@@ -68,6 +68,7 @@ builder.Services.AddScoped<AllowedAdminRegistry>();
 builder.Services.AddScoped<InstallationStatusService>();
 builder.Services.AddSingleton(compatibilityPolicy);
 builder.Services.AddScoped<LegitimacyCheckService>();
+builder.Services.AddScoped<AdminLoginCheckService>();
 
 // The status-change push (US-006 spec FR-006; api-design §6): plain HTTP to the school's private port,
 // no redirects and no cookies; the 10-second attempt timeout and the retry pauses are in the sender.

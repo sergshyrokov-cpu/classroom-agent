@@ -56,6 +56,78 @@ public sealed class ControlPlaneClient(HttpClient httpClient, TimeProvider timeP
         }
     }
 
+    /// <summary>
+    /// The Admin login check (US-008 spec FR-008; api-design §2.4). It reuses the service-channel timeout rather
+    /// than introducing a second one (spec I-8): a sign-in that waits longer than a background check would be
+    /// worse, not better. Only the outcome leaves this class; the body is never returned or logged (SC-10).
+    /// </summary>
+    public async Task<AdminLoginCheckReply> CheckAdminLoginAsync(
+        Guid installationId,
+        string email,
+        CancellationToken cancellationToken)
+    {
+        using var limit = new CancellationTokenSource(CallLimit, timeProvider);
+        using var call = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, limit.Token);
+        try
+        {
+            using var content = JsonContent.Create(
+                new AdminLoginCheckRequest(installationId, email),
+                options: ServiceChannel.JsonOptions);
+            using var response = await httpClient.PostAsync(ServiceChannel.AdminLoginCheckPath, content, call.Token);
+            var body = await response.Content.ReadAsByteArrayAsync(call.Token);
+            return ClassifyLogin(response.StatusCode, body);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (OperationCanceledException) when (limit.IsCancellationRequested)
+        {
+            return AdminLoginCheckReply.Unavailable;
+        }
+        catch (HttpRequestException)
+        {
+            return AdminLoginCheckReply.Unavailable;
+        }
+    }
+
+    /// <summary>
+    /// api-design §2.4. The load-bearing row is the last one: a <c>404</c> <b>without</b> the
+    /// <c>unknown_installation</c> body — what a Control Plane too old to route this path returns — is
+    /// <see cref="AdminLoginCheckReply.Unavailable"/>, never "not allowed". Both refuse the sign-in, but the audit
+    /// categories differ, and an operator must not read a failed deployment as a revocation.
+    /// </summary>
+    private static AdminLoginCheckReply ClassifyLogin(HttpStatusCode status, byte[] body) => status switch
+    {
+        HttpStatusCode.OK => ParseAllowed(body) switch
+        {
+            true => AdminLoginCheckReply.Allowed,
+            false => AdminLoginCheckReply.NotAllowed,
+            null => AdminLoginCheckReply.Unavailable,
+        },
+        HttpStatusCode.NotFound when IsUnknownInstallationOutcome(body) => AdminLoginCheckReply.UnknownInstallation,
+        _ => AdminLoginCheckReply.Unavailable,
+    };
+
+    /// <summary>The single <c>allowed</c> property, or null when the answer is not one this contract defines.</summary>
+    private static bool? ParseAllowed(byte[] body)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(body);
+            var root = document.RootElement;
+            return root.ValueKind == JsonValueKind.Object
+                && root.TryGetProperty("allowed", out var allowed)
+                && allowed.ValueKind is JsonValueKind.True or JsonValueKind.False
+                ? allowed.GetBoolean()
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
     private static ControlPlaneCheckReply Classify(HttpStatusCode status, byte[] body) => status switch
     {
         HttpStatusCode.OK => (ControlPlaneCheckReply?)ParseAnswer(body) ?? Failure(CheckFailureCategory.UnparseableAnswer),

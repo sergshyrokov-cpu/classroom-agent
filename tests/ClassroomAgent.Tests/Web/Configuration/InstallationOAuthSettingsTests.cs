@@ -99,18 +99,31 @@ public sealed class InstallationOAuthSettingsTests(PostgreSqlFixture database)
         Assert.Contains(key, ExceptionText(exception), StringComparison.Ordinal);
     }
 
-    /// <summary>Spec I-5: a client id and secret reference Google would reject still start the host.</summary>
+    /// <summary>
+    /// Spec I-5: credentials Google would reject still start the host — a mistyped secret must not take the
+    /// school's read-only views down with it. The reference itself resolves (OD-004 makes an unresolvable one a
+    /// start-up failure, which <see cref="AReferenceNamingAnAbsentOrEmptySecret_HostDoesNotStart"/> covers); what
+    /// is wrong here is the client id and the secret's value.
+    /// </summary>
     [Fact]
     public async Task OAuthCredentialsAreNotVerifiedAgainstGoogle_HostStarts()
     {
         var ct = TestContext.Current.CancellationToken;
+        var variable = "CA_TEST_OAUTH_SECRET_" + Guid.NewGuid().ToString("N");
         await using var host = await InstallationTestHost.CreateAsync(database, ct);
         host.Settings[InstallationConfigurationKeys.OAuthClientId] = "not-a-real-client-id";
-        host.Settings[InstallationConfigurationKeys.OAuthClientSecretReference] = "no-such-secret-in-the-store";
+        host.Settings[InstallationConfigurationKeys.OAuthClientSecretReference] = variable;
+        Environment.SetEnvironmentVariable(variable, "not-a-real-client-secret");
+        try
+        {
+            host.Start();
 
-        host.Start();
-
-        Assert.NotNull(host.Services);
+            Assert.NotNull(host.Services);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(variable, null);
+        }
     }
 
     /// <summary>VR-003: a path the process can create; a file where a directory belongs is a refusal.</summary>

@@ -12,7 +12,7 @@ namespace ClassroomAgent.Tests.Web.UseCases;
 public sealed class SignInInReadOnlyModeTests(PostgreSqlFixture database)
 {
     private static ScriptedHttpHandler Allowed() =>
-        ScriptedHttpHandler.Json(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
+        ScriptedHttpHandler.AdminLoginCheckJson(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
 
     public static TheoryData<ReadOnlyModeHost.Cause> ReadOnlyCauses => ReadOnlyModeHost.ReadOnlyCauses;
 
@@ -67,7 +67,7 @@ public sealed class SignInInReadOnlyModeTests(PostgreSqlFixture database)
     public async Task InReadOnlyMode_ARefusalIsStillAudited()
     {
         var ct = TestContext.Current.CancellationToken;
-        var channel = ScriptedHttpHandler.Json(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(false));
+        var channel = ScriptedHttpHandler.AdminLoginCheckJson(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(false));
         await using var host = await InstallationTestHost.StartWithControlPlaneHttpAsync(
             database,
             channel,
@@ -92,12 +92,12 @@ public sealed class SignInInReadOnlyModeTests(PostgreSqlFixture database)
         Assert.Equal(
             new[]
             {
-                PermittedServiceWrite.AuditEvent,
-                PermittedServiceWrite.LegitimacyCheckState,
-                PermittedServiceWrite.RetentionPurge,
-                PermittedServiceWrite.SignInBookkeeping,
+                nameof(PermittedServiceWrite.AuditEvent),
+                nameof(PermittedServiceWrite.LegitimacyCheckState),
+                nameof(PermittedServiceWrite.RetentionPurge),
+                nameof(PermittedServiceWrite.SignInBookkeeping),
             },
-            Enum.GetValues<PermittedServiceWrite>().Order());
+            Enum.GetNames<PermittedServiceWrite>().Order(StringComparer.Ordinal));
     }
 
     /// <summary>

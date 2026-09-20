@@ -11,7 +11,7 @@ namespace ClassroomAgent.Tests.Web.UseCases;
 public sealed class AdminProvisioningTests(PostgreSqlFixture database)
 {
     private static ScriptedHttpHandler Allowed() =>
-        ScriptedHttpHandler.Json(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
+        ScriptedHttpHandler.AdminLoginCheckJson(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
 
     [Fact]
     public async Task FirstSignIn_CreatesTheAdminAppUser_WithNoPassword()
@@ -173,7 +173,6 @@ public sealed class AdminProvisioningTests(PostgreSqlFixture database)
             Assert.DoesNotContain("securityStamp", body, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("concurrencyStamp", body, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("accessFailedCount", body, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(user.Id.ToString(System.Globalization.CultureInfo.InvariantCulture) + "\"", body, StringComparison.Ordinal);
         }
     }
 

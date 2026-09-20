@@ -81,7 +81,7 @@ public sealed class AntiforgeryTests(PostgreSqlFixture database)
     }
 
     [Fact]
-    public async Task OnlyTheLegitimacyCheckIsExemptFromAntiforgery()
+    public async Task OnlyTheServiceChannelPostsAreExemptFromAntiforgery()
     {
         var ct = TestContext.Current.CancellationToken;
         await using var host = await ControlPlaneTestHost.StartAsync(database, ct);
@@ -90,8 +90,8 @@ public sealed class AntiforgeryTests(PostgreSqlFixture database)
         var exempt = endpoints.Where(e => e.IsExemptFromAntiforgery).ToList();
 
         Assert.Contains(endpoints, e => e.Pattern == "sign-out");
-        var check = Assert.Single(exempt);
-        Assert.True(IsSc4Exemption(check), check.ToString());
+        Assert.Equal(2, exempt.Count);
+        Assert.All(exempt, e => Assert.True(IsSc4Exemption(e), e.ToString()));
     }
 
     /// <summary>SC-4 exemption list: the legitimacy check POST (US-005 AC-013) and the Admin login check POST (US-008 AC-006).</summary>

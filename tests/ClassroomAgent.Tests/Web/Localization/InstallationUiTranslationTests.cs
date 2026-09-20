@@ -11,7 +11,7 @@ namespace ClassroomAgent.Tests.Web.Localization;
 public sealed class InstallationUiTranslationTests(PostgreSqlFixture database)
 {
     private static ScriptedHttpHandler Allowed() =>
-        ScriptedHttpHandler.Json(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
+        ScriptedHttpHandler.AdminLoginCheckJson(HttpStatusCode.OK, AdminLoginCheckTestData.AnswerJson(true));
 
     public static TheoryData<string> ContractKeys => new(SignInTestData.TextKeys.All);
 

@@ -1,0 +1,37 @@
+@model LandingPageModel
+@{
+    ViewData["Title"] = T["Landing.Title"];
+}
+<p>@T["Landing.SignedInAs"] <span id="signed-in-email">@Model.Email</span></p>
+<p id="signed-in-role">@T[Model.RoleKey]</p>
+
+@if (Model.IsReadOnly)
+{
+    <section class="notice">
+        <h2>@T["Landing.ReadOnly.Title"]</h2>
+        <p>@T[ReasonKey(Model.ReadOnlyReason)]</p>
+        @if (Model.LastSuccessfulCheckAt is { } checkedAt)
+        {
+            <p>@T["Landing.ReadOnly.LastSuccessfulCheck"]: @checkedAt.UtcDateTime.ToString("dd.MM.yyyy HH:mm", System.Globalization.CultureInfo.InvariantCulture) UTC</p>
+        }
+    </section>
+}
+else
+{
+    <p>@T["Landing.Legitimacy.Ok"]</p>
+}
+
+<form method="post" action="@SignInRoutes.SignOut">
+    @Html.AntiForgeryToken()
+    <button type="submit">@T["Landing.SignOut"]</button>
+</form>
+
+@functions {
+    private static string ReasonKey(LegitimacyModeReason? reason) => reason switch
+    {
+        LegitimacyModeReason.NotYetConfirmed => "Landing.ReadOnly.NotYetConfirmed",
+        LegitimacyModeReason.SuspendedByOwner => "Landing.ReadOnly.SuspendedByOwner",
+        LegitimacyModeReason.GracePeriodExpired => "Landing.ReadOnly.GracePeriodExpired",
+        _ => "Landing.ReadOnly.Title",
+    };
+}
