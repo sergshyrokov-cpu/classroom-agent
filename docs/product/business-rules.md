@@ -169,11 +169,15 @@ bookkeeping (Identity failed-attempt counting and lockout, recording the time of
 the last successful sign-in, which the retention period of an account counts
 from (PC-11), creating the
 `AppUser` of an approved Admin at their first login, a Dean changing their
-own password, and a user choosing their UI language); the legitimacy-check state
+own password, a user choosing their UI language, and rotating an account's security
+stamp at sign-out — the session cookie is checked against it on every request, so
+without the rotation a captured cookie would stay valid until its own expiry, and
+without the permission a user of a suspended school could not end a session
+(v79)); the legitimacy-check state
 (last successful check time, last known status, last compatibility state, and the
 `Installation`'s domain and client ID); and the retention purge with
 its audit event (BR-075). Any other write is refused; a new service write is
-permitted only by extending this list in `trebovaniya.md` §2. *(§2, §5, §9, v28)*
+permitted only by extending this list in `trebovaniya.md` §2. *(§2, §5, §9, v28, v79)*
 
 **BR-027** A check answered `upgrade_required` — the installation's version is
 no longer supported by the Control Plane — is an unsuccessful check. It therefore
