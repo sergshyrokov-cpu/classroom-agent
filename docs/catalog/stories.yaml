@@ -111,6 +111,12 @@ stories:
     state: BACKLOG
     blocked_by: >
       Depends on US-009 (a saved connection to check).
+    # US-009 COMPLETED. Story file authored:
+    # docs/stories/US-011-check-access.md. OD-001 (Google's official client
+    # libraries), OD-002 (one token request per scope plus one read per API),
+    # OD-003 (result not stored), OD-004 (self-check logs a skip) and OD-005
+    # (no rate limit) were all resolved by the Owner on 2026-09-21 as option 1,
+    # before activation.
   - id: US-012
     epic: EPIC-6
     title: Create and manage Dean accounts
