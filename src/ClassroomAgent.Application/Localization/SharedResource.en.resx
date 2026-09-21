@@ -58,4 +58,22 @@
   <data name="WorkspaceConnection.Validation.Domain" xml:space="preserve"><value>This does not look like a domain.</value></data>
   <data name="WorkspaceConnection.Validation.TooLong" xml:space="preserve"><value>The address is too long.</value></data>
   <data name="Landing.Settings.WorkspaceConnection" xml:space="preserve"><value>Google Workspace connection</value></data>
+  <data name="ConnectionInstruction.Title" xml:space="preserve"><value>Connection instructions for the school's super-admin</value></data>
+  <data name="ConnectionInstruction.Intro" xml:space="preserve"><value>Hand this text to your school's super-admin. They perform these steps once, in your school's own Google console — outside this program.</value></data>
+  <data name="ConnectionInstruction.Domain.Label" xml:space="preserve"><value>School domain</value></data>
+  <data name="ConnectionInstruction.ClientId.Label" xml:space="preserve"><value>Service account client ID</value></data>
+  <data name="ConnectionInstruction.ClientId.ThisSchoolOnly" xml:space="preserve"><value>This client ID belongs to your school alone: a neighbouring school has a different one. Do not confuse it with the OAuth web client id an Administrator signs in with.</value></data>
+  <data name="ConnectionInstruction.NotConfirmed" xml:space="preserve"><value>not known yet: this installation has not confirmed its legitimacy. The value appears after the first successful check.</value></data>
+  <data name="ConnectionInstruction.Scopes.Label" xml:space="preserve"><value>The scopes to authorise (every one read-only):</value></data>
+  <data name="ConnectionInstruction.Step.AuthoriseDelegation" xml:space="preserve"><value>Authorise domain-wide delegation for this service account: enter the client ID above with the scopes below.</value></data>
+  <data name="ConnectionInstruction.Step.CreateTechnicalAccount" xml:space="preserve"><value>Create the school's technical account, on whose behalf the program reads the data.</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.Label" xml:space="preserve"><value>What the technical account must be:</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.CreatedBySuperAdmin" xml:space="preserve"><value>the school's super-admin creates it at onboarding, together with the domain-wide delegation;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.NoPersonBehindIt" xml:space="preserve"><value>no person stands behind it, it is not a super-admin, and nobody signs in to the program with it;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.ReadOnlyRoles" xml:space="preserve"><value>it must be able to read Classroom and Admin Reports — and hold nothing beyond that;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.NoWriteAccess" xml:space="preserve"><value>a super-admin account, and any account with write access, are not acceptable: the program writes nothing to Google Workspace;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.EnteredInSettings" xml:space="preserve"><value>an Administrator enters its address in the connection settings, and that address must be in the school's domain.</value></data>
+  <data name="ConnectionInstruction.Copy.Button" xml:space="preserve"><value>Copy the instructions</value></data>
+  <data name="ConnectionInstruction.Copy.Confirmation" xml:space="preserve"><value>Instructions copied</value></data>
+  <data name="Landing.Settings.ConnectionInstruction" xml:space="preserve"><value>Connection instructions</value></data>
 </root>

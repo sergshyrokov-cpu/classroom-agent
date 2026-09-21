@@ -1,0 +1,58 @@
+@model ConnectionInstructionPageModel
+@{
+    ViewData["Title"] = T[ConnectionInstructionTextKeys.Title];
+    var notConfirmed = T[ConnectionInstructionTextKeys.NotConfirmed].Value;
+}
+
+@* BR-026: the instruction stays viewable in read-only mode. The reason is stated beside it, never instead of
+   it, and it does not gate the page (api-design §2.3). *@
+@if (Model.ReadOnly)
+{
+    <section class="notice">
+        <h2>@T["Landing.ReadOnly.Title"]</h2>
+        <p>@T[ReasonKey(Model.ReadOnlyReason)]</p>
+    </section>
+}
+
+<p>@T[ConnectionInstructionTextKeys.Intro]</p>
+
+@* OD-002: the instruction is handed over from the page itself. This <pre> is both the visible text and what
+   the copy affordance copies — rendered ONCE, because two copies can disagree and the pasted one would be the
+   one nobody proof-read. Every value goes through Razor's HTML encoding, as data (spec VR-004). *@
+<pre id="connection-instruction">@T[ConnectionInstructionTextKeys.DomainLabel]: @(Model.InstallationDomain ?? notConfirmed)
+@T[ConnectionInstructionTextKeys.ClientIdLabel]: @(Model.ServiceAccountClientId ?? notConfirmed)
+@T[ConnectionInstructionTextKeys.ClientIdThisSchoolOnly]
+
+1. @T[ConnectionInstructionTextKeys.StepAuthoriseDelegation]
+
+@T[ConnectionInstructionTextKeys.ScopesLabel]
+@foreach (var scope in Model.Scopes)
+{
+    @:    @scope
+}
+
+2. @T[ConnectionInstructionTextKeys.StepCreateTechnicalAccount]
+
+@T[ConnectionInstructionTextKeys.TechnicalAccountLabel]
+@foreach (var statement in ConnectionInstructionTextKeys.TechnicalAccountStatements)
+{
+    @:    - @T[statement]
+}</pre>
+
+<button type="button" id="copy-instruction" data-confirmation="@T[ConnectionInstructionTextKeys.CopyConfirmation]">
+    @T[ConnectionInstructionTextKeys.CopyButton]
+</button>
+
+@* Spec I-5: a static file, never inline script, so a Content-Security-Policy added later needs no
+   'unsafe-inline'. The page is complete without it — the text above is already selectable and printable. *@
+<script src="/js/copy-instruction.js" defer></script>
+
+@functions {
+    private static string ReasonKey(LegitimacyModeReason? reason) => reason switch
+    {
+        LegitimacyModeReason.NotYetConfirmed => "Landing.ReadOnly.NotYetConfirmed",
+        LegitimacyModeReason.SuspendedByOwner => "Landing.ReadOnly.SuspendedByOwner",
+        LegitimacyModeReason.GracePeriodExpired => "Landing.ReadOnly.GracePeriodExpired",
+        _ => "Landing.ReadOnly.Title",
+    };
+}

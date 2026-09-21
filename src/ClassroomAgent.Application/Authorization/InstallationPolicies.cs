@@ -17,4 +17,11 @@ public static class InstallationPolicies
     /// "Настройка `WorkspaceConnection` (домен, impersonation)" — ✔ Admin, ✘ Dean (US-009 spec FR-010).
     /// </summary>
     public const string ConfigureWorkspaceConnection = "ConfigureWorkspaceConnection";
+
+    /// <summary>
+    /// "Просмотр инструкции по подключению" — ✔ Admin, ✘ Dean (<c>trebovaniya.md</c> §2, v39; US-010 spec
+    /// FR-011). Deliberately separate from <see cref="ConfigureWorkspaceConnection"/>: §2 split the two rows
+    /// because one is a write read-only mode blocks and the other a read it permits (US-010 spec I-7).
+    /// </summary>
+    public const string ViewConnectionInstruction = "ViewConnectionInstruction";
 }

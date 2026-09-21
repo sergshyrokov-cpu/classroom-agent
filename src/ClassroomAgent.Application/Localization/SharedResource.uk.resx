@@ -58,4 +58,22 @@
   <data name="WorkspaceConnection.Validation.Domain" xml:space="preserve"><value>Це не схоже на домен.</value></data>
   <data name="WorkspaceConnection.Validation.TooLong" xml:space="preserve"><value>Адреса задовга.</value></data>
   <data name="Landing.Settings.WorkspaceConnection" xml:space="preserve"><value>Підключення до Google Workspace</value></data>
+  <data name="ConnectionInstruction.Title" xml:space="preserve"><value>Інструкція з підключення для super-admin школи</value></data>
+  <data name="ConnectionInstruction.Intro" xml:space="preserve"><value>Передайте цей текст super-admin вашої школи. Він виконує ці дії один раз у консолі Google вашої школи — поза цією програмою.</value></data>
+  <data name="ConnectionInstruction.Domain.Label" xml:space="preserve"><value>Домен школи</value></data>
+  <data name="ConnectionInstruction.ClientId.Label" xml:space="preserve"><value>Client ID сервіс-акаунта</value></data>
+  <data name="ConnectionInstruction.ClientId.ThisSchoolOnly" xml:space="preserve"><value>Цей client ID належить лише вашій школі: у сусідньої школи він інший. Не переплутайте його з client ID веб-клієнта OAuth, яким Адміністратор входить у програму.</value></data>
+  <data name="ConnectionInstruction.NotConfirmed" xml:space="preserve"><value>поки не відомо: легітимність інсталяції ще не підтверджено. Значення з'явиться після першої успішної перевірки.</value></data>
+  <data name="ConnectionInstruction.Scopes.Label" xml:space="preserve"><value>Перелік scope, які потрібно дозволити (усі — лише для читання):</value></data>
+  <data name="ConnectionInstruction.Step.AuthoriseDelegation" xml:space="preserve"><value>Дозвольте цьому сервіс-акаунту domain-wide delegation: впишіть client ID вище та перелік scope нижче.</value></data>
+  <data name="ConnectionInstruction.Step.CreateTechnicalAccount" xml:space="preserve"><value>Створіть технічний акаунт школи, від імені якого програма читатиме дані.</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.Label" xml:space="preserve"><value>Вимоги до технічного акаунта:</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.CreatedBySuperAdmin" xml:space="preserve"><value>його створює super-admin школи під час підключення, разом із domain-wide delegation;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.NoPersonBehindIt" xml:space="preserve"><value>за ним не стоїть людина, він не super-admin, і в програму під ним ніхто не входить;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.ReadOnlyRoles" xml:space="preserve"><value>він має читати Classroom і Admin Reports — і не мати нічого понад це;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.NoWriteAccess" xml:space="preserve"><value>акаунт super-admin і будь-який акаунт із правом запису не підходять: програма нічого не записує в Google Workspace;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.EnteredInSettings" xml:space="preserve"><value>його адресу вписує Адміністратор у налаштуваннях підключення, і домен адреси має бути доменом школи.</value></data>
+  <data name="ConnectionInstruction.Copy.Button" xml:space="preserve"><value>Скопіювати інструкцію</value></data>
+  <data name="ConnectionInstruction.Copy.Confirmation" xml:space="preserve"><value>Інструкцію скопійовано</value></data>
+  <data name="Landing.Settings.ConnectionInstruction" xml:space="preserve"><value>Інструкція з підключення</value></data>
 </root>

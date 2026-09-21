@@ -41,11 +41,10 @@ public sealed class GetWorkspaceConnectionQuery(
     }
 
     /// <summary>The <c>Installation</c> domain of the last successful check, or null while none has succeeded.</summary>
-    public async Task<string?> KnownDomainAsync(CancellationToken cancellationToken)
-    {
-        var state = await states.GetForReadAsync(cancellationToken);
-        return state?.LastSuccessfulCheckAt is null || string.IsNullOrWhiteSpace(state.Domain)
-            ? null
-            : state.Domain;
-    }
+    /// <remarks>
+    /// The rule itself is <see cref="ConfirmedLegitimacy"/>, shared with the super-admin instruction of US-010
+    /// so that "known" cannot be decided two subtly different ways (US-010 spec I-1).
+    /// </remarks>
+    public async Task<string?> KnownDomainAsync(CancellationToken cancellationToken) =>
+        ConfirmedLegitimacy.DomainOf(await states.GetForReadAsync(cancellationToken));
 }

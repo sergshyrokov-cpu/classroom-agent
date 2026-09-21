@@ -73,6 +73,10 @@ public static class InstallationServices
         // US-009 spec FR-015: the connection query and the guarded save of the settings screen.
         services.AddScoped<GetWorkspaceConnectionQuery>();
         services.AddScoped<SaveWorkspaceConnectionUseCase>();
+
+        // US-010 spec FR-016: the instruction query. It reads and writes nothing, so it needs no guard and no
+        // unit of work; the scope list is a constant in Domain and needs no registration (spec FR-004, I-2).
+        services.AddScoped<GetConnectionInstructionQuery>();
         services.AddHostedService<LegitimacyCheckBackgroundService>();
         return services;
     }

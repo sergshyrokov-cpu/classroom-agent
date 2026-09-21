@@ -19,6 +19,12 @@ public static class SignInRoutes
     /// <summary>US-009 openapi: the connection settings page and its save share one path.</summary>
     public const string WorkspaceConnection = "/settings/workspace-connection";
 
+    /// <summary>
+    /// US-010 openapi: the super-admin instruction. Singular, because there is exactly one instruction per
+    /// <c>Installation</c> — API-3's plural rule is about collections (api-design §2.2). GET only.
+    /// </summary>
+    public const string ConnectionInstruction = "/settings/connection-instruction";
+
     /// <summary>The key the refusal category travels under in TempData (api-design §2.2). Never a query parameter.</summary>
     public const string RefusalTempDataKey = "SignInRefusal";
 

@@ -51,6 +51,13 @@ public static class InstallationSecurityServices
                 policy => policy.RequireAuthenticatedUser().RequireRole(
                     InstallationSession.RoleName(AppRole.Admin)));
 
+            // US-010 spec FR-011: its own cell of the §2 matrix, not US-009's. The two rows are separate in the
+            // requirements because read-only mode blocks one and permits the other (spec I-7).
+            options.AddPolicy(
+                InstallationPolicies.ViewConnectionInstruction,
+                policy => policy.RequireAuthenticatedUser().RequireRole(
+                    InstallationSession.RoleName(AppRole.Admin)));
+
             // Deny by default: an endpoint whose author forgot an attribute closes rather than opens (SC-4, API-9).
             options.FallbackPolicy = options.GetPolicy(InstallationPolicies.AuthenticatedUser);
         });

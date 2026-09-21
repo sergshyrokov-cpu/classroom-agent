@@ -1,0 +1,287 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Connection instructions for the school super-admin (US-010)
+  version: "1"
+  description: >
+    HTTP contract of US-010 on the installation's public port: **one**
+    server-rendered `GET` that shows the instruction the school's super-admin
+    carries out once in the school's own Google console — this school's
+    service-account client ID, the six read-only scopes of `trebovaniya.md` §6 and
+    what the technical account must be (§4 Epic 6, BR-015, BR-032). No JSON API —
+    §8 keeps screens on Razor and this Story adds no client that consumes the
+    instruction as data. No `POST`, and **no download endpoint**: OD-002 hands the
+    instruction over from the page itself with a copy-to-clipboard affordance, so
+    the contract gains one operation and nothing else. The Control Plane is
+    untouched, and nothing here calls Google. The host-wide rules of
+    docs/designs/api/US-008-openapi.yaml apply unchanged. Companion document:
+    docs/designs/api/US-010-api-design.md.
+x-story: US-010
+x-source-specification: docs/specifications/US-010-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-010-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 79
+x-produced-by: openapi-designer
+x-extends: docs/designs/api/US-008-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. This Story adds
+  no wire type and changes none: the service channel, the legitimacy check and the
+  push are untouched, and the operation below is one of the installation's own
+  screens, which the contract version does not describe (DC-12).
+
+servers:
+  - url: https://school.example
+    description: >
+      Installation public port. Illustrative; the real value is the configured
+      public base address (US-008 spec FR-001).
+
+tags:
+  - name: settings
+    description: "The admin panel's settings section (US-009 spec FR-013, this Story's FR-013)"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 configured host-wide applies to this operation and is not
+    restated: HTTPS redirection and HSTS on the public port, the deny-by-default
+    fallback policy (SC-4, API-9), the single translated error page, the anonymous
+    catch-all `404`, the non-persistent session cookie with its 60-minute idle and
+    8-hour absolute limits checked against the account's security stamp, and the
+    exception handler that answers the error page outside `/api/v1` (US-008 spec
+    FR-002, FR-004, FR-005, FR-014, FR-015, FR-018).
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list of anonymous endpoints gains **nothing**. The operation
+    requires an authenticated Admin, and the US-008 endpoint enumeration test
+    passes unchanged (spec FR-011, S-01). The copy affordance's script is a static
+    file from the application's static files directory, which the list's existing
+    "Static files — CSS, JS, images" entry already covers (`trebovaniya.md` §8,
+    v68) — it carries no data and nothing user-specific (spec FR-008, I-5).
+
+  antiforgery-list-unchanged: >
+    This Story adds no state-changing request, so the antiforgery exemption list
+    gains nothing and needs nothing. Antiforgery never validates a `GET` (SC-4,
+    v64).
+
+  no-api-v1-operation: >
+    This Story adds no `/api/v1` path, so the API-6 error body appears nowhere in
+    it (spec FR-007).
+
+  no-write-of-any-kind: >
+    The operation writes nothing: no audit row, no table, no state, in any mode
+    (spec FR-010, AC-007). `PermittedServiceWrite` keeps exactly its four members
+    and the BR-026 closed list of service writes gains none (spec S-07). This is
+    a `GET` that changes nothing, as API-4 and SC-4 require of every `GET` but the
+    OAuth callback.
+
+  nothing-leaves-the-installation: >
+    The operation calls Google, the Control Plane and every other outside service
+    **not at all** — in any mode (spec S-05, S-06; BR-026, SC-5, SC-8). The only
+    external destination reachable from this Story's code is the installation's
+    own database. The copy affordance runs in the viewer's browser over values
+    already in the response and contacts nothing (spec S-09; SC-13).
+
+  read-only-mode-is-not-a-refusal: >
+    Read-only mode does **not** change the status code here. BR-026 names the
+    connection instruction as viewable in read-only mode, so all three causes of
+    BR-025 answer `200` with the reason named in the response (spec FR-009,
+    AC-005). The `409` read-only mapping US-008 configured is not reached by this
+    operation, because nothing is written.
+
+paths:
+
+  /settings/connection-instruction:
+
+    get:
+      tags: [settings]
+      operationId: getConnectionInstruction
+      summary: "The connection instruction for the school's super-admin"
+      description: >
+        Renders the instruction from `LegitimacyState` — the school's domain and
+        the client ID of *this* `Installation`'s service account — together with
+        the six scopes fixed in `trebovaniya.md` §6 and the technical-account
+        requirements of BR-015. The values are read on every request, so a client
+        ID the Owner rotated appears no later than the next successful legitimacy
+        check, with no restart and no action on the school's server (spec FR-003,
+        AC-006). The Control Plane is not asked at render time, and no Google call
+        is made. The instruction states what must be configured; confirming that
+        it is, is "check access" (US-011).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewConnectionInstruction
+      x-permission-matrix-row: "Просмотр инструкции по подключению — Admin ✔, Dean ✘"
+      x-spec: [FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013]
+      x-acceptance-criteria: [AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010]
+      x-parameters-none: >
+        The operation takes no route parameter, no query parameter and no body. A
+        query string, if present, is ignored and never echoed into the response or
+        a log (spec VR-001) — there is no input by which a caller could influence
+        the rendered text.
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: >
+            The instruction, in the user's language. Complete without scripting:
+            every value and every sentence is in the markup and the text is
+            selectable, so the page is usable with JavaScript disabled and prints
+            from the browser (OD-002, spec FR-007, FR-008). In read-only mode it
+            is served unchanged with the reason named (BR-026). When no legitimacy
+            check has ever succeeded, the school-specific parts are replaced by
+            the not-yet-confirmed statement and the rest is complete (spec FR-002,
+            AC-008).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ConnectionInstructionPageModel"
+        "302":
+          description: "Not signed in: the challenge sends the visitor to `/sign-in` (US-008)."
+          headers:
+            Location:
+              schema:
+                type: string
+                const: /sign-in
+        "403":
+          description: >
+            Signed in as a Dean: the translated error page. The cell is `✘` in the
+            permission matrix (§2, v39), and the page reveals no part of the
+            instruction — not the client ID and not the domain.
+          content:
+            text/html: {}
+
+x-operations-deliberately-absent:
+
+  post: >
+    There is none. Nothing on this page is submitted (spec FR-007), so the
+    contract documents no `400` for a malformed request and no `409` for a
+    refusal by installation state — there is neither a request to malform nor an
+    action for the state to refuse (spec §8).
+
+  download: >
+    OD-002 rejected a generated `.txt` or `.pdf`: a stored document outlives a
+    rotated client ID, which is exactly what AC-006 exists to prevent. If a later
+    Story revisits the decision, it adds the operation with its own content type,
+    file name and place in the SC-4 and antiforgery rules — none of which this
+    contract reserves.
+
+  email: >
+    Rejected on sight by OD-002: the program has no mail channel and SC-13 lists
+    exactly two outbound destinations. A third is a requirements change, never an
+    API design decision.
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: __Host-ca-session
+      description: >
+        The installation's own session cookie (US-008 spec FR-015): httpOnly,
+        Secure, SameSite=Lax, non-persistent, checked against the account's
+        security stamp on every request. No Google token is ever presented to this
+        host.
+
+  schemas:
+
+    ConnectionInstructionPageModel:
+      type: object
+      additionalProperties: false
+      description: >
+        The view model of the `200` — a DTO built in `Application`, never a domain
+        entity (AD-8). It carries **no secret**: not the service-account key, not
+        the reference to it, not the OAuth client secret, not a session identifier
+        (SC-7, a Hard Stop; PC-9). It also carries **neither** of the two
+        identifiers §6 (v78) warns against confusing with the client ID — the
+        OAuth web client id of the installation's configuration and the
+        `Installation` UUID of the service channel are absent by construction
+        (spec FR-006), and the service account's own
+        `…@….iam.gserviceaccount.com` address is absent with them.
+      required: [state, scopes, readOnly]
+      properties:
+        state:
+          $ref: "#/components/schemas/ConnectionInstructionState"
+        installationDomain:
+          type: [string, "null"]
+          description: >
+            The school's Workspace domain from `LegitimacyState`, or null while no
+            legitimacy check has ever succeeded (spec FR-003, VR-003). Data:
+            rendered as stored, never translated and never re-cased.
+        serviceAccountClientId:
+          type: [string, "null"]
+          description: >
+            The numeric client ID of **this** `Installation`'s service account,
+            from `LegitimacyState` — the one value a school authorises for
+            domain-wide delegation, and one of the two non-secret values that
+            cross from the Owner to a school (§1, §6, BR-032). Null while no
+            legitimacy check has ever succeeded. Data, never translated; no format
+            rule is imposed at render time (spec VR-002, I-9).
+          examples: ["114725187446993216470"]
+        scopes:
+          type: array
+          minItems: 6
+          maxItems: 6
+          uniqueItems: true
+          description: >
+            Exactly the six read-only scopes of `trebovaniya.md` §6, in a fixed
+            order, from the immutable constant in `Domain` — a requirement, not a
+            configuration, so no installation can change them (spec FR-004, I-2).
+            Rendered as full URIs, which is the form the Google console accepts
+            (spec I-4). `drive.file` and `classroom.profile.photos` are absent
+            (§6, v25), and so are the identity scopes of the Admin's own sign-in
+            (`openid`, `email`, `profile`), which belong to a different mechanism
+            (§6, v78).
+          items:
+            type: string
+            format: uri
+          const:
+            - https://www.googleapis.com/auth/classroom.courses.readonly
+            - https://www.googleapis.com/auth/classroom.rosters.readonly
+            - https://www.googleapis.com/auth/classroom.profile.emails
+            - https://www.googleapis.com/auth/classroom.coursework.students.readonly
+            - https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly
+            - https://www.googleapis.com/auth/admin.reports.audit.readonly
+        readOnly:
+          type: boolean
+          description: >
+            Whether the installation is in read-only mode (US-007). It does not
+            gate the page: the instruction is viewable in all three causes of
+            BR-025 (BR-026, spec FR-009).
+        readOnlyReasonKey:
+          type: [string, "null"]
+          description: >
+            A translation key for BR-025's reason, never a rendered sentence:
+            `Application` holds no user-visible string (AD-6, NFR-073). Null when
+            the installation is not in read-only mode.
+        notConfirmedMessageKey:
+          type: [string, "null"]
+          description: >
+            The translation key of the statement that replaces the domain and the
+            client ID while the installation has not confirmed its legitimacy.
+            Non-null exactly when `state` is `InstallationNotConfirmed` (spec
+            FR-002, FR-003, AC-008).
+
+    ConnectionInstructionState:
+      type: string
+      description: >
+        The instruction state `Application` produces (spec FR-002). Exactly two
+        members: read-only mode is **not** one of them — an installation can be
+        read-only and its instruction `Complete`, and the two are reported
+        independently through `readOnly`.
+      enum:
+        - Complete
+        - InstallationNotConfirmed
+
+  x-static-text-not-in-the-model:
+    description: >
+      The parts of the instruction that never vary — the five technical-account
+      statements of spec FR-005, what the super-admin actually does (spec FR-001
+      part 5), and every label — are **not** fields of the view model. They are
+      translated text the view renders from named keys, one key per paragraph or
+      statement (spec FR-012, I-8). Putting them in the model would make
+      `Application` carry user-visible sentences, which AD-6 forbids, and would
+      invite a caller to substitute them. The model therefore carries only what
+      varies: the two values from `LegitimacyState`, the fixed scope list, and the
+      state and reason keys.
