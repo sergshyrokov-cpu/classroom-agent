@@ -4,23 +4,31 @@
 version: 1
 story: US-011
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: 2026-09-21T07:54:55Z
+  verdict: PASS
+  stage: API_DESIGN
+  recorded_at: 2026-09-21T07:58:59Z
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-011-spec.md
+  - type: api_design
+    path: docs/designs/api/US-011-api-design.md
+    version: 1
+  - type: openapi
+    path: docs/designs/api/US-011-openapi.yaml
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "API_DESIGN: PASS. TWO server-rendered operations on the installation public port - GET /settings/access-check (the page; no Google call, no secret-store read, no write) and POST /settings/access-check (runs the eight steps, renders the result). No /api/v1 path, no Control Plane endpoint, no Contracts type; ContractVersion stays 1. The startup self-check has no HTTP surface. YAML parsed: GET answers 200/302/403, POST 200/302/400/403/409; six scopes pinned in x-scopes-in-order, forbidden ones in x-never."
+  - "API_DESIGN 2.1: API-3's POST /api/v1/workspace-connection/test is deliberately NOT added (spec I-10) - nothing calls the check by script, and an endpoint with no caller is surface without purpose. Recorded in x-operations-deliberately-absent. api-conventions.md API-3 still lists the shape; keeping or removing it is a documentation decision outside this Story."
+  - "API_DESIGN 2.2 and 2.3: no Post-Redirect-Get - the result is not stored (OD-003), so the POST answers 200 with the page; a reload re-runs the check, which OD-005 permits. A failed step is a diagnosis, not an error: AccessInPlace, NotConfigured and Inconclusive all answer 200 and write a Succeeded audit row (spec I-4)."
+  - "API_DESIGN 2.4 for TEST_WRITING: two 409s - read-only mode (existing category ReadOnlyMode, host-wide error page) and no usable connection (NotConfigured or DomainMismatch; new category ConnectionNotUsable, the page re-rendered). DomainUnknown is always read-only, so a school both read-only and unconfigured answers with the read-only reason and the port records zero calls. Evaluation order of the POST is fixed in api-design section 3."
+  - "API_DESIGN proposes names for DB_DESIGN to confirm: AuditAction.AccessCheckRun, AuditRefusalCategory.ConnectionNotUsable; policy RunAccessCheck."
   - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-21T07:54:55Z (no comment): Specification v1 and open decisions v1 accepted; automated verdict PASS with no blocking findings. OD-001 ... OD-005 arrived resolved; interpretations I-1 ... I-11 accepted as written, including I-1 (the service-account key reference is not a start-up requirement), I-2 (30-second bound, sequential steps), I-4 (the audit row records that the check ran, not what it found), I-6 (the self-check skip line is Warning) and I-8 (the check cannot prove full course visibility or the absence of extra rights - section 7 item 10 stays open). The key-of-another-school diagnosis stays out of scope (spec section 10)."
   - "ORCHESTRATOR NOTE: the pending_human_gate.requested_at recorded after SPECIFICATION (07:58:00Z) was a placeholder later than the actual clock; the gate was approved at 2026-09-21T07:54:55Z. No stage or artifact is affected."
   - "SPECIFICATION: PASS. 16 functional requirements, 6 validation rules, 13 security requirements, interpretations I-1 ... I-11, all 10 Acceptance Criteria traced. OD-001 ... OD-005 arrived resolved and are carried into docs/decisions/US-011-open-decisions.md unchanged; no new Open Decision was raised. No automated spec reviewer exists in this variant, so HUMAN_SPEC_APPROVAL is the only check that the Specification reflects trebovaniya.md v79."
@@ -37,5 +45,5 @@ non_blocking_findings:
   - "Carried from the US-010 security review: F-6 (Informational) - no host sends a Content-Security-Policy header. If US-011 adds script (e.g. to call the check without a page reload), it keeps to external files in /js/ and no inline script, as US-010 did."
   - "Carried from the US-008 security review: F-5 (Minor, no security impact) stays open - a wrong HTTP method on /sign-in/google or /sign-out answers 404 where the openapi documents 405. US-011 does not touch those routes."
 started_at: 2026-09-21T07:48:44Z
-updated_at: 2026-09-21T07:54:55Z
+updated_at: 2026-09-21T07:58:59Z
 completed_at: null

@@ -1,0 +1,370 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Check access diagnostic (US-011)
+  version: "1"
+  description: >
+    HTTP contract of US-011 on the installation's public port: the "Проверить
+    доступ" page and the action that runs the check as the school's technical
+    account (`trebovaniya.md` §4 Epic 6, §2, BR-015, BR-026). Two server-rendered
+    operations, no JSON API — the same split US-009 and US-010 used (§8: screens on
+    Razor, `/api/v1` for what a client consumes as data; this Story adds no such
+    client). The startup self-check (spec FR-010) has no HTTP surface at all. The
+    Control Plane is untouched. The installation's host-wide rules of
+    docs/designs/api/US-008-openapi.yaml apply unchanged — deny by default, global
+    antiforgery, the single error page, the anonymous catch-all, the session policy
+    and the `409` read-only mapping. The private port of US-005 and US-006 is
+    untouched. Companion document: docs/designs/api/US-011-api-design.md.
+x-story: US-011
+x-source-specification: docs/specifications/US-011-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-011-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 79
+x-produced-by: openapi-designer
+x-extends: docs/designs/api/US-008-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. This Story adds
+  no wire type and changes none: the service channel, the legitimacy check and the
+  push are untouched, and the two operations below are the installation's own
+  screens, which the contract version does not describe (DC-12).
+
+servers:
+  - url: https://school.example
+    description: >
+      Installation public port. Illustrative; the real value is the configured
+      public base address (US-008 spec FR-001).
+
+tags:
+  - name: settings
+    description: "The admin panel's settings section (spec FR-007; US-009 FR-013)"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 configured host-wide applies to both operations and is not
+    restated per operation: HTTPS redirection and HSTS on the public port, the
+    deny-by-default fallback policy (SC-4, API-9), the global antiforgery filter on
+    every state-changing request, the single error page, the anonymous catch-all
+    `404`, the non-persistent session cookie with its 60-minute idle and 8-hour
+    absolute limits, and the exception handler that turns a
+    `ReadOnlyModeException` into `409` — the translated error page outside
+    `/api/v1` (US-008 spec FR-002, FR-004, FR-005, FR-014, FR-015, FR-018).
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list of anonymous endpoints gains **nothing**. Both operations
+    require an authenticated Admin, and the US-008 endpoint enumeration test passes
+    with both classified as protected (spec FR-011, S-01).
+
+  antiforgery-list-unchanged: >
+    The `POST` below is covered by the global antiforgery rule and gains no
+    exemption; the exemption list (the service channel only) is unchanged
+    (spec S-10, API-7).
+
+  outbound: >
+    The `POST` is the first operation of the installation whose handling calls
+    Google — the OAuth token endpoint and the Classroom and Admin Reports APIs,
+    read-only, as the technical account (spec FR-002, FR-003). Google is already on
+    SC-13's list; no other destination is added (spec S-12). The `GET` calls
+    nothing.
+
+paths:
+
+  /settings/access-check:
+
+    get:
+      tags: [settings]
+      operationId: getAccessCheckPage
+      summary: "The check-access page"
+      description: >
+        Explains in one or two sentences what the check does — it calls Google as
+        the technical account, keeps nothing it reads, and also runs automatically
+        at every start — shows the technical account and domain it would check, and
+        offers the `POST` below. It **never runs the check** (API-4: GET changes
+        nothing, and a Google call is an action BR-026 blocks). In read-only mode it
+        is served with the reason named; the button is neither hidden nor disabled,
+        because the refusal is enforced in `Application` (AD-6, TC-5).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: RunAccessCheck
+      x-permission-matrix-row: "\"Проверить доступ\" — Admin ✔, Dean ✘"
+      x-calls-google: false
+      x-writes: none
+      x-spec: [FR-007, FR-009, FR-011, FR-012]
+      x-acceptance-criteria: [AC-001, AC-006, AC-010]
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: >
+            The page, in the user's language, with no check result (`result` is
+            null). Served in read-only mode too, with the reason.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/AccessCheckPageModel"
+        "302":
+          description: "Not signed in: the challenge sends the visitor to `/sign-in` (US-008)."
+          headers:
+            Location:
+              schema:
+                type: string
+                const: /sign-in
+        "403":
+          description: >
+            Signed in as a Dean: the translated error page. It reveals nothing about
+            the connection.
+          content:
+            text/html: {}
+
+    post:
+      tags: [settings]
+      operationId: runAccessCheck
+      summary: "Run the check"
+      description: >
+        Runs the eight steps of spec FR-001 — one delegated-token request per scope
+        of §6, then one minimal Classroom read and one minimal Admin Reports read —
+        as the technical account of the usable `WorkspaceConnection`, and renders
+        the result on the page. The request carries nothing but the antiforgery
+        token: the technical account, the domain and the scopes are read server-side
+        (spec VR-001). The result is **not stored** (OD-003) and there is no
+        Post-Redirect-Get: the answer to the `POST` is the page with the result. A
+        reload re-submits the form and runs the check again, which OD-005 permits.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: RunAccessCheck
+      x-antiforgery: required
+      x-calls-google: true
+      x-writes: "one AuditEvent row per run or refusal (spec FR-008); nothing else"
+      x-time-limit-seconds: 30
+      x-spec: [FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-008, FR-009, FR-011, FR-012, FR-014]
+      x-acceptance-criteria: [AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-009, AC-010]
+      security:
+        - installationSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/RunAccessCheckForm"
+      responses:
+        "200":
+          description: >
+            The check was **carried out**, whatever it found: the page with
+            `result` filled — the overall verdict and one entry per step. A failed
+            step is a diagnosis, not an error, so `AccessInPlace`, `NotConfigured`
+            and `Inconclusive` all answer `200` (spec §8). One audit row with
+            outcome `Succeeded` is written (spec FR-008, I-4). Nothing Google
+            returned appears in the page (spec S-08).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/AccessCheckPageModel"
+        "302":
+          description: "Not signed in: the challenge sends the visitor to `/sign-in`; nothing runs."
+          headers:
+            Location:
+              schema:
+                type: string
+                const: /sign-in
+        "400":
+          description: >
+            Missing or invalid antiforgery token: the translated error page under the
+            global rule (API-7, SC-4 v64). Nothing runs, nothing is written.
+          content:
+            text/html: {}
+        "403":
+          description: "Signed in as a Dean: the translated error page. Nothing runs, nothing is written."
+          content:
+            text/html: {}
+        "409":
+          description: >
+            The installation's state refuses the check (API-5). **No call reaches
+            Google** in either case — not even a token request — and one audit row
+            with outcome `Refused` is written.
+            (1) Read-only mode, any of the three BR-025 causes: category
+            `ReadOnlyMode`; the host-wide US-008 handler renders the translated error
+            page naming the reason (spec FR-009).
+            (2) No usable connection — the US-009 state is `NotConfigured` or
+            `DomainMismatch` (`DomainUnknown` is always read-only and so answers as
+            case 1): category `ConnectionNotUsable`; the page is re-rendered with
+            `messageKey` saying what to do first (spec FR-006 step 2, I-11).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/AccessCheckPageModel"
+
+x-operations-deliberately-absent:
+
+  api-v1-test: >
+    `api-conventions.md` API-3 names `POST /api/v1/workspace-connection/test` as the
+    approved shape of this check. This Story does **not** add it (spec I-10): the
+    admin panel is server-rendered, no script calls the check, and API-3's shape is
+    a reservation for a JSON client, not an obligation to ship an unused endpoint.
+    The check is **one** operation — the `POST` above. If a later Story needs the
+    JSON shape, it adds it under API-3, API-5 and API-6 and retires or keeps this
+    form deliberately.
+
+  get-that-runs: >
+    No `GET` runs the check. A link, a prefetch or a crawler must never make the
+    installation call Google (API-4, spec S-10).
+
+  result-history: >
+    No operation returns a previous result: none is stored (OD-003).
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: __Host-ca-session
+      description: >
+        The installation's own session cookie (US-008 spec FR-015). No Google token
+        is ever presented to, or returned by, this host.
+
+  schemas:
+
+    RunAccessCheckForm:
+      type: object
+      additionalProperties: true
+      description: >
+        The request body carries **no field this Story reads**: only the antiforgery
+        token the global filter validates. The request model has no property, so a
+        technical account, a domain or a scope submitted under any name has nothing
+        to bind to and is ignored (spec VR-001, VR-003).
+      properties:
+        __RequestVerificationToken:
+          type: string
+          description: "The antiforgery token (API-7). Validated by the host-wide filter, never by this Story."
+
+    AccessCheckPageModel:
+      type: object
+      additionalProperties: false
+      description: >
+        The view model of every HTML response of both operations — a DTO built in
+        `Application`, never an entity (AD-8). It carries no key, no key reference,
+        no token, no Google error text and nothing a Google response contained
+        (spec S-07, S-08).
+      required: [connectionState, readOnly, result]
+      properties:
+        connectionState:
+          type: string
+          enum: [NotConfigured, Configured, DomainMismatch, DomainUnknown]
+          description: "The US-009 connection state (US-009 spec FR-002), read, never re-derived."
+        technicalAccount:
+          type: [string, "null"]
+          description: >
+            The stored impersonation user the check uses, or null when none is
+            stored. Data the Admin saved and is entitled to see; never translated,
+            never logged (spec FR-001, FR-014).
+          examples: ["classroom-agent@school.example"]
+        domain:
+          type: [string, "null"]
+          description: "The school's domain from `LegitimacyState`, or null while unknown. Data."
+        readOnly:
+          type: boolean
+        readOnlyReasonKey:
+          type: [string, "null"]
+          description: "A translation key for the BR-025 reason, never a rendered sentence (AD-6, NFR-073)."
+        messageKey:
+          type: [string, "null"]
+          description: >
+            The refusal of a `409` for an unusable connection, as a translation key.
+            Null on `200`.
+        result:
+          description: "Null on the `GET` and on a `409`; the check's result on a `200` of the `POST`."
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/AccessCheckResult"
+
+    AccessCheckResult:
+      type: object
+      additionalProperties: false
+      description: "Spec FR-001. Always exactly eight steps, in the fixed order."
+      required: [verdict, steps]
+      properties:
+        verdict:
+          $ref: "#/components/schemas/AccessCheckVerdict"
+        steps:
+          type: array
+          minItems: 8
+          maxItems: 8
+          items:
+            $ref: "#/components/schemas/AccessCheckStep"
+
+    AccessCheckVerdict:
+      type: string
+      description: >
+        `AccessInPlace` only when all eight steps are `Succeeded`. `NotConfigured`
+        when at least one step failed for a configuration cause. `Inconclusive` when
+        none did but at least one is `GoogleUnavailable` (spec FR-001).
+      enum: [AccessInPlace, NotConfigured, Inconclusive]
+
+    AccessCheckStep:
+      type: object
+      additionalProperties: false
+      required: [kind, outcome, messageKey]
+      properties:
+        kind:
+          type: string
+          enum: [Delegation, ClassroomRead, ReportsRead]
+          description: >
+            Six `Delegation` steps first, in the order of `x-scopes-in-order`, then
+            `ClassroomRead`, then `ReportsRead` (spec FR-001).
+        scope:
+          type: [string, "null"]
+          description: >
+            For a `Delegation` step, the full scope URI — the form the super-admin
+            pastes into the Google console (US-010 spec I-4). Null for a read.
+          x-scopes-in-order:
+            - https://www.googleapis.com/auth/classroom.courses.readonly
+            - https://www.googleapis.com/auth/classroom.rosters.readonly
+            - https://www.googleapis.com/auth/classroom.profile.emails
+            - https://www.googleapis.com/auth/classroom.coursework.students.readonly
+            - https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly
+            - https://www.googleapis.com/auth/admin.reports.audit.readonly
+          x-never:
+            - https://www.googleapis.com/auth/drive.file
+            - https://www.googleapis.com/auth/classroom.profile.photos
+            - openid
+            - email
+            - profile
+        outcome:
+          $ref: "#/components/schemas/AccessCheckStepOutcome"
+        notAttemptedBecause:
+          description: >
+            For a `NotAttempted` step, the outcome of the step that made it
+            impossible (a run-wide cause of the first delegation step, or the
+            delegation step of the read's own scope). Null otherwise (spec FR-002,
+            FR-003, FR-005).
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/AccessCheckStepOutcome"
+        messageKey:
+          type: string
+          description: >
+            The translation key of the step's message (spec FR-012). The message of a
+            `ScopeNotAuthorized` step is rendered with the step's `scope` as data;
+            Owner-side outcomes name the Owner and nothing about the key, its
+            reference, the store or the Cloud project (spec FR-005, S-07).
+
+    AccessCheckStepOutcome:
+      type: string
+      description: >
+        The closed list of spec FR-005. `TechnicalAccountUnknown`, `KeyUnavailable`
+        and `KeyRejected` are run-wide; `TechnicalAccountCannotRead` and
+        `ApiNotEnabled` occur only on a read; `ScopeNotAuthorized` only on a
+        delegation step.
+      enum:
+        - Succeeded
+        - ScopeNotAuthorized
+        - TechnicalAccountUnknown
+        - TechnicalAccountCannotRead
+        - ApiNotEnabled
+        - KeyUnavailable
+        - KeyRejected
+        - GoogleUnavailable
+        - NotAttempted
