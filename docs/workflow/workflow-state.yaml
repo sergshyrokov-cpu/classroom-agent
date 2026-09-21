@@ -4,20 +4,31 @@
 version: 1
 story: US-011
 workflow: story-delivery
-current_stage: SPECIFICATION
-previous_stage: null
-last_completed_stage: null
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
 status: IN_PROGRESS
 attempt: 1
 last_invoked_skill: null
 last_result:
-  verdict: null
-  stage: null
-  recorded_at: null
-last_artifacts: []
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: 2026-09-21T07:54:55Z
+last_artifacts:
+  - type: specification
+    path: docs/specifications/US-011-spec.md
+    version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-21T07:54:55Z (no comment): Specification v1 and open decisions v1 accepted; automated verdict PASS with no blocking findings. OD-001 ... OD-005 arrived resolved; interpretations I-1 ... I-11 accepted as written, including I-1 (the service-account key reference is not a start-up requirement), I-2 (30-second bound, sequential steps), I-4 (the audit row records that the check ran, not what it found), I-6 (the self-check skip line is Warning) and I-8 (the check cannot prove full course visibility or the absence of extra rights - section 7 item 10 stays open). The key-of-another-school diagnosis stays out of scope (spec section 10)."
+  - "ORCHESTRATOR NOTE: the pending_human_gate.requested_at recorded after SPECIFICATION (07:58:00Z) was a placeholder later than the actual clock; the gate was approved at 2026-09-21T07:54:55Z. No stage or artifact is affected."
+  - "SPECIFICATION: PASS. 16 functional requirements, 6 validation rules, 13 security requirements, interpretations I-1 ... I-11, all 10 Acceptance Criteria traced. OD-001 ... OD-005 arrived resolved and are carried into docs/decisions/US-011-open-decisions.md unchanged; no new Open Decision was raised. No automated spec reviewer exists in this variant, so HUMAN_SPEC_APPROVAL is the only check that the Specification reflects trebovaniya.md v79."
+  - "SPECIFICATION interpretations worth reading at the gate: I-1 (the service-account key reference is NOT a start-up requirement - section 5 and DC-3 do not list it, so a missing key is diagnosed as KeyUnavailable instead of stopping the school); I-2 (one check bounded by 30 seconds, steps sequential); I-4 (the audit row records that the check RAN, not what it found); I-6 (the self-check skip line is Warning); I-8 (the check cannot prove the technical account sees every course or holds nothing beyond read access - section 7 item 10 stays open)."
+  - "SPECIFICATION FR-005 fixes a closed list of step outcomes (ScopeNotAuthorized, TechnicalAccountUnknown, TechnicalAccountCannotRead, ApiNotEnabled, KeyUnavailable, KeyRejected, GoogleUnavailable, NotAttempted); an unclassifiable Google answer is reported as GoogleUnavailable, never as a configuration diagnosis. Owner-side outcomes reveal nothing about the key, its reference or the Cloud project."
+  - "SPECIFICATION FR-013: no new table or column (OD-003); AuditAction and AuditRefusalCategory each gain one member, and DB_DESIGN decides whether the audit check constraints need an amending migration, as US-009 did."
+  - "SPECIFICATION FR-015 pins the Google packages to the 1.76 line (Auth 1.76.0, Classroom.v1 1.76.0.4254, Admin.Reports.reports_v1 1.76.0.4252 on nuget.org at 2026-09-21), Infrastructure only; IMPLEMENTATION records the exact versions."
+  - "Story defect, not corrected by SPECIFICATION (the Story is human-authored): its Notes cite 'DC-2' for the list of installation settings; the list is DC-3. The Specification cites DC-3."
   - "US-011 carries five Open Decisions written into the Story, all resolved by the Owner on 2026-09-21 as option 1 before activation: OD-001 (Google's official .NET client libraries - Google.Apis.Auth, Google.Apis.Classroom.v1, Google.Apis.Admin.Reports.reports_v1 - added to Infrastructure only; this is the approval AGENTS.md requires for a new NuGet package), OD-002 (one token request per scope plus one minimal read per API), OD-003 (the result is not stored), OD-004 (the startup self-check logs a skip with its reason) and OD-005 (no rate limit). SPECIFICATION carries them into docs/decisions/US-011-open-decisions.md keeping their OD- ids."
   - "Carried from the US-007 security review: F-5 (Informational, SC-8) - the first Story adding a real Google data port must prove its own read-only refusal there. US-011 IS that Story: the check-access use case holds the first IGoogleDataPort implementation and must take IReadOnlyModeGuard and call it first; the proof belongs in the Application layer with the port substituted (TC-5)."
   - "Carried from the US-009 security review: F-2 (Informational) - a declared service write commits the WHOLE DbContext, not one row. US-011 writes an audit row for each run, including (per the Story's Notes) possibly a refused one; nothing else may be staged when that commit happens."
@@ -25,6 +36,6 @@ non_blocking_findings:
   - "Carried from the US-010 security review: F-2 (Informational) - legitimacy_state.domain has only a length constraint and no character set. If US-011 puts the domain into a Google request, a log line or a message, it must not assume the value is constrained."
   - "Carried from the US-010 security review: F-6 (Informational) - no host sends a Content-Security-Policy header. If US-011 adds script (e.g. to call the check without a page reload), it keeps to external files in /js/ and no inline script, as US-010 did."
   - "Carried from the US-008 security review: F-5 (Minor, no security impact) stays open - a wrong HTTP method on /sign-in/google or /sign-out answers 404 where the openapi documents 405. US-011 does not touch those routes."
-started_at: null
-updated_at: 2026-09-21T07:45:27Z
+started_at: 2026-09-21T07:48:44Z
+updated_at: 2026-09-21T07:54:55Z
 completed_at: null
