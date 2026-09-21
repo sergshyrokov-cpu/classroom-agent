@@ -4,26 +4,30 @@
 version: 1
 story: US-011
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: PASS
-  stage: API_DESIGN
-  recorded_at: 2026-09-21T07:58:59Z
+  stage: DB_DESIGN
+  recorded_at: 2026-09-21T08:02:19Z
 last_artifacts:
-  - type: api_design
-    path: docs/designs/api/US-011-api-design.md
+  - type: database_design
+    path: docs/designs/database/US-011-db-design.md
     version: 1
-  - type: openapi
-    path: docs/designs/api/US-011-openapi.yaml
+  - type: entity_model
+    path: docs/designs/database/US-011-entity-model.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "DB_DESIGN: PASS. No table, column, index or relationship; nothing about a check is stored (OD-003) and the self-check writes nothing to the database. The ONLY schema change: audit_event's closed lists grow - ck_audit_event_action gains access_check_run and ck_audit_event_refusal_category_value gains connection_not_usable - verified against AuditEventConfiguration and the US-009 migration, so ONE constraint-amending migration AddAccessCheckAudit is required (PC-2). Control Plane untouched."
+  - "DB_DESIGN confirms the API design's names: AuditAction.AccessCheckRun (access_check_run) and AuditRefusalCategory.ConnectionNotUsable (connection_not_usable); ReadOnlyMode is REUSED for the read-only refusal. AuditTargetType gains nothing. Row shapes are tabulated in db-design section 3.2; a succeeded row always carries the connection id, a refused one carries it when a row exists."
+  - "DB_DESIGN section 8 for TEST_WRITING: AppUserMigrationTests goes from 3 to 4 installation migrations with _AddAccessCheckAudit last, tables stay at five - an EXPECTED change to an existing test, traced here (unlike US-010). Control Plane migration test unchanged. The read-only refusal commit must contain exactly one audit_event row (carried US-009 F-2)."
+  - "DB_DESIGN entity model: the check's result types (step outcome, step kind, verdict, step, result) are transient Application models, never entities; AccessCheckStepOutcome lives in Application, not Domain, because it describes an external system's answer. New AuditEvent factories AccessCheckRun and AccessCheckRefused; the latter accepts only ReadOnlyMode and ConnectionNotUsable."
   - "API_DESIGN: PASS. TWO server-rendered operations on the installation public port - GET /settings/access-check (the page; no Google call, no secret-store read, no write) and POST /settings/access-check (runs the eight steps, renders the result). No /api/v1 path, no Control Plane endpoint, no Contracts type; ContractVersion stays 1. The startup self-check has no HTTP surface. YAML parsed: GET answers 200/302/403, POST 200/302/400/403/409; six scopes pinned in x-scopes-in-order, forbidden ones in x-never."
   - "API_DESIGN 2.1: API-3's POST /api/v1/workspace-connection/test is deliberately NOT added (spec I-10) - nothing calls the check by script, and an endpoint with no caller is surface without purpose. Recorded in x-operations-deliberately-absent. api-conventions.md API-3 still lists the shape; keeping or removing it is a documentation decision outside this Story."
   - "API_DESIGN 2.2 and 2.3: no Post-Redirect-Get - the result is not stored (OD-003), so the POST answers 200 with the page; a reload re-runs the check, which OD-005 permits. A failed step is a diagnosis, not an error: AccessInPlace, NotConfigured and Inconclusive all answer 200 and write a Succeeded audit row (spec I-4)."
@@ -45,5 +49,5 @@ non_blocking_findings:
   - "Carried from the US-010 security review: F-6 (Informational) - no host sends a Content-Security-Policy header. If US-011 adds script (e.g. to call the check without a page reload), it keeps to external files in /js/ and no inline script, as US-010 did."
   - "Carried from the US-008 security review: F-5 (Minor, no security impact) stays open - a wrong HTTP method on /sign-in/google or /sign-out answers 404 where the openapi documents 405. US-011 does not touch those routes."
 started_at: 2026-09-21T07:48:44Z
-updated_at: 2026-09-21T07:58:59Z
+updated_at: 2026-09-21T08:02:19Z
 completed_at: null
