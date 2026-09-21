@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-011
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-09-21T07:48:44Z
-updated_at: 2026-09-21T07:48:44Z
+updated_at: 2026-09-21T08:39:55Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-011-check-access.md
@@ -28,6 +28,11 @@ activation; they are carried here with their `OD-` ids and resolutions unchanged
 | OD-003 Whether the result of a check is stored | the Story | RESOLVED 2026-09-21 (option 1) |
 | OD-004 What the self-check logs when it cannot run | the Story | RESOLVED 2026-09-21 (option 1) |
 | OD-005 Whether repeated runs are limited | the Story | RESOLVED 2026-09-21 (option 1) |
+| OD-006 Compile-only skeleton created at TEST_WRITING | TEST_WRITING | RESOLVED 2026-09-21 (option 1) |
+
+Version 2 adds OD-006 only. It concerns how TEST_WRITING makes its tests compile and changes nothing the
+Specification, the API design or the database design says, so those artifacts, which consumed version 1, are not
+stale in substance.
 
 ## OD-001 Which library the program uses to call Google
 
@@ -85,6 +90,26 @@ Options: (1) no limit; (2) a cooldown with stored state and a refusal message.
 **Resolution:** option 1, decided by the Owner on 2026-09-21.
 
 **Impact on the Specification:** FR-006 (no cooldown step), §8.
+
+## OD-006 Compile-only skeleton created at TEST_WRITING
+
+Raised by TEST_WRITING on 2026-09-21. The Story's decisive tests substitute the first real Google port: read-only
+mode must make **zero** calls, a run must request exactly the six scopes, and each Google answer must map onto the
+closed list of spec FR-005. A substitute has to implement the port's type, and the type does not exist yet, so the
+test project cannot compile. The `test-writer` Skill may not create production source on its own judgement, and
+the US-005 OD-002 and US-007 OD-003 resolutions were scoped to their own Stories.
+
+Options: (1) a compile-only skeleton in `src/` — only the types the tests reference, members throwing
+`NotImplementedException`, nothing registered in DI, owned by IMPLEMENTATION from then on; (2) tests written through
+reflection; (3) IMPLEMENTATION writes the tests; (4) option 1 made a standing rule in `AGENTS.md`.
+
+**Resolution:** option 1, decided by the Owner on 2026-09-21, scoped to US-011 exactly as US-005 OD-002 and
+US-007 OD-003 were. The skeleton is: `Application/Ports/IGoogleAccessProbe.cs`,
+`Application/Models/AccessCheckStepOutcome.cs`, `Application/Models/DelegatedToken.cs`,
+`Application/Models/DelegationAttempt.cs`, `Infrastructure/Google/GoogleAccessProbe.cs`,
+`Infrastructure/Google/GoogleServiceAccountSettings.cs`. IMPLEMENTATION may reshape them together with the tests.
+
+**Impact on the Specification:** none (FR-004 already requires the port; the names are indicative there).
 
 ## `trebovaniya.md` §7 — the open items and this Story
 

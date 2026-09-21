@@ -4,26 +4,35 @@
 version: 1
 story: US-011
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
+current_stage: IMPLEMENTATION
+previous_stage: TEST_WRITING
+last_completed_stage: TEST_WRITING
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: test-writer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: 2026-09-21T08:02:19Z
+  stage: TEST_WRITING
+  recorded_at: 2026-09-21T09:01:17Z
 last_artifacts:
-  - type: database_design
-    path: docs/designs/database/US-011-db-design.md
+  - type: test_strategy
+    path: docs/tests/US-011-test-strategy.md
     version: 1
-  - type: entity_model
-    path: docs/designs/database/US-011-entity-model.md
+  - type: ac_test_matrix
+    path: docs/tests/US-011-ac-test-matrix.md
+    version: 1
+  - type: test_generation_report
+    path: docs/evidence/US-011-test-generation-report.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "TEST_WRITING: PASS. 10 new test classes, 91 methods, 185 cases, one existing test modified (AppUserMigrationTests: 3 -> 4 migrations, traced to db-design section 8); 0 build errors, 0 warnings. Whole suite 1976 total, 1793 passed, 183 failed, 0 skipped - every failure is in the US-011 set and names missing production behaviour (adapter NotImplemented, 21 translation keys, policy RunAccessCheck, page and run endpoints, audit migration, startup self-check). No test of US-001 ... US-010 changed state."
+  - "TEST_WRITING raised OD-006 (compile-only skeleton) and the Owner resolved it on 2026-09-21 as option 1, scoped to US-011 like US-005 OD-002 and US-007 OD-003. Six production files exist as skeleton (IGoogleAccessProbe, AccessCheckStepOutcome, DelegatedToken, DelegationAttempt, GoogleAccessProbe, GoogleServiceAccountSettings) with members throwing NotImplementedException and nothing in DI; IMPLEMENTATION owns them. open_decisions is now v2 - it adds OD-006 only and changes nothing the Specification or the designs consumed."
+  - "TEST_WRITING environment note: the first run failed 191/191 on DockerUnavailableException because Docker Desktop was not running; it was started and the run repeated. Integration tests need a running Docker daemon (TC-2)."
+  - "TEST_WRITING names IMPLEMENTATION must honour or correct together with the tests (test strategy section 5): setting Google:ServiceAccountKeyReference; markup id access-check-verdict with data-verdict and class access-check-step with data-kind/data-scope/data-outcome; log events AccessSelfCheckCompleted (Verdict) and AccessSelfCheckSkipped (Reason); 21 translation keys incl. Landing.Settings.AccessCheck; adapter constructor (ISecretStore, GoogleServiceAccountSettings, HttpMessageHandler)."
+  - "TEST_WRITING notes for IMPLEMENTATION (report section 8): register IGoogleAccessProbe as a plain DI service so tests can replace it; the 30-second limit uses the injected TimeProvider; disable the Google client library's own 5xx/429 retry; send nothing when the key is missing or unusable; the self-check runs outside any request scope. Three new cases are GUARDs that pass today (unknown action rejected, no table, no column added) and must stay green."
+  - "TEST_WRITING coverage limits: the adapter's mapping is proven on synthetic answers in Google's documented formats - an unrecognised answer is GoogleUnavailable, so a wrong diagnosis is ruled out, an unhelpful one is not. Excluded because they need real-time waits: the lower bound of the 30-second limit and 'self-check runs only once per start'."
   - "DB_DESIGN: PASS. No table, column, index or relationship; nothing about a check is stored (OD-003) and the self-check writes nothing to the database. The ONLY schema change: audit_event's closed lists grow - ck_audit_event_action gains access_check_run and ck_audit_event_refusal_category_value gains connection_not_usable - verified against AuditEventConfiguration and the US-009 migration, so ONE constraint-amending migration AddAccessCheckAudit is required (PC-2). Control Plane untouched."
   - "DB_DESIGN confirms the API design's names: AuditAction.AccessCheckRun (access_check_run) and AuditRefusalCategory.ConnectionNotUsable (connection_not_usable); ReadOnlyMode is REUSED for the read-only refusal. AuditTargetType gains nothing. Row shapes are tabulated in db-design section 3.2; a succeeded row always carries the connection id, a refused one carries it when a row exists."
   - "DB_DESIGN section 8 for TEST_WRITING: AppUserMigrationTests goes from 3 to 4 installation migrations with _AddAccessCheckAudit last, tables stay at five - an EXPECTED change to an existing test, traced here (unlike US-010). Control Plane migration test unchanged. The read-only refusal commit must contain exactly one audit_event row (carried US-009 F-2)."
@@ -49,5 +58,5 @@ non_blocking_findings:
   - "Carried from the US-010 security review: F-6 (Informational) - no host sends a Content-Security-Policy header. If US-011 adds script (e.g. to call the check without a page reload), it keeps to external files in /js/ and no inline script, as US-010 did."
   - "Carried from the US-008 security review: F-5 (Minor, no security impact) stays open - a wrong HTTP method on /sign-in/google or /sign-out answers 404 where the openapi documents 405. US-011 does not touch those routes."
 started_at: 2026-09-21T07:48:44Z
-updated_at: 2026-09-21T08:02:19Z
+updated_at: 2026-09-21T09:01:17Z
 completed_at: null
