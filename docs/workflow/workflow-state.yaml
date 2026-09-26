@@ -4,26 +4,33 @@
 version: 1
 story: US-012
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: PASS
-  stage: API_DESIGN
-  recorded_at: 2026-09-26T17:26:40Z
+  stage: DB_DESIGN
+  recorded_at: 2026-09-26T17:33:28Z
 last_artifacts:
-  - type: api_design
-    path: docs/designs/api/US-012-api-design.md
+  - type: database_design
+    path: docs/designs/database/US-012-db-design.md
     version: 1
-  - type: openapi
-    path: docs/designs/api/US-012-openapi.yaml
+  - type: entity_model
+    path: docs/designs/database/US-012-entity-model.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "DB_DESIGN: PASS. ONE new column app_user.password_is_temporary (boolean NOT NULL DEFAULT false) with one new check constraint ck_app_user_password_temporary (password_is_temporary = false OR sign_in_method = 'password'), so an Admin row can never carry a temporary password - the same defence in depth as the two US-008 constraints that make an Admin password hash impossible. Three audit_event check constraints amended. No new table, no new index, no new relationship; Control Plane untouched. ONE migration AddDeanAccounts (PC-2); installation migrations go from four to five, tables stay five."
+  - "DB_DESIGN §2: everything else the Story needs already exists on app_user from US-008 - email/normalized_email with the unique index, password_hash, is_disabled, access_failed_count, lockout_end, security_stamp, last_successful_sign_in_at, ui_language - which is why the schema delta is one boolean."
+  - "DB_DESIGN §4: ck_audit_event_action gains six values (dean_account_created, dean_account_disabled, dean_account_reenabled, dean_account_password_reset, dean_password_changed, dean_sign_in); ck_audit_event_target_type_value gains app_user; ck_audit_event_refusal_category_value gains unknown_login, wrong_password, locked_out. account_disabled and read_only_mode are REUSED. Disabling and re-enabling stay two audit actions although the API made them one operation, because SC-11 lists four things; dean_sign_in mirrors admin_sign_in with outcome telling succeeded from refused."
+  - "DB_DESIGN §4.4 tabulates nine row shapes. The unknown-login refusal is the only row with actor anonymous, no actor id, no actor role and no target at all - SC-11 forbids recording the typed login. The existing ck_audit_event_actor_id / actor_role / target constraints already force exactly that shape and are unchanged."
+  - "DB_DESIGN §3.3 records what is deliberately NOT added: no index (the unique email index serves every lookup; the list is unpaginated by OD-003 and tiny), no disabled_at/disabled_by/password_changed_at (audit answers who and when), no password-history table (no rule forbids reuse), no temporary-password expiry (BR-014 knows only \"changed at the next sign-in\")."
+  - "DB_DESIGN entity model: AppUser gains PasswordIsTemporary plus CreateDean, Disable, ReEnable, ResetPassword, SetOwnPassword, RecordFailedSignIn and IsLockedOut; RecordSuccessfulSignIn and RotateSecurityStamp already exist and are reused. The entity holds NO policy numbers - 5 attempts and 15 minutes arrive as arguments from Application - and never hashes or verifies a password (AD-3, AD-4, OD-002). AuditEvent gains eight factories, each restricted to the refusal categories its case allows, as US-011's AccessCheckRefused is. IAppUserRepository gains GetDeanByIdAsync (role-filtered, so the contract's 404 is a repository outcome) and ListDeansAsync; NO delete method is added anywhere."
+  - "DB_DESIGN §8 for TEST_WRITING: AppUserMigrationTests goes from four to five installation migrations with _AddDeanAccounts last, tables stay five - an EXPECTED change to an existing test, traced here as US-011 traced its own. Each refusing path must commit exactly one audit_event row and nothing else (carried US-009 F-2), and five of the nine row shapes are refusals. Three guards must stay green (no new table, no new index on app_user, no column added to audit_event), and ck_app_user_password_temporary deserves a database-level test: an Admin row with the flag set must be rejected by PostgreSQL, not only by the domain."
   - "API_DESIGN: PASS. TEN server-rendered operations on the installation public port, in three groups: /settings/deans (GET list+form, POST create, POST /{deanId}/state, POST /{deanId}/password), /sign-in (GET extended, POST new) with /sign-in/change-password (GET, POST), and /account/password (GET, POST). No /api/v1 path, no Control Plane endpoint, no Contracts type; ContractVersion stays 1. YAML parsed. Nothing in this Story calls Google."
   - "API_DESIGN 2.1: the four BR-014 actions are expressed without verbs in paths - create is POST /settings/deans, disable and re-enable are ONE operation POST /{deanId}/state carrying desiredState (Active|Disabled), reset is POST /{deanId}/password. There is no DELETE anywhere, which is AC-008 expressed as contract."
   - "API_DESIGN 2.3: POST /sign-in answers 302 for EVERY outcome of the six-step sequence - the outcome is in the Location and in TempData, never in the status code. Steps 1, 2 and 3 share both the redirect target and the message key; step 4 differs only in the key; steps 5 and 6 differ only in the Location. A refused sign-in is deliberately NOT 401, because a distinguishing status would be the oracle SC-2 forbids."
@@ -47,5 +54,5 @@ non_blocking_findings:
   - "Carried from the US-008 security review: F-5 (Minor, no security impact) — a wrong HTTP method on /sign-in/google or /sign-out answers 404 where the openapi documents 405. US-012 adds the Dean sign-in surface next to those routes; API_DESIGN decides whether the new routes repeat the same shape."
   - "Existing code the Story builds on, verified before activation: AppUser is a hand-written Domain entity (no ASP.NET Core Identity in the installation host) already carrying PasswordHash, SecurityStamp, AccessFailedCount, LockoutEnd, IsDisabled and LastSuccessfulSignInAt, with only a CreateAdmin factory; AppRole has exactly Admin and Dean; AuditAction holds AdminSignIn, WorkspaceConnectionSaved and AccessCheckRun; AuditTargetType holds only WorkspaceConnection; the three settings pages declare Admin-only policies in InstallationPolicies. The US-008 Google path already refuses a disabled AppUser with the AccountDisabled refusal category."
 started_at: 2026-09-26T17:11:09Z
-updated_at: 2026-09-26T17:26:40Z
+updated_at: 2026-09-26T17:33:28Z
 completed_at: null
