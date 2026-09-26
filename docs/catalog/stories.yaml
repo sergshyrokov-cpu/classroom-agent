@@ -120,9 +120,17 @@ stories:
   - id: US-012
     epic: EPIC-6
     title: Create and manage Dean accounts
-    state: BACKLOG
+    state: IN_PROGRESS
     blocked_by: >
       Depends on US-008 (a signed-in Admin).
+    # US-008 COMPLETED. Story file authored:
+    # docs/stories/US-012-manage-dean-accounts.md. OD-001 (one Story — the
+    # Admin's four management actions and the Dean's sign-in together),
+    # OD-002 (hand-written AppUser plus IPasswordHasher<AppUser> from
+    # Microsoft.Extensions.Identity.Core — the NuGet approval AGENTS.md
+    # requires), OD-003 (what the Dean list shows; no search or paging) and
+    # OD-004 (a mistyped email is not corrected) were all resolved by the Owner
+    # on 2026-09-26 as option 1, before activation.
   - id: US-039
     epic: EPIC-6
     title: Choose UI language (Admin, Dean and Owner)

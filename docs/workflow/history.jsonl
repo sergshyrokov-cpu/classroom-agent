@@ -106,3 +106,4 @@
 {"timestamp":"2026-09-26T13:12:32Z","story":"US-011","from_stage":"IMPLEMENTATION","to_stage":"SECURITY_REVIEW","skill":"dotnet-implementor","verdict":"PASS","artifacts":["docs/evidence/US-011-implementation-report.md"],"attempt":1}
 {"timestamp":"2026-09-26T13:23:59Z","story":"US-011","from_stage":"SECURITY_REVIEW","to_stage":"HUMAN_PR_APPROVAL","skill":"security-reviewer","verdict":"PASS","artifacts":["docs/reviews/security/US-011-security-review.md"],"attempt":1}
 {"timestamp":"2026-09-26T14:16:02Z","story":"US-011","from_stage":"HUMAN_PR_APPROVAL","to_stage":"COMPLETED","skill":null,"verdict":"HUMAN_APPROVED","artifacts":["docs/evidence/US-011-implementation-report.md","docs/reviews/security/US-011-security-review.md"],"attempt":1}
+{"timestamp":"2026-09-26T17:11:09Z","story":"US-012","from_stage":null,"to_stage":"SPECIFICATION","skill":null,"verdict":"ACTIVATED","artifacts":["docs/stories/US-012-manage-dean-accounts.md"],"attempt":1}
