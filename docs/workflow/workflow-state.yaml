@@ -4,26 +4,35 @@
 version: 1
 story: US-012
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: 2026-09-26T17:19:45Z
+  verdict: PASS
+  stage: API_DESIGN
+  recorded_at: 2026-09-26T17:26:40Z
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-012-spec.md
+  - type: api_design
+    path: docs/designs/api/US-012-api-design.md
     version: 1
-  - type: open_decisions
-    path: docs/decisions/US-012-open-decisions.md
+  - type: openapi
+    path: docs/designs/api/US-012-openapi.yaml
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "API_DESIGN: PASS. TEN server-rendered operations on the installation public port, in three groups: /settings/deans (GET list+form, POST create, POST /{deanId}/state, POST /{deanId}/password), /sign-in (GET extended, POST new) with /sign-in/change-password (GET, POST), and /account/password (GET, POST). No /api/v1 path, no Control Plane endpoint, no Contracts type; ContractVersion stays 1. YAML parsed. Nothing in this Story calls Google."
+  - "API_DESIGN 2.1: the four BR-014 actions are expressed without verbs in paths - create is POST /settings/deans, disable and re-enable are ONE operation POST /{deanId}/state carrying desiredState (Active|Disabled), reset is POST /{deanId}/password. There is no DELETE anywhere, which is AC-008 expressed as contract."
+  - "API_DESIGN 2.3: POST /sign-in answers 302 for EVERY outcome of the six-step sequence - the outcome is in the Location and in TempData, never in the status code. Steps 1, 2 and 3 share both the redirect target and the message key; step 4 differs only in the key; steps 5 and 6 differ only in the Location. A refused sign-in is deliberately NOT 401, because a distinguishing status would be the oracle SC-2 forbids."
+  - "API_DESIGN 2.4: the SC-4 anonymous list grows by one METHOD, POST /sign-in, not by a page - the Dean form joins the /sign-in page US-008 already serves anonymously. The US-008 endpoint enumeration test gains exactly one row. GET /sign-in changes additively (new form, new refusal keys)."
+  - "API_DESIGN 2.6: step 5 of the sequence opens a RESTRICTED session whose every other authenticated request redirects to /sign-in/change-password; GET of that page answers 302 to /sign-in with no session and 302 to / when the session's password is not temporary, so it can never change a password without the old one having just been proved."
+  - "API_DESIGN 2.7: a management action on an id that is not a Dean answers 404, not 403 - 403 would announce that the id exists (spec VR-005, I-8; API-5 allows 404 for a resource not visible to the caller)."
+  - "API_DESIGN 2.10 recorded deviation: GET /settings/deans is NOT paginated although API-8 would paginate a growing collection. OD-003 resolved it as no search and no paging in v1, and the list is bounded by the school's staff rather than by synchronised data. Recorded in x-pagination-deviation so SECURITY_REVIEW meets a decision, not an oversight."
+  - "API_DESIGN proposes three policy names for IMPLEMENTATION to register beside the existing three: ManageDeanAccounts (Admin), ChangeOwnPassword (Dean), CompleteTemporaryPasswordChange (a session whose password is temporary)."
+  - "API_DESIGN §8 for DB_DESIGN: decide the AppUser field marking a password temporary, the new AuditAction and AuditTargetType members, the AuditRefusalCategory members the sign-in sequence needs beyond the existing AccountDisabled and ReadOnlyMode, and whether the audit check constraints need an amending migration (PC-2)."
   - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-26T17:19:45Z (no comment): Specification v1 and open decisions v1 accepted; automated verdict PASS with no blocking findings. OD-001 ... OD-004 arrived resolved; interpretations I-1 ... I-11 accepted as written, including I-1 (SC-2's \"ASP.NET Core Identity\" read as the password primitive only, IPasswordHasher<AppUser>), I-4 (disabling rotates the security stamp, ending the Dean's open sessions), I-6 (steps 1, 2 and 3 of the sign-in sequence share one message and differ in nothing observable), I-7 (no rule forbids a voluntary new password equal to the current one, and none was added) and I-8 (an Admin never appears on the Dean screen). The Specification's status is now APPROVED."
   - "SPECIFICATION: PASS. 20 functional requirements, 6 validation rules, 14 security requirements, interpretations I-1 ... I-11, all 16 Acceptance Criteria traced. OD-001 ... OD-004 arrived resolved and are carried into docs/decisions/US-012-open-decisions.md unchanged; no new Open Decision was raised, and trebovaniya.md §7 holds no item about Dean accounts (item 26 names the Dean only as an audience for future documentation). No automated spec reviewer exists in this variant, so HUMAN_SPEC_APPROVAL is the only check that the Specification reflects trebovaniya.md v79."
   - "SPECIFICATION interpretations worth reading at the gate: I-1 (SC-2's \"ASP.NET Core Identity\" is read as the password primitive only - IPasswordHasher<AppUser> - because the installation host has no Identity and SC-2 itself forbids building the check sequence on SignInManager); I-4 (disabling rotates the security stamp, so an open session of that Dean ends at its next request, rather than living until its own expiry); I-6 (steps 1, 2 and 3 of the sign-in sequence share ONE translated message and must differ in nothing else observable); I-7 (no rule forbids a voluntary new password equal to the current one, and none was added); I-8 (an Admin never appears on the Dean screen and every management action refuses a non-Dean target)."
@@ -38,5 +47,5 @@ non_blocking_findings:
   - "Carried from the US-008 security review: F-5 (Minor, no security impact) — a wrong HTTP method on /sign-in/google or /sign-out answers 404 where the openapi documents 405. US-012 adds the Dean sign-in surface next to those routes; API_DESIGN decides whether the new routes repeat the same shape."
   - "Existing code the Story builds on, verified before activation: AppUser is a hand-written Domain entity (no ASP.NET Core Identity in the installation host) already carrying PasswordHash, SecurityStamp, AccessFailedCount, LockoutEnd, IsDisabled and LastSuccessfulSignInAt, with only a CreateAdmin factory; AppRole has exactly Admin and Dean; AuditAction holds AdminSignIn, WorkspaceConnectionSaved and AccessCheckRun; AuditTargetType holds only WorkspaceConnection; the three settings pages declare Admin-only policies in InstallationPolicies. The US-008 Google path already refuses a disabled AppUser with the AccountDisabled refusal category."
 started_at: 2026-09-26T17:11:09Z
-updated_at: 2026-09-26T17:19:45Z
+updated_at: 2026-09-26T17:26:40Z
 completed_at: null

@@ -1,0 +1,917 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Create and manage Dean accounts (US-012)
+  version: "1"
+  description: >
+    HTTP contract of US-012 on the installation's public port: the Admin's Dean
+    accounts screen with the four actions of BR-014, and the Dean's own sign-in,
+    forced temporary-password change and voluntary password change
+    (`trebovaniya.md` §2, §3, BR-014, BR-026, SC-2, SC-4). Ten server-rendered
+    operations, no JSON API — the same split US-009, US-010 and US-011 used (§8:
+    screens on Razor, `/api/v1` for what a client consumes as data; this Story
+    adds no such client). The installation's host-wide rules of
+    docs/designs/api/US-008-openapi.yaml apply unchanged — deny by default, global
+    antiforgery, the single translated error page, the anonymous catch-all, the
+    session policy and the `409` read-only mapping — with one deliberate addition:
+    the SC-4 anonymous list gains the Dean's sign-in submission on the page that
+    is already anonymous. The Control Plane is untouched. Companion document:
+    docs/designs/api/US-012-api-design.md.
+x-story: US-012
+x-source-specification: docs/specifications/US-012-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-012-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 79
+x-produced-by: openapi-designer
+x-extends: docs/designs/api/US-008-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. This Story adds
+  no wire type and changes none: the service channel, the legitimacy check and the
+  push are untouched, and the operations below are the installation's own screens,
+  which the contract version does not describe (DC-12).
+
+servers:
+  - url: https://school.example
+    description: >
+      Installation public port. Illustrative; the real value is the configured
+      public base address (US-008 spec FR-001).
+
+tags:
+  - name: settings
+    description: "The admin panel's settings section (US-009 FR-013, US-011 FR-007)"
+  - name: sign-in
+    description: "The installation's sign-in surface (US-008)"
+  - name: account
+    description: "What a signed-in user may do to their own account"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 configured host-wide applies to every operation below and is
+    not restated per operation: HTTPS redirection and HSTS on the public port, the
+    deny-by-default fallback policy (SC-4, API-9), the global antiforgery filter on
+    every state-changing request, the single translated error page, the anonymous
+    catch-all `404`, the non-persistent session cookie with its 60-minute idle and
+    8-hour absolute limits, and the exception handler that turns a
+    `ReadOnlyModeException` into `409` — the translated error page outside
+    `/api/v1` (US-008 spec FR-002, FR-004, FR-005, FR-014, FR-015, FR-018).
+
+  anonymous-list-grows-by-one-method: >
+    The SC-4 closed list of anonymous endpoints gains `POST /sign-in` — the Dean's
+    sign-in submission. `GET /sign-in` is already on that list (US-008), and SC-4
+    already names "Dean sign-in page" as its own entry protected by the lockout of
+    SC-2. No new anonymous **page** is added: the forced password change and the
+    voluntary change both require a session. The US-008 endpoint enumeration test
+    gains this one row (spec S-01).
+
+  antiforgery-list-unchanged: >
+    Every `POST` below carries the antiforgery token, the anonymous
+    `POST /sign-in` included — login CSRF is exactly what SC-4 requires the token
+    on an anonymous form for. The exemption list (the service channel only) is
+    unchanged (spec VR-004, API-7).
+
+  security-stamp: >
+    Disabling an account, resetting its password and any password change rotate the
+    account's security stamp, which the host already validates on every request
+    (spec FR-019, I-4, I-5). This is not an HTTP concern of these operations — it
+    is why a session opened earlier stops working at its next request, whatever
+    path that request takes.
+
+  outbound: >
+    **No operation of this Story calls Google or any other external service**
+    (spec S-14). SC-13's list is unchanged and neither destination on it is
+    contacted here.
+
+paths:
+
+  /settings/deans:
+
+    get:
+      tags: [settings]
+      operationId: getDeanAccountsPage
+      summary: "The Dean accounts screen"
+      description: >
+        Lists every `AppUser` with role Dean, active and disabled alike, each row
+        carrying the email, the state, whether the stored password is still
+        temporary, and the date of the last successful sign-in (spec FR-011,
+        OD-003). No search and no paging (see `x-pagination-deviation`). The page
+        also carries the creation form. It lists no Admin account and offers no
+        action on one (spec I-8). Served in read-only mode with the reason named;
+        the controls are neither hidden nor disabled, because the refusal is
+        enforced in `Application` (AD-6, TC-5, spec FR-015).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ManageDeanAccounts
+      x-permission-matrix-row: "\"Создание, отключение и включение, сброс пароля учётных записей Деканов\" — Admin ✔, Dean ✘"
+      x-calls-google: false
+      x-writes: none
+      x-spec: [FR-011, FR-015, FR-016, FR-020]
+      x-acceptance-criteria: [AC-001, AC-009]
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: >
+            The screen, in the user's language. Served in read-only mode too, with
+            the reason (spec FR-015).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/DeanAccountsPageModel"
+        "302":
+          description: "Not signed in: the challenge sends the visitor to `/sign-in` (US-008)."
+          headers:
+            Location:
+              schema:
+                type: string
+                const: /sign-in
+        "403":
+          description: >
+            Signed in as a Dean: the translated error page. It reveals nothing
+            about the accounts (spec AC-001, S-02).
+          content:
+            text/html: {}
+
+    post:
+      tags: [settings]
+      operationId: createDeanAccount
+      summary: "Create a Dean account"
+      description: >
+        Creates an account for a work email in the school's domain with the
+        temporary password the Admin typed (spec FR-003). The evaluation order is
+        fixed by FR-003: read-only first, then the address, then the domain, then
+        the password policy, then uniqueness. The school's domain is read
+        server-side from the legitimacy state and is never submitted (spec FR-004,
+        S-04).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ManageDeanAccounts
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: "one AppUser row and one AuditEvent row in one transaction; nothing else (spec FR-003, FR-017)"
+      x-spec: [FR-002, FR-003, FR-004, FR-005, FR-015, FR-017, FR-018]
+      x-acceptance-criteria: [AC-002, AC-003, AC-004, AC-009, AC-016]
+      security:
+        - installationSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/CreateDeanForm"
+      responses:
+        "302":
+          description: >
+            Created. Post-Redirect-Get back to the screen, which renders the new
+            row and the confirmation carried in TempData — never in a query
+            parameter (the US-008 rule). One audit row is written in the same
+            transaction as the account (spec FR-003, FR-017).
+          headers:
+            Location:
+              schema:
+                type: string
+                const: /settings/deans
+        "400":
+          description: >
+            Refused by validation, or a missing or invalid antiforgery token
+            (API-7). The causes are VR-001 (not an email, empty local part, a
+            domain that is not the school's, an address already in use) and VR-002
+            (the password policy). The screen is re-rendered with a per-field
+            message and the typed **email** preserved so it can be corrected; the
+            typed password is never echoed back, logged or audited (spec VR-006,
+            SC-10). Nothing is written. The message for an address already in use
+            does not reveal the role or state of the existing account (spec S-03).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/DeanAccountsPageModel"
+        "403":
+          description: "Signed in as a Dean: the translated error page. Nothing is written."
+          content:
+            text/html: {}
+        "409":
+          description: >
+            Read-only mode, any of the three BR-025 causes (API-5): the host-wide
+            US-008 handler renders the translated error page naming the reason. No
+            `AppUser` row is created and no password is hashed; the refusal writes
+            its own audit row, one of the service writes BR-026 permits (spec
+            FR-015, FR-017).
+          content:
+            text/html: {}
+
+  /settings/deans/{deanId}/state:
+
+    parameters:
+      - $ref: "#/components/parameters/DeanId"
+
+    post:
+      tags: [settings]
+      operationId: setDeanAccountState
+      summary: "Disable or re-enable a Dean account"
+      description: >
+        One operation for both directions, because they are one decision — the
+        account is active or it is not — and the form says which state is wanted
+        (spec FR-007, FR-008). Disabling rotates the security stamp, so the Dean's
+        open sessions end at their next request (spec I-4); re-enabling changes
+        nothing but the state — it sets no temporary password and clears no
+        lockout (spec FR-008, S-08). `DELETE` is deliberately absent: an account is
+        never deleted (spec FR-010, BR-014).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ManageDeanAccounts
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: "the AppUser state (and, when disabling, its security stamp) plus one AuditEvent row, in one transaction"
+      x-spec: [FR-007, FR-008, FR-015, FR-017, FR-019]
+      x-acceptance-criteria: [AC-005, AC-006, AC-009, AC-016]
+      security:
+        - installationSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/SetDeanStateForm"
+      responses:
+        "302":
+          description: >
+            Done. Post-Redirect-Get back to the screen with the confirmation in
+            TempData. One audit row — disabled or re-enabled — is written in the
+            same transaction (spec FR-017).
+          headers:
+            Location:
+              schema:
+                type: string
+                const: /settings/deans
+        "400":
+          description: >
+            A missing or unrecognised `desiredState`, or a missing or invalid
+            antiforgery token. Nothing is written.
+          content:
+            text/html: {}
+        "403":
+          description: "Signed in as a Dean: the translated error page. Nothing is written."
+          content:
+            text/html: {}
+        "404":
+          description: >
+            No `AppUser` with that id, or one whose role is not Dean (spec VR-005,
+            I-8). The two cases answer identically, so the screen cannot be used to
+            discover that an id belongs to an Admin (spec S-03). Nothing is
+            written.
+          content:
+            text/html: {}
+        "409":
+          description: >
+            (1) Read-only mode (API-5, BR-025): the host-wide translated error
+            page; the state is unchanged and the refusal writes its audit row.
+            (2) The account is already in the requested state — a stale screen
+            (spec VR-005): the screen is re-rendered with a message saying so, and
+            nothing is written.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/DeanAccountsPageModel"
+
+  /settings/deans/{deanId}/password:
+
+    parameters:
+      - $ref: "#/components/parameters/DeanId"
+
+    post:
+      tags: [settings]
+      operationId: resetDeanPassword
+      summary: "Reset a Dean's password to a new temporary one"
+      description: >
+        Replaces the stored hash with the hash of the new temporary password, marks
+        the password temporary, resets the failed-attempt counter, clears the
+        lockout and rotates the security stamp (spec FR-009, I-5). **A disabled
+        account stays disabled** — a reset never re-enables one (spec S-08). It is
+        accepted for an account that is locked out or disabled, which is why no
+        state precondition guards it.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ManageDeanAccounts
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: "the AppUser password hash, temporary mark, counter, lockout and security stamp, plus one AuditEvent row, in one transaction"
+      x-spec: [FR-005, FR-006, FR-009, FR-015, FR-017, FR-018, FR-019]
+      x-acceptance-criteria: [AC-004, AC-007, AC-009, AC-016]
+      security:
+        - installationSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ResetDeanPasswordForm"
+      responses:
+        "302":
+          description: >
+            Reset. Post-Redirect-Get back to the screen, whose row now shows the
+            password as temporary again. One audit row is written; the new password
+            appears in no row and no log (spec FR-017, S-10).
+          headers:
+            Location:
+              schema:
+                type: string
+                const: /settings/deans
+        "400":
+          description: >
+            The submitted password fails the policy of VR-002, evaluated against
+            **that account's** email as the login, or the antiforgery token is
+            missing or invalid. The screen is re-rendered with the message; the
+            rejected password is never echoed, logged or audited (spec VR-006).
+            Nothing is written.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/DeanAccountsPageModel"
+        "403":
+          description: "Signed in as a Dean: the translated error page. Nothing is written."
+          content:
+            text/html: {}
+        "404":
+          description: >
+            No such account, or its role is not Dean — one answer for both (spec
+            VR-005, S-03). Nothing is written.
+          content:
+            text/html: {}
+        "409":
+          description: >
+            Read-only mode (API-5, BR-025): the host-wide translated error page.
+            No hash is computed and nothing is written but the refusal's audit row
+            (spec FR-015).
+          content:
+            text/html: {}
+
+  /sign-in:
+
+    get:
+      tags: [sign-in]
+      operationId: getSignInPage
+      summary: "The sign-in page (extended by this Story)"
+      description: >
+        US-008 already serves this anonymous page with the Google button for the
+        Admin. This Story adds the Dean's email-and-password form to the same page
+        — SC-4's "Dean sign-in page" — and the refusal message carried in TempData
+        gains the categories of spec FR-012. **The `GET` itself is unchanged**: no
+        new parameter, no new status code, and the page keeps working with no
+        TempData (spec FR-012, FR-020).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: true
+      x-policy: "none — anonymous, on the SC-4 closed list (US-008)"
+      x-calls-google: false
+      x-writes: none
+      x-change-to-existing-contract: "additive: the page model gains the Dean form and the new refusal keys"
+      x-spec: [FR-012, FR-020]
+      x-acceptance-criteria: [AC-010, AC-015]
+      responses:
+        "200":
+          description: "The page, in the installation's default language, with the refusal message when TempData carries one."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/SignInPageModel"
+
+    post:
+      tags: [sign-in]
+      operationId: signInAsDean
+      summary: "Sign in with an email and a password"
+      description: >
+        Runs the six steps of spec FR-012 in order. Steps 1, 2 and 3 answer
+        identically — the same redirect, the same message key — so the response
+        never reveals whether the login exists or is locked (spec S-05, I-6). Step
+        2 does **not** verify the password. Step 4 answers with the separate
+        "account disabled" message and touches neither the counter nor the
+        lockout. Step 5 opens a session that may reach nothing but the forced
+        change page. Step 6 signs the Dean in.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: true
+      x-anonymous-justification: >
+        A sign-in submission cannot require a session. It joins the SC-4 closed
+        list beside the page that carries it, and it carries the antiforgery token
+        against login CSRF (spec VR-004).
+      x-antiforgery: required
+      x-calls-google: false
+      x-rate-limit: "none beyond the SC-2 lockout of spec FR-013 (5 attempts / 15 minutes, never permanent)"
+      x-writes: "sign-in bookkeeping (counter, lockout, last successful sign-in) plus one AuditEvent row — both permitted in read-only mode (BR-026, spec FR-015)"
+      x-spec: [FR-012, FR-013, FR-017, FR-018]
+      x-acceptance-criteria: [AC-010, AC-011, AC-012, AC-016]
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/DeanSignInForm"
+      responses:
+        "302":
+          description: >
+            Every outcome of the sequence is a redirect; **the outcome is in the
+            `Location` and in TempData, never in the status code** — a caller
+            cannot tell steps 1, 2 and 3 apart by the response line (spec S-05).
+            (a) Steps 1, 2 and 3 — back to `/sign-in`, TempData carrying the one
+            common refusal key; the audit row carries the real category (unknown
+            login, locked out, wrong password) and the caller sees none of it.
+            (b) Step 4 — back to `/sign-in`, TempData carrying the "account
+            disabled" key; reachable only with the correct password and no lockout
+            in force.
+            (c) Step 5 — to `/sign-in/change-password`, with a session that may
+            reach nothing else (spec FR-006).
+            (d) Step 6 — to `/`, signed in, counter reset, last successful sign-in
+            recorded.
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: ["/sign-in", "/sign-in/change-password", "/"]
+        "400":
+          description: >
+            A missing or invalid antiforgery token, or a missing email or password
+            field: the translated error page under the global rule (API-7, SC-4
+            v64). No account is looked up, no counter moves, nothing is written.
+          content:
+            text/html: {}
+
+  /sign-in/change-password:
+
+    get:
+      tags: [sign-in]
+      operationId: getForcedPasswordChangePage
+      summary: "The forced change of a temporary password"
+      description: >
+        Shown to a Dean who has just authenticated with a temporary password (step
+        5 of FR-012). It does not ask for the current password — it was just
+        supplied — and it is the only page such a session may reach: every other
+        authenticated request of that session redirects back here (spec FR-006,
+        I-3).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: CompleteTemporaryPasswordChange
+      x-calls-google: false
+      x-writes: none
+      x-spec: [FR-006, FR-016, FR-020]
+      x-acceptance-criteria: [AC-012, AC-015]
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: "The form, in the user's language."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ChangePasswordPageModel"
+        "302":
+          description: >
+            No session at all, or a session whose password is not temporary: to
+            `/sign-in` or to `/` respectively. The page is never a way to change a
+            password without having just proved the old one.
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: ["/sign-in", "/"]
+
+    post:
+      tags: [sign-in]
+      operationId: completeForcedPasswordChange
+      summary: "Set the first password of one's own account"
+      description: >
+        Replaces the temporary password. The new one obeys the policy of FR-005 and
+        must not equal the temporary one, which is checked by verifying the **new**
+        password against the hash still stored (spec VR-003) — no plaintext is kept
+        anywhere to make that comparison. On success the temporary mark is cleared,
+        the security stamp is rotated and the Dean is signed in fully.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: CompleteTemporaryPasswordChange
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: "the AppUser password hash, temporary mark and security stamp, plus one AuditEvent row — permitted in read-only mode (BR-026)"
+      x-spec: [FR-005, FR-006, FR-015, FR-017, FR-018, FR-019]
+      x-acceptance-criteria: [AC-004, AC-012, AC-016]
+      security:
+        - installationSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ForcedPasswordChangeForm"
+      responses:
+        "302":
+          description: >
+            Changed: to `/`, signed in. One audit row records a password change by
+            the Dean themselves (spec FR-017). **This works in read-only mode** —
+            BR-026 names it among the permitted service writes (spec FR-015).
+          headers:
+            Location:
+              schema:
+                type: string
+                const: /
+        "400":
+          description: >
+            The new password fails VR-002, or equals the temporary one (VR-003), or
+            the antiforgery token is missing or invalid. The form is re-rendered
+            with the message; nothing submitted is echoed back (spec VR-006).
+            Nothing is written.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ChangePasswordPageModel"
+
+  /account/password:
+
+    get:
+      tags: [account]
+      operationId: getOwnPasswordPage
+      summary: "The Dean's own password page"
+      description: >
+        A signed-in Dean whose password is not temporary may change it at any time
+        (spec FR-014, `trebovaniya.md` §2: "Смена собственного пароля — Декан ✔").
+        An Admin has no password and therefore no such page (spec S-07); they
+        receive `403`.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ChangeOwnPassword
+      x-permission-matrix-row: "\"Смена собственного пароля\" — Admin — (пароля нет), Dean ✔"
+      x-calls-google: false
+      x-writes: none
+      x-spec: [FR-014, FR-016, FR-020]
+      x-acceptance-criteria: [AC-013, AC-015]
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: "The form, in the user's language. Served in read-only mode unchanged (spec FR-015)."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ChangePasswordPageModel"
+        "302":
+          description: "Not signed in: to `/sign-in` (US-008)."
+          headers:
+            Location:
+              schema:
+                type: string
+                const: /sign-in
+        "403":
+          description: "Signed in as an Admin: the translated error page — an Admin has no local password (SC-2, spec S-07)."
+          content:
+            text/html: {}
+
+    post:
+      tags: [account]
+      operationId: changeOwnPassword
+      summary: "Change one's own password"
+      description: >
+        Succeeds only when the current password verifies and the new one obeys
+        FR-005. The security stamp is rotated, so the Dean's other sessions end at
+        their next request (spec FR-019). No rule forbids a new password equal to
+        the current one and none is added (spec I-7, VR-003).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ChangeOwnPassword
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: "the AppUser password hash and security stamp, plus one AuditEvent row — permitted in read-only mode (BR-026)"
+      x-spec: [FR-005, FR-014, FR-015, FR-017, FR-018, FR-019]
+      x-acceptance-criteria: [AC-004, AC-013, AC-016]
+      security:
+        - installationSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ChangeOwnPasswordForm"
+      responses:
+        "302":
+          description: >
+            Changed. Post-Redirect-Get back to the page with the confirmation in
+            TempData. One audit row is written. **This works in read-only mode**
+            (BR-026, spec FR-015).
+          headers:
+            Location:
+              schema:
+                type: string
+                const: /account/password
+        "400":
+          description: >
+            The current password does not verify, or the new one fails VR-002, or
+            the antiforgery token is missing or invalid. The form is re-rendered
+            with the message and nothing submitted is echoed back (spec VR-006).
+            Nothing is written. A wrong current password is **not** a failed
+            sign-in attempt: it moves no counter and triggers no lockout (spec
+            FR-013 governs sign-in only).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ChangePasswordPageModel"
+        "403":
+          description: "Signed in as an Admin: the translated error page. Nothing is written."
+          content:
+            text/html: {}
+
+x-operations-deliberately-absent:
+
+  delete-account: >
+    There is no `DELETE /settings/deans/{deanId}` and no other path that removes an
+    account. BR-014 forbids it and PC-11 owns the only deletion there is — the
+    retention purge (spec FR-010, AC-008, OD-004).
+
+  edit-email: >
+    No operation changes an existing account's email. OD-004 was resolved by the
+    Owner on 2026-09-26: a mistyped address is handled by disabling that account
+    and creating the correct one. Adding the operation would need a new rule in
+    `trebovaniya.md` §2 and its own audit action.
+
+  api-v1-surface: >
+    No `/api/v1` path is added. Nothing consumes these screens as data, and
+    `api-conventions.md` reserves the JSON shapes for clients that exist. An
+    account-management JSON API would also be a second way to reach the most
+    sensitive write in the installation.
+
+  admin-password-anything: >
+    No password page, reset or column for an Admin, in any shape. SC-2 calls a
+    migration or entity that adds one a **Critical** finding.
+
+  self-service-recovery: >
+    No "forgot my password" path: the installation sends no mail (SC-13) and BR-014
+    gives the reset to the Admin alone.
+
+  repeat-password-field: >
+    Neither change form carries a "repeat the password" field. The Specification
+    fixes the validation rules (VR-002, VR-003) and a confirmation field would be a
+    rule it does not state. A later Story may add one as a UI improvement.
+
+x-pagination-deviation: >
+  `api-conventions.md` API-8 paginates any collection that can grow unbounded, and
+  names courses, participants, submissions and Meet sessions. `GET /settings/deans`
+  is **not** paginated: OD-003 was resolved by the Owner on 2026-09-26 as option 1
+  — a school has a handful of Deans, and the list is bounded by the school's staff,
+  not by synchronised data. Recorded here as a deliberate, human-approved deviation
+  rather than an oversight; a later Story adds `page`/`size` in the API-8 shape if
+  the screen ever needs them.
+
+x-error-body-note: >
+  No operation here is under `/api/v1`, so none uses the API-6 JSON body: every
+  refusal is the host's translated error page or the re-rendered form with its
+  field messages, exactly as US-009, US-010 and US-011 do (API-6 first line, SC-4
+  v66).
+
+x-cross-contract-consequence: >
+  **AC-014 changes no contract.** The three Admin-only settings pages of US-009,
+  US-010 and US-011 already answer `403` to a Dean; until this Story no Dean could
+  sign in to prove it over HTTP, so the test used a synthetic principal (US-010
+  F-1, carried to US-011 F-1). With `POST /sign-in` a real Dean session exists, and
+  TEST_WRITING asserts the `403` against those existing operations on every method
+  they expose, plus the `200` a Dean keeps receiving from the legitimacy-status
+  view.
+
+components:
+
+  parameters:
+    DeanId:
+      name: deanId
+      in: path
+      required: true
+      description: >
+        The account's internal id, as the screen rendered it. It is not personal
+        data — audit rows already carry internal ids and nothing else (SC-11) — but
+        it is only ever submitted from the screen, and an id that names no Dean
+        answers `404` (spec VR-005).
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: __Host-ca-session
+      description: >
+        The installation's own session cookie (US-008 spec FR-015). A Dean's
+        session is created by `POST /sign-in`; an Admin's by the Google callback.
+        No password and no Google token is ever stored client-side (SC-2).
+
+  schemas:
+
+    DeanAccountsPageModel:
+      type: object
+      additionalProperties: false
+      description: >
+        The view model of every HTML response of the three `/settings/deans`
+        operations — a DTO built in `Application`, never an entity (AD-8). It
+        carries no password, no hash and no security stamp (spec S-10).
+      properties:
+        deans:
+          type: array
+          description: "Every Dean account, active and disabled alike (spec FR-011)."
+          items:
+            $ref: "#/components/schemas/DeanRow"
+        readOnly:
+          $ref: "#/components/schemas/ReadOnlyState"
+        emailInput:
+          type: [string, "null"]
+          description: "The email just typed, preserved so a refusal can be corrected. Never the password (spec VR-006)."
+        messageKey:
+          type: [string, "null"]
+          description: "Translation key of the confirmation or refusal, from TempData or the current refusal. Never a message built by string concatenation (NFR-073)."
+        fieldErrors:
+          type: array
+          description: "Per-field validation messages, by translation key (spec §6)."
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              field:
+                type: string
+              messageKey:
+                type: string
+      required: [deans, readOnly]
+
+    DeanRow:
+      type: object
+      additionalProperties: false
+      description: "One row of the list, exactly the columns OD-003 fixed (spec FR-011)."
+      properties:
+        id:
+          type: integer
+          format: int64
+        email:
+          type: string
+          description: "The work email, which is also the login (spec FR-002)."
+        state:
+          type: string
+          enum: [Active, Disabled]
+        passwordIsTemporary:
+          type: boolean
+          description: "True while the Dean has not yet replaced the password an Admin typed (spec FR-006)."
+        lastSuccessfulSignInAt:
+          type: [string, "null"]
+          format: date-time
+          description: "Null when the account has never signed in; that is also where the retention clock starts (PC-11)."
+      required: [id, email, state, passwordIsTemporary, lastSuccessfulSignInAt]
+
+    ReadOnlyState:
+      type: object
+      additionalProperties: false
+      description: >
+        Whether the installation is in read-only mode and why (BR-025). The screen
+        names the reason; it never hides or disables a control, because the refusal
+        is enforced in `Application` (AD-6, spec FR-015).
+      properties:
+        isReadOnly:
+          type: boolean
+        reasonKey:
+          type: [string, "null"]
+      required: [isReadOnly]
+
+    CreateDeanForm:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          maxLength: 320
+          description: "The work email; its domain must equal the school's domain, which is read server-side (spec VR-001, FR-004)."
+        temporaryPassword:
+          type: string
+          minLength: 15
+          maxLength: 128
+          format: password
+          description: "The temporary password (spec VR-002, FR-006). Never stored in clear, logged, audited or echoed back."
+        __RequestVerificationToken:
+          type: string
+      required: [email, temporaryPassword]
+
+    SetDeanStateForm:
+      type: object
+      additionalProperties: false
+      properties:
+        desiredState:
+          type: string
+          enum: [Active, Disabled]
+          description: "Which state the Admin wants. A value outside the enum is `400` (spec VR-005)."
+        __RequestVerificationToken:
+          type: string
+      required: [desiredState]
+
+    ResetDeanPasswordForm:
+      type: object
+      additionalProperties: false
+      properties:
+        temporaryPassword:
+          type: string
+          minLength: 15
+          maxLength: 128
+          format: password
+          description: "The new temporary password, checked against the policy using that account's email as the login (spec VR-002)."
+        __RequestVerificationToken:
+          type: string
+      required: [temporaryPassword]
+
+    SignInPageModel:
+      type: object
+      additionalProperties: true
+      description: >
+        The US-008 page model, extended by this Story with the Dean's form and the
+        refusal keys of FR-012. `additionalProperties: true` because US-008 owns the
+        rest of it; only the additions are listed here.
+      properties:
+        refusalKey:
+          type: [string, "null"]
+          description: >
+            The translation key of the refusal carried in TempData. Steps 1, 2 and 3
+            of FR-012 all set the **same** key; step 4 sets the "account disabled"
+            key (spec I-6, S-05).
+
+    DeanSignInForm:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          maxLength: 320
+          description: "The login. Never logged, never audited, never echoed back when it matches no account (spec VR-006, SC-11)."
+        password:
+          type: string
+          maxLength: 128
+          format: password
+          description: >
+            Not length-validated on the way in beyond the storage bound: a sign-in
+            checks a password, it does not judge it. The policy of FR-005 applies
+            where a password is **set**, not where it is presented.
+        __RequestVerificationToken:
+          type: string
+      required: [email, password]
+
+    ChangePasswordPageModel:
+      type: object
+      additionalProperties: false
+      description: "The view model of both password forms. It carries no password, in any field, in any direction (spec S-10)."
+      properties:
+        mode:
+          type: string
+          enum: [Forced, Voluntary]
+          description: "Forced after step 5 of FR-012; Voluntary on `/account/password`."
+        readOnly:
+          $ref: "#/components/schemas/ReadOnlyState"
+        messageKey:
+          type: [string, "null"]
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              field:
+                type: string
+              messageKey:
+                type: string
+      required: [mode, readOnly]
+
+    ForcedPasswordChangeForm:
+      type: object
+      additionalProperties: false
+      description: "No current-password field: it was supplied at sign-in moments earlier (spec FR-006, I-3)."
+      properties:
+        newPassword:
+          type: string
+          minLength: 15
+          maxLength: 128
+          format: password
+        __RequestVerificationToken:
+          type: string
+      required: [newPassword]
+
+    ChangeOwnPasswordForm:
+      type: object
+      additionalProperties: false
+      properties:
+        currentPassword:
+          type: string
+          maxLength: 128
+          format: password
+          description: "Verified against the stored hash before anything is written (spec FR-014)."
+        newPassword:
+          type: string
+          minLength: 15
+          maxLength: 128
+          format: password
+        __RequestVerificationToken:
+          type: string
+      required: [currentPassword, newPassword]
