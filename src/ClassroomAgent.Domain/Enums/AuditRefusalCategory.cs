@@ -32,4 +32,10 @@ public enum AuditRefusalCategory
 
     /// <summary>US-009: the installation is in read-only mode, where connection settings may not be saved (BR-026).</summary>
     ReadOnlyMode,
+
+    /// <summary>
+    /// US-011: the check was refused because the connection is not usable — none saved, or saved for a domain that
+    /// is no longer the <c>Installation</c> domain (US-009 OD-002; db-design §3.2).
+    /// </summary>
+    ConnectionNotUsable,
 }

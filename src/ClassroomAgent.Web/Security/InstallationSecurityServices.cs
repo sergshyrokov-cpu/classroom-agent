@@ -58,6 +58,12 @@ public static class InstallationSecurityServices
                 policy => policy.RequireAuthenticatedUser().RequireRole(
                     InstallationSession.RoleName(AppRole.Admin)));
 
+            // US-011 spec FR-011: "Проверить доступ" is its own cell of the §2 matrix (spec I-9).
+            options.AddPolicy(
+                InstallationPolicies.RunAccessCheck,
+                policy => policy.RequireAuthenticatedUser().RequireRole(
+                    InstallationSession.RoleName(AppRole.Admin)));
+
             // Deny by default: an endpoint whose author forgot an attribute closes rather than opens (SC-4, API-9).
             options.FallbackPolicy = options.GetPolicy(InstallationPolicies.AuthenticatedUser);
         });

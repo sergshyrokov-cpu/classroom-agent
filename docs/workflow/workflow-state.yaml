@@ -4,29 +4,39 @@
 version: 1
 story: US-011
 workflow: story-delivery
-current_stage: IMPLEMENTATION
-previous_stage: TEST_WRITING
-last_completed_stage: TEST_WRITING
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: test-writer
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: TEST_WRITING
-  recorded_at: 2026-09-21T09:01:17Z
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_PR_APPROVAL
+  recorded_at: 2026-09-26T14:16:02Z
 last_artifacts:
-  - type: test_strategy
-    path: docs/tests/US-011-test-strategy.md
+  - type: implementation_report
+    path: docs/evidence/US-011-implementation-report.md
     version: 1
-  - type: ac_test_matrix
-    path: docs/tests/US-011-ac-test-matrix.md
-    version: 1
-  - type: test_generation_report
-    path: docs/evidence/US-011-test-generation-report.md
+  - type: security_review
+    path: docs/reviews/security/US-011-security-review.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "HUMAN_PR_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-26T14:16:02Z (no comment): implementation_report v1 and security_review v1 accepted; automated verdict PASS with no blocking findings. The approval covers the accepted deviation D-1 (three US-007 tests in ReadOnlyRefusalLoggingTests scoped to the operation under test, required by spec FR-010/I-7) and the two Minor findings, both about test coverage: F-1 carried to US-012 (HTTP-level forbidden-role case for all three settings actions) and F-2 recommended for a later Story (resolve IGoogleAccessProbe from the real container with no key reference and assert KeyUnavailable with zero requests). Until the final commit lands on master the Story is approved, not Done (AGENTS.md Definition of Done item 10)."
+  - "SECURITY_REVIEW: PASS. 0 Critical, 0 Major, 2 Minor, 6 Informational; every touched SC item (SC-1, SC-4, SC-5, SC-6, SC-7, SC-8, SC-10, SC-11, SC-12, SC-13) PASS with evidence; SC-2, SC-3, SC-9 NOT_APPLICABLE. runtime_checks PARTIAL - static and test-based review, no live Google call and no running host."
+  - "SECURITY_REVIEW closes the carried US-007 finding F-5: the first real IGoogleDataPort implementation takes IReadOnlyModeGuard, calls it first, and the substituted port records zero calls for all three BR-025 causes, for the interactive run and the self-check alike (review F-4)."
+  - "SECURITY_REVIEW F-1 (Minor, carried US-010 F-1): the forbidden-role case for the two new endpoints uses a synthetic Dean principal against the real policy, not HTTP, because no Dean can sign in until US-012. Owner stays US-012, which should add the HTTP-level case for all three settings actions at once."
+  - "SECURITY_REVIEW F-2 (Minor, new): no test resolves the real GoogleAccessProbe from a container - every test substitutes the port or builds the adapter directly - so the composition-root wiring has no evidence beyond reading it. Verified statically as correct (ISecretStore is registered at Program.cs:62). A wiring defect would answer 500 for the Admin and, in the self-check, be swallowed and logged as AccessSelfCheckFailed with only an exception type name, degrading the DC-5 rotation procedure. No approved artifact demands such a test; recommended later: resolve IGoogleAccessProbe from the real container with no key reference and assert KeyUnavailable with zero requests."
+  - "SECURITY_REVIEW Informational: F-3 SelfCheckFailed logs only the exception type name (right under SC-10, poor diagnosability); F-5 the page model carries the school domain but the view never renders it, so carried US-010 F-2 does not bite; F-6 no rate limit by OD-005 (eight Google calls per run, every run audited); F-7 still no Content-Security-Policy header, but the new page adds no script (carried US-010 F-6); F-8 the check cannot prove full course visibility or the absence of extra rights - trebovaniya.md section 7 item 10 stays open (spec I-8)."
+  - "SECURITY_REVIEW accepted deviation D-1 (review section 17) after judging it independently: the three US-007 tests in ReadOnlyRefusalLoggingTests were scoped to the operation under test because spec FR-010/I-7 makes the startup self-check consult the same guard at every start. The extra log line is required behaviour, no assertion was removed or weakened, and US-007 AC-010 is asserted exactly as before. Recorded so HUMAN_PR_APPROVAL decides with it in view."
+  - "IMPLEMENTATION: PASS. Build 0 errors / 0 warnings; dotnet test 1976 total, 1976 passed, 0 failed, 0 skipped; dotnet format --verify-no-changes clean; dotnet list package --vulnerable --include-transitive clean for all seven projects. 22 files modified, 18 created, none deleted; every file traced in the implementation_report. All ten Acceptance Criteria implemented and covered by passing tests. The work of an interrupted earlier run was adopted and verified rather than regenerated."
+  - "IMPLEMENTATION deviation (report section 7): three EXISTING US-007 tests in ReadOnlyRefusalLoggingTests counted ReadOnlyWriteRefused log events across the whole host log and had to be scoped to the operation under test. US-011 spec FR-010 and I-7 require the startup self-check to consult the same read-only guard at every start, so in a read-only host the guard legitimately logs one refusal of its own (Operation AccessCheck.StartupSelfCheck). The helper now filters by operation (SyntheticWriteUseCase.Operation, ReadOnlyModeUnitOfWork.Operation); no assertion was removed or weakened and US-007 AC-010 is asserted exactly as before. test_strategy section 5 did not foresee this change - unlike the anticipated AppUserMigrationTests change (db-design section 8). The baseline before implementation was 1973/1976 with exactly these three failures."
+  - "IMPLEMENTATION observation, no change made: the startup self-check runs in every installation host, including the hosts other Stories' tests start. It sends nothing while no key reference is configured (spec FR-016, VR-004), which is why no test reaches a live Google endpoint (TC-4, AC-009); a future test host that set a real reference and seeded a usable connection would make a real call at start."
+  - "IMPLEMENTATION pinned the Google packages in ClassroomAgent.Infrastructure only: Google.Apis.Auth 1.76.0, Google.Apis.Classroom.v1 1.76.0.4254, Google.Apis.Admin.Reports.reports_v1 1.76.0.4252 (spec FR-015, OD-001). New optional installation setting Google:ServiceAccountKeyReference, not a start-up requirement (spec I-1); no committed configuration file changed - the installation host has no appsettings.json."
+  - "IMPLEMENTATION: api_design and database_design record open_decisions v1 while it is now v2; v2 adds OD-006 only and changes nothing either design consumed. No new Open Decision was raised; OD-006's six skeleton types are implemented and registered, and no NotImplementedException remains."
+  - "IMPLEMENTATION environment note: Docker Desktop was not running and had to be started before the suite could run (TC-2, Testcontainers, PostgreSQL)."
   - "TEST_WRITING: PASS. 10 new test classes, 91 methods, 185 cases, one existing test modified (AppUserMigrationTests: 3 -> 4 migrations, traced to db-design section 8); 0 build errors, 0 warnings. Whole suite 1976 total, 1793 passed, 183 failed, 0 skipped - every failure is in the US-011 set and names missing production behaviour (adapter NotImplemented, 21 translation keys, policy RunAccessCheck, page and run endpoints, audit migration, startup self-check). No test of US-001 ... US-010 changed state."
   - "TEST_WRITING raised OD-006 (compile-only skeleton) and the Owner resolved it on 2026-09-21 as option 1, scoped to US-011 like US-005 OD-002 and US-007 OD-003. Six production files exist as skeleton (IGoogleAccessProbe, AccessCheckStepOutcome, DelegatedToken, DelegationAttempt, GoogleAccessProbe, GoogleServiceAccountSettings) with members throwing NotImplementedException and nothing in DI; IMPLEMENTATION owns them. open_decisions is now v2 - it adds OD-006 only and changes nothing the Specification or the designs consumed."
   - "TEST_WRITING environment note: the first run failed 191/191 on DockerUnavailableException because Docker Desktop was not running; it was started and the run repeated. Integration tests need a running Docker daemon (TC-2)."
@@ -58,5 +68,5 @@ non_blocking_findings:
   - "Carried from the US-010 security review: F-6 (Informational) - no host sends a Content-Security-Policy header. If US-011 adds script (e.g. to call the check without a page reload), it keeps to external files in /js/ and no inline script, as US-010 did."
   - "Carried from the US-008 security review: F-5 (Minor, no security impact) stays open - a wrong HTTP method on /sign-in/google or /sign-out answers 404 where the openapi documents 405. US-011 does not touch those routes."
 started_at: 2026-09-21T07:48:44Z
-updated_at: 2026-09-21T09:01:17Z
-completed_at: null
+updated_at: 2026-09-26T14:16:02Z
+completed_at: 2026-09-26T14:16:02Z

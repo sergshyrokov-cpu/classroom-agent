@@ -108,7 +108,7 @@ stories:
   - id: US-011
     epic: EPIC-6
     title: Check access diagnostic
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: >
       Depends on US-009 (a saved connection to check).
     # US-009 COMPLETED. Story file authored:

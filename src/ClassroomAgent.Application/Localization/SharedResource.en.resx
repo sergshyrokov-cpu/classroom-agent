@@ -76,4 +76,25 @@
   <data name="ConnectionInstruction.Copy.Button" xml:space="preserve"><value>Copy the instructions</value></data>
   <data name="ConnectionInstruction.Copy.Confirmation" xml:space="preserve"><value>Instructions copied</value></data>
   <data name="Landing.Settings.ConnectionInstruction" xml:space="preserve"><value>Connection instructions</value></data>
+  <data name="AccessCheck.Title" xml:space="preserve"><value>Access check</value></data>
+  <data name="AccessCheck.Explanation" xml:space="preserve"><value>The program calls Google as the school's technical account: it requests access for each delegation scope separately and makes one trial read of Classroom and of Admin Reports. Nothing it reads is stored or shown. The same check runs automatically at every start, and its result is written to the application log.</value></data>
+  <data name="AccessCheck.Run.Button" xml:space="preserve"><value>Check access</value></data>
+  <data name="AccessCheck.TechnicalAccount.Label" xml:space="preserve"><value>Technical account</value></data>
+  <data name="AccessCheck.Verdict.AccessInPlace" xml:space="preserve"><value>Access is in place: every check succeeded.</value></data>
+  <data name="AccessCheck.Verdict.NotConfigured" xml:space="preserve"><value>Access is not fully configured — see below what needs to be fixed.</value></data>
+  <data name="AccessCheck.Verdict.Inconclusive" xml:space="preserve"><value>The check could not be completed: Google did not answer. Try again later.</value></data>
+  <data name="AccessCheck.Step.ClassroomRead" xml:space="preserve"><value>Trial read of Google Classroom</value></data>
+  <data name="AccessCheck.Step.ReportsRead" xml:space="preserve"><value>Trial read of Meet events in Admin Reports</value></data>
+  <data name="AccessCheck.Outcome.Succeeded" xml:space="preserve"><value>works</value></data>
+  <data name="AccessCheck.Outcome.ScopeNotAuthorized" xml:space="preserve"><value>this scope is not authorised in domain-wide delegation. Ask the school's super-admin to add it for this school's client ID, as the connection instruction says.</value></data>
+  <data name="AccessCheck.Outcome.TechnicalAccountUnknown" xml:space="preserve"><value>the technical account was not found in the school's domain, or it cannot be acted for. Check the address in the connection settings with the school's super-admin.</value></data>
+  <data name="AccessCheck.Outcome.TechnicalAccountCannotRead" xml:space="preserve"><value>access is authorised, but the technical account has no right to this read. The school's super-admin must give it read-only rights to this data.</value></data>
+  <data name="AccessCheck.Outcome.ApiNotEnabled" xml:space="preserve"><value>this API is not enabled in the service Owner's Google Cloud project. The service Owner fixes this, not the school.</value></data>
+  <data name="AccessCheck.Outcome.KeyUnavailable" xml:space="preserve"><value>the service-account key is not available. The service Owner fixes this, not the school.</value></data>
+  <data name="AccessCheck.Outcome.KeyRejected" xml:space="preserve"><value>Google rejected the service-account key. The service Owner fixes this, not the school.</value></data>
+  <data name="AccessCheck.Outcome.GoogleUnavailable" xml:space="preserve"><value>Google did not answer in time or is temporarily unavailable. Try again later.</value></data>
+  <data name="AccessCheck.Outcome.NotAttempted" xml:space="preserve"><value>not checked, because an earlier step prevented it.</value></data>
+  <data name="AccessCheck.Refused.NotConfigured" xml:space="preserve"><value>Save the Google Workspace connection in the connection settings first — there is nothing to check yet.</value></data>
+  <data name="AccessCheck.Refused.DomainMismatch" xml:space="preserve"><value>The saved connection belongs to a domain other than the school's. Save the connection again, then check access.</value></data>
+  <data name="Landing.Settings.AccessCheck" xml:space="preserve"><value>Access check</value></data>
 </root>

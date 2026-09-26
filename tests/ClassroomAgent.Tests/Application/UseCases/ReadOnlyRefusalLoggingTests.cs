@@ -21,7 +21,7 @@ public sealed class ReadOnlyRefusalLoggingTests(PostgreSqlFixture database)
         await using var host = await ReadOnlyModeHost.StartAsync(database, ReadOnlyModeHost.Cause.Suspended, ct);
         await Assert.ThrowsAsync<ReadOnlyModeException>(() => WriteAsync(host, ct));
 
-        var refusals = await RefusalsAsync(host, ct);
+        var refusals = await RefusalsAsync(host, SyntheticWriteUseCase.Operation, ct);
 
         var line = Assert.Single(refusals);
         Assert.Equal("Warning", line.Level);
@@ -38,7 +38,8 @@ public sealed class ReadOnlyRefusalLoggingTests(PostgreSqlFixture database)
             host,
             useCase => useCase.ExecuteAsync(host.Time.GetUtcNow(), ct)));
 
-        var line = Assert.Single(await RefusalsAsync(host, ct));
+        var line = Assert.Single(
+            await RefusalsAsync(host, ClassroomAgent.Application.UseCases.ReadOnlyModeUnitOfWork.Operation, ct));
 
         Assert.Equal("Warning", line.Level);
     }
@@ -72,7 +73,7 @@ public sealed class ReadOnlyRefusalLoggingTests(PostgreSqlFixture database)
 
         var events = await host.ReadLogEventsAsync(ct);
 
-        Assert.Equal(2, events.Count(e => e.EventName == RefusedEvent));
+        Assert.Equal(2, (await RefusalsAsync(host, SyntheticWriteUseCase.Operation, ct)).Count);
         Assert.True(events.Count(e => e.EventName == "ReadOnlyModeEntered") <= 1);
     }
 
@@ -91,10 +92,19 @@ public sealed class ReadOnlyRefusalLoggingTests(PostgreSqlFixture database)
         Assert.Empty(await host.AuditRowsAsync(ct));
     }
 
+    /// <summary>
+    /// The refusal lines of ONE operation. Scoped by operation because the guard serves every operation of the
+    /// installation, including ones that run on their own: US-011's startup self-check consults it at every start
+    /// (US-011 spec FR-010, I-7), so in read-only mode the host's log legitimately holds its refusal too.
+    /// </summary>
     private static async Task<IReadOnlyList<LogEvent>> RefusalsAsync(
         InstallationTestHost host,
+        string operation,
         CancellationToken cancellationToken) =>
-        (await host.ReadLogEventsAsync(cancellationToken)).Where(e => e.EventName == RefusedEvent).ToList();
+        (await host.ReadLogEventsAsync(cancellationToken))
+        .Where(e => e.EventName == RefusedEvent
+            && e.Line.Contains($"\"Operation\":\"{operation}\"", StringComparison.Ordinal))
+        .ToList();
 
     private static Task WriteAsync(InstallationTestHost host, CancellationToken cancellationToken) =>
         ReadOnlyModeHost.InScopeAsync<SyntheticWriteUseCase>(

@@ -1,0 +1,62 @@
+@model AccessCheckPageModel
+@{
+    ViewData["Title"] = T[AccessCheckTextKeys.Title];
+}
+
+@if (Model.IsReadOnly)
+{
+    <section class="notice">
+        <h2>@T["Landing.ReadOnly.Title"]</h2>
+        <p>@T[ReasonKey(Model.ReadOnlyReason)]</p>
+    </section>
+}
+
+<p>@T[AccessCheckTextKeys.Explanation]</p>
+
+<p>
+    @T[AccessCheckTextKeys.TechnicalAccountLabel]:
+    <span id="technical-account">@(Model.TechnicalAccount ?? "—")</span>
+</p>
+
+@if (Model.MessageKey is not null)
+{
+    <p class="form-message">@T[Model.MessageKey]</p>
+}
+
+<form method="post" action="@SignInRoutes.AccessCheck">
+    @Html.AntiForgeryToken()
+    <button type="submit">@T[AccessCheckTextKeys.RunButton]</button>
+</form>
+
+@if (Model.Result is { } result)
+{
+    <section id="access-check-result">
+        <p id="access-check-verdict" data-verdict="@result.Verdict">@T[AccessCheckTextKeys.Of(result.Verdict)]</p>
+        <ul>
+            @foreach (var step in result.Steps)
+            {
+                @if (step.Scope is { } scope)
+                {
+                    <li class="access-check-step" data-kind="@step.Kind" data-scope="@scope" data-outcome="@step.Outcome"><code>@scope</code> — @T[AccessCheckTextKeys.Of(step.Outcome)]</li>
+                }
+                else
+                {
+                    <li class="access-check-step" data-kind="@step.Kind" data-outcome="@step.Outcome">@T[ReadKey(step.Kind)] — @T[AccessCheckTextKeys.Of(step.Outcome)]</li>
+                }
+            }
+        </ul>
+    </section>
+}
+
+@functions {
+    private static string ReasonKey(LegitimacyModeReason? reason) => reason switch
+    {
+        LegitimacyModeReason.NotYetConfirmed => "Landing.ReadOnly.NotYetConfirmed",
+        LegitimacyModeReason.SuspendedByOwner => "Landing.ReadOnly.SuspendedByOwner",
+        LegitimacyModeReason.GracePeriodExpired => "Landing.ReadOnly.GracePeriodExpired",
+        _ => "Landing.ReadOnly.Title",
+    };
+
+    private static string ReadKey(AccessCheckStepKind kind) =>
+        kind == AccessCheckStepKind.ClassroomRead ? AccessCheckTextKeys.StepClassroomRead : AccessCheckTextKeys.StepReportsRead;
+}

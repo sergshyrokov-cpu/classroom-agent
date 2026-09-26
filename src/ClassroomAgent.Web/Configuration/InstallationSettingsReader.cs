@@ -41,6 +41,12 @@ public static class InstallationSettingsReader
     /// <summary>US-008 spec FR-001, VR-002: the name of the secret holding the OAuth client secret (OD-004).</summary>
     public const string OAuthClientSecretReferenceKey = "GoogleOAuth:ClientSecretReference";
 
+    /// <summary>
+    /// US-011 spec FR-016, I-1: the name of the secret holding the service-account key. Optional — its absence is the
+    /// check's <c>KeyUnavailable</c>, not a refusal to start. Never logged (SC-7).
+    /// </summary>
+    public const string ServiceAccountKeyReferenceKey = "Google:ServiceAccountKeyReference";
+
     /// <summary>US-008 spec FR-001, VR-004: optional; Ukrainian when absent (NFR-073).</summary>
     public const string DefaultLanguageKey = "Ui:DefaultLanguage";
 
@@ -56,7 +62,12 @@ public static class InstallationSettingsReader
             PublicBaseAddress(configuration),
             Required(configuration, OAuthClientIdKey).Trim(),
             OAuthClientSecret(configuration, secretStore),
-            DefaultLanguage(configuration));
+            DefaultLanguage(configuration),
+            ServiceAccountKeyReference(configuration));
+
+    /// <summary>US-011 spec VR-004: trimmed; blank counts as absent. Resolved per check, not here (spec FR-016).</summary>
+    private static string? ServiceAccountKeyReference(IConfiguration configuration) =>
+        configuration[ServiceAccountKeyReferenceKey]?.Trim() is { Length: > 0 } reference ? reference : null;
 
     /// <summary>
     /// VR-003: a path the process can create if absent and write to. A file where a directory belongs, or a path

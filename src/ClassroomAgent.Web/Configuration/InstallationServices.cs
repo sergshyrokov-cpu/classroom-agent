@@ -3,6 +3,7 @@ using ClassroomAgent.Application.Ports;
 using ClassroomAgent.Application.UseCases;
 using ClassroomAgent.Contracts;
 using ClassroomAgent.Infrastructure.ControlPlane;
+using ClassroomAgent.Infrastructure.Google;
 using ClassroomAgent.Infrastructure.Persistence;
 using ClassroomAgent.Infrastructure.Persistence.Repositories;
 using ClassroomAgent.Infrastructure.ReadOnly;
@@ -77,6 +78,19 @@ public static class InstallationServices
         // US-010 spec FR-016: the instruction query. It reads and writes nothing, so it needs no guard and no
         // unit of work; the scope list is a constant in Domain and needs no registration (spec FR-004, I-2).
         services.AddScoped<GetConnectionInstructionQuery>();
+
+        // US-011 spec FR-004, FR-015, FR-016: the first real Google port. Its transport reaches Google only
+        // (SC-13), follows no redirect and keeps no cookie; the key is resolved per request from the store the
+        // reference names. Both use cases take the read-only guard (US-007 FR-007).
+        services.AddSingleton(new GoogleServiceAccountSettings(settings.ServiceAccountKeyReference));
+        services.AddSingleton<IGoogleAccessProbe>(provider => new GoogleAccessProbe(
+            provider.GetRequiredService<ISecretStore>(),
+            provider.GetRequiredService<GoogleServiceAccountSettings>(),
+            new SocketsHttpHandler { AllowAutoRedirect = false, UseCookies = false },
+            provider.GetRequiredService<ILogger<GoogleAccessProbe>>()));
+        services.AddScoped<RunAccessCheckUseCase>();
+        services.AddScoped<RunStartupSelfCheckUseCase>();
+        services.AddHostedService<StartupSelfCheckBackgroundService>();
         services.AddHostedService<LegitimacyCheckBackgroundService>();
         return services;
     }

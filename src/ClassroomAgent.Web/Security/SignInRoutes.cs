@@ -25,6 +25,9 @@ public static class SignInRoutes
     /// </summary>
     public const string ConnectionInstruction = "/settings/connection-instruction";
 
+    /// <summary>US-011 openapi: the check-access page and its run, one path (api-design §2.1).</summary>
+    public const string AccessCheck = "/settings/access-check";
+
     /// <summary>The key the refusal category travels under in TempData (api-design §2.2). Never a query parameter.</summary>
     public const string RefusalTempDataKey = "SignInRefusal";
 

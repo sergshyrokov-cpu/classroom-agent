@@ -171,6 +171,63 @@ public sealed class AuditEvent
         };
     }
 
+    /// <summary>
+    /// A carried-out access check (US-011 spec FR-008, I-4; db-design §3.2): <c>succeeded</c> means the check ran,
+    /// whatever it found. It names the connection it checked and nothing it found.
+    /// </summary>
+    public static AuditEvent AccessCheckRun(
+        long appUserId,
+        long connectionId,
+        DateTimeOffset occurredAt,
+        string? requestId) =>
+        new()
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = appUserId,
+            ActorRole = AppRole.Admin,
+            Action = AuditAction.AccessCheckRun,
+            TargetType = AuditTargetType.WorkspaceConnection,
+            TargetId = connectionId,
+            Outcome = AuditOutcome.Succeeded,
+            RefusalCategory = null,
+            RequestId = requestId,
+        };
+
+    /// <summary>
+    /// A refused access check (US-011 spec FR-008; db-design §3.2): the connection is named when a row exists, and
+    /// only the two refusal categories of the check are accepted.
+    /// </summary>
+    public static AuditEvent AccessCheckRefused(
+        long appUserId,
+        AuditRefusalCategory category,
+        long? connectionId,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        if (category is not (AuditRefusalCategory.ReadOnlyMode or AuditRefusalCategory.ConnectionNotUsable))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(category),
+                category,
+                "A refused access check carries a category of its own action.");
+        }
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = appUserId,
+            ActorRole = AppRole.Admin,
+            Action = AuditAction.AccessCheckRun,
+            TargetType = AuditTargetType.WorkspaceConnection,
+            TargetId = connectionId,
+            Outcome = AuditOutcome.Refused,
+            RefusalCategory = category,
+            RequestId = requestId,
+        };
+    }
+
     /// <summary>The categories a refused connection save may carry (US-009 db-design §4.2).</summary>
     private static readonly AuditRefusalCategory[] SaveRefusals =
     [

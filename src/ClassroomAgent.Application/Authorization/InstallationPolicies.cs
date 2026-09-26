@@ -24,4 +24,10 @@ public static class InstallationPolicies
     /// because one is a write read-only mode blocks and the other a read it permits (US-010 spec I-7).
     /// </summary>
     public const string ViewConnectionInstruction = "ViewConnectionInstruction";
+
+    /// <summary>
+    /// "Проверить доступ" — ✔ Admin, ✘ Dean (<c>trebovaniya.md</c> §2, v39; US-011 spec FR-011). Its own policy: §2
+    /// keeps the three settings rows apart and read-only mode treats them differently (US-011 spec I-9).
+    /// </summary>
+    public const string RunAccessCheck = "RunAccessCheck";
 }

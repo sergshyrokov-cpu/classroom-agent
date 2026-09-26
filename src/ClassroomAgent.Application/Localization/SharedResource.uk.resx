@@ -76,4 +76,25 @@
   <data name="ConnectionInstruction.Copy.Button" xml:space="preserve"><value>Скопіювати інструкцію</value></data>
   <data name="ConnectionInstruction.Copy.Confirmation" xml:space="preserve"><value>Інструкцію скопійовано</value></data>
   <data name="Landing.Settings.ConnectionInstruction" xml:space="preserve"><value>Інструкція з підключення</value></data>
+  <data name="AccessCheck.Title" xml:space="preserve"><value>Перевірка доступу</value></data>
+  <data name="AccessCheck.Explanation" xml:space="preserve"><value>Програма звертається до Google від імені технічного облікового запису школи: окремо запитує доступ за кожним скоупом делегування і робить по одному пробному читанню Classroom та Admin Reports. Прочитане ніде не зберігається й не показується. Така сама перевірка виконується автоматично під час кожного запуску, а її результат записується в журнал роботи.</value></data>
+  <data name="AccessCheck.Run.Button" xml:space="preserve"><value>Перевірити доступ</value></data>
+  <data name="AccessCheck.TechnicalAccount.Label" xml:space="preserve"><value>Технічний обліковий запис</value></data>
+  <data name="AccessCheck.Verdict.AccessInPlace" xml:space="preserve"><value>Доступ налаштовано: усі перевірки пройшли успішно.</value></data>
+  <data name="AccessCheck.Verdict.NotConfigured" xml:space="preserve"><value>Доступ налаштовано не повністю — дивіться, що саме потрібно виправити.</value></data>
+  <data name="AccessCheck.Verdict.Inconclusive" xml:space="preserve"><value>Перевірку не вдалося завершити: Google не відповів. Спробуйте ще раз пізніше.</value></data>
+  <data name="AccessCheck.Step.ClassroomRead" xml:space="preserve"><value>Пробне читання Google Classroom</value></data>
+  <data name="AccessCheck.Step.ReportsRead" xml:space="preserve"><value>Пробне читання подій Meet в Admin Reports</value></data>
+  <data name="AccessCheck.Outcome.Succeeded" xml:space="preserve"><value>працює</value></data>
+  <data name="AccessCheck.Outcome.ScopeNotAuthorized" xml:space="preserve"><value>цей скоуп не дозволено в делегуванні на рівні домену. Попросіть super-admin школи додати його для client ID цієї школи, як зазначено в інструкції з підключення.</value></data>
+  <data name="AccessCheck.Outcome.TechnicalAccountUnknown" xml:space="preserve"><value>технічний обліковий запис не знайдено в домені школи або від його імені не можна діяти. Перевірте адресу в налаштуваннях підключення разом із super-admin школи.</value></data>
+  <data name="AccessCheck.Outcome.TechnicalAccountCannotRead" xml:space="preserve"><value>доступ дозволено, але технічний обліковий запис не має прав на це читання. Super-admin школи має надати йому права лише на читання цих даних.</value></data>
+  <data name="AccessCheck.Outcome.ApiNotEnabled" xml:space="preserve"><value>цей API не ввімкнено в проєкті Google Cloud Власника сервісу. Це виправляє Власник сервісу, а не школа.</value></data>
+  <data name="AccessCheck.Outcome.KeyUnavailable" xml:space="preserve"><value>ключ сервісного облікового запису недоступний. Це виправляє Власник сервісу, а не школа.</value></data>
+  <data name="AccessCheck.Outcome.KeyRejected" xml:space="preserve"><value>Google відхилив ключ сервісного облікового запису. Це виправляє Власник сервісу, а не школа.</value></data>
+  <data name="AccessCheck.Outcome.GoogleUnavailable" xml:space="preserve"><value>Google не відповів вчасно або тимчасово недоступний. Спробуйте ще раз пізніше.</value></data>
+  <data name="AccessCheck.Outcome.NotAttempted" xml:space="preserve"><value>не перевірялося, бо цьому завадив попередній крок.</value></data>
+  <data name="AccessCheck.Refused.NotConfigured" xml:space="preserve"><value>Спершу збережіть підключення до Google Workspace у налаштуваннях підключення — перевіряти поки нічого.</value></data>
+  <data name="AccessCheck.Refused.DomainMismatch" xml:space="preserve"><value>Збережене підключення належить іншому домену, ніж домен школи. Збережіть підключення заново, а потім перевірте доступ.</value></data>
+  <data name="Landing.Settings.AccessCheck" xml:space="preserve"><value>Перевірка доступу</value></data>
 </root>

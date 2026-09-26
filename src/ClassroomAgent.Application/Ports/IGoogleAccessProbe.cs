@@ -8,8 +8,9 @@ namespace ClassroomAgent.Application.Ports;
 /// call it first (US-007 FR-007). No Google SDK type crosses it (AD-4).
 /// </summary>
 /// <remarks>
-/// Compile-only skeleton created at TEST_WRITING under US-011 OD-006; IMPLEMENTATION owns it from here and may
-/// reshape it together with the tests.
+/// Every method answers with an outcome of the closed list of spec FR-005 and never throws for an answer Google
+/// gave; cancellation is the only exception it lets through. Created as a compile-only skeleton at TEST_WRITING
+/// (US-011 OD-006).
 /// </remarks>
 public interface IGoogleAccessProbe : IGoogleDataPort
 {

@@ -2,9 +2,9 @@ namespace ClassroomAgent.Application.Models;
 
 /// <summary>
 /// An access token issued for one scope, held only for the duration of one check and never stored, logged or
-/// returned to a browser (US-011 spec FR-002, S-07).
+/// returned to a browser (US-011 spec FR-002, S-07). <see cref="ToString"/> never prints it, so an accidental log
+/// or interpolation cannot leak it.
 /// </summary>
-/// <remarks>Compile-only skeleton created at TEST_WRITING under US-011 OD-006.</remarks>
 public sealed class DelegatedToken
 {
     public DelegatedToken(string value)
@@ -13,7 +13,8 @@ public sealed class DelegatedToken
         Value = value;
     }
 
+    /// <summary>The bearer value; only the Google adapter reads it.</summary>
     public string Value { get; }
 
-    public override string ToString() => throw new NotImplementedException();
+    public override string ToString() => "[delegated token]";
 }

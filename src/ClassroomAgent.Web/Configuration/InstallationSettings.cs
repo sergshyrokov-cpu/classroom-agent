@@ -23,4 +23,5 @@ public sealed record InstallationSettings(
     Uri PublicBaseAddress,
     string OAuthClientId,
     string OAuthClientSecret,
-    UiLanguage DefaultUiLanguage);
+    UiLanguage DefaultUiLanguage,
+    string? ServiceAccountKeyReference = null);

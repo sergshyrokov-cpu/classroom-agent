@@ -13,4 +13,10 @@ public enum AuditAction
     /// <c>trebovaniya.md</c> §5 names them in one breath; which it was follows from the row it targets (spec I-2).
     /// </summary>
     WorkspaceConnectionSaved,
+
+    /// <summary>
+    /// US-011 spec FR-008: running "Проверить доступ" (<c>trebovaniya.md</c> §5). The row records that the check was
+    /// carried out or refused — never what it found (spec I-4, OD-003).
+    /// </summary>
+    AccessCheckRun,
 }
