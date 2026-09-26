@@ -4,17 +4,32 @@
 version: 1
 story: US-012
 workflow: story-delivery
-current_stage: SPECIFICATION
-previous_stage: null
-last_completed_stage: null
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
 status: IN_PROGRESS
 attempt: 1
 last_invoked_skill: null
-last_result: null
-last_artifacts: []
+last_result:
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: 2026-09-26T17:19:45Z
+last_artifacts:
+  - type: specification
+    path: docs/specifications/US-012-spec.md
+    version: 1
+  - type: open_decisions
+    path: docs/decisions/US-012-open-decisions.md
+    version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-26T17:19:45Z (no comment): Specification v1 and open decisions v1 accepted; automated verdict PASS with no blocking findings. OD-001 ... OD-004 arrived resolved; interpretations I-1 ... I-11 accepted as written, including I-1 (SC-2's \"ASP.NET Core Identity\" read as the password primitive only, IPasswordHasher<AppUser>), I-4 (disabling rotates the security stamp, ending the Dean's open sessions), I-6 (steps 1, 2 and 3 of the sign-in sequence share one message and differ in nothing observable), I-7 (no rule forbids a voluntary new password equal to the current one, and none was added) and I-8 (an Admin never appears on the Dean screen). The Specification's status is now APPROVED."
+  - "SPECIFICATION: PASS. 20 functional requirements, 6 validation rules, 14 security requirements, interpretations I-1 ... I-11, all 16 Acceptance Criteria traced. OD-001 ... OD-004 arrived resolved and are carried into docs/decisions/US-012-open-decisions.md unchanged; no new Open Decision was raised, and trebovaniya.md §7 holds no item about Dean accounts (item 26 names the Dean only as an audience for future documentation). No automated spec reviewer exists in this variant, so HUMAN_SPEC_APPROVAL is the only check that the Specification reflects trebovaniya.md v79."
+  - "SPECIFICATION interpretations worth reading at the gate: I-1 (SC-2's \"ASP.NET Core Identity\" is read as the password primitive only - IPasswordHasher<AppUser> - because the installation host has no Identity and SC-2 itself forbids building the check sequence on SignInManager); I-4 (disabling rotates the security stamp, so an open session of that Dean ends at its next request, rather than living until its own expiry); I-6 (steps 1, 2 and 3 of the sign-in sequence share ONE translated message and must differ in nothing else observable); I-7 (no rule forbids a voluntary new password equal to the current one, and none was added); I-8 (an Admin never appears on the Dean screen and every management action refuses a non-Dean target)."
+  - "SPECIFICATION FR-012 fixes the six-step sign-in sequence as a table (condition, response, failed-attempt counter, audit refusal category) in the exact order trebovaniya.md §2 v66 and SC-2 require, including that step 2 does NOT verify the password and step 4 neither increments nor resets the counter."
+  - "SPECIFICATION FR-017: AuditAction and AuditTargetType grow by the members SC-11 names for Dean accounts; AuditRefusalCategory already holds AccountDisabled and ReadOnlyMode and grows by the sign-in categories it lacks. DB_DESIGN decides which members are new and whether the audit check constraints need an amending migration, as US-009 and US-011 each did (PC-2)."
+  - "SPECIFICATION FR-002: AppUser needs ONE new field - the mark that the stored password is temporary. Every other field the Story needs (PasswordHash, SecurityStamp, AccessFailedCount, LockoutEnd, IsDisabled, LastSuccessfulSignInAt, UiLanguage) already exists. DB_DESIGN owns the entity model and the migration."
   - "US-012 carries four Open Decisions written into the Story, all resolved by the Owner on 2026-09-26 as option 1 before activation: OD-001 (one Story — the Admin's four management actions AND the Dean's sign-in, forced temporary-password change and self-service change together, because BR-014's temporary-password rule spans both sides and a split would leave AC-012 unprovable), OD-002 (keep the hand-written AppUser and add only IPasswordHasher<AppUser> from Microsoft.Extensions.Identity.Core, as the Control Plane already does for the Owner — this IS the NuGet approval AGENTS.md requires; no UserManager or SignInManager, since SC-2 forbids building the six-step sequence on them), OD-003 (the Dean list shows email, state, whether the password is temporary, and the last successful sign-in date; no search and no paging in v1) and OD-004 (a mistyped email is not corrected — the Admin disables the wrong account and creates the correct one; changing an account's email stays undefined and would need a new rule in trebovaniya.md §2). SPECIFICATION carries them into docs/decisions/US-012-open-decisions.md keeping their OD- ids."
   - "US-012 is a large Story by the Owner's explicit decision (OD-001): the Admin's Dean-accounts screen with four actions, the Dean sign-in page with the six-step SC-2 check sequence, the 5/15 lockout, the forced temporary-password change and the Dean's own password change, plus one amending migration, new audit members and two sets of translations. SPECIFICATION is expected to reflect that size rather than trim it."
   - "US-012 owns the finding carried from the US-010 security review (F-1, Minor, TC-5) through the US-011 security review (F-1): the forbidden-role test for the Admin-only settings pages has had to use a synthetic Dean principal because no Dean could sign in. Story AC-014 requires the HTTP-level 403 for all three settings pages (workspace-connection, connection-instruction, access-check) against a real Dean session; it must be closed here, not carried again."
@@ -22,6 +37,6 @@ non_blocking_findings:
   - "Carried from the US-011 security review: F-2 (Minor) — no test resolves a real adapter from the composition root. Not owned by US-012, recorded so it is not lost."
   - "Carried from the US-008 security review: F-5 (Minor, no security impact) — a wrong HTTP method on /sign-in/google or /sign-out answers 404 where the openapi documents 405. US-012 adds the Dean sign-in surface next to those routes; API_DESIGN decides whether the new routes repeat the same shape."
   - "Existing code the Story builds on, verified before activation: AppUser is a hand-written Domain entity (no ASP.NET Core Identity in the installation host) already carrying PasswordHash, SecurityStamp, AccessFailedCount, LockoutEnd, IsDisabled and LastSuccessfulSignInAt, with only a CreateAdmin factory; AppRole has exactly Admin and Dean; AuditAction holds AdminSignIn, WorkspaceConnectionSaved and AccessCheckRun; AuditTargetType holds only WorkspaceConnection; the three settings pages declare Admin-only policies in InstallationPolicies. The US-008 Google path already refuses a disabled AppUser with the AccountDisabled refusal category."
-started_at: null
-updated_at: 2026-09-26T17:11:09Z
+started_at: 2026-09-26T17:11:09Z
+updated_at: 2026-09-26T17:19:45Z
 completed_at: null
