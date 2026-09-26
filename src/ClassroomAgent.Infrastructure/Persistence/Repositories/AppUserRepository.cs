@@ -30,4 +30,14 @@ public sealed class AppUserRepository(ClassroomAgentDbContext db) : IAppUserRepo
     public void Add(AppUser user) => db.AppUsers.Add(user);
 
     public void Forget(AppUser user) => db.Entry(user).State = EntityState.Detached;
+
+    /// <inheritdoc />
+    /// <remarks>US-012 TEST_WRITING skeleton (OD-005) — IMPLEMENTATION writes the body.</remarks>
+    public Task<AppUser?> FindDeanByIdAsync(long id, CancellationToken cancellationToken) =>
+        throw new NotImplementedException("US-012 IMPLEMENTATION (spec VR-005).");
+
+    /// <inheritdoc />
+    /// <remarks>US-012 TEST_WRITING skeleton (OD-005) — IMPLEMENTATION writes the body.</remarks>
+    public Task<IReadOnlyList<AppUser>> ListDeansAsync(CancellationToken cancellationToken) =>
+        throw new NotImplementedException("US-012 IMPLEMENTATION (spec FR-011).");
 }

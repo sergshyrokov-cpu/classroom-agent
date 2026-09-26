@@ -8,4 +8,7 @@ public enum AuditTargetType
 {
     /// <summary>The installation's connection to its Workspace domain (US-009 db-design §4).</summary>
     WorkspaceConnection,
+
+    /// <summary>An account of the installation — the target of every US-012 action (db-design §4.2).</summary>
+    AppUser,
 }

@@ -28,11 +28,12 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
         Assert.Equal(
             new[] { "__EFMigrationsHistory", "app_user", "audit_event", "legitimacy_state", "workspace_connection" },
             tables.Order(StringComparer.Ordinal));
-        Assert.Equal(4, migrations.Count);
+        Assert.Equal(5, migrations.Count);
         Assert.EndsWith("_InitialLegitimacyState", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_InitialAppUserAndAuditEvent", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_AddWorkspaceConnection", migrations[2], StringComparison.Ordinal);
         Assert.EndsWith("_AddAccessCheckAudit", migrations[3], StringComparison.Ordinal);
+        Assert.EndsWith("_AddDeanAccounts", migrations[4], StringComparison.Ordinal);
     }
 
     /// <summary>db-design 7.1: the migration seeds nothing — the first account appears when a person signs in.</summary>

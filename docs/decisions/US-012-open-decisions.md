@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-012
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-09-26T17:14:21Z
-updated_at: 2026-09-26T17:14:21Z
+updated_at: 2026-09-26T17:42:53Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-012-manage-dean-accounts.md
@@ -28,6 +28,12 @@ unchanged.
 | OD-002 How the Dean's password is stored and verified | the Story | RESOLVED 2026-09-26 (option 1) |
 | OD-003 What the Dean accounts list shows | the Story | RESOLVED 2026-09-26 (option 1) |
 | OD-004 Whether a mistyped email can be corrected | the Story | RESOLVED 2026-09-26 (option 1) |
+| OD-005 How the tests compile before the implementation exists | TEST_WRITING | RESOLVED 2026-09-26 (option 1) |
+
+Version 2 adds OD-005 only. It concerns how TEST_WRITING makes its tests
+compile and changes nothing the Specification, the API design or the database
+design says, so those artifacts, which consumed version 1, are not stale in
+substance.
 
 No new Open Decision was raised by SPECIFICATION. `trebovaniya.md` §7
 ("Открытые вопросы") holds no item about Dean accounts: item 26 mentions the
@@ -114,3 +120,43 @@ deletion there is. Option 2 would be a new rule needing its own line in
 outright.
 
 **Impact on the Specification:** FR-010, §10 (Out of Scope).
+
+## OD-005 How the tests compile before the implementation exists
+
+TC-1 puts TEST_WRITING before IMPLEMENTATION, and the test-writer Skill accepts a
+failing test only when it **compiles**. The US-012 tests name production types
+that do not exist yet: six use cases, the password-policy type, the password
+hasher port, the new `IAppUserRepository` members, the new `AppUser` members
+(`PasswordIsTemporary`, `CreateDean`, `Disable`, `ReEnable`, `ResetPassword`,
+`SetOwnPassword`, `RecordFailedSignIn`, `IsLockedOut`), the new audit enum
+members and factories, the three policy names and the result models.
+
+Options: (1) a compile-only skeleton — those files exist with members throwing
+`NotImplementedException`, nothing registered in DI, as US-005 (OD-002), US-007
+(OD-003) and US-011 (OD-006) each did; (2) write the tests without compiling
+them, deferring part of the suite until the code exists; (3) implement the
+production code during TEST_WRITING.
+
+**Resolution:** option 1, decided by the Owner on 2026-09-26. Option 2 breaks
+TC-1 and the Skill's own red-phase rule, and would make TEST_WRITING stop being
+evidence; option 3 merges TEST_WRITING into IMPLEMENTATION and would make the
+tests be written against finished code, which `AGENTS.md` forbids.
+
+**Scope of the skeleton**, so IMPLEMENTATION knows exactly what it inherits:
+
+- nothing is registered in dependency injection, so no existing behaviour
+  changes and no existing test changes state because of it;
+- `AppUser.PasswordIsTemporary` is temporarily **excluded from the EF Core
+  model** (one `Ignore` line in `AppUserConfiguration`, marked as skeleton).
+  Without it EF Core would map the property by convention and every existing
+  test that touches `app_user` would fail against a column the migration has not
+  created yet — a red phase that says nothing about US-012. IMPLEMENTATION
+  replaces that line with the real mapping, the check constraint of db-design
+  §3.2 and the `AddDeanAccounts` migration;
+- every skeleton member throws `NotImplementedException`; no partial behaviour
+  is written, so a test that passes before IMPLEMENTATION passes for a real
+  reason.
+
+**Impact on the Specification:** none. It is a stage mechanism, not a
+requirement: no functional requirement, validation rule or security requirement
+is added, removed or reinterpreted.

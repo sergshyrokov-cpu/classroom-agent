@@ -58,7 +58,10 @@ public sealed class PermittedServiceWriteTests(PostgreSqlFixture database)
     {
         // Every entry is a use case of the Application layer performing a write of the BR-026 list; a
         // registry that grew silently is exactly what AC-004 forbids. US-008 added the two sign-in entries
-        // (spec FR-013, FR-016), so the registry is named here rather than counted.
+        // (spec FR-013, FR-016), so the registry is named here rather than counted. US-012 added three more,
+        // all SignInBookkeeping: the Dean's sign-in and the two password changes — BR-026 names sign-in
+        // bookkeeping and "a Dean changing their own password" already, so the closed list itself did not
+        // grow (the enum is asserted unchanged above).
         Assert.All(
             PermittedServiceWrites.Declarations,
             entry => Assert.Equal(typeof(GetLegitimacyModeQuery).Namespace, entry.Key.Namespace));
@@ -66,7 +69,15 @@ public sealed class PermittedServiceWriteTests(PostgreSqlFixture database)
             PermittedServiceWrites.Declarations,
             entry => Assert.Contains(entry.Value, Enum.GetValues<PermittedServiceWrite>()));
         Assert.Equal(
-            new[] { "AccountSessionService", "CheckLegitimacyUseCase", "CompleteGoogleSignInUseCase" },
+            new[]
+            {
+                "AccountSessionService",
+                "ChangeOwnPasswordUseCase",
+                "CheckLegitimacyUseCase",
+                "CompleteGoogleSignInUseCase",
+                "CompleteTemporaryPasswordChangeUseCase",
+                "SignInDeanUseCase",
+            },
             PermittedServiceWrites.Declarations.Keys.Select(k => k.Name).Order(StringComparer.Ordinal));
     }
 }

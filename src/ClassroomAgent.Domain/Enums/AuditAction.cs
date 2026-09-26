@@ -19,4 +19,28 @@ public enum AuditAction
     /// carried out or refused — never what it found (spec I-4, OD-003).
     /// </summary>
     AccessCheckRun,
+
+    /// <summary>US-012 spec FR-017: an Admin created a Dean account (SC-11, BR-014).</summary>
+    DeanAccountCreated,
+
+    /// <summary>US-012 spec FR-017: an Admin disabled a Dean account.</summary>
+    DeanAccountDisabled,
+
+    /// <summary>US-012 spec FR-017: an Admin re-enabled a disabled Dean account.</summary>
+    DeanAccountReEnabled,
+
+    /// <summary>US-012 spec FR-017: an Admin reset a Dean account's password to a new temporary one.</summary>
+    DeanAccountPasswordReset,
+
+    /// <summary>
+    /// US-012 spec FR-017: a Dean changed their own password — at the forced change or later. One action for
+    /// both, as <c>trebovaniya.md</c> §5 names it once (db-design §4.1).
+    /// </summary>
+    DeanPasswordChanged,
+
+    /// <summary>
+    /// US-012 spec FR-017: a Dean's sign-in, succeeded or refused. It mirrors <see cref="AdminSignIn"/>; the
+    /// outcome tells the two apart and the refusal category says why (db-design §4.1).
+    /// </summary>
+    DeanSignIn,
 }

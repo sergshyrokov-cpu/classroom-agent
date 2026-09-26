@@ -30,4 +30,23 @@ public static class InstallationPolicies
     /// keeps the three settings rows apart and read-only mode treats them differently (US-011 spec I-9).
     /// </summary>
     public const string RunAccessCheck = "RunAccessCheck";
+
+    /// <summary>
+    /// US-012 spec FR-016: creating, disabling, re-enabling and resetting the password of a Dean account.
+    /// Admin only — the matrix row is "Создание, отключение и включение, сброс пароля учётных записей
+    /// Деканов", ✔ Admin, ✘ Dean (<c>trebovaniya.md</c> §2 v64).
+    /// </summary>
+    public const string ManageDeanAccounts = nameof(ManageDeanAccounts);
+
+    /// <summary>
+    /// US-012 spec FR-016: a Dean changing their own password. Dean only — an Admin has no local password at
+    /// all (SC-2), so the page answers 403 to one.
+    /// </summary>
+    public const string ChangeOwnPassword = nameof(ChangeOwnPassword);
+
+    /// <summary>
+    /// US-012 spec FR-006, api-design §2.6: the session created at step 5 of the sign-in sequence, which may
+    /// reach the forced change form and nothing else.
+    /// </summary>
+    public const string CompleteTemporaryPasswordChange = nameof(CompleteTemporaryPasswordChange);
 }

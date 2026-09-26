@@ -4,26 +4,36 @@
 version: 1
 story: US-012
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
+current_stage: IMPLEMENTATION
+previous_stage: TEST_WRITING
+last_completed_stage: TEST_WRITING
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: test-writer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: 2026-09-26T17:33:28Z
+  stage: TEST_WRITING
+  recorded_at: 2026-09-26T19:39:28Z
 last_artifacts:
-  - type: database_design
-    path: docs/designs/database/US-012-db-design.md
+  - type: test_strategy
+    path: docs/tests/US-012-test-strategy.md
     version: 1
-  - type: entity_model
-    path: docs/designs/database/US-012-entity-model.md
+  - type: ac_test_matrix
+    path: docs/tests/US-012-ac-test-matrix.md
+    version: 1
+  - type: test_generation_report
+    path: docs/evidence/US-012-test-generation-report.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "TEST_WRITING: PASS. 15 new test classes, 130 methods, 195 cases; three existing tests modified. Build 0 errors / 0 warnings. Whole suite 2163 total, 1983 passed, 180 failed, 0 skipped - 179 failures are US-012 tests and one is the modified AppUserMigrationTests. Every other test in the solution is green. Docker was running throughout, so TC-2 met no obstacle this time."
+  - "TEST_WRITING raised OD-005 (compile-only skeleton) and the Owner resolved it on 2026-09-26 as option 1, scoped like US-005 OD-002, US-007 OD-003 and US-011 OD-006. Sixteen production files exist as skeleton (seven Application models, IPasswordHasher, DeanPasswordPolicy, six use cases and a query) with members throwing NotImplementedException and nothing in DI; AppUser, AuditEvent, three audit enums, IAppUserRepository and InstallationPolicies gained members the same way. open_decisions is now v2 - it adds OD-005 only and changes nothing the Specification or the designs consumed."
+  - "TEST_WRITING made TWO changes that are not skeleton and that IMPLEMENTATION owns: (1) AppUserConfiguration carries one Ignore line excluding AppUser.PasswordIsTemporary from the EF Core model, because mapping it before the migration would fail every existing test that touches app_user - IMPLEMENTATION replaces it with the mapping, ck_app_user_password_temporary and the AddDeanAccounts migration; (2) PermittedServiceWrites declares SignInDeanUseCase, CompleteTemporaryPasswordChangeUseCase and ChangeOwnPasswordUseCase as SignInBookkeeping, because BR-026 already names sign-in bookkeeping and a Dean changing their own password. The BR-026 closed list itself did NOT grow."
+  - "TEST_WRITING modified three existing tests. AppUserMigrationTests (4 -> 5 migrations) was foreseen in db-design 8. The other two were NOT foreseen: WorkspaceConnectionReadOnlyTests.NoNewUseCase_IsRegisteredAsAPermittedServiceWrite pinned the registry at three entries and PermittedServiceWriteTests.TheRegistry_DeclaresOnlyWritesOnTheClosedList pinned it by name; both now expect the three US-012 declarations, and both kept their own assertions. A third guard, ReadOnlyEnforcementTests.TheApplicationAssembly_HasNoUnprotectedWritePath, failed first and was fixed by DECLARING the use cases, not by changing the test. That all three fired is US-007 working as designed - SECURITY_REVIEW should judge the declarations rather than meet them as a surprise."
+  - "TEST_WRITING strengthened two of its own tests that passed vacuously in the red phase: AManagementActionOnANonDeanId_Answers404 now asserts the screen answers 200 first (otherwise three 404s from a missing route proved nothing), and TheThreeCommonRefusals_AreIndistinguishable now asserts the answer is a 302 to /sign-in before comparing the three. Seven other tests pass today as GUARDS and must stay green: the SC-2 policy numbers, translation-file parity, the closed audit action list, no new table or index, no DELETE method, /sign-in staying anonymous, and no typed password in a response."
+  - "TEST_WRITING names IMPLEMENTATION must honour or correct together with the tests: routes /settings/deans, /settings/deans/{id}/state, /settings/deans/{id}/password, POST /sign-in, /sign-in/change-password, /account/password; form fields email, temporaryPassword, password, desiredState (Active|Disabled), currentPassword, newPassword; policies ManageDeanAccounts, ChangeOwnPassword, CompleteTemporaryPasswordChange; audit codes dean_account_created, dean_account_disabled, dean_account_reenabled, dean_account_password_reset, dean_password_changed, dean_sign_in, target app_user, categories unknown_login, wrong_password, locked_out; column password_is_temporary with ck_app_user_password_temporary and migration AddDeanAccounts; 39 translation keys in DeanAccountTestData.TextKeys."
+  - "TEST_WRITING coverage limits: the timing difference of the three common refusals is not asserted (step 2 skips the password verification by design, which SC-2 accepts); the restricted session of step 5 is asserted through the pages it may reach, not through the claim that carries it; the hasher's algorithm is not tested, only that a hash is stored and verified through the port. AC-008 is proved for today's code - no test can prove a later Story adds no delete path."
   - "DB_DESIGN: PASS. ONE new column app_user.password_is_temporary (boolean NOT NULL DEFAULT false) with one new check constraint ck_app_user_password_temporary (password_is_temporary = false OR sign_in_method = 'password'), so an Admin row can never carry a temporary password - the same defence in depth as the two US-008 constraints that make an Admin password hash impossible. Three audit_event check constraints amended. No new table, no new index, no new relationship; Control Plane untouched. ONE migration AddDeanAccounts (PC-2); installation migrations go from four to five, tables stay five."
   - "DB_DESIGN §2: everything else the Story needs already exists on app_user from US-008 - email/normalized_email with the unique index, password_hash, is_disabled, access_failed_count, lockout_end, security_stamp, last_successful_sign_in_at, ui_language - which is why the schema delta is one boolean."
   - "DB_DESIGN §4: ck_audit_event_action gains six values (dean_account_created, dean_account_disabled, dean_account_reenabled, dean_account_password_reset, dean_password_changed, dean_sign_in); ck_audit_event_target_type_value gains app_user; ck_audit_event_refusal_category_value gains unknown_login, wrong_password, locked_out. account_disabled and read_only_mode are REUSED. Disabling and re-enabling stay two audit actions although the API made them one operation, because SC-11 lists four things; dean_sign_in mirrors admin_sign_in with outcome telling succeeded from refused."
@@ -54,5 +64,5 @@ non_blocking_findings:
   - "Carried from the US-008 security review: F-5 (Minor, no security impact) — a wrong HTTP method on /sign-in/google or /sign-out answers 404 where the openapi documents 405. US-012 adds the Dean sign-in surface next to those routes; API_DESIGN decides whether the new routes repeat the same shape."
   - "Existing code the Story builds on, verified before activation: AppUser is a hand-written Domain entity (no ASP.NET Core Identity in the installation host) already carrying PasswordHash, SecurityStamp, AccessFailedCount, LockoutEnd, IsDisabled and LastSuccessfulSignInAt, with only a CreateAdmin factory; AppRole has exactly Admin and Dean; AuditAction holds AdminSignIn, WorkspaceConnectionSaved and AccessCheckRun; AuditTargetType holds only WorkspaceConnection; the three settings pages declare Admin-only policies in InstallationPolicies. The US-008 Google path already refuses a disabled AppUser with the AccountDisabled refusal category."
 started_at: 2026-09-26T17:11:09Z
-updated_at: 2026-09-26T17:33:28Z
+updated_at: 2026-09-26T19:39:28Z
 completed_at: null

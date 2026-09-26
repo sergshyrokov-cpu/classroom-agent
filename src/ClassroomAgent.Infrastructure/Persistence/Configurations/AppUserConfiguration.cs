@@ -56,6 +56,13 @@ public sealed class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
             .IsRequired()
             .HasConversion(v => LanguageCode(v), code => LanguageFromCode(code));
         builder.Property(u => u.IsDisabled).IsRequired().HasDefaultValue(false);
+
+        // US-012 TEST_WRITING skeleton (OD-005). The property exists so the US-012 tests compile, but the column
+        // does not exist until the AddDeanAccounts migration. Mapping it now would make every existing test that
+        // touches app_user fail against a missing column. IMPLEMENTATION replaces this line with
+        //   builder.Property(u => u.PasswordIsTemporary).IsRequired().HasDefaultValue(false);
+        // plus ck_app_user_password_temporary and the migration (US-012 db-design §3).
+        builder.Ignore(u => u.PasswordIsTemporary);
         builder.Property(u => u.LastSuccessfulSignInAt);
         builder.Property(u => u.CreatedAt).IsRequired();
         builder.Property(u => u.UpdatedAt).IsRequired();

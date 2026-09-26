@@ -38,4 +38,14 @@ public enum AuditRefusalCategory
     /// is no longer the <c>Installation</c> domain (US-009 OD-002; db-design §3.2).
     /// </summary>
     ConnectionNotUsable,
+
+    /// <summary>US-012 step 1 of the sign-in sequence: no account with that normalized email. The typed login is
+    /// never recorded, so the category is the whole explanation (spec FR-012, SC-11).</summary>
+    UnknownLogin,
+
+    /// <summary>US-012 step 3: the password does not match the stored hash (spec FR-012).</summary>
+    WrongPassword,
+
+    /// <summary>US-012 step 2: a sign-in lockout is in force, so the password was not checked (spec FR-012, FR-013).</summary>
+    LockedOut,
 }

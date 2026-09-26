@@ -115,13 +115,19 @@ public sealed class WorkspaceConnectionReadOnlyTests(PostgreSqlFixture database)
     }
 
     /// <summary>
-    /// AC-009: no new use case is registered as a permitted service write. The save is guarded, not exempt,
-    /// so the registry keeps exactly the entries US-008 left in it.
+    /// AC-009: the connection save is guarded, not exempt — no use case of US-009 is registered as a permitted
+    /// service write.
     /// </summary>
+    /// <remarks>
+    /// The registry grew from three entries to six in US-012, which declares the Dean's sign-in and the two
+    /// password changes as <c>SignInBookkeeping</c> — the BR-026 member that already names sign-in bookkeeping
+    /// and "a Dean changing their own password". The closed list itself did not grow, which the test above
+    /// asserts; this test keeps its own point, that nothing of US-009 is exempt.
+    /// </remarks>
     [Fact]
     public void NoNewUseCase_IsRegisteredAsAPermittedServiceWrite()
     {
-        Assert.Equal(3, PermittedServiceWrites.Declarations.Count);
+        Assert.Equal(6, PermittedServiceWrites.Declarations.Count);
         Assert.DoesNotContain(
             PermittedServiceWrites.Declarations.Keys,
             t => t.Name.Contains("WorkspaceConnection", StringComparison.Ordinal));

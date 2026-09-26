@@ -236,4 +236,159 @@ public sealed class AuditEvent
         AuditRefusalCategory.DomainNotConfirmed,
         AuditRefusalCategory.ReadOnlyMode,
     ];
+
+    /// <summary>
+    /// A succeeded Dean-account management action by an Admin (US-012 spec FR-017; db-design §4.4). The action
+    /// says which of the four it was; the target is always the account acted upon.
+    /// </summary>
+    public static AuditEvent DeanAccountManaged(
+        long adminId,
+        AuditAction action,
+        long deanId,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        if (action is not (AuditAction.DeanAccountCreated or AuditAction.DeanAccountDisabled
+            or AuditAction.DeanAccountReEnabled or AuditAction.DeanAccountPasswordReset))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(action),
+                action,
+                "A Dean-account management row carries one of the four actions SC-11 names.");
+        }
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = adminId,
+            ActorRole = AppRole.Admin,
+            Action = action,
+            TargetType = AuditTargetType.AppUser,
+            TargetId = deanId,
+            Outcome = AuditOutcome.Succeeded,
+            RefusalCategory = null,
+            RequestId = requestId,
+        };
+    }
+
+    /// <summary>
+    /// A refused Dean-account management action (US-012 spec FR-017). Only read-only mode refuses one, and the
+    /// target is named when a row exists — a refused creation names none (db-design §4.4).
+    /// </summary>
+    public static AuditEvent DeanAccountManagementRefused(
+        long adminId,
+        AuditAction action,
+        long? deanId,
+        AuditRefusalCategory category,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        if (category is not AuditRefusalCategory.ReadOnlyMode)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(category),
+                category,
+                "A refused Dean-account action carries the read-only category (US-012 spec FR-015).");
+        }
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = adminId,
+            ActorRole = AppRole.Admin,
+            Action = action,
+            TargetType = deanId is null ? null : AuditTargetType.AppUser,
+            TargetId = deanId,
+            Outcome = AuditOutcome.Refused,
+            RefusalCategory = category,
+            RequestId = requestId,
+        };
+    }
+
+    /// <summary>A Dean changed their own password — the forced change or a later one (US-012 spec FR-017).</summary>
+    public static AuditEvent DeanPasswordChanged(long deanId, DateTimeOffset occurredAt, string? requestId) =>
+        new()
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = deanId,
+            ActorRole = AppRole.Dean,
+            Action = AuditAction.DeanPasswordChanged,
+            TargetType = AuditTargetType.AppUser,
+            TargetId = deanId,
+            Outcome = AuditOutcome.Succeeded,
+            RefusalCategory = null,
+            RequestId = requestId,
+        };
+
+    /// <summary>A Dean signed in (US-012 spec FR-017, steps 5 and 6 of FR-012).</summary>
+    public static AuditEvent DeanSignInSucceeded(long deanId, DateTimeOffset occurredAt, string? requestId) =>
+        new()
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = deanId,
+            ActorRole = AppRole.Dean,
+            Action = AuditAction.DeanSignIn,
+            TargetType = AuditTargetType.AppUser,
+            TargetId = deanId,
+            Outcome = AuditOutcome.Succeeded,
+            RefusalCategory = null,
+            RequestId = requestId,
+        };
+
+    /// <summary>
+    /// A refused Dean sign-in against an existing account (US-012 spec FR-017; db-design §4.4): steps 2, 3 and
+    /// 4 of the sequence, each with its own category.
+    /// </summary>
+    public static AuditEvent DeanSignInRefused(
+        long deanId,
+        AuditRefusalCategory category,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        if (category is not (AuditRefusalCategory.WrongPassword or AuditRefusalCategory.AccountDisabled
+            or AuditRefusalCategory.LockedOut))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(category),
+                category,
+                "A refused Dean sign-in against a known account carries one of the three categories of steps 2 to 4.");
+        }
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = deanId,
+            ActorRole = AppRole.Dean,
+            Action = AuditAction.DeanSignIn,
+            TargetType = AuditTargetType.AppUser,
+            TargetId = deanId,
+            Outcome = AuditOutcome.Refused,
+            RefusalCategory = category,
+            RequestId = requestId,
+        };
+    }
+
+    /// <summary>
+    /// Step 1 of the sequence: no account matched, so the row names no actor and no target at all — the typed
+    /// login is never recorded (US-012 spec FR-017, SC-11; db-design §4.4).
+    /// </summary>
+    public static AuditEvent DeanSignInRefusedUnknownLogin(DateTimeOffset occurredAt, string? requestId) =>
+        new()
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.Anonymous,
+            ActorId = null,
+            ActorRole = null,
+            Action = AuditAction.DeanSignIn,
+            TargetType = null,
+            TargetId = null,
+            Outcome = AuditOutcome.Refused,
+            RefusalCategory = AuditRefusalCategory.UnknownLogin,
+            RequestId = requestId,
+        };
 }

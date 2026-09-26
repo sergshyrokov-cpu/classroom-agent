@@ -22,6 +22,18 @@ public interface IAppUserRepository
     /// </summary>
     Task<AccountSessionState?> GetSessionStateAsync(long id, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// The account with that id **only when its role is Dean**, tracked for an update; null otherwise, so an
+    /// Admin account and an id that matches nothing are one answer (US-012 spec VR-005, I-8).
+    /// </summary>
+    Task<AppUser?> FindDeanByIdAsync(long id, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Every account with role Dean, active and disabled alike, ordered by email, read untracked for the
+    /// Admin's screen (US-012 spec FR-011). Unpaginated by OD-003.
+    /// </summary>
+    Task<IReadOnlyList<AppUser>> ListDeansAsync(CancellationToken cancellationToken);
+
     void Add(AppUser user);
 
     /// <summary>Forgets what is tracked, so a unique-violation can be followed by a clean re-read (spec I-10).</summary>
