@@ -4,26 +4,27 @@
 version: 1
 story: US-013
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: 2026-09-27T11:52:20Z
+  verdict: NOT_APPLICABLE
+  stage: API_DESIGN
+  recorded_at: 2026-09-27T11:55:30Z
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-013-spec.md
-    version: 1
-  - type: open_decisions
-    path: docs/decisions/US-013-open-decisions.md
+  - type: api_design
+    path: docs/designs/api/US-013-api-design.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "API_DESIGN: NOT_APPLICABLE. The approved Specification states in four places (FR-016, VR-005, §10, S-07) that the Story adds no endpoint, page, policy or route, which is exactly the optional_when of stage-map.yaml. There is deliberately NO docs/designs/api/US-013-openapi.yaml - its absence is the recorded decision, the same one US-007 made; downstream stages that list openapi as an input read the api_design document instead."
+  - "API_DESIGN §3 names the ONE thing a reviewer should check: readiness changes which STATES the existing private-port endpoint reports, not its route, method, media type or status mapping. Unhealthy already answers 503 and Degraded/Healthy already answer 200, so FR-014 makes an existing state reachable for a new reason - and read-only mode MUST keep answering Degraded with 200 (DC-7, DC-11). A behaviour change inside an unchanged contract."
+  - "API_DESIGN §4 records what US-019 inherits: the coordinator entry point is what its endpoint calls (AD-5 - enqueue and return, never wait); «Запуск синхронизации» belongs to BOTH Admin and Dean (§2, BR-004), unlike the Admin-only settings pages; a MANUAL start is audited (§5, SC-11), so US-019 adds the AuditAction member, its constraint migration and the audit row, none of which US-013 adds; in read-only mode that endpoint answers 409 with the API-6 body, while US-013 turns the same refusal into a silent skip because it has no caller to answer; a POST needs the antiforgery token (API-7)."
+  - "API_DESIGN confirmed the no-change list: liveness and the push receiver on the private port, the public-port pages of US-008 ... US-012, the service channel and ClassroomAgent.Contracts (ContractVersion stays 1), and the Control Plane. DB_DESIGN owns what this stage did not: the SyncState table, its singleton and status check constraints, the bound on the stored error message, and the AddSyncState migration (FR-015, VR-002)."
   - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-27T11:52:20Z (no comment): Specification v1 and open decisions v1 accepted; automated verdict PASS with no blocking findings. OD-001 ... OD-007 arrived resolved; interpretations I-1 ... I-8 accepted as written, with ONE CHANGED AT THE GATE: I-6, the default run interval, was lowered from 6 hours to 1 HOUR on the Owner's decision, because until US-019 adds the manual trigger there is no way to ask for a run by hand and an hour keeps a school day's data current; the cost is nothing while the pipeline is empty, and the value can be raised by configuration once US-014 and US-015 make a run measurable. FR-013 and I-6 were corrected before approval, so the Specification was approved at version 1 (it was still DRAFT and the gate had not passed). The Specification's status is now APPROVED."
   - "SPECIFICATION: PASS. 18 functional requirements, 6 validation rules, 12 security requirements, interpretations I-1 ... I-8, all 9 Acceptance Criteria traced. OD-001 ... OD-007 arrived resolved and are carried into docs/decisions/US-013-open-decisions.md unchanged; no new Open Decision was raised, and trebovaniya.md §7 holds no item that blocks this Story (items 10 and 14 are untouched because the Story makes no Google call). No automated spec reviewer exists in this variant, so HUMAN_SPEC_APPROVAL was the only check that the Specification reflects trebovaniya.md v79."
   - "SPECIFICATION interpretations API_DESIGN and DB_DESIGN must honour: I-1 (a run completing with a ZERO counter is success, not a defect - OD-001 leaves the pipeline empty until US-014); I-2 (no SyncState row means the installation has never synchronized - §3 gives three status values and none describes the never-run case, so the row is created by the first run rather than seeded or given a fourth value); I-3 (a row left at Running by a crashed or stopped process is TOLERATED, not prevented - the next run overwrites it and readiness, not SyncState, tells the Owner the service is down; writing a fourth status §3 does not define was rejected); I-4 (a skipped run is logged at Information, because DC-10 assigns Warning to ENTERING read-only mode, not to every run skipped while it lasts); I-5 (the wait for the first legitimacy determination is bounded by one interval, so a stalled check cannot stop synchronization for the life of the process); I-6 (the DEFAULT interval is 1 HOUR, decided by the Owner at the gate on 2026-09-27; 6 hours, matching BR-024's cadence, was considered and rejected as too stale for a school day); I-7 (a failed run is logged at Error, because DC-10 reserves Warning for RETRIED transient failures and this Story neither classifies nor retries - US-017 may lower the retried cases later); I-8 (ONE counter, because §3 says «счётчик» in the singular)."
@@ -38,5 +39,5 @@ non_blocking_findings:
   - "Carried from the US-011 security review: F-2 (Minor) - no test resolves a real adapter from the composition root. Not owned by US-013, recorded so it is not lost."
   - "Carried from the US-012 security review: five Informational observations (I-1 ... I-5) stand on the sign-in surface and are not US-013's to correct."
 started_at: 2026-09-27T11:33:12Z
-updated_at: 2026-09-27T11:52:20Z
+updated_at: 2026-09-27T11:55:30Z
 completed_at: null

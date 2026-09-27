@@ -122,3 +122,4 @@
 {"timestamp":"2026-09-27T08:36:33Z","story":"US-013","from_stage":null,"to_stage":"SPECIFICATION","skill":null,"verdict":"ACTIVATED","artifacts":[],"attempt":1}
 {"timestamp":"2026-09-27T11:33:12Z","story":"US-013","from_stage":"SPECIFICATION","to_stage":"HUMAN_SPEC_APPROVAL","skill":"spec-writer","verdict":"PASS","artifacts":["docs/specifications/US-013-spec.md","docs/decisions/US-013-open-decisions.md"],"attempt":1}
 {"timestamp":"2026-09-27T11:52:20Z","story":"US-013","from_stage":"HUMAN_SPEC_APPROVAL","to_stage":"API_DESIGN","skill":null,"verdict":"HUMAN_APPROVED","artifacts":["docs/specifications/US-013-spec.md"],"attempt":1}
+{"timestamp":"2026-09-27T11:55:30Z","story":"US-013","from_stage":"API_DESIGN","to_stage":"DB_DESIGN","skill":"openapi-designer","verdict":"NOT_APPLICABLE","artifacts":["docs/designs/api/US-013-api-design.md"],"attempt":1}
