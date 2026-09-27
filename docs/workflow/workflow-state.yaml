@@ -4,23 +4,25 @@
 version: 1
 story: US-014
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 2
-last_invoked_skill: null
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: 2026-09-27T17:20:48Z
+  verdict: NOT_APPLICABLE
+  stage: API_DESIGN
+  recorded_at: 2026-09-27T17:22:45Z
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-014-spec.md
+  - type: api_design
+    path: docs/designs/api/US-014-api-design.md
     version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "API_DESIGN attempt 2: NOT_APPLICABLE again, now recorded against Specification v2. The stage RE-RAN rather than having v1's input version edited in place, because recording that a stage read a version it never read would defeat the staleness contract. api_design is now v2 and its §0 holds the reassessment: the uniqueness correction is a unique INDEX plus an Application-side tie-break, so it has no API dimension, and the Specification's four no-surface statements (FR-018, VR-007, S-08, §10) were re-read and are UNCHANGED from v1. The stale input is cleared."
+  - "API_DESIGN v2 added ONE forward-looking consequence for EPIC-2: because a person now has ONE membership per course, a roster DTO carries ONE ROLE PER PERSON PER COURSE - US-021 (course detail with roster) must not model a collection of roles per person. Recorded in api_design §0 and §4 so EPIC-2 does not re-derive it."
   - "HUMAN_SPEC_APPROVAL approved AGAIN by Serhii SHYROKOV (/so:approve) at 2026-09-27T17:20:48Z (no comment), this time for Specification v2: the CourseMembership uniqueness correction accepted as PC-8 has it - unique on (course, person), the role a field, teacher winning a both-rosters conflict in Application. Automated verdict PASS, no blocking findings. Specification v2 status is now APPROVED; v1 was never superseded as a separate file, the artifact is revised in place (the US-013 convention)."
   - "STALE INPUT to clear next: docs/designs/api/US-014-api-design.md (v1) records specification version 1 in its inputs, and the Specification is now v2, so by the artifact-schema.md staleness contract that artifact is STALE. API_DESIGN therefore RE-RUNS at attempt 2 against v2. The verdict is expected to stay NOT_APPLICABLE - the correction has no API dimension (it changes a unique index and an Application-side tie-break, not any endpoint) - but the artifact must record specification v2 rather than be assumed current."
   - "DB_DESIGN attempt 1: BLOCKED, and the Owner routed the workflow back to SPECIFICATION on 2026-09-27. db-designer found the approved Specification v1 (FR-007, I-9) fixing a CourseMembership as one row per (course, person, ROLE) while persistence-conventions.md PC-8 fixes «Unique on (course, participant)», and trebovaniya.md §3 settles neither - it says only that a person may teach one course and study ON ANOTHER. The choice changes the unique index, so the stage could not proceed, and changing an approved Specification is not a stage Skill's to make. NO design artifact was produced at attempt 1."
@@ -48,5 +50,5 @@ non_blocking_findings:
   - "Carried from the US-012 security review: five Informational observations (I-1 … I-5) stand on the sign-in surface and are not US-014's to correct."
   - "Carried from the US-013 security review: five Informational observations stand - I-1 the tolerated stale Running row, I-2 the deliberately coarse failure diagnosis («RunFailed:» plus a type name, US-017 makes it actionable), I-3 the Guid run identifier, I-4 the 1440-minute interval ceiling as a functional choice, I-5 the bounds spelled in prose beside their constants. None is US-014's to correct."
 started_at: 2026-09-27T16:33:58Z
-updated_at: 2026-09-27T17:20:48Z
+updated_at: 2026-09-27T17:22:45Z
 completed_at: null

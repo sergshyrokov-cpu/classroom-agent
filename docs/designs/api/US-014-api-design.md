@@ -1,14 +1,14 @@
 ---
 artifact_type: api_design
 story: US-014
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-09-27T17:00:33Z
-updated_at: 2026-09-27T17:00:33Z
+updated_at: 2026-09-27T17:22:45Z
 produced_by: openapi-designer
 inputs:
   - path: docs/specifications/US-014-spec.md
-    version: 1
+    version: 2
   - path: docs/decisions/US-014-open-decisions.md
     version: 1
   - path: trebovaniya.md
@@ -27,11 +27,40 @@ and US-013 recorded for the same reason. A contract file describing zero operati
 would assert a surface this Story does not have. Downstream stages that list
 `openapi` among their inputs read this document instead.
 
+## 0. Why this artifact is at version 2
+
+Version 1 was written against Specification **v1** and recorded that version in its
+inputs. `DB_DESIGN` then reported a contradiction between the Specification's
+`CourseMembership` uniqueness and `persistence-conventions.md` PC-8; the Owner
+resolved it in PC-8's favour and the Specification was revised to **v2** and
+re-approved. That made version 1 of this artifact **stale** under the staleness
+contract of `artifact-schema.md`, so this stage re-ran at attempt 2 against v2
+rather than having its input version edited in place — recording that a stage read a
+version it never read would defeat the contract.
+
+**Reassessment: the verdict is unchanged, NOT_APPLICABLE.** The v2 correction has no
+API dimension at all:
+
+| What v2 changed | Where it lives | Why no contract is affected |
+|---|---|---|
+| A membership is unique on **(course, person)**, not on (course, person, role) | a unique index (FR-007, VR-004) | a database constraint; nothing is exposed over HTTP |
+| The role becomes a field on the membership rather than part of its identity | the entity model | still no DTO in this Story — EPIC-2 designs the DTOs that will carry it (§4) |
+| A person on both rosters of one course is stored once, with role `teacher` | resolved in `Application` before the write (I-9, §8) | an in-process tie-break during import; there is no caller to answer and no status code to choose |
+
+The Specification's no-surface statements were re-read in v2 and are **unchanged**
+from v1: FR-018, VR-007, S-08 and §10 all still say the Story adds no endpoint, no
+page, no policy and no route. Nothing in the correction reopens them.
+
+One forward-looking note the correction does add, recorded here so EPIC-2 does not
+have to re-derive it: because a person now has **one** membership per course, a
+roster DTO carries **one role per person per course**, not a collection of roles.
+US-021 (course detail with roster) should shape its response accordingly.
+
 ## 1. Why the stage does not apply
 
 `stage-map.yaml` marks `API_DESIGN` optional when "the approved Specification
 explicitly states the Story does not change public API behavior". The approved
-Specification (v1) states exactly that, in four places:
+Specification (v2) states exactly that, in four places, unchanged from v1:
 
 - **FR-018** — "This Story adds **no** endpoint, **no** Razor page, **no**
   authorization policy and **no** route. SC-4's anonymous list is unchanged and the
@@ -64,7 +93,7 @@ no existing endpoint answers differently because of it.
 | FR-001 | the first pipeline step inside `RunSynchronizationUseCase` | an `Application` use case reached only by the `BackgroundService` US-013 hosts |
 | FR-002 | the `IClassroomReader` port and its Google adapter | an outbound port (AD-4). It *calls* an API; it exposes none |
 | FR-003, FR-004 | reading courses and rosters, paged | outbound Google reads; VR-005 fixes the paging, and NFR-002's page sizes govern this program's own endpoints, not a Google call |
-| FR-005 … FR-007 | `Course`, `ClassroomParticipant`, `CourseMembership` | Domain entities and three tables, read by no endpoint until EPIC-2 |
+| FR-005 … FR-007 | `Course`, `ClassroomParticipant`, `CourseMembership` — the last unique on (course, person), the role a field on it (v2) | Domain entities and three tables, read by no endpoint until EPIC-2 |
 | FR-008 … FR-011 | upsert, the observation rule, leaving a roster, a course Google stopped returning | persistence behaviour, owned by DB_DESIGN |
 | FR-012 | one transaction per course | an `Application` transaction boundary (AD-7) |
 | FR-013 | the run counter | a column on an existing table; shown by US-024, not by this Story |
@@ -104,7 +133,10 @@ Recorded here so the next API design does not re-derive it:
   entities this Story creates and must return DTOs, never entities (AD-8), and must
   paginate: a course list and a roster both grow unbounded, so API-8's default page
   size 20 / maximum 100 applies (NFR-002). Note that this is a *different* paging
-  from VR-005's, which is how the program reads from Google.
+  from VR-005's, which is how the program reads from Google. Since v2 of the
+  Specification, a roster DTO carries **one role per person per course** — a
+  membership is unique on (course, person) — so US-021 must not model a collection of
+  roles per person.
 - **US-019** still inherits what US-013 §4 recorded — the coordinator entry point,
   "Запуск синхронизации" belonging to **both** Admin and Dean (§2, BR-004), the
   audit row for a *manual* start (SC-11), and the `409` with the API-6 body in
@@ -160,13 +192,19 @@ US-013 did change and this Story does not.
 
 ## 9. Open questions
 
-None raised by this stage. All eleven Open Decisions are resolved (open-decisions
-artifact v1): OD-001 … OD-009 before activation, OD-010 and OD-011 at
+None raised by this stage, at either attempt. All eleven Open Decisions are resolved
+(open-decisions artifact v1): OD-001 … OD-009 before activation, OD-010 and OD-011 at
 `HUMAN_SPEC_APPROVAL`. None leaves an API question open, and neither of the two
-resolved at the gate has an API dimension — both are schema decisions.
+resolved at the gate has an API dimension — both are schema decisions. The v2
+uniqueness correction is likewise a schema decision plus an `Application`-side
+tie-break (§0).
 
 DB_DESIGN owns what this stage deliberately does not: the three tables, the unique
 indexes on the Google identifiers, the closed vocabularies for the course state and
-the membership role with their check constraints, the non-unique index on the
-participant's email (OD-011), the string bounds VR-002 leaves to it with truncation
-rather than refusal, and the single migration (FR-017, VR-002 … VR-004).
+the membership role with their check constraints, **the unique index on (course,
+person) for `CourseMembership` — not (course, person, role), which is what
+Specification v2 corrected (FR-007, VR-004, PC-8)** — the non-unique index on the
+participant's email (OD-011), the roster-on-a-date indexes PC-7 requires on
+`CourseMembership` (course plus `first_seen_at` / `last_seen_at`), the string bounds
+VR-002 leaves to it with truncation rather than refusal, and the single migration
+(FR-017, VR-002 … VR-004).
