@@ -2,9 +2,9 @@
 artifact_type: specification
 story: US-014
 version: 1
-status: DRAFT
+status: APPROVED
 created_at: 2026-09-27T16:33:58Z
-updated_at: 2026-09-27T16:50:05Z
+updated_at: 2026-09-27T16:58:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-014-sync-courses-and-rosters.md
