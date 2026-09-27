@@ -1,10 +1,10 @@
 ---
 artifact_type: specification
 story: US-014
-version: 1
+version: 2
 status: APPROVED
 created_at: 2026-09-27T16:33:58Z
-updated_at: 2026-09-27T16:58:00Z
+updated_at: 2026-09-27T17:20:48Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-014-sync-courses-and-rosters.md
@@ -39,6 +39,14 @@ one are US-017 (OD-008). Not re-fetching what is already known is US-018
 (OD-007). The age rule that keeps the purge and the next sync from undoing each
 other is not applied here, because this Story can see only one of the four dates
 that define a course's last activity (OD-001).
+
+**Version 2** corrects one thing and nothing else: FR-007, VR-004, I-9, §8 and the
+testing notes now make a `CourseMembership` unique on **(course, person)**, with the
+role as a field and an explicit `teacher`-wins rule for a person on both rosters of
+one course. Version 1 had interpreted the uniqueness as including the role, which
+contradicted `persistence-conventions.md` PC-8; `db-designer` reported the
+contradiction at DB_DESIGN instead of designing around it, and the Owner resolved it
+in PC-8's favour on 2026-09-27. No other requirement changed.
 
 Two gaps found while writing this document were raised as OD-010 and OD-011 and
 resolved by the Owner at `HUMAN_SPEC_APPROVAL` before approval, because both
@@ -244,11 +252,21 @@ A `CourseMembership` entity is one person's participation in one course, carryin
   it is a fact in statistics, not a right (§3);
 - the observation fields of BR-051: when synchronization **first** saw the person
   on that roster, when it **last** saw them, and whether they are on it **now**;
-- its own uniqueness: one row per (course, person, role).
+- its own uniqueness: **one row per (course, person)**, as PC-8 fixes it. A person
+  has one participation in a course, and the role is a field on it — not part of
+  its identity.
 
 A person who teaches one course and studies on another has one
-`ClassroomParticipant` row and two `CourseMembership` rows with different roles
-(BR-050).
+`ClassroomParticipant` row and two `CourseMembership` rows, one per course, with
+different roles (BR-050).
+
+**If Classroom returns the same person on both rosters of one course**, the single
+membership records the role `teacher`: being a teacher of a course is the stronger
+relationship in Classroom, and a second appearance in the student list adds nothing
+the reports use. Classroom is understood to refuse such an enrolment, so this is a
+defensive rule, not an expected path — but it is stated, because without it the
+second roster would violate the uniqueness above and fail the course's import
+(I-9). The rule is applied in `Application`, not by the database.
 
 ### FR-008 Upsert and identity
 
@@ -457,7 +475,9 @@ written to a log (SC-10).
 - First-seen and last-seen are required; last-seen is never earlier than
   first-seen.
 - The on-roster flag is required.
-- One row per (course, person, role), enforced by a unique index (FR-007).
+- One row per **(course, person)**, enforced by a unique index (FR-007, PC-8). A
+  person appearing on both of a course's rosters is stored once with the role
+  `teacher`, resolved in `Application` before the write (I-9).
 
 ### VR-005 Paging
 
@@ -520,6 +540,7 @@ governed by VR-001.
 | A Classroom read fails (any status) | The failure propagates; US-013 records the run as failed with `RunFailed:<type>`; the next run retries by simply running again. No classification and no in-run retry here (FR-014, OD-008). |
 | A course's roster read fails | That course is not committed, and **no** membership of it is marked off the roster (FR-010). |
 | A course field fails validation | The value is truncated where VR-002 allows; a missing required identifier makes that course unimportable. |
+| The same person on both rosters of one course | One membership with the role `teacher`; resolved in `Application` before the write, so the unique index is never violated (FR-007, I-9). |
 | A `courseState` outside the five §3 values | That one course is skipped and the run completes with the others; one `Warning` line carries the state string and the course's Google id, never its name (OD-010, FR-003). |
 | Host shutdown during the step | `OperationCanceledException` is a normal stop, not a failed run (FR-014, US-013 FR-010). |
 | An exception anywhere in the step | Never takes the host down (US-013 AC-006). |
@@ -542,8 +563,10 @@ governed by VR-001.
   the three tables and their constraints are tested against real PostgreSQL through
   Testcontainers, never the InMemory provider; paging is covered by a fixture
   returning more than one page; the BR-051 sequence — seen, gone, seen again — is
-  covered with the first-seen date asserted unchanged; the read-only refusal is
-  tested in the Application layer.
+  covered with the first-seen date asserted unchanged; a person returned on **both**
+  rosters of one course is covered, asserting one membership with the role `teacher`
+  and no unique-index violation (FR-007, I-9); the read-only refusal is tested in the
+  Application layer.
 - **Known limitation (OD-001).** Until the age rule exists, a fresh installation
   may import a course whose data in Google is already older than the retention
   period. Nothing is lost by this while no code deletes data (US-037).
@@ -622,10 +645,18 @@ reading. Each is a candidate for correction at the gate.
   read that succeeded and one that did not.
 - **I-8 One instant per run.** All observations of one run carry the same last-seen
   value, so "seen in the same run" is expressible in a query.
-- **I-9 Uniqueness of a membership includes the role.** §3 allows one person two
-  relationships to two courses; within one course, a person listed on both rosters
-  is a Classroom reality the model represents as two memberships rather than
-  choosing one role for them.
+- **I-9 A membership is unique on (course, person); the role is a field, and
+  `teacher` wins a conflict.** §3 says only that a person may teach one course and
+  study on another, and settles nothing about one course; `persistence-conventions.md`
+  PC-8 does settle it — "Unique on (course, participant)" — and it was written with
+  the v23 decision that moved the role onto the membership. This Specification
+  originally interpreted the uniqueness as including the role; that reading was
+  **corrected at DB_DESIGN**, where `db-designer` reported the contradiction rather
+  than designing around it (workflow history, 2026-09-27, attempt 2). Two rows per
+  person per course would leave "what was this person in this course on that date"
+  ambiguous, which is exactly the question BR-051 and BR-064 oblige the Meet reports
+  to answer, and no document gives a rule for choosing between them. One row plus an
+  explicit `teacher`-wins rule answers it and cannot fail an import.
 - **I-10 The page size is not configuration.** VR-005: it describes how this
   program talks to Google, so AD-10's ban on hard-coded configuration does not
   reach it, and DC-3 gains no key.

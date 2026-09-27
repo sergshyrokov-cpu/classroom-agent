@@ -134,3 +134,7 @@
 {"timestamp":"2026-09-27T16:37:45Z","story":"US-014","from_stage":"SPECIFICATION","to_stage":"HUMAN_SPEC_APPROVAL","skill":"spec-writer","verdict":"PASS","artifacts":["docs/specifications/US-014-spec.md","docs/decisions/US-014-open-decisions.md"],"attempt":1}
 {"timestamp":"2026-09-27T16:58:00Z","story":"US-014","from_stage":"HUMAN_SPEC_APPROVAL","to_stage":"API_DESIGN","skill":null,"verdict":"HUMAN_APPROVED","artifacts":["docs/specifications/US-014-spec.md"],"attempt":1}
 {"timestamp":"2026-09-27T17:00:33Z","story":"US-014","from_stage":"API_DESIGN","to_stage":"DB_DESIGN","skill":"openapi-designer","verdict":"NOT_APPLICABLE","artifacts":["docs/designs/api/US-014-api-design.md"],"attempt":1}
+{"timestamp":"2026-09-27T17:16:31Z","story":"US-014","from_stage":"DB_DESIGN","to_stage":"DB_DESIGN","skill":"db-designer","verdict":"BLOCKED","artifacts":[],"attempt":1}
+{"timestamp":"2026-09-27T17:16:31Z","story":"US-014","from_stage":"DB_DESIGN","to_stage":"SPECIFICATION","skill":null,"verdict":"CHANGES_REQUIRED","artifacts":[],"attempt":2}
+{"timestamp":"2026-09-27T17:16:31Z","story":"US-014","from_stage":"SPECIFICATION","to_stage":"HUMAN_SPEC_APPROVAL","skill":"spec-writer","verdict":"PASS","artifacts":["docs/specifications/US-014-spec.md"],"attempt":2}
+{"timestamp":"2026-09-27T17:20:48Z","story":"US-014","from_stage":"HUMAN_SPEC_APPROVAL","to_stage":"API_DESIGN","skill":null,"verdict":"HUMAN_APPROVED","artifacts":["docs/specifications/US-014-spec.md"],"attempt":2}

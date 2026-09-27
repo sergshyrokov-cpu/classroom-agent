@@ -4,23 +4,28 @@
 version: 1
 story: US-014
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
 status: IN_PROGRESS
-attempt: 1
-last_invoked_skill: openapi-designer
+attempt: 2
+last_invoked_skill: null
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: 2026-09-27T17:00:33Z
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: 2026-09-27T17:20:48Z
 last_artifacts:
-  - type: api_design
-    path: docs/designs/api/US-014-api-design.md
-    version: 1
+  - type: specification
+    path: docs/specifications/US-014-spec.md
+    version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "HUMAN_SPEC_APPROVAL approved AGAIN by Serhii SHYROKOV (/so:approve) at 2026-09-27T17:20:48Z (no comment), this time for Specification v2: the CourseMembership uniqueness correction accepted as PC-8 has it - unique on (course, person), the role a field, teacher winning a both-rosters conflict in Application. Automated verdict PASS, no blocking findings. Specification v2 status is now APPROVED; v1 was never superseded as a separate file, the artifact is revised in place (the US-013 convention)."
+  - "STALE INPUT to clear next: docs/designs/api/US-014-api-design.md (v1) records specification version 1 in its inputs, and the Specification is now v2, so by the artifact-schema.md staleness contract that artifact is STALE. API_DESIGN therefore RE-RUNS at attempt 2 against v2. The verdict is expected to stay NOT_APPLICABLE - the correction has no API dimension (it changes a unique index and an Application-side tie-break, not any endpoint) - but the artifact must record specification v2 rather than be assumed current."
+  - "DB_DESIGN attempt 1: BLOCKED, and the Owner routed the workflow back to SPECIFICATION on 2026-09-27. db-designer found the approved Specification v1 (FR-007, I-9) fixing a CourseMembership as one row per (course, person, ROLE) while persistence-conventions.md PC-8 fixes «Unique on (course, participant)», and trebovaniya.md §3 settles neither - it says only that a person may teach one course and study ON ANOTHER. The choice changes the unique index, so the stage could not proceed, and changing an approved Specification is not a stage Skill's to make. NO design artifact was produced at attempt 1."
+  - "The Owner resolved it in PC-8's FAVOUR: uniqueness is (course, person), the role is a FIELD on the membership, and a person returned on BOTH rosters of one course gets ONE membership with the role teacher, resolved in Application before the write so the unique index is never violated. Reasons recorded: PC-8 was written together with the v23 decision that moved the role onto the membership, while I-9 was a fresh interpretation with no textual support; two rows per person per course would leave «what was this person in this course on that date» ambiguous, which is precisely what BR-051 and BR-064 oblige the Meet reports to answer and for which no document gives a tie-break; and the risk I-9 guarded against is better closed by an explicit rule than by a second row. Classroom is understood to refuse such an enrolment, but that was NOT verified on a live domain and the prototype gives no evidence (it never calls teachers().list), so the rule is stated defensively rather than assumed away."
+  - "SPECIFICATION attempt 2: PASS. Specification is now v2 and changes ONE thing - FR-007, VR-004, I-9, §8 and the testing notes - and nothing else; §1 records why. Because the correction touched an artifact that had already passed HUMAN_SPEC_APPROVAL, the Specification returned to DRAFT and the gate must be recorded again; the api_design (v1, NOT_APPLICABLE) is unaffected, because the change has no API dimension. TEST_WRITING must cover a person on both rosters of one course: one membership, role teacher, no unique-index violation."
   - "API_DESIGN: NOT_APPLICABLE. The approved Specification states in four places (FR-018, VR-007, S-08, §10) that the Story adds no endpoint, page, policy or route, which is exactly the optional_when of stage-map.yaml. There is deliberately NO docs/designs/api/US-014-openapi.yaml - its absence is the recorded decision, the same one US-007 and US-013 made; downstream stages that list openapi as an input read the api_design document instead."
   - "API_DESIGN §1 records that this is a STRICTER NOT_APPLICABLE than US-013's: US-013 changed which STATES the existing readiness endpoint reports (a behaviour change inside an unchanged contract, which its api-design §3 flagged for a reviewer), while US-014 does not touch readiness and makes NO existing endpoint answer differently. A readiness change appearing in this Story is out of scope."
   - "API_DESIGN §4 records what later Stories inherit: EPIC-2 (US-020 … US-022) is the first consumer and must return DTOs, never entities (AD-8), and must paginate with API-8's default 20 / maximum 100, because a course list and a roster both grow unbounded (NFR-002) - a DIFFERENT paging from VR-005's, which is how the program reads from Google; US-019 still inherits what US-013 recorded (the coordinator entry point, «Запуск синхронизации» for BOTH Admin and Dean per §2/BR-004, the audit row for a MANUAL start, the 409 with the API-6 body in read-only mode), unchanged by this Story; US-024 must label the SyncState counter «courses processed» (OD-005); and Epic 4 MUST resolve a Meet address through the roster of the course ON THE MEETING'S DATE (PC-12, BR-051), because OD-011 made the email non-unique precisely for that rule - matching globally against the participant table would reintroduce the defect OD-011 avoided."
@@ -43,5 +48,5 @@ non_blocking_findings:
   - "Carried from the US-012 security review: five Informational observations (I-1 … I-5) stand on the sign-in surface and are not US-014's to correct."
   - "Carried from the US-013 security review: five Informational observations stand - I-1 the tolerated stale Running row, I-2 the deliberately coarse failure diagnosis («RunFailed:» plus a type name, US-017 makes it actionable), I-3 the Guid run identifier, I-4 the 1440-minute interval ceiling as a functional choice, I-5 the bounds spelled in prose beside their constants. None is US-014's to correct."
 started_at: 2026-09-27T16:33:58Z
-updated_at: 2026-09-27T17:00:33Z
+updated_at: 2026-09-27T17:20:48Z
 completed_at: null
