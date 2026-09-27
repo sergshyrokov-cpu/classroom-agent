@@ -126,13 +126,39 @@ public sealed class InstallationCookieTests(PostgreSqlFixture database)
         Assert.Contains(stateChanging, e => e.Pattern == "sign-in/google");
         Assert.Contains(stateChanging, e => e.Pattern == "sign-out");
 
+        // US-012 put two endpoints behind a Dean's role: /account/password needs an ordinary Dean session and
+        // /sign-in/change-password needs the restricted one of step 5. Sent as the Admin they would answer 403
+        // before the antiforgery filter ran, which would say nothing about the token (TC-5: "a user with an
+        // allowed role").
+        // Two different accounts on purpose: completing the forced change rotates that account's security
+        // stamp, which would end the other session if they shared one (US-012 spec FR-019).
+        await host.InsertDeanAsync(ct);
+        await host.InsertDeanAsync(ct, email: DeanAccountTestData.SecondDeanEmail);
+        using var deanWithTemporaryPassword = host.CreateClient();
+        await deanWithTemporaryPassword.SignInAsDeanAsync(
+            DeanAccountTestData.DeanEmail,
+            DeanAccountTestData.TemporaryPassword,
+            ct);
+        using var dean = host.CreateClient();
+        await dean.SignInAsDeanAsync(
+            DeanAccountTestData.SecondDeanEmail,
+            DeanAccountTestData.TemporaryPassword,
+            ct);
+        await dean.CompleteForcedChangeAsync(DeanAccountTestData.NewPassword, ct);
+
         var failures = new List<string>();
         foreach (var endpoint in stateChanging)
         {
             foreach (var method in endpoint.UnsafeMethodsAccepted)
             {
                 using var anonymous = host.CreateClient();
-                var client = endpoint.AllowsAnonymous ? anonymous : signedIn;
+                var client = endpoint switch
+                {
+                    { AllowsAnonymous: true } => anonymous,
+                    { Pattern: "sign-in/change-password" } => deanWithTemporaryPassword,
+                    { Pattern: "account/password" } => dean,
+                    _ => signedIn,
+                };
                 var response = await client.SendAsync(
                     new HttpMethod(method),
                     endpoint.SamplePath,

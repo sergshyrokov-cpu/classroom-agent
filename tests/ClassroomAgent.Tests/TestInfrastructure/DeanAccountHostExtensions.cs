@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ClassroomAgent.Tests.TestInfrastructure;
 
@@ -147,17 +148,39 @@ public static class DeanAccountHostExtensions
         this InstallationTestHost host,
         CancellationToken cancellationToken,
         string email = DeanAccountTestData.DeanEmail,
-        string? passwordHash = null,
+        string password = DeanAccountTestData.TemporaryPassword,
+        bool passwordIsTemporary = true,
         bool isDisabled = false,
         DateTimeOffset? lastSuccessfulSignInAt = null) =>
-        host.InsertAppUserAsync(
+        host.ExecuteAsync(
+            """
+            INSERT INTO app_user (email, normalized_email, role, sign_in_method, password_hash, security_stamp,
+                                  concurrency_stamp, access_failed_count, ui_language, is_disabled,
+                                  password_is_temporary, last_successful_sign_in_at, created_at, updated_at)
+            VALUES (@email, @email, 'dean', 'password', @passwordHash, @securityStamp, @concurrencyStamp,
+                    0, 'uk', @isDisabled, @temporary, @lastSignIn, @stamp, @stamp)
+            """,
             cancellationToken,
-            email: email,
-            role: "dean",
-            signInMethod: "password",
-            passwordHash: passwordHash ?? "seeded-hash",
-            isDisabled: isDisabled,
-            lastSuccessfulSignInAt: lastSuccessfulSignInAt);
+            ("email", email.ToLowerInvariant()),
+            ("passwordHash", HashOf(host, password)),
+            ("securityStamp", Guid.NewGuid().ToString("N")),
+            ("concurrencyStamp", Guid.NewGuid().ToString("N")),
+            ("isDisabled", isDisabled),
+            ("temporary", passwordIsTemporary),
+            ("lastSignIn", lastSuccessfulSignInAt),
+            ("stamp", host.Time.GetUtcNow()));
+
+    /// <summary>
+    /// The hash the production code would store, produced by the host's own hasher port — so a seeded account
+    /// signs in exactly as a created one does, and the fixture cannot drift from the implementation.
+    /// </summary>
+    private static string HashOf(InstallationTestHost host, string password)
+    {
+        using var scope = host.CreateScope();
+        return scope.ServiceProvider
+            .GetRequiredService<ClassroomAgent.Application.Ports.IPasswordHasher>()
+            .Hash(password);
+    }
 
     /// <summary>
     /// Opens a page only to pick up its antiforgery token, falling back to the landing page while the page does

@@ -64,6 +64,27 @@ public static class InstallationSecurityServices
                 policy => policy.RequireAuthenticatedUser().RequireRole(
                     InstallationSession.RoleName(AppRole.Admin)));
 
+            // US-012 spec FR-016: managing Dean accounts is the Admin's cell of the §2 matrix (v64).
+            options.AddPolicy(
+                InstallationPolicies.ManageDeanAccounts,
+                policy => policy.RequireAuthenticatedUser().RequireRole(
+                    InstallationSession.RoleName(AppRole.Admin)));
+
+            // US-012 spec FR-016: changing one's own password is the Dean's cell — an Admin has no password
+            // at all, so this policy refuses one (SC-2, spec S-07).
+            options.AddPolicy(
+                InstallationPolicies.ChangeOwnPassword,
+                policy => policy.RequireAuthenticatedUser().RequireRole(
+                    InstallationSession.RoleName(AppRole.Dean)));
+
+            // US-012 spec FR-006: only the session created at step 5 of the sequence may reach the forced
+            // change form (api-design §2.6).
+            options.AddPolicy(
+                InstallationPolicies.CompleteTemporaryPasswordChange,
+                policy => policy
+                    .RequireAuthenticatedUser()
+                    .RequireClaim(InstallationClaimTypes.PasswordIsTemporary, "true"));
+
             // Deny by default: an endpoint whose author forgot an attribute closes rather than opens (SC-4, API-9).
             options.FallbackPolicy = options.GetPolicy(InstallationPolicies.AuthenticatedUser);
         });

@@ -1,5 +1,6 @@
 using ClassroomAgent.Application.Models;
 using ClassroomAgent.Application.Ports;
+using ClassroomAgent.Domain.Entities;
 
 namespace ClassroomAgent.Application.UseCases;
 
@@ -9,26 +10,49 @@ namespace ClassroomAgent.Application.UseCases;
 /// (spec I-7). Permitted in read-only mode (BR-026), and a wrong current password is not a failed sign-in
 /// attempt — it moves no counter.
 /// </summary>
-/// <remarks>US-012 TEST_WRITING skeleton (OD-005) — IMPLEMENTATION writes the body.</remarks>
-public sealed class ChangeOwnPasswordUseCase
+public sealed class ChangeOwnPasswordUseCase(
+    IAppUserRepository users,
+    IAuditEventRepository auditEvents,
+    IPasswordHasher passwordHasher,
+    IUnitOfWork unitOfWork,
+    ServiceWriteScope writeScope,
+    TimeProvider timeProvider)
 {
-    /// <summary>US-012 TEST_WRITING skeleton (OD-005): IMPLEMENTATION turns this into a primary constructor
-    /// holding the dependencies. They are listed here so the tests construct the type exactly as it will be.</summary>
-    public ChangeOwnPasswordUseCase(
-        IAppUserRepository users,
-        IAuditEventRepository auditEvents,
-        IPasswordHasher passwordHasher,
-        IUnitOfWork unitOfWork,
-        ServiceWriteScope writeScope,
-        TimeProvider timeProvider)
-    {
-    }
-
-    public Task<PasswordChangeOutcome> ExecuteAsync(
+    public async Task<PasswordChangeOutcome> ExecuteAsync(
         long deanId,
         string currentPassword,
         string newPassword,
         string? requestId,
-        CancellationToken cancellationToken) =>
-        throw new NotImplementedException("US-012 IMPLEMENTATION (spec FR-014).");
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(currentPassword);
+        ArgumentNullException.ThrowIfNull(newPassword);
+
+        var dean = await users.FindDeanByIdAsync(deanId, cancellationToken);
+        if (dean is null || dean.PasswordHash is not { } hash)
+        {
+            return new PasswordChangeOutcome(true, false, null);
+        }
+
+        if (!passwordHasher.Verify(hash, currentPassword))
+        {
+            return new PasswordChangeOutcome(true, true, null);
+        }
+
+        var violation = DeanPasswordPolicy.Check(newPassword, dean.Email);
+        if (violation is { } broken)
+        {
+            return new PasswordChangeOutcome(true, false, broken);
+        }
+
+        var now = timeProvider.GetUtcNow();
+        dean.SetOwnPassword(passwordHasher.Hash(newPassword), now);
+        auditEvents.Add(AuditEvent.DeanPasswordChanged(dean.Id, now, requestId));
+        using (writeScope.Declare(PermittedServiceWrite.SignInBookkeeping))
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
+        return new PasswordChangeOutcome(false, false, null);
+    }
 }

@@ -22,10 +22,14 @@ public static class InstallationSession
     public static readonly TimeSpan AbsoluteLimit = TimeSpan.FromHours(8);
 
     /// <summary>Issues the session for an account the use case admitted (spec FR-010: never before that).</summary>
-    public static Task SignInAsync(HttpContext context, SignedInUser user, TimeProvider timeProvider)
+    public static Task SignInAsync(
+        HttpContext context,
+        SignedInUser user,
+        TimeProvider timeProvider,
+        bool passwordIsTemporary = false)
     {
         var signedInAt = timeProvider.GetUtcNow().ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture);
-        var identity = new ClaimsIdentity(
+        List<Claim> claims =
             [
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString(CultureInfo.InvariantCulture)),
                 new Claim(ClaimTypes.Email, user.Email),
@@ -33,8 +37,16 @@ public static class InstallationSession
                 new Claim(InstallationClaimTypes.UiLanguage, LanguageCode(user.UiLanguage)),
                 new Claim(InstallationClaimTypes.SignedInAt, signedInAt),
                 new Claim(InstallationClaimTypes.SecurityStamp, user.SecurityStamp),
-            ],
-            CookieAuthenticationDefaults.AuthenticationScheme);
+            ];
+
+        // US-012 spec FR-006: step 5 of the sequence issues a session that may reach the forced change form
+        // and nothing else. The claim is the whole of that state — no second authentication mechanism.
+        if (passwordIsTemporary)
+        {
+            claims.Add(new Claim(InstallationClaimTypes.PasswordIsTemporary, "true"));
+        }
+
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
         return context.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,

@@ -15,4 +15,11 @@ public static class InstallationClaimTypes
     /// authenticating even when someone kept a copy of it (US-008 AC-014; the Owner session of US-001 does the same).
     /// </summary>
     public const string SecurityStamp = "ca:security_stamp";
+
+    /// <summary>
+    /// US-012 spec FR-006, api-design §2.6: the session was created at step 5 of the sign-in sequence, so the
+    /// password is still the temporary one an Admin typed. Such a session may reach the forced change form and
+    /// nothing else.
+    /// </summary>
+    public const string PasswordIsTemporary = "ca:password_is_temporary";
 }

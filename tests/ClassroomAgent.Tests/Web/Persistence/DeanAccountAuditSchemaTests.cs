@@ -151,7 +151,9 @@ public sealed class DeanAccountAuditSchemaTests(PostgreSqlFixture database)
 
         var columns = await InstallationSchemaQueries.ColumnsAsync(host, "audit_event", ct);
 
-        Assert.Equal(12, columns.Count);
+        // Thirteen since US-008: id, occurred_at, actor_type, actor_id, actor_role, action,
+        // target_type, target_id, outcome, refusal_category, request_id, created_at, updated_at.
+        Assert.Equal(13, columns.Count);
     }
 
     private static string Text(Exception exception)

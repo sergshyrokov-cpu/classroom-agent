@@ -7,16 +7,18 @@ namespace ClassroomAgent.Application.UseCases;
 /// Every Dean account, active and disabled alike, for the Admin's screen (US-012 spec FR-011). Reading is never
 /// blocked in read-only mode (BR-026), so this query consults no guard.
 /// </summary>
-/// <remarks>US-012 TEST_WRITING skeleton (OD-005) — IMPLEMENTATION writes the body.</remarks>
-public sealed class ListDeanAccountsQuery
+public sealed class ListDeanAccountsQuery(IAppUserRepository users)
 {
-    /// <summary>US-012 TEST_WRITING skeleton (OD-005): IMPLEMENTATION turns this into a primary constructor
-    /// holding the dependencies. They are listed here so the tests construct the type exactly as it will be.</summary>
-    public ListDeanAccountsQuery(
-        IAppUserRepository users)
+    public async Task<IReadOnlyList<DeanAccountRow>> ExecuteAsync(CancellationToken cancellationToken)
     {
+        var deans = await users.ListDeansAsync(cancellationToken);
+        return deans
+            .Select(d => new DeanAccountRow(
+                d.Id,
+                d.Email,
+                d.IsDisabled,
+                d.PasswordIsTemporary,
+                d.LastSuccessfulSignInAt))
+            .ToList();
     }
-
-    public Task<IReadOnlyList<DeanAccountRow>> ExecuteAsync(CancellationToken cancellationToken) =>
-        throw new NotImplementedException("US-012 IMPLEMENTATION (spec FR-011).");
 }

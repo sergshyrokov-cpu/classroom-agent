@@ -112,6 +112,11 @@ public sealed class Program
         app.UseStaticFiles();
         app.UseRouting();
         app.UseAuthentication();
+
+        // US-012 spec FR-006: a Dean whose password is still temporary may reach the change form and nothing
+        // else. It sits after authentication, so it sees the principal, and before authorization, so a
+        // restricted session never reaches a policy at all.
+        app.UseMiddleware<TemporaryPasswordMiddleware>();
         app.UseRequestLocalization(options =>
         {
             CultureInfo[] cultures = [CultureInfo.GetCultureInfo("uk"), CultureInfo.GetCultureInfo("en")];

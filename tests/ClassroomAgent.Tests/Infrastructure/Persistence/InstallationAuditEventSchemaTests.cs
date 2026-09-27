@@ -170,7 +170,9 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
 
     /// <summary>db-design 4.1, I-11: only the action this Story performs is allowed.</summary>
     [Theory]
-    [InlineData("dean_sign_in")]
+    // US-012 performs dean_sign_in now, so the example of "a value no Story performs" moved on to an action
+    // of a later Epic. The point of the test is unchanged: the list stays closed.
+    [InlineData("sync_started")]
     [InlineData("export")]
     [InlineData("AdminSignIn")]
     public async Task AnActionNoStoryPerforms_IsRejected(string action)
@@ -223,7 +225,8 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
     }
 
     [Theory]
-    [InlineData("wrong_password")]
+    // US-012 performs wrong_password now (step 3 of the sign-in sequence), so the example moved on.
+    [InlineData("password_expired")]
     [InlineData("NotInAllowedAdmin")]
     public async Task AnUndocumentedRefusalCategory_IsRejected(string category)
     {
@@ -241,7 +244,9 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
 
     /// <summary>db-design 4.1: the target columns travel together.</summary>
     [Theory]
-    [InlineData("app_user", null)]
+    // US-012 added app_user to the closed list of target types, so the unknown-type example moved on to a
+    // type a later Epic will add.
+    [InlineData("course", null)]
     [InlineData(null, 7L)]
     public async Task AHalfSetTarget_IsRejected(string? targetType, long? targetId)
     {

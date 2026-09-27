@@ -1,0 +1,20 @@
+@model ChangePasswordPageModel
+@{
+    ViewData["Title"] = T[DeanAccountTextKeys.ForcedChangeTitle];
+}
+
+<p>@T[DeanAccountTextKeys.ForcedChangeExplanation]</p>
+
+@if (Model.MessageKey is not null)
+{
+    <p class="form-message">@T[Model.MessageKey]</p>
+}
+
+<form method="post" action="/sign-in/change-password" id="forced-password-change">
+    @Html.AntiForgeryToken()
+    <label>
+        @T[DeanAccountTextKeys.OwnPasswordNewLabel]
+        <input type="password" name="newPassword" autocomplete="new-password" />
+    </label>
+    <button type="submit">@T[DeanAccountTextKeys.OwnPasswordSubmit]</button>
+</form>

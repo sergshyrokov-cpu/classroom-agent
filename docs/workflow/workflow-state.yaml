@@ -4,29 +4,63 @@
 version: 1
 story: US-012
 workflow: story-delivery
-current_stage: IMPLEMENTATION
-previous_stage: TEST_WRITING
-last_completed_stage: TEST_WRITING
-status: IN_PROGRESS
-attempt: 1
-last_invoked_skill: test-writer
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
+attempt: 3
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: TEST_WRITING
-  recorded_at: 2026-09-26T19:39:28Z
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_PR_APPROVAL
+  recorded_at: 2026-09-27T07:28:24Z
 last_artifacts:
-  - type: test_strategy
-    path: docs/tests/US-012-test-strategy.md
-    version: 1
-  - type: ac_test_matrix
-    path: docs/tests/US-012-ac-test-matrix.md
-    version: 1
-  - type: test_generation_report
-    path: docs/evidence/US-012-test-generation-report.md
-    version: 1
+  - type: implementation_report
+    path: docs/evidence/US-012-implementation-report.md
+    version: 3
+  - type: security_review
+    path: docs/reviews/security/US-012-security-review.md
+    version: 3
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "HUMAN_PR_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-27T07:28:24Z (no comment): implementation_report v3 and security_review v3 accepted; automated verdict PASS with no Critical, Major or Minor findings. The approval covers the three review rounds - F-1 and F-3 (the unknown-login timing oracle, in both directions) and F-2 (the session ended by a voluntary password change), all closed - and the five Informational observations that stand: I-1 the timing of step 2 is a difference SC-2 MANDATES, I-2 no log line for a refused Dean sign-in, I-3 the sign-in password bounded only by the form-value limit, I-4 no rate limit beyond the per-account lockout, I-5 the internal id in a form action. implementation_report status is now APPROVED. Until the final commit lands on master the Story is approved, not Done (AGENTS.md Definition of Done item 10)."
+
+  - "SECURITY_REVIEW attempt 3: PASS. 0 Critical, 0 Major, 0 Minor, 5 Informational. security_review is v3 and APPROVED; it keeps the record of all three passes - v1 found F-1 and F-2, v2 closed F-2 and found F-3 inside the fix of F-1, v3 closes F-3. Every touched SC item PASS; SC-3, SC-6, SC-7, SC-9, SC-12 NOT_APPLICABLE. runtime_checks PARTIAL."
+  - "SECURITY_REVIEW attempt 3 closed F-3: the dummy hash is now a private static string? filled at most once per process, so the unknown-login path pays exactly one verification like a real check and the response no longer reveals whether the login exists by timing in EITHER direction. Re-checked that the static introduces nothing: the value is a hash of a fresh GUID, never a real password, never logged; a thread race is bounded; step 2 still verifies nothing, which SC-2 v66 requires."
+  - "SECURITY_REVIEW five Informational observations stand and need no correction: I-1 the timing of step 2 is a difference SC-2 MANDATES; I-2 a refused Dean sign-in writes an audit row but no log line, unlike the Admin path; I-3 the password presented at sign-in is bounded only by the form-value limit before hashing; I-4 no rate limit on POST /sign-in beyond the per-account lockout, and §2 rules out a permanent one by design; I-5 the account's internal id appears in a form action, which SC-11 already treats as non-personal."
+
+  - "IMPLEMENTATION attempt 3: PASS. F-3 fixed, two files touched (SignInDeanUseCase.cs, DeanSignInSequenceTests.cs). Build 0 errors / 0 warnings; dotnet test 2167 total, 2167 passed, 0 failed, 0 skipped; dotnet format --verify-no-changes clean. implementation_report is now v3."
+  - "IMPLEMENTATION attempt 3 fixed F-3: the dummy hash is now a private static string? filled at most once for the process through TimingEqualisationHashOf, the way ControlPlane OwnerSignInService declares HashTimingHash. An instance field on a scoped use case made the unknown-login path pay a Hash PLUS a Verify while a real check paid one Verify - the same oracle inverted. A race would make each thread hash once and one value win: bounded, harmless, and it keeps a lock off the sign-in path."
+  - "IMPLEMENTATION attempt 3 verification: Step1_DoesNotRehashOnEveryAttempt performs two unknown-login attempts and asserts the hash count does not grow between them. The assertion is deterministic whichever test populated the static first, unlike an absolute count would be."
+
+  - "SECURITY_REVIEW attempt 2: CHANGES_REQUIRED, loop back to IMPLEMENTATION. 0 Critical, 1 Major (F-3), 0 Minor, 5 Informational unchanged. security_review is now v2; v1 remains the record of the first pass and its sections 3-17 still describe the Story accurately."
+  - "SECURITY_REVIEW F-2 CLOSED: both password paths re-issue the session through ReIssueSessionAsync, the account is re-read after the commit so the cookie carries the rotated stamp, and two new tests follow the redirect."
+  - "SECURITY_REVIEW F-1 addressed but NOT closed, superseded by F-3 (MAJOR, SC-2): _timingEqualisationHash is a private INSTANCE Lazy<string> and SignInDeanUseCase is AddScoped (InstallationServices.cs:104), so the dummy hash is computed on every unknown-login request. That path now pays one Hash PLUS one Verify while a known login pays one Verify, so an unknown login answers in roughly twice the time - the oracle is inverted and smaller, not removed, and SC-2 still requires that the response never reveal whether the login exists. FIX: make the field static readonly, exactly as ControlPlane OwnerSignInService declares HashTimingHash. Verify by asserting that two consecutive unknown-login attempts produce ONE Hash call in total through the substituted port."
+  - "SECURITY_REVIEW attempt 2 re-verified, because the sign-in path was touched: step 2 still refuses without verifying the password and without moving the counter (a new test pins this); step 4 still needs the correct password; the unknown-login audit row still carries no actor, role or target; no secret reaches a view model, audit row or log line; the three management use cases still consult the guard first; no Google call, no configuration change, no secret in the working tree."
+
+  - "IMPLEMENTATION attempt 2: PASS. Both security-review findings fixed, nothing else changed. Build 0 errors / 0 warnings; dotnet test 2166 total, 2166 passed, 0 failed, 0 skipped (2163 in attempt 1 plus three tests that verify the fixes); dotnet format --verify-no-changes clean. implementation_report is now v2 and its section 0 records both fixes."
+  - "IMPLEMENTATION attempt 2 fixed F-1 (Major, SC-2): step 1 of SignInDeanUseCase now verifies a hash of a value nobody knows, computed once per instance, and discards the result - the same countermeasure and the same reason as ControlPlane OwnerSignInService. Step 2 still skips verification, which SC-2 v66 requires. Two tests pin both halves: Step1_SpendsTheSameHashingWorkAsARealCheck compares the hasher call count on an unknown login with the count on a known one, and Step2_StillVerifiesNoPassword asserts the lockout path calls it zero times. The old Step1_VerifiesNoPassword asserted the opposite of the fix and was replaced by the first of these."
+  - "IMPLEMENTATION attempt 2 fixed F-2 (Minor): DeanPasswordController re-issues the session in BOTH password paths through one ReIssueSessionAsync helper, so the stamp rotation of a voluntary change no longer ends the Dean's own session. AfterAChange_TheSessionSurvivesAndTheConfirmationIsShown follows the redirect and asserts 200 with the confirmation; AfterAChange_TheNewPasswordIsTheOneThatWorks signs in with the new password in a fresh client."
+  - "IMPLEMENTATION attempt 2 touched four files only: Application/UseCases/SignInDeanUseCase.cs, Web/Controllers/DeanPasswordController.cs, tests/.../DeanSignInSequenceTests.cs, tests/.../DeanPasswordPageTests.cs. The five Informational observations of the review (I-1 ... I-5) were left as they are - none requires a change."
+
+  - "SECURITY_REVIEW: CHANGES_REQUIRED, loop back to IMPLEMENTATION. 0 Critical, 1 Major, 1 Minor, 5 Informational. Every touched SC item PASS except SC-2 (F-1); SC-3, SC-6, SC-7, SC-9, SC-12 NOT_APPLICABLE. runtime_checks PARTIAL - static and test-based, the recorded suite result read not re-run, no live host driven by hand. dotnet list package --vulnerable clean for all seven projects."
+  - "SECURITY_REVIEW F-1 (MAJOR, SC-2, AUTHENTICATION): step 1 of SignInDeanUseCase returns on an unknown login WITHOUT calling passwordHasher.Verify, while steps 3 to 6 call it. Password hashing is deliberately expensive, so the two paths differ measurably in time and an unauthenticated caller can enumerate which staff addresses have Dean accounts - without tripping any lockout, because the counter never moves for an unknown login. SC-2 requires that a refusal never reveals whether the login exists, and SC-2 v62 notes the Dean sign-in is reachable from the internet with a guessable work email. THE COUNTERMEASURE ALREADY EXISTS IN THIS REPOSITORY: ControlPlane OwnerSignInService verifies a pre-computed dummy hash on an unknown login, commented \"Spend the same hashing work as a real check, so timing does not reveal the login\". Fix step 1 the same way; step 2 must KEEP skipping verification, which SC-2 mandates. Verify with a test asserting the unknown-login path calls the substituted hasher exactly once."
+  - "SECURITY_REVIEW F-2 (Minor, AUTHENTICATION): the voluntary password change rotates the security stamp but does not re-issue the session, so the Dean's own cookie dies and the Post-Redirect-Get confirmation is never rendered - the forced change does re-issue. Fix DeanPasswordController.ChangeOwn the way CompleteForced already works, and extend AChange_RedirectsBackToThePage to follow the redirect."
+  - "SECURITY_REVIEW informational: I-1 the timing of step 2 is a difference SC-2 MANDATES and must not be \"fixed\"; I-2 a refused Dean sign-in writes an audit row but no log line, unlike the Admin path; I-3 the password presented at sign-in is bounded only by the form-value limit before hashing; I-4 no rate limit on POST /sign-in beyond the per-account lockout, and §2 rules out a permanent one by design; I-5 the account's internal id appears in a form action, which SC-11 already treats as non-personal."
+  - "SECURITY_REVIEW judged the six IMPLEMENTATION deviations independently and accepted all six: D-3 (RecordSuccessfulSignIn now resets the counter) is REQUIRED by SC-2 step 6; D-4 (a malformed stored hash is a failed verification, not a 500) is correct and prevents an oracle; D-5 matches api-design 2.6 and weakens nothing; D-1 and D-2 corrected two US-012 tests without removing an assertion; D-6 kept each guard's own assertion and did not widen the BR-026 closed list."
+  - "SECURITY_REVIEW confirmed AC-014 closed: a real Dean session by password is refused on all three Admin-only settings pages, on every method, and still gets 200 from the legitimacy-status view. The finding carried from US-010 F-1 through US-011 F-1 does not need to be carried again."
+
+  - "IMPLEMENTATION: PASS. Build 0 errors / 0 warnings; dotnet test 2163 total, 2163 passed, 0 failed, 0 skipped; dotnet format --verify-no-changes clean. All sixteen Acceptance Criteria implemented and covered. The OD-005 skeleton is fully replaced - no NotImplementedException remains in the US-012 surface. 29 production files and 9 test files changed, every one traced in the implementation_report."
+  - "IMPLEMENTATION deviation D-3 (SECURITY-RELEVANT, read first): AppUser.RecordSuccessfulSignIn - an EXISTING US-008 method - now also resets AccessFailedCount and clears LockoutEnd, because SC-2 step 6 requires a success to reset the counter. Both sign-in paths share it; for the Admin path, whose counter is never touched, both are no-ops."
+  - "IMPLEMENTATION deviation D-4 (SECURITY-RELEVANT): PasswordHasherAdapter.Verify catches FormatException and ArgumentException and returns false. A stored value not in Identity's format made VerifyHashedPassword throw, which surfaced as 500 on the sign-in page and would have told a caller that one account is special. A malformed hash cannot match any password, so it is a failed verification; the value is never logged (SC-10, spec S-05)."
+  - "IMPLEMENTATION deviation D-5: the forced-change GET requires only an authenticated user and redirects on the PasswordIsTemporary claim (302 to / for an ordinary session), because the claim policy alone answered 403 where api-design 2.6 requires the redirect. The POST keeps the strict claim policy."
+  - "IMPLEMENTATION deviations D-1 and D-2 corrected two US-012 tests written at TEST_WRITING: the commit-count assertion (EF Core needs the identity before the audit row names it, so one transaction holds two saves - the US-008 pattern of db-design 4.4) and the re-enabling assertion (FR-008 says nothing else changes, so the temporary mark stays as it was). No assertion was removed and both requirements are still proved."
+  - "IMPLEMENTATION deviation D-6: four EXISTING guard tests were updated. Three pinned audit values US-012 now performs (dean_sign_in, wrong_password, the app_user target) and moved their examples on to values no Story performs yet; one, InstallationCookieTests.EveryStateChangingPublicEndpoint_WithoutToken_Returns400, now signs in as a Dean for the two Dean-owned endpoints, because as the Admin they answered 403 before the antiforgery filter ran. Each kept its own assertion; only sample data or the caller changed. HostEndpoint.SamplePath also gained a numeric sample for {deanId:long}."
+  - "IMPLEMENTATION: the restricted session of step 5 is a claim (ca:password_is_temporary) plus TemporaryPasswordMiddleware placed after UseAuthentication and before UseAuthorization; /sign-out and /sign-in stay reachable so nobody is trapped in the form. The claim is dropped by re-issuing the session after the forced change."
+  - "IMPLEMENTATION: Microsoft.Extensions.Identity.Core 10.0.4 added to ClassroomAgent.Infrastructure ONLY, used for IPasswordHasher<AppUser> alone (OD-002). No UserManager, no SignInManager, no IdentityDbContext, no Identity tables. No appsettings key was added or changed."
+  - "IMPLEMENTATION: AC-014 is closed - DeanSessionBoundaryTests drives a real Dean session by password and asserts 403 on the three Admin-only settings pages (GET and POST) and 200 on the legitimacy-status view. The finding carried from US-010 F-1 through US-011 F-1 does not need to be carried again."
+
   - "TEST_WRITING: PASS. 15 new test classes, 130 methods, 195 cases; three existing tests modified. Build 0 errors / 0 warnings. Whole suite 2163 total, 1983 passed, 180 failed, 0 skipped - 179 failures are US-012 tests and one is the modified AppUserMigrationTests. Every other test in the solution is green. Docker was running throughout, so TC-2 met no obstacle this time."
   - "TEST_WRITING raised OD-005 (compile-only skeleton) and the Owner resolved it on 2026-09-26 as option 1, scoped like US-005 OD-002, US-007 OD-003 and US-011 OD-006. Sixteen production files exist as skeleton (seven Application models, IPasswordHasher, DeanPasswordPolicy, six use cases and a query) with members throwing NotImplementedException and nothing in DI; AppUser, AuditEvent, three audit enums, IAppUserRepository and InstallationPolicies gained members the same way. open_decisions is now v2 - it adds OD-005 only and changes nothing the Specification or the designs consumed."
   - "TEST_WRITING made TWO changes that are not skeleton and that IMPLEMENTATION owns: (1) AppUserConfiguration carries one Ignore line excluding AppUser.PasswordIsTemporary from the EF Core model, because mapping it before the migration would fail every existing test that touches app_user - IMPLEMENTATION replaces it with the mapping, ck_app_user_password_temporary and the AddDeanAccounts migration; (2) PermittedServiceWrites declares SignInDeanUseCase, CompleteTemporaryPasswordChangeUseCase and ChangeOwnPasswordUseCase as SignInBookkeeping, because BR-026 already names sign-in bookkeeping and a Dean changing their own password. The BR-026 closed list itself did NOT grow."
@@ -64,5 +98,5 @@ non_blocking_findings:
   - "Carried from the US-008 security review: F-5 (Minor, no security impact) — a wrong HTTP method on /sign-in/google or /sign-out answers 404 where the openapi documents 405. US-012 adds the Dean sign-in surface next to those routes; API_DESIGN decides whether the new routes repeat the same shape."
   - "Existing code the Story builds on, verified before activation: AppUser is a hand-written Domain entity (no ASP.NET Core Identity in the installation host) already carrying PasswordHash, SecurityStamp, AccessFailedCount, LockoutEnd, IsDisabled and LastSuccessfulSignInAt, with only a CreateAdmin factory; AppRole has exactly Admin and Dean; AuditAction holds AdminSignIn, WorkspaceConnectionSaved and AccessCheckRun; AuditTargetType holds only WorkspaceConnection; the three settings pages declare Admin-only policies in InstallationPolicies. The US-008 Google path already refuses a disabled AppUser with the AccountDisabled refusal category."
 started_at: 2026-09-26T17:11:09Z
-updated_at: 2026-09-26T19:39:28Z
-completed_at: null
+updated_at: 2026-09-27T07:28:24Z
+completed_at: 2026-09-27T07:28:24Z

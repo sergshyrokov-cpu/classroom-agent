@@ -1,5 +1,6 @@
 using ClassroomAgent.Application.Models;
 using ClassroomAgent.Application.Ports;
+using ClassroomAgent.Domain.Entities;
 
 namespace ClassroomAgent.Application.UseCases;
 
@@ -8,25 +9,48 @@ namespace ClassroomAgent.Application.UseCases;
 /// not equal the temporary one, which is checked by verifying it against the hash still stored — no plaintext is
 /// kept anywhere to make that comparison (spec VR-003, S-10). Permitted in read-only mode (BR-026).
 /// </summary>
-/// <remarks>US-012 TEST_WRITING skeleton (OD-005) — IMPLEMENTATION writes the body.</remarks>
-public sealed class CompleteTemporaryPasswordChangeUseCase
+public sealed class CompleteTemporaryPasswordChangeUseCase(
+    IAppUserRepository users,
+    IAuditEventRepository auditEvents,
+    IPasswordHasher passwordHasher,
+    IUnitOfWork unitOfWork,
+    ServiceWriteScope writeScope,
+    TimeProvider timeProvider)
 {
-    /// <summary>US-012 TEST_WRITING skeleton (OD-005): IMPLEMENTATION turns this into a primary constructor
-    /// holding the dependencies. They are listed here so the tests construct the type exactly as it will be.</summary>
-    public CompleteTemporaryPasswordChangeUseCase(
-        IAppUserRepository users,
-        IAuditEventRepository auditEvents,
-        IPasswordHasher passwordHasher,
-        IUnitOfWork unitOfWork,
-        ServiceWriteScope writeScope,
-        TimeProvider timeProvider)
-    {
-    }
-
-    public Task<PasswordChangeOutcome> ExecuteAsync(
+    public async Task<PasswordChangeOutcome> ExecuteAsync(
         long deanId,
         string newPassword,
         string? requestId,
-        CancellationToken cancellationToken) =>
-        throw new NotImplementedException("US-012 IMPLEMENTATION (spec FR-006).");
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(newPassword);
+
+        var dean = await users.FindDeanByIdAsync(deanId, cancellationToken);
+        if (dean is null || dean.PasswordHash is not { } hash)
+        {
+            return new PasswordChangeOutcome(true, false, null);
+        }
+
+        var violation = DeanPasswordPolicy.Check(newPassword, dean.Email);
+        if (violation is { } broken)
+        {
+            return new PasswordChangeOutcome(true, false, broken);
+        }
+
+        // The new password may not equal the temporary one it replaces (BR-014 v64, spec VR-003).
+        if (passwordHasher.Verify(hash, newPassword))
+        {
+            return new PasswordChangeOutcome(true, false, PasswordPolicyViolation.EqualsTemporaryPassword);
+        }
+
+        var now = timeProvider.GetUtcNow();
+        dean.SetOwnPassword(passwordHasher.Hash(newPassword), now);
+        auditEvents.Add(AuditEvent.DeanPasswordChanged(dean.Id, now, requestId));
+        using (writeScope.Declare(PermittedServiceWrite.SignInBookkeeping))
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
+        return new PasswordChangeOutcome(false, false, null);
+    }
 }

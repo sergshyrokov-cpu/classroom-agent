@@ -18,6 +18,8 @@
     <PackageReference Include="Google.Apis.Admin.Reports.reports_v1" Version="1.76.0.4252" />
     <PackageReference Include="Google.Apis.Auth" Version="1.76.0" />
     <PackageReference Include="Google.Apis.Classroom.v1" Version="1.76.0.4254" />
+    <!-- US-012 OD-002: the password hasher only. No UserManager, no SignInManager, no Identity tables. -->
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.4" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
   </ItemGroup>
 

@@ -10,3 +10,16 @@
     @Html.AntiForgeryToken()
     <button type="submit">@T["SignIn.Google.Button"]</button>
 </form>
+
+<form method="post" action="/sign-in" id="dean-sign-in">
+    @Html.AntiForgeryToken()
+    <label>
+        @T[DeanAccountTextKeys.SignInEmailLabel]
+        <input type="email" name="email" autocomplete="username" />
+    </label>
+    <label>
+        @T[DeanAccountTextKeys.SignInPasswordLabel]
+        <input type="password" name="password" autocomplete="current-password" />
+    </label>
+    <button type="submit">@T[DeanAccountTextKeys.SignInSubmit]</button>
+</form>

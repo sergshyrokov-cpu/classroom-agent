@@ -50,7 +50,7 @@ public sealed class DeanAccountWorld
     public LegitimacyRepository Legitimacy { get; }
 
     public CreateDeanAccountUseCase Create =>
-        new(ReadOnly, Users, Legitimacy, Audit, Hasher, Work, WriteScope, Time);
+        new(ReadOnly, Users, Legitimacy, Audit, Hasher, new SchoolDefaults(UiLanguage.Uk), Work, WriteScope, Time);
 
     public SetDeanAccountStateUseCase SetState =>
         new(ReadOnly, Users, Audit, Work, WriteScope, Time);

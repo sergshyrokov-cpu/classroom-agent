@@ -25,7 +25,9 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 "actor_role IS NULL OR actor_role IN ('admin', 'dean')");
             table.HasCheckConstraint(
                 "ck_audit_event_action",
-                "action IN ('admin_sign_in', 'workspace_connection_saved', 'access_check_run')");
+                "action IN ('admin_sign_in', 'workspace_connection_saved', 'access_check_run', "
+                + "'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', "
+                + "'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in')");
 
             // US-009 db-design §4.1: a refused action names WHAT was refused without naming a row that was never
             // created, so a target type without an id is now legal. An id without a type — an identifier belonging
@@ -33,7 +35,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
             table.HasCheckConstraint("ck_audit_event_target", "target_id IS NULL OR target_type IS NOT NULL");
             table.HasCheckConstraint(
                 "ck_audit_event_target_type_value",
-                "target_type IS NULL OR target_type IN ('workspace_connection')");
+                "target_type IS NULL OR target_type IN ('workspace_connection', 'app_user')");
             table.HasCheckConstraint("ck_audit_event_outcome", "outcome IN ('succeeded', 'refused')");
             table.HasCheckConstraint(
                 "ck_audit_event_refusal_category",
@@ -42,7 +44,8 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 "ck_audit_event_refusal_category_value",
                 "refusal_category IS NULL OR refusal_category IN ('not_in_allowed_admin', 'control_plane_unavailable', "
                 + "'unknown_installation', 'callback_failed', 'account_disabled', 'domain_mismatch', "
-                + "'impersonation_domain_mismatch', 'domain_not_confirmed', 'read_only_mode', 'connection_not_usable')");
+                + "'impersonation_domain_mismatch', 'domain_not_confirmed', 'read_only_mode', 'connection_not_usable', "
+                + "'unknown_login', 'wrong_password', 'locked_out')");
 
             // PC-6 states the equality as a property of the table; turning it into a CHECK costs nothing and
             // catches an update that passes through EF Core, because the interceptor stamps updated_at on a
@@ -134,6 +137,12 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         AuditAction.AdminSignIn => "admin_sign_in",
         AuditAction.WorkspaceConnectionSaved => "workspace_connection_saved",
         AuditAction.AccessCheckRun => "access_check_run",
+        AuditAction.DeanAccountCreated => "dean_account_created",
+        AuditAction.DeanAccountDisabled => "dean_account_disabled",
+        AuditAction.DeanAccountReEnabled => "dean_account_reenabled",
+        AuditAction.DeanAccountPasswordReset => "dean_account_password_reset",
+        AuditAction.DeanPasswordChanged => "dean_password_changed",
+        AuditAction.DeanSignIn => "dean_sign_in",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -142,6 +151,12 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         "admin_sign_in" => AuditAction.AdminSignIn,
         "workspace_connection_saved" => AuditAction.WorkspaceConnectionSaved,
         "access_check_run" => AuditAction.AccessCheckRun,
+        "dean_account_created" => AuditAction.DeanAccountCreated,
+        "dean_account_disabled" => AuditAction.DeanAccountDisabled,
+        "dean_account_reenabled" => AuditAction.DeanAccountReEnabled,
+        "dean_account_password_reset" => AuditAction.DeanAccountPasswordReset,
+        "dean_password_changed" => AuditAction.DeanPasswordChanged,
+        "dean_sign_in" => AuditAction.DeanSignIn,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 
@@ -149,12 +164,14 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
     private static string TargetTypeCode(AuditTargetType value) => value switch
     {
         AuditTargetType.WorkspaceConnection => "workspace_connection",
+        AuditTargetType.AppUser => "app_user",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
     private static AuditTargetType TargetTypeFromCode(string code) => code switch
     {
         "workspace_connection" => AuditTargetType.WorkspaceConnection,
+        "app_user" => AuditTargetType.AppUser,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 
@@ -184,6 +201,9 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         AuditRefusalCategory.DomainNotConfirmed => "domain_not_confirmed",
         AuditRefusalCategory.ReadOnlyMode => "read_only_mode",
         AuditRefusalCategory.ConnectionNotUsable => "connection_not_usable",
+        AuditRefusalCategory.UnknownLogin => "unknown_login",
+        AuditRefusalCategory.WrongPassword => "wrong_password",
+        AuditRefusalCategory.LockedOut => "locked_out",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -199,6 +219,9 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         "domain_not_confirmed" => AuditRefusalCategory.DomainNotConfirmed,
         "read_only_mode" => AuditRefusalCategory.ReadOnlyMode,
         "connection_not_usable" => AuditRefusalCategory.ConnectionNotUsable,
+        "unknown_login" => AuditRefusalCategory.UnknownLogin,
+        "wrong_password" => AuditRefusalCategory.WrongPassword,
+        "locked_out" => AuditRefusalCategory.LockedOut,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 }

@@ -120,6 +120,40 @@ public sealed class DeanPasswordPageTests(PostgreSqlFixture database)
         Assert.Equal(DeanAccountTestData.Paths.OwnPassword, page.LocationPath);
     }
 
+    /// <summary>
+    /// AC-013 (security review F-2): the change rotates the security stamp, so the session has to be re-issued
+    /// — otherwise the redirect lands on a page the Dean can no longer reach and the confirmation is never
+    /// shown. Following the redirect proves both.
+    /// </summary>
+    [Fact]
+    public async Task AfterAChange_TheSessionSurvivesAndTheConfirmationIsShown()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var host = await InstallationTestHost.StartAsync(database, ct);
+        using var client = await SignedInDeanAsync(host, ct);
+        await client.ChangeOwnPasswordAsync(DeanAccountTestData.NewPassword, "a third good password", ct);
+
+        var page = await client.GetAsync(DeanAccountTestData.Paths.OwnPassword, ct);
+
+        Assert.Equal(HttpStatusCode.OK, page.Status);
+        Assert.Contains(host.Text(DeanAccountTestData.TextKeys.OwnPasswordChanged, "uk"), page.Text, StringComparison.Ordinal);
+    }
+
+    /// <summary>AC-013: and the new password is the one that works afterwards.</summary>
+    [Fact]
+    public async Task AfterAChange_TheNewPasswordIsTheOneThatWorks()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var host = await InstallationTestHost.StartAsync(database, ct);
+        using var client = await SignedInDeanAsync(host, ct);
+        await client.ChangeOwnPasswordAsync(DeanAccountTestData.NewPassword, "a third good password", ct);
+        using var fresh = host.CreateClient();
+
+        var withNew = await fresh.SignInAsDeanAsync(DeanAccountTestData.DeanEmail, "a third good password", ct);
+
+        Assert.Equal(DeanAccountTestData.Paths.Landing, withNew.LocationPath);
+    }
+
     /// <summary>AC-013: a wrong current password answers 400 and nothing submitted is echoed back (VR-006).</summary>
     [Fact]
     public async Task AWrongCurrentPassword_Answers400AndEchoesNothing()

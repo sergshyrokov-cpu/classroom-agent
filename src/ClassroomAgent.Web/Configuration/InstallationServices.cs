@@ -1,10 +1,12 @@
 using ClassroomAgent.Application.Models;
 using ClassroomAgent.Application.Ports;
 using ClassroomAgent.Application.UseCases;
+using ClassroomAgent.Domain.Entities;
 using ClassroomAgent.Contracts;
 using ClassroomAgent.Infrastructure.ControlPlane;
 using ClassroomAgent.Infrastructure.Google;
 using ClassroomAgent.Infrastructure.Persistence;
+using ClassroomAgent.Infrastructure.Security;
 using ClassroomAgent.Infrastructure.Persistence.Repositories;
 using ClassroomAgent.Infrastructure.ReadOnly;
 using ClassroomAgent.Infrastructure.Secrets;
@@ -89,6 +91,19 @@ public static class InstallationServices
             new SocketsHttpHandler { AllowAutoRedirect = false, UseCookies = false },
             provider.GetRequiredService<ILogger<GoogleAccessProbe>>()));
         services.AddScoped<RunAccessCheckUseCase>();
+
+        // US-012: the Dean accounts screen, the Dean's sign-in and the two password changes (spec FR-003,
+        // FR-007 … FR-014). The password hasher is Identity's, behind the Application port (OD-002, FR-018).
+        services.AddScoped<Microsoft.AspNetCore.Identity.IPasswordHasher<AppUser>,
+            Microsoft.AspNetCore.Identity.PasswordHasher<AppUser>>();
+        services.AddScoped<IPasswordHasher, PasswordHasherAdapter>();
+        services.AddScoped<ListDeanAccountsQuery>();
+        services.AddScoped<CreateDeanAccountUseCase>();
+        services.AddScoped<SetDeanAccountStateUseCase>();
+        services.AddScoped<ResetDeanPasswordUseCase>();
+        services.AddScoped<SignInDeanUseCase>();
+        services.AddScoped<CompleteTemporaryPasswordChangeUseCase>();
+        services.AddScoped<ChangeOwnPasswordUseCase>();
         services.AddScoped<RunStartupSelfCheckUseCase>();
         services.AddHostedService<StartupSelfCheckBackgroundService>();
         services.AddHostedService<LegitimacyCheckBackgroundService>();

@@ -120,7 +120,7 @@ stories:
   - id: US-012
     epic: EPIC-6
     title: Create and manage Dean accounts
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: >
       Depends on US-008 (a signed-in Admin).
     # US-008 COMPLETED. Story file authored:

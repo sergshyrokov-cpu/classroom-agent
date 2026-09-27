@@ -1,3 +1,6 @@
+using ClassroomAgent.Application.Models;
+using ClassroomAgent.Application.Ports;
+using ClassroomAgent.Application.UseCases;
 using ClassroomAgent.Web.Security;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -36,4 +39,57 @@ public sealed class SignInController : Controller
         Challenge(
             new AuthenticationProperties { RedirectUri = SignInRoutes.Landing },
             InstallationSecurityServices.GoogleScheme);
+
+    /// <summary>
+    /// The Dean's sign-in (US-012 openapi <c>POST /sign-in</c>; spec FR-012). **Every** outcome of the six-step
+    /// sequence answers with a redirect: the outcome travels in the <c>Location</c> and in TempData, never in the
+    /// status code, so steps 1, 2 and 3 are indistinguishable to the caller (spec S-05, I-6).
+    /// </summary>
+    [HttpPost(SignInRoutes.SignInPage)]
+    public async Task<IActionResult> SignInWithPassword(
+        [FromForm] string? email,
+        [FromForm] string? password,
+        [FromServices] SignInDeanUseCase signIn,
+        [FromServices] IAppUserRepository users,
+        [FromServices] TimeProvider timeProvider,
+        CancellationToken cancellationToken)
+    {
+        if (email is null || password is null)
+        {
+            return BadRequest();
+        }
+
+        var outcome = await signIn.ExecuteAsync(email, password, HttpContext.TraceIdentifier, cancellationToken);
+        switch (outcome.Result)
+        {
+            // Steps 1, 2 and 3: one message, one redirect, nothing that tells them apart.
+            case DeanSignInResult.UnknownLogin:
+            case DeanSignInResult.LockedOut:
+            case DeanSignInResult.WrongPassword:
+                TempData[SignInRoutes.RefusalTempDataKey] = DeanAccountTextKeys.SignInRefused;
+                return Redirect(SignInRoutes.SignInPage);
+
+            // Step 4: the one distinction SC-2 allows, and only with the correct password and no lockout.
+            case DeanSignInResult.AccountDisabled:
+                TempData[SignInRoutes.RefusalTempDataKey] = DeanAccountTextKeys.SignInAccountDisabled;
+                return Redirect(SignInRoutes.SignInPage);
+
+            default:
+                var dean = await users.FindDeanByIdAsync(outcome.AccountId!.Value, cancellationToken);
+                if (dean is null)
+                {
+                    TempData[SignInRoutes.RefusalTempDataKey] = DeanAccountTextKeys.SignInRefused;
+                    return Redirect(SignInRoutes.SignInPage);
+                }
+
+                var temporary = outcome.Result is DeanSignInResult.TemporaryPassword;
+                await InstallationSession.SignInAsync(
+                    HttpContext,
+                    new SignedInUser(dean.Id, dean.Email, dean.Role, dean.UiLanguage, dean.SecurityStamp),
+                    timeProvider,
+                    temporary);
+
+                return Redirect(temporary ? SignInRoutes.ForcedPasswordChange : SignInRoutes.Landing);
+        }
+    }
 }

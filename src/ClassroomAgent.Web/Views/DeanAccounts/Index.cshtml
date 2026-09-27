@@ -1,0 +1,77 @@
+@model DeanAccountsPageModel
+@{
+    ViewData["Title"] = T[DeanAccountTextKeys.Title];
+}
+
+@if (Model.IsReadOnly)
+{
+    <section class="notice">
+        <h2>@T["Landing.ReadOnly.Title"]</h2>
+        <p>@T[ReasonKey(Model.ReadOnlyReason)]</p>
+    </section>
+}
+
+@if (Model.MessageKey is not null)
+{
+    <p class="form-message">@T[Model.MessageKey]</p>
+}
+
+<table id="dean-accounts">
+    <thead>
+        <tr>
+            <th>@T[DeanAccountTextKeys.ColumnEmail]</th>
+            <th>@T[DeanAccountTextKeys.ColumnState]</th>
+            <th>@T[DeanAccountTextKeys.ColumnTemporary]</th>
+            <th>@T[DeanAccountTextKeys.ColumnLastSignIn]</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var dean in Model.Deans)
+        {
+            <tr class="dean-account" data-dean-id="@dean.Id" data-state="@(dean.IsDisabled ? "Disabled" : "Active")">
+                <td class="dean-email">@dean.Email</td>
+                <td class="dean-state">@T[dean.IsDisabled ? DeanAccountTextKeys.StateDisabled : DeanAccountTextKeys.StateActive]</td>
+                <td class="dean-temporary">@(dean.PasswordIsTemporary ? "+" : "—")</td>
+                <td class="dean-last-sign-in">@(dean.LastSuccessfulSignInAt?.ToString("yyyy-MM-dd") ?? "—")</td>
+                <td>
+                    <form method="post" action="/settings/deans/@dean.Id/state">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="desiredState" value="@(dean.IsDisabled ? "Active" : "Disabled")" />
+                        <button type="submit">@T[dean.IsDisabled ? DeanAccountTextKeys.ActionReEnable : DeanAccountTextKeys.ActionDisable]</button>
+                    </form>
+                    <form method="post" action="/settings/deans/@dean.Id/password">
+                        @Html.AntiForgeryToken()
+                        <label>
+                            @T[DeanAccountTextKeys.CreatePasswordLabel]
+                            <input type="password" name="temporaryPassword" autocomplete="new-password" />
+                        </label>
+                        <button type="submit">@T[DeanAccountTextKeys.ActionResetPassword]</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<form method="post" action="/settings/deans" id="create-dean">
+    @Html.AntiForgeryToken()
+    <label>
+        @T[DeanAccountTextKeys.CreateEmailLabel]
+        <input type="email" name="email" value="@Model.EmailInput" autocomplete="off" />
+    </label>
+    <label>
+        @T[DeanAccountTextKeys.CreatePasswordLabel]
+        <input type="password" name="temporaryPassword" autocomplete="new-password" />
+    </label>
+    <button type="submit">@T[DeanAccountTextKeys.CreateSubmit]</button>
+</form>
+
+@functions {
+    private static string ReasonKey(LegitimacyModeReason? reason) => reason switch
+    {
+        LegitimacyModeReason.SuspendedByOwner => "Landing.ReadOnly.SuspendedByOwner",
+        LegitimacyModeReason.GracePeriodExpired => "Landing.ReadOnly.GracePeriodExpired",
+        _ => "Landing.ReadOnly.NotYetConfirmed",
+    };
+}

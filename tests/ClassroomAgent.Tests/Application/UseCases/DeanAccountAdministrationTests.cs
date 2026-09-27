@@ -67,7 +67,10 @@ public sealed class DeanAccountAdministrationTests
         Assert.Null(outcome.Refusal);
         Assert.False(dean.IsDisabled);
         Assert.Equal(hash, dean.PasswordHash);
-        Assert.False(dean.PasswordIsTemporary);
+
+        // "Nothing else" means exactly that: the temporary mark keeps the value it had, it is not cleared
+        // (spec FR-008 — re-enabling sets no temporary password and clears none).
+        Assert.True(dean.PasswordIsTemporary);
     }
 
     /// <summary>AC-006: re-enabling does not clear a lockout — only a reset does (BR-014 v64).</summary>

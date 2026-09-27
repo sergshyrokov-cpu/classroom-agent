@@ -97,4 +97,42 @@
   <data name="AccessCheck.Refused.NotConfigured" xml:space="preserve"><value>Save the Google Workspace connection in the connection settings first — there is nothing to check yet.</value></data>
   <data name="AccessCheck.Refused.DomainMismatch" xml:space="preserve"><value>The saved connection belongs to a domain other than the school's. Save the connection again, then check access.</value></data>
   <data name="Landing.Settings.AccessCheck" xml:space="preserve"><value>Access check</value></data>
+  <data name="DeanAccounts.Title" xml:space="preserve"><value>Dean accounts</value></data>
+  <data name="DeanAccounts.Column.Email" xml:space="preserve"><value>Email</value></data>
+  <data name="DeanAccounts.Column.State" xml:space="preserve"><value>State</value></data>
+  <data name="DeanAccounts.Column.PasswordIsTemporary" xml:space="preserve"><value>Temporary password</value></data>
+  <data name="DeanAccounts.Column.LastSignIn" xml:space="preserve"><value>Last sign-in</value></data>
+  <data name="DeanAccounts.State.Active" xml:space="preserve"><value>Active</value></data>
+  <data name="DeanAccounts.State.Disabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="DeanAccounts.Create.Submit" xml:space="preserve"><value>Create account</value></data>
+  <data name="DeanAccounts.Create.Email.Label" xml:space="preserve"><value>Dean's email</value></data>
+  <data name="DeanAccounts.Create.TemporaryPassword.Label" xml:space="preserve"><value>Temporary password</value></data>
+  <data name="DeanAccounts.Action.Disable" xml:space="preserve"><value>Disable</value></data>
+  <data name="DeanAccounts.Action.ReEnable" xml:space="preserve"><value>Re-enable</value></data>
+  <data name="DeanAccounts.Action.ResetPassword" xml:space="preserve"><value>Reset password</value></data>
+  <data name="DeanAccounts.Confirmation.Created" xml:space="preserve"><value>The account has been created.</value></data>
+  <data name="DeanAccounts.Confirmation.Disabled" xml:space="preserve"><value>The account has been disabled.</value></data>
+  <data name="DeanAccounts.Confirmation.ReEnabled" xml:space="preserve"><value>The account has been re-enabled.</value></data>
+  <data name="DeanAccounts.Confirmation.PasswordReset" xml:space="preserve"><value>The password has been reset.</value></data>
+  <data name="DeanAccounts.Refused.NotAnEmail" xml:space="preserve"><value>This does not look like an email address.</value></data>
+  <data name="DeanAccounts.Refused.OutsideSchoolDomain" xml:space="preserve"><value>This address must be in the school's domain.</value></data>
+  <data name="DeanAccounts.Refused.EmailAlreadyUsed" xml:space="preserve"><value>This address cannot be used.</value></data>
+  <data name="DeanAccounts.Refused.AlreadyInThatState" xml:space="preserve"><value>The account is already in that state.</value></data>
+  <data name="Password.Refused.TooShort" xml:space="preserve"><value>The password must be at least 15 characters long.</value></data>
+  <data name="Password.Refused.TooLong" xml:space="preserve"><value>The password must be no more than 128 characters long.</value></data>
+  <data name="Password.Refused.EqualsLogin" xml:space="preserve"><value>The password may not be the same as the login.</value></data>
+  <data name="Password.Refused.ContainsLogin" xml:space="preserve"><value>The password may not contain the login.</value></data>
+  <data name="Password.Refused.EqualsTemporary" xml:space="preserve"><value>The new password must differ from the temporary one.</value></data>
+  <data name="SignIn.Refused.WrongLoginOrPassword" xml:space="preserve"><value>Wrong login or password, or sign-in is temporarily blocked after several failed attempts.</value></data>
+  <data name="SignIn.Password.Email.Label" xml:space="preserve"><value>Email</value></data>
+  <data name="SignIn.Password.Password.Label" xml:space="preserve"><value>Password</value></data>
+  <data name="SignIn.Password.Submit" xml:space="preserve"><value>Sign in</value></data>
+  <data name="Password.ForcedChange.Title" xml:space="preserve"><value>You must change your password</value></data>
+  <data name="Password.ForcedChange.Explanation" xml:space="preserve"><value>This is a temporary password. Set your own password before you continue.</value></data>
+  <data name="Password.Own.Title" xml:space="preserve"><value>Change password</value></data>
+  <data name="Password.Own.Current.Label" xml:space="preserve"><value>Current password</value></data>
+  <data name="Password.Own.New.Label" xml:space="preserve"><value>New password</value></data>
+  <data name="Password.Own.Submit" xml:space="preserve"><value>Change password</value></data>
+  <data name="Password.Own.Changed" xml:space="preserve"><value>The password has been changed.</value></data>
+  <data name="Password.Own.Refused.WrongCurrent" xml:space="preserve"><value>The current password is incorrect.</value></data>
 </root>

@@ -33,16 +33,73 @@ public sealed class DeanSignInSequenceTests
         Assert.Null(row.TargetId);
     }
 
-    /// <summary>AC-010 step 1: an unknown login never reaches the hasher — there is nothing to verify.</summary>
+    /// <summary>
+    /// AC-010 step 1, SC-2 (security review F-1): an unknown login spends the **same hashing work** as a real
+    /// check, so the response time does not reveal whether the login exists. The page is reachable from the
+    /// internet and the login is a guessable work email (§2 v62), and the failed-attempt counter never moves
+    /// for an unknown login — so without this the account list of a school could be enumerated freely.
+    /// </summary>
     [Fact]
-    public async Task Step1_VerifiesNoPassword()
+    public async Task Step1_SpendsTheSameHashingWorkAsARealCheck()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var world = new DeanAccountWorld();
+        world.SeedDean();
+
+        var known = new DeanAccountWorld();
+        known.SeedDean();
+        await known.SignIn.ExecuteAsync(
+            DeanAccountTestData.DeanEmail,
+            DeanAccountTestData.WrongPassword,
+            "r-1",
+            ct);
+        var verificationsOnAKnownLogin = known.Hasher.Verified.Count;
+
+        var before = world.Hasher.Verified.Count;
+        await world.SignIn.ExecuteAsync("nobody@school-one.example.test", "whatever it is", "r-1", ct);
+
+        Assert.Equal(verificationsOnAKnownLogin, world.Hasher.Verified.Count - before);
+    }
+
+    /// <summary>
+    /// SC-2 (security review F-3): the dummy hash is computed at most once for the process, not once per
+    /// attempt. An instance field would make the unknown-login path cost a hash **plus** a verification while a
+    /// real check costs one verification — the same oracle, merely inverted. Two consecutive attempts must
+    /// therefore add no hashing work of their own.
+    /// </summary>
+    [Fact]
+    public async Task Step1_DoesNotRehashOnEveryAttempt()
     {
         var ct = TestContext.Current.CancellationToken;
         var world = new DeanAccountWorld();
 
         await world.SignIn.ExecuteAsync("nobody@school-one.example.test", "whatever it is", "r-1", ct);
+        var afterFirst = world.Hasher.Hashed.Count;
+        await world.SignIn.ExecuteAsync("nobody.else@school-one.example.test", "whatever it is", "r-2", ct);
 
-        Assert.Empty(world.Hasher.Verified);
+        Assert.Equal(afterFirst, world.Hasher.Hashed.Count);
+    }
+
+    /// <summary>
+    /// AC-010 step 2, SC-2 v66: a lockout still skips the verification entirely. The equalisation of step 1
+    /// must not leak into step 2 — skipping there is the rule, not an oversight.
+    /// </summary>
+    [Fact]
+    public async Task Step2_StillVerifiesNoPassword()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var world = new DeanAccountWorld();
+        world.SeedDean();
+        await LockOutAsync(world, ct);
+        var before = world.Hasher.Verified.Count;
+
+        await world.SignIn.ExecuteAsync(
+            DeanAccountTestData.DeanEmail,
+            DeanAccountTestData.TemporaryPassword,
+            "r-9",
+            ct);
+
+        Assert.Equal(before, world.Hasher.Verified.Count);
     }
 
     /// <summary>

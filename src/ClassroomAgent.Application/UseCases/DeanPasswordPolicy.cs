@@ -7,7 +7,6 @@ namespace ClassroomAgent.Application.UseCases;
 /// change and the voluntary change (spec FR-005, VR-002). It is a pure function of the password and the login:
 /// no clock, no database, no configuration.
 /// </summary>
-/// <remarks>US-012 TEST_WRITING skeleton (OD-005) — IMPLEMENTATION writes the body.</remarks>
 public static class DeanPasswordPolicy
 {
     /// <summary>The shortest password SC-2 accepts, in characters.</summary>
@@ -20,6 +19,51 @@ public static class DeanPasswordPolicy
     public const int ShortestComparedSubstring = 4;
 
     /// <summary>The violation, or null when the password is acceptable.</summary>
-    public static PasswordPolicyViolation? Check(string password, string login) =>
-        throw new NotImplementedException("US-012 IMPLEMENTATION (spec FR-005).");
+    public static PasswordPolicyViolation? Check(string password, string login)
+    {
+        ArgumentNullException.ThrowIfNull(password);
+        ArgumentNullException.ThrowIfNull(login);
+
+        // Length first, counted in characters and not bytes; spaces count and are never trimmed (spec FR-005).
+        if (password.Length < MinimumLength)
+        {
+            return PasswordPolicyViolation.TooShort;
+        }
+
+        if (password.Length > MaximumLength)
+        {
+            return PasswordPolicyViolation.TooLong;
+        }
+
+        // No composition rule is applied on purpose: adding one would be a requirement nobody wrote (S-06).
+        var localPart = LocalPartOf(login);
+        if (Equals(password, login) || Equals(password, localPart))
+        {
+            return PasswordPolicyViolation.EqualsLogin;
+        }
+
+        if (Contains(password, login) || Contains(password, localPart))
+        {
+            return PasswordPolicyViolation.ContainsLogin;
+        }
+
+        return null;
+    }
+
+    private static string LocalPartOf(string login)
+    {
+        var at = login.IndexOf('@');
+        return at > 0 ? login[..at] : login;
+    }
+
+    private static bool Equals(string password, string other) =>
+        other.Length > 0 && string.Equals(password, other, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Containment is checked only for a string of at least <see cref="ShortestComparedSubstring"/> characters:
+    /// a shorter one would forbid almost any password, so SC-2 v65 compares it for equality only.
+    /// </summary>
+    private static bool Contains(string password, string other) =>
+        other.Length >= ShortestComparedSubstring
+        && password.Contains(other, StringComparison.OrdinalIgnoreCase);
 }

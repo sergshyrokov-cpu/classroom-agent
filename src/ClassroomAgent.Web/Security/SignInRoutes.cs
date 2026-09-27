@@ -28,6 +28,24 @@ public static class SignInRoutes
     /// <summary>US-011 openapi: the check-access page and its run, one path (api-design §2.1).</summary>
     public const string AccessCheck = "/settings/access-check";
 
+    /// <summary>US-012 openapi: the Admin's Dean accounts screen, its list and its creation form.</summary>
+    public const string Deans = "/settings/deans";
+
+    /// <summary>US-012 openapi: disabling and re-enabling one account — one operation, both directions.</summary>
+    public const string DeanState = "/settings/deans/{deanId:long}/state";
+
+    /// <summary>US-012 openapi: resetting one account's password to a new temporary one.</summary>
+    public const string DeanPassword = "/settings/deans/{deanId:long}/password";
+
+    /// <summary>US-012 openapi: the forced change of a temporary password (api-design §2.5, §2.6).</summary>
+    public const string ForcedPasswordChange = "/sign-in/change-password";
+
+    /// <summary>US-012 openapi: the Dean's own password page.</summary>
+    public const string OwnPassword = "/account/password";
+
+    /// <summary>The key the US-012 message travels under in TempData — never a query parameter (the US-008 rule).</summary>
+    public const string MessageTempDataKey = "DeanAccountMessage";
+
     /// <summary>The key the refusal category travels under in TempData (api-design §2.2). Never a query parameter.</summary>
     public const string RefusalTempDataKey = "SignInRefusal";
 

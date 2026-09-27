@@ -27,6 +27,11 @@ public sealed class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
                 "(sign_in_method = 'password') = (password_hash IS NOT NULL)");
             table.HasCheckConstraint("ck_app_user_ui_language", "ui_language IN ('uk', 'en')");
             table.HasCheckConstraint("ck_app_user_access_failed_count", "access_failed_count >= 0");
+            // US-012 db-design §3.2: an Admin row can never carry a temporary password. It joins the two
+            // constraints above that already make an Admin password hash impossible (SC-2).
+            table.HasCheckConstraint(
+                "ck_app_user_password_temporary",
+                "password_is_temporary = false OR sign_in_method = 'password'");
             table.HasCheckConstraint(
                 "ck_app_user_email_lowercase",
                 "email = lower(email) AND normalized_email = lower(normalized_email)");
@@ -57,12 +62,8 @@ public sealed class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
             .HasConversion(v => LanguageCode(v), code => LanguageFromCode(code));
         builder.Property(u => u.IsDisabled).IsRequired().HasDefaultValue(false);
 
-        // US-012 TEST_WRITING skeleton (OD-005). The property exists so the US-012 tests compile, but the column
-        // does not exist until the AddDeanAccounts migration. Mapping it now would make every existing test that
-        // touches app_user fail against a missing column. IMPLEMENTATION replaces this line with
-        //   builder.Property(u => u.PasswordIsTemporary).IsRequired().HasDefaultValue(false);
-        // plus ck_app_user_password_temporary and the migration (US-012 db-design §3).
-        builder.Ignore(u => u.PasswordIsTemporary);
+        // US-012 db-design §3.1: the one column this Story adds.
+        builder.Property(u => u.PasswordIsTemporary).IsRequired().HasDefaultValue(false);
         builder.Property(u => u.LastSuccessfulSignInAt);
         builder.Property(u => u.CreatedAt).IsRequired();
         builder.Property(u => u.UpdatedAt).IsRequired();

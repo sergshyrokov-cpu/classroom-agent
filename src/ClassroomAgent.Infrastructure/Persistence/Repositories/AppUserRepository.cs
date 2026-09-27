@@ -1,6 +1,7 @@
 using ClassroomAgent.Application.Ports;
 using ClassroomAgent.Application.Models;
 using ClassroomAgent.Domain.Entities;
+using ClassroomAgent.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClassroomAgent.Infrastructure.Persistence.Repositories;
@@ -32,12 +33,14 @@ public sealed class AppUserRepository(ClassroomAgentDbContext db) : IAppUserRepo
     public void Forget(AppUser user) => db.Entry(user).State = EntityState.Detached;
 
     /// <inheritdoc />
-    /// <remarks>US-012 TEST_WRITING skeleton (OD-005) — IMPLEMENTATION writes the body.</remarks>
     public Task<AppUser?> FindDeanByIdAsync(long id, CancellationToken cancellationToken) =>
-        throw new NotImplementedException("US-012 IMPLEMENTATION (spec VR-005).");
+        db.AppUsers.SingleOrDefaultAsync(u => u.Id == id && u.Role == AppRole.Dean, cancellationToken);
 
     /// <inheritdoc />
-    /// <remarks>US-012 TEST_WRITING skeleton (OD-005) — IMPLEMENTATION writes the body.</remarks>
-    public Task<IReadOnlyList<AppUser>> ListDeansAsync(CancellationToken cancellationToken) =>
-        throw new NotImplementedException("US-012 IMPLEMENTATION (spec FR-011).");
+    public async Task<IReadOnlyList<AppUser>> ListDeansAsync(CancellationToken cancellationToken) =>
+        await db.AppUsers
+            .AsNoTracking()
+            .Where(u => u.Role == AppRole.Dean)
+            .OrderBy(u => u.NormalizedEmail)
+            .ToListAsync(cancellationToken);
 }

@@ -103,8 +103,11 @@ public sealed class CreateDeanAccountUseCaseTests
 
         await CreateAsync(world, admin.Id, ct);
 
+        // One transaction, and by the end of it both the account and its audit row are staged. The row names
+        // the account, so the identity has to exist first (US-008 db-design §4.4) — the number of commits
+        // inside the transaction is an EF Core mechanism, not a requirement.
         Assert.Equal(1, world.Work.Transactions);
-        Assert.Equal((1, 1), Assert.Single(world.Work.Staged));
+        Assert.Equal((1, 1), world.Work.Staged[^1]);
     }
 
     /// <summary>AC-003: an address outside the school's domain is refused (spec FR-004, VR-001).</summary>
