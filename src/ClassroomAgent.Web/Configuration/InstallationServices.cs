@@ -114,6 +114,19 @@ public static class InstallationServices
 
         // US-013 spec FR-005, FR-006, FR-015: the run and the single sync_state row.
         services.AddScoped<ISyncStateRepository, SyncStateRepository>();
+
+        // US-014 OD-012 compile-only skeleton: registration only, so the host starts and the US-013 tests stay
+        // green while the bodies still throw NotImplementedException. IMPLEMENTATION replaces only the bodies of
+        // GoogleClassroomReader and the three repositories below, never this wiring.
+        services.AddSingleton<IClassroomReader>(provider => new GoogleClassroomReader(
+            provider.GetRequiredService<ISecretStore>(),
+            provider.GetRequiredService<GoogleServiceAccountSettings>(),
+            new SocketsHttpHandler { AllowAutoRedirect = false, UseCookies = false },
+            provider.GetRequiredService<ILogger<GoogleClassroomReader>>()));
+        services.AddScoped<ICourseRepository, CourseRepository>();
+        services.AddScoped<IClassroomParticipantRepository, ClassroomParticipantRepository>();
+        services.AddScoped<ICourseMembershipRepository, CourseMembershipRepository>();
+
         services.AddScoped<RunSynchronizationUseCase>();
         services.AddHostedService<StartupSelfCheckBackgroundService>();
         services.AddHostedService<LegitimacyCheckBackgroundService>();

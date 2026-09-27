@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-014
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-09-27T16:33:58Z
-updated_at: 2026-09-27T16:50:05Z
+updated_at: 2026-09-27T17:43:19Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-014-sync-courses-and-rosters.md
@@ -26,6 +26,16 @@ Two further gaps (OD-010, OD-011) were found while writing the Specification fro
 `HUMAN_SPEC_APPROVAL` gate**, before the Specification was approved. The
 Specification was corrected accordingly at version 1, while it was still `DRAFT`
 and the gate had not passed.
+
+**Version 2** adds **OD-012** only, raised at `TEST_WRITING` and resolved by the
+Owner the same day. It changes nothing the Specification or either design
+consumed.
+
+Not recorded here as an Open Decision, because it was a contradiction between
+approved artifacts rather than an undecided question: the `CourseMembership`
+uniqueness, which blocked `DB_DESIGN` at attempt 1 and was resolved in PC-8's
+favour, producing Specification v2. The workflow history and Specification §1 and
+I-9 carry that record.
 
 ---
 
@@ -274,6 +284,75 @@ Google `userId`, which remains the sole identity of a person (PC-3). Epic 4 must
 match through the roster on the meeting's date, as PC-12 already requires — a
 future Story that matches against the participant table globally would be
 reintroducing this defect.
+
+---
+
+## Raised at TEST_WRITING, resolved by the Owner
+
+### OD-012 How tests compile before the production types exist
+
+**The gap.** `AGENTS.md` requires that `TEST_WRITING` run before
+`IMPLEMENTATION`, against the approved artifacts and never against finished code.
+In C# a test that names `Course`, `IClassroomReader` or a new constructor
+parameter of `RunSynchronizationUseCase` **does not compile** while those do not
+exist — and a test that does not compile is neither red nor evidence of anything.
+
+This gap recurs in every Story that introduces new types, and it has been
+resolved the same way five times: US-005 OD-002, US-007 OD-003, US-011 OD-006,
+US-012 OD-005, US-013 OD-008.
+
+**Options.**
+
+1. **A compile-only skeleton.** The types and members the tests name are declared
+   with bodies that throw `NotImplementedException`; the tests compile and fail
+   for that one expected reason, and `IMPLEMENTATION` replaces the bodies.
+2. Write tests that name no new type — covering only behaviour that already
+   exists. Nine Acceptance Criteria would then have no test at all and the stage
+   would lose its purpose.
+3. Reverse the order: implement first, then test. Contradicts `AGENTS.md`.
+
+**Resolution (Owner, 2026-09-27) — option 1**, scoped exactly like the five
+precedents. The skeleton covers:
+
+- `Domain/Entities`: `Course`, `ClassroomParticipant`, `CourseMembership`;
+- `Domain/Enums`: `CourseState` (five members), `ClassroomRole` (two);
+- `Application/Ports`: `IClassroomReader`, `ICourseRepository`,
+  `IClassroomParticipantRepository`, `ICourseMembershipRepository`;
+- `Application/Models`: `CourseSnapshot`, `CourseDetails`, `CourseRoster`,
+  `RosterEntry`;
+- **one change to an existing production file**: the new constructor parameters
+  of `RunSynchronizationUseCase`. Without it the use-case tests cannot be
+  compiled. US-013's skeleton carried an equivalent item (a member with a default
+  on `InstallationSettings` plus the `SyncIntervalKey` constant);
+- `Infrastructure/Google/GoogleClassroomReader`, the adapter itself. Added after
+  the first pass: paging is a property of the adapter and invisible at the port by
+  design (VR-005), so the test that proves it must construct the adapter;
+- `Infrastructure/Persistence.Repositories`: `CourseRepository`,
+  `ClassroomParticipantRepository`, `CourseMembershipRepository`, **and their
+  registration in `InstallationServices`** together with `IClassroomReader`.
+  Added after the first pass for a reason worth recording: without the
+  registrations the host cannot construct `RunSynchronizationUseCase` at all, so
+  **eight US-013 tests failed on a host that would not start** — and a stage that
+  leaves existing regression tests red has not finished. The registration is the
+  wiring; `IMPLEMENTATION` replaces only the bodies behind it.
+
+The skeleton therefore grew twice beyond its first description, both times because
+a test could not otherwise exist or an existing test could not otherwise pass. The
+principle did not change.
+
+**Deliberately outside the skeleton**, exactly as US-013 decided: the three EF
+Core entity configurations, the three `DbSet` properties and the
+`AddCoursesAndRosters` migration. Mapping an entity without its migration would
+leave the model and the database disagreeing, so `IMPLEMENTATION` adds the
+mapping, the check constraints, the indexes and the migration as **one** piece.
+
+**Consequence the test-generation report must state plainly:** the schema tests
+(db-design §9) fail on missing tables, not on a wrong constraint. That is the
+expected red phase for them, and `IMPLEMENTATION` is what turns them green.
+
+**Also required of `IMPLEMENTATION`:** every `NotImplementedException` and every
+`#pragma warning disable` the skeleton needs must be gone once the members are
+implemented. A remaining one is a finding — the rule US-013 set for itself.
 
 ---
 

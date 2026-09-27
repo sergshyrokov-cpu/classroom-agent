@@ -91,7 +91,8 @@ public sealed class AdminLoginCheckEveryTimeTests(PostgreSqlFixture database)
 
     /// <summary>
     /// AC-004, S-02: no table in the installation holds a copy of AllowedAdmin. The expected table set gained
-    /// <c>sync_state</c> with US-013; the two assertions that no table names "allowed" or "admin" are unchanged.
+    /// <c>sync_state</c> with US-013 and the three course tables with US-014; the two assertions that no table
+    /// names "allowed" or "admin" are unchanged.
     /// </summary>
     [Fact]
     public async Task NoInstallationTable_HoldsACopyOfAllowedAdmin()
@@ -104,7 +105,18 @@ public sealed class AdminLoginCheckEveryTimeTests(PostgreSqlFixture database)
 
         var tables = await host.TableNamesAsync(ct);
         Assert.Equal(
-            new[] { "__EFMigrationsHistory", "app_user", "audit_event", "legitimacy_state", "sync_state", "workspace_connection" },
+            new[]
+            {
+                "__EFMigrationsHistory",
+                "app_user",
+                "audit_event",
+                "classroom_participant",
+                "course",
+                "course_membership",
+                "legitimacy_state",
+                "sync_state",
+                "workspace_connection",
+            },
             tables.Order(StringComparer.Ordinal));
         Assert.DoesNotContain(tables, t => t.Contains("allowed", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(tables, t => t.Contains("admin", StringComparison.OrdinalIgnoreCase));

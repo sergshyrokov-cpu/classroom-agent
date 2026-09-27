@@ -1,10 +1,10 @@
 ---
 artifact_type: entity_model
 story: US-014
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-09-27T17:30:24Z
-updated_at: 2026-09-27T17:30:24Z
+updated_at: 2026-09-27T18:11:29Z
 produced_by: db-designer
 inputs:
   - path: docs/specifications/US-014-spec.md
@@ -30,6 +30,43 @@ express.
 The governing principle, inherited from `SyncState`: **an entity holds no clock and
 no policy.** Every instant arrives as an argument, so the run's single observation
 instant (I-8) is passed in rather than read (`TimeProvider` lives in the use case).
+
+## 0. Why this artifact is at version 2
+
+Version 1 placed `CourseDetails` in `Application/Models` while making it a parameter
+of `Course.Import` and `Course.UpdateFrom`. `Course` lives in `Domain`, and **`Domain`
+references nothing** — Architecture Invariant 1 (AD-3), which `AGENTS.md` calls
+non-negotiable. The combination does not compile: `CS0234`, the namespace
+`ClassroomAgent.Application` does not exist inside `ClassroomAgent.Domain`. It was
+caught at TEST_WRITING, when the skeleton of OD-012 was built from this document, and
+corrected here rather than worked around in code.
+
+**The correction: `CourseDetails` is a `Domain` type** (`Domain/Entities`, beside the
+entity whose fields it carries). It describes a course's own attributes, so it belongs
+to the domain; putting it in `Application/Models` was an error of placement, not a
+design choice. `Application` may then hold it freely — `Application` → `Domain` is
+allowed and is how `CourseSnapshot` carries it (§6).
+
+Two alternatives were rejected: a `ProjectReference` from `Domain` to `Application`
+breaks AD-3 in plain text, and expanding `CourseDetails` into primitive parameters
+gives `Import` eleven arguments, which is the signature the type exists to avoid.
+
+**A second gap was found in the same pass** and is corrected here too: §6's port
+signatures gave the adapter no way to know **whose** Google data it is reading. Every
+Classroom call impersonates the technical account of `WorkspaceConnection` (BR-015,
+BR-031, S-03), and `GoogleAccessProbe` — the precedent this adapter follows — takes
+that account as a **method** parameter rather than holding it. Version 1's
+`ReadCoursesAsync(CancellationToken)` therefore could not be implemented at all
+without giving the adapter its own database access, which would put a repository
+behind a Google port for no reason.
+
+The correction: both members take the impersonation address as their first parameter.
+The use case already has it — it reads the connection before the import step
+(spec FR-005), and `WorkspaceConnectionView` carries `ImpersonationUserEmail` — so
+nothing new is looked up, and the adapter stays a pure outbound port.
+
+Neither correction touches the db-design (v1): both move or reshape C# declarations
+and leave every table, column, constraint and index exactly as designed.
 
 ## 1. `Course` — new entity
 
@@ -74,9 +111,10 @@ Every setter is private; the entity is changed only through the two members belo
   returning is left untouched (FR-011, I-4), and deletion belongs to the purge
   (PC-11, US-037).
 
-`CourseDetails` is a `record` in `Application/Models` carrying the optional fields as
-one parameter, so neither member grows a twelve-argument signature. It holds no
-Google SDK type (AD-4).
+`CourseDetails` is a `record` in **`Domain/Entities`** carrying the course's fields as
+one parameter, so neither member grows a twelve-argument signature. It holds no Google
+SDK type (AD-4), and it is in `Domain` because `Course` takes it and `Domain`
+references nothing (§0, AD-3).
 
 ## 2. `CourseState` — new enum
 
@@ -197,22 +235,27 @@ first (FR-015).
 Shape, in the Application's own vocabulary — no Google SDK type crosses the boundary
 (AD-4, FR-002):
 
-- **`IAsyncEnumerable<CourseSnapshot> ReadCoursesAsync(CancellationToken)`** — the
-  school's courses, the adapter following the continuation token so the caller never
-  sees a page (VR-005). Streaming rather than a list keeps one course's transaction
-  independent of the whole school being in memory (FR-012).
-- **`Task<CourseRoster> ReadRosterAsync(string courseGoogleId, CancellationToken)`** —
-  both rosters of one course, each fully paged. One call returning both is what lets
-  FR-010 distinguish "read succeeded, roster empty" from "read failed, roster
-  unknown" (I-6, I-7): a returned `CourseRoster` means success, an exception means
-  unknown.
+- **`IAsyncEnumerable<CourseSnapshot> ReadCoursesAsync(string impersonationUser,
+  CancellationToken)`** — the school's courses, the adapter following the continuation
+  token so the caller never sees a page (VR-005). Streaming rather than a list keeps
+  one course's transaction independent of the whole school being in memory (FR-012).
+- **`Task<CourseRoster> ReadRosterAsync(string impersonationUser, string
+  courseGoogleId, CancellationToken)`** — both rosters of one course, each fully
+  paged. One call returning both is what lets FR-010 distinguish "read succeeded,
+  roster empty" from "read failed, roster unknown" (I-6, I-7): a returned
+  `CourseRoster` means success, an exception means unknown.
+
+`impersonationUser` is the technical account of `WorkspaceConnection` (§0, BR-015).
+The use case passes what it already read; the adapter holds no connection and reaches
+no repository, exactly as `GoogleAccessProbe` takes its technical account per call.
 
 Application models beside it (`Application/Models`):
 
 - **`CourseSnapshot`** — the Google id, the **state as the string Google sent**, and
-  `CourseDetails`. The state stays a string here precisely so the use case can apply
-  OD-010 and skip an unrecognised value; parsing into `CourseState` happens in the
-  use case, not the adapter.
+  the `Domain` `CourseDetails` (§0; `Application` → `Domain` is allowed). The state
+  stays a string here precisely so the use case can apply OD-010 and skip an
+  unrecognised value; parsing into `CourseState` happens in the use case, not the
+  adapter.
 - **`CourseRoster`** — the teacher entries and the student entries.
 - **`RosterEntry`** — the Google `userId`, the email and the name, each as Classroom
   gave them (OD-006).

@@ -102,7 +102,8 @@ public sealed class AccessCheckAuditSchemaTests(PostgreSqlFixture database)
 
     /// <summary>
     /// db-design §1, §4: no table is added — nothing about a check is stored (OD-003). The expected table set
-    /// gained <c>sync_state</c> with US-013, which is the Story that adds it — US-011 still adds none.
+    /// gained <c>sync_state</c> with US-013 and the three course tables with US-014, which are the Stories
+    /// that add them — US-011 still adds none.
     /// </summary>
     [Fact]
     public async Task NoTableIsAdded()
@@ -111,7 +112,18 @@ public sealed class AccessCheckAuditSchemaTests(PostgreSqlFixture database)
         await using var host = await InstallationTestHost.CreateAsync(database, ct);
 
         Assert.Equal(
-            new[] { "__EFMigrationsHistory", "app_user", "audit_event", "legitimacy_state", "sync_state", "workspace_connection" },
+            new[]
+            {
+                "__EFMigrationsHistory",
+                "app_user",
+                "audit_event",
+                "classroom_participant",
+                "course",
+                "course_membership",
+                "legitimacy_state",
+                "sync_state",
+                "workspace_connection",
+            },
             (await host.TableNamesAsync(ct)).Order(StringComparer.Ordinal));
     }
 

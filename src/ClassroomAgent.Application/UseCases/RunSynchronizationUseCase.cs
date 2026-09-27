@@ -22,12 +22,21 @@ namespace ClassroomAgent.Application.UseCases;
 /// Google port it introduces is already behind the guard.
 /// </para>
 /// </remarks>
+// The four US-014 parameters below are not yet read by ExecuteAsync: the pipeline step that uses them is
+// IMPLEMENTATION's, not this compile-only skeleton's (US-014 OD-012). This pragma must be gone once that step
+// is implemented (the US-013 precedent for this rule).
+#pragma warning disable CS9113 // Parameter is unread.
 public sealed class RunSynchronizationUseCase(
     ISyncStateRepository syncStates,
     GetWorkspaceConnectionQuery connectionQuery,
     IReadOnlyModeGuard readOnlyMode,
     IUnitOfWork unitOfWork,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    IClassroomReader classroom,
+    ICourseRepository courses,
+    IClassroomParticipantRepository participants,
+    ICourseMembershipRepository memberships)
+#pragma warning restore CS9113
 {
     /// <summary>The operation name the read-only refusal carries (US-007 spec VR-001).</summary>
     public const string Operation = "Sync.Run";

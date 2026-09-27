@@ -4,26 +4,38 @@
 version: 1
 story: US-014
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
+current_stage: IMPLEMENTATION
+previous_stage: TEST_WRITING
+last_completed_stage: TEST_WRITING
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: test-writer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: 2026-09-27T17:30:24Z
+  stage: TEST_WRITING
+  recorded_at: 2026-09-27T19:23:02Z
 last_artifacts:
-  - type: database_design
-    path: docs/designs/database/US-014-db-design.md
+  - type: test_strategy
+    path: docs/tests/US-014-test-strategy.md
     version: 1
-  - type: entity_model
-    path: docs/designs/database/US-014-entity-model.md
+  - type: ac_test_matrix
+    path: docs/tests/US-014-ac-test-matrix.md
+    version: 1
+  - type: test_generation_report
+    path: docs/evidence/US-014-test-generation-report.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "DB_DESIGN attempt 3 correction, forced by TEST_WRITING: building the OD-012 skeleton from entity-model v1 exposed TWO defects in that document, both found by COMPILING it rather than reading it. (1) CourseDetails sat in Application/Models while being a parameter of Course.Import - but Course is in Domain and Domain references NOTHING (Architecture Invariant 1, AD-3), so the combination does not compile (CS0234). Corrected: CourseDetails is a Domain type; a ProjectReference Domain->Application was rejected as a plain breach of AD-3, and primitives would give Import eleven parameters. (2) The port signatures gave the adapter no way to know WHOSE data it reads, though every Classroom call impersonates the technical account of WorkspaceConnection (BR-015) and GoogleAccessProbe takes that account per call. Corrected: both members take the impersonation address first; the use case already holds it. entity-model is v2; the db-design (v1) is untouched, because neither correction changes a table, column, constraint or index."
+  - "TEST_WRITING: PASS. 68 new tests in 7 classes plus 2 new fixtures (CourseTestData, CourseRows); 5 existing test files modified, 4 of them the expected table-set and migration-count changes db-design §9 item 10 foresaw (six migrations to SEVEN, three tables added) - each of those kept ITS OWN assertion and only the sample set grew, the US-013 D-2 pattern. Build 0 errors / 0 warnings. Whole suite 2321 total, 2252 passed, 69 failed, 0 skipped; every failure expected and classified by class in the report."
+  - "TEST_WRITING raised OD-012 (compile-only skeleton) and the Owner resolved it on 2026-09-27 as option 1, scoped like US-005 OD-002, US-007 OD-003, US-011 OD-006, US-012 OD-005 and US-013 OD-008. open_decisions is now v2 - it adds OD-012 only. The skeleton GREW TWICE beyond its first description, both times out of necessity: GoogleClassroomReader was added because paging is a property of the ADAPTER and invisible at the port by design (VR-005), so the test proving it must construct the adapter; then three repository implementations AND their DI registration in InstallationServices were added because without them the host cannot construct RunSynchronizationUseCase and EIGHT US-013 tests failed on a host that would not start - a stage leaving regression tests red has not finished. OD-012 records both additions rather than leaving the decision and the repository out of step."
+  - "TEST_WRITING: EF Core configurations, the three DbSet properties and the AddCoursesAndRosters migration are DELIBERATELY outside the skeleton, exactly as US-013 decided for itself - mapping an entity without its migration would leave the model and the database disagreeing. Consequence stated plainly in the report: the 32 schema tests fail on MISSING TABLES, not on a wrong constraint, so until the migration exists they cannot tell a correct constraint from an absent one. IMPLEMENTATION adds the mapping, the check constraints, the indexes and the migration as ONE piece, and must remove every NotImplementedException and every #pragma warning disable CS9113 (in RunSynchronizationUseCase and the three repositories) - a remaining one is a finding."
+  - "TEST_WRITING found and fixed SIX VACUOUS PASSES of its own, which is the finding most worth carrying forward. Five refusal tests passed before any implementation existed, because «the Classroom port was not called» and «nothing was written» are equally true of a run that correctly refused AND of a pipeline that has no step at all; green there would have stayed green if the read-only guard were later deleted. Each now pairs the refusal with a CONTROL - the same seeded world, allowed to run, must reach the port and write - and all six fail red. A sixth, ClassroomParticipantSchemaTests.TheTable_HasNoRoleColumn, passed because information_schema returns nothing for a table that does not exist, so it asserted an absence inside an absence; it now asserts the table's presence first. BOTH vacuities had one shape: an assertion that something did not happen, in a world where nothing happens yet - a shape the red phase makes easy to write and easy to miss."
+  - "TEST_WRITING verified positively that no other Story was disturbed: US-013's Application and schema classes (SynchronizationRunTests, SynchronizationRefusalTests, SyncStateInvariantTests, SyncStateSchemaTests, SyncIntervalConfigurationTests) are 49/49 GREEN, SyncReadinessTests 9/9 GREEN, and SyncScheduleTests + SyncLoggingTests + SyncRunCoordinationTests 28/28 GREEN. The 69 failures are 65 new tests plus the 4 deliberately-changed guards, and no US-013 class is among them."
+  - "TEST_WRITING coverage gaps IMPLEMENTATION must close, recorded rather than hidden: (1) NO host-level log-content test for the new lines - SC-10 compliance is asserted only through the stored SyncState diagnosis, and the assertion that a run's log lines carry no course name or address is left to IMPLEMENTATION, where those lines are written (US-013's SyncLoggingTests is the precedent to extend); (2) TRUNCATION (VR-002) is untested - the bounds are asserted in the schema, but the entity's cut-rather-refuse behaviour has no test because Course.Import throws in the skeleton."
+  - "TEST_WRITING limits that are not gaps but must not be mistaken for coverage: Google's real response shapes are only as accurate as the synthetic fixtures, so a renamed field would pass here and fail in production (US-011's live «check access» is the mitigation, not a test); paging is proved with TWO pages, so a token mishandled only after the second would not be caught; the both-rosters tie-break tests the PROGRAM's rule, not Google's behaviour, because whether Classroom can return one person on both rosters was never verified on a live domain (spec I-9); and the JWT sub claim proves the address reaches Google's token endpoint, not that Google honours it."
+  - "TEST_WRITING fixture note for SECURITY_REVIEW: this is the FIRST Story whose fixtures describe people at all, so TC-4's prohibition binds here for the first time. Every person, course, address and domain is invented - the test domain is school-one.example.test - and a check confirmed no skipped test, no TODO/FIXME marker and no real address or school domain in any new test file."
   - "DB_DESIGN attempt 2: PASS. THREE new tables (course, classroom_participant, course_membership) and ONE migration AddCoursesAndRosters (PC-2); installation migrations go from six to SEVEN and the table set as AppUserMigrationTests counts it from six to NINE. No existing table is altered: sync_state gains NO column (the counter's MEANING changes, not its shape - FR-013, OD-005) and audit_event needs no amendment, because a scheduled run writes no audit row (FR-019). The Control Plane is untouched."
   - "DB_DESIGN the two closed vocabularies, both value converters plus check constraints on the SyncStateConfiguration pattern: ck_course_course_state over the five §3 codes, ck_course_membership_role over exactly teacher/student. The course-state constraint is the DATABASE half of OD-010 - the Application half skips such a course BEFORE the write with one Warning line, so a violation reaching the database would mean the skip was not implemented. ck_course_membership_seen_order keeps last_seen_at >= first_seen_at. DELIBERATELY NOT constrained: on_roster against the dates - «in the past» needs a clock a row-level check does not have, and «seen in this very run and still on the roster» is the legitimate equal-instants case; the entity owns that invariant, the US-013 division for LastSuccessfulRunAt."
   - "DB_DESIGN §5.3 implements Specification v2's correction: uq_course_membership_course_participant is unique on (course_id, participant_id) per PC-8, the role a FIELD and not part of identity. Plus ix_course_membership_course_seen on (course_id, first_seen_at, last_seen_at), which PC-7 requires for roster-on-a-date lookups and which the unique index cannot serve because it has no date column, and ix_course_membership_participant_id for the second foreign key. Both foreign keys are RESTRICT, not Cascade: PC-8's reason applies exactly here, because when US-015 hangs submissions off these rows a cascade from course would silently take grades with it - the purge (US-037) deletes in an explicit order inside one transaction instead."
@@ -65,5 +77,5 @@ non_blocking_findings:
   - "Carried from the US-012 security review: five Informational observations (I-1 … I-5) stand on the sign-in surface and are not US-014's to correct."
   - "Carried from the US-013 security review: five Informational observations stand - I-1 the tolerated stale Running row, I-2 the deliberately coarse failure diagnosis («RunFailed:» plus a type name, US-017 makes it actionable), I-3 the Guid run identifier, I-4 the 1440-minute interval ceiling as a functional choice, I-5 the bounds spelled in prose beside their constants. None is US-014's to correct."
 started_at: 2026-09-27T16:33:58Z
-updated_at: 2026-09-27T17:30:24Z
+updated_at: 2026-09-27T19:23:02Z
 completed_at: null
