@@ -144,9 +144,19 @@ stories:
   - id: US-013
     epic: EPIC-1
     title: Background synchronization service
-    state: BACKLOG
+    state: IN_PROGRESS
     blocked_by: >
       Depends on US-009 (a connection to synchronize through).
+    # US-009 COMPLETED. Story file authored:
+    # docs/stories/US-013-background-sync-service.md. OD-001 (host only — the
+    # service, the schedule, SyncState and the read-only refusal; the data comes
+    # with US-014), OD-002 (the run interval is a new optional installation
+    # setting with a default), OD-003 (one interval after a success and after a
+    # failure alike), OD-004 (one SyncState row updated in place), OD-005 (a
+    # skipped run is logged, never written — BR-026), OD-006 (the first run waits
+    # for the first legitimacy determination) and OD-007 (the one-run-at-a-time
+    # coordinator is built here) were all resolved by the Owner on 2026-09-27 as
+    # option 1, before activation.
   - id: US-014
     epic: EPIC-1
     title: Sync courses and rosters
