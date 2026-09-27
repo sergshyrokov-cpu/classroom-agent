@@ -4,23 +4,38 @@
 version: 1
 story: US-014
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
-attempt: 2
-last_invoked_skill: openapi-designer
+attempt: 1
+last_invoked_skill: db-designer
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: 2026-09-27T17:22:45Z
+  verdict: PASS
+  stage: DB_DESIGN
+  recorded_at: 2026-09-27T17:30:24Z
 last_artifacts:
-  - type: api_design
-    path: docs/designs/api/US-014-api-design.md
-    version: 2
+  - type: database_design
+    path: docs/designs/database/US-014-db-design.md
+    version: 1
+  - type: entity_model
+    path: docs/designs/database/US-014-entity-model.md
+    version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "DB_DESIGN attempt 2: PASS. THREE new tables (course, classroom_participant, course_membership) and ONE migration AddCoursesAndRosters (PC-2); installation migrations go from six to SEVEN and the table set as AppUserMigrationTests counts it from six to NINE. No existing table is altered: sync_state gains NO column (the counter's MEANING changes, not its shape - FR-013, OD-005) and audit_event needs no amendment, because a scheduled run writes no audit row (FR-019). The Control Plane is untouched."
+  - "DB_DESIGN the two closed vocabularies, both value converters plus check constraints on the SyncStateConfiguration pattern: ck_course_course_state over the five §3 codes, ck_course_membership_role over exactly teacher/student. The course-state constraint is the DATABASE half of OD-010 - the Application half skips such a course BEFORE the write with one Warning line, so a violation reaching the database would mean the skip was not implemented. ck_course_membership_seen_order keeps last_seen_at >= first_seen_at. DELIBERATELY NOT constrained: on_roster against the dates - «in the past» needs a clock a row-level check does not have, and «seen in this very run and still on the roster» is the legitimate equal-instants case; the entity owns that invariant, the US-013 division for LastSuccessfulRunAt."
+  - "DB_DESIGN §5.3 implements Specification v2's correction: uq_course_membership_course_participant is unique on (course_id, participant_id) per PC-8, the role a FIELD and not part of identity. Plus ix_course_membership_course_seen on (course_id, first_seen_at, last_seen_at), which PC-7 requires for roster-on-a-date lookups and which the unique index cannot serve because it has no date column, and ix_course_membership_participant_id for the second foreign key. Both foreign keys are RESTRICT, not Cascade: PC-8's reason applies exactly here, because when US-015 hangs submissions off these rows a cascade from course would silently take grades with it - the purge (US-037) deletes in an explicit order inside one transaction instead."
+  - "DB_DESIGN made three columns NULLABLE on purpose - owner_google_id, creation_time, update_time (§3.3) - on the same reasoning that made the email non-unique: a column no requirement READS must not be able to fail a school's import, and OD-004 already established that US-022 reads memberships rather than the owner column. This obliges the future age rule (OD-001): a MISSING update_time means «age unknown» and the course IS imported, because refusing on absent evidence is the failure mode OD-001 rejected (§3.5)."
+  - "DB_DESIGN §4.2 recorded WHY ix_classroom_participant_email is non-unique as a decision rather than an omission: PC-3's «natural keys such as email get a unique index» is written for keys the PROGRAM owns, while this address is Google's, may be absent, and may be reused by a new userId after an account is deleted. A future migration adding IsUnique() to that index would reintroduce the defect OD-011 avoided - and the positive test for it (two participants sharing an address SUCCEEDS) is item 3 of §9."
+  - "DB_DESIGN §3.4 / §5.5 record what is deliberately NOT added: no «gone from Google» column or present flag (§3 defines five states and nothing else - I-4); no index besides the unique one on course, because this Story's only lookup is by google_id and Epic 2's filters should be indexed against US-020's real queries rather than guessed (the prototype's three indexes are recorded as a hint, not copied); no purge-scan index on (on_roster, last_seen_at), left to US-037; no off-roster timestamp; no membership history; and NO MeetParticipation foreign key to ClassroomParticipant, now or when Epic 4 creates that table (PC-12 calls it a finding)."
+  - "DB_DESIGN §7 marks the personal data this Story is the FIRST to store: classroom_participant.email and full_name are personal data of students, potentially minors - stored in plain form because the reports must show a person by name and address and it is not a credential, never logged (SC-10 permits an INTERNAL id only), never sent beyond this database (S-05), deleted only by the purge, and with NO read path at all until EPIC-2 (S-08). A course NAME is also kept out of logs. No credential, token, key or secret reference appears in any of the three tables."
+  - "ENTITY MODEL: three entities, two enums (CourseState with exactly five members and ClassroomRole with exactly two - NO Unknown/None/Unspecified, because OD-010 skips an unrecognised state before it can become an entity), the IClassroomReader port with its Application models, and three repository ports with NO delete member. Governing principle inherited from SyncState: the entity holds no clock and no policy - the run's single instant (I-8) arrives as an argument."
+  - "ENTITY MODEL §4.2 is where BR-051 actually lives: FirstSeen sets both instants and OnRoster true; SeenAgain advances LastSeenAt, refreshes the role and NEVER touches FirstSeenAt (so a genuine role change keeps one membership with its original first sighting); NotOnRoster sets the flag false and LEAVES LastSeenAt where it was, and it deliberately takes NO instant, because passing one would invite writing it into LastSeenAt and postponing the leaver's expiry for ever (PC-11). No Delete member on any of the three entities."
+  - "ENTITY MODEL §6: IClassroomReader returns IAsyncEnumerable<CourseSnapshot> (streaming, so one course's transaction does not depend on the whole school being in memory) and Task<CourseRoster> for BOTH rosters of one course in ONE call - which is precisely what lets FR-010 distinguish «read succeeded, roster empty» from «read failed, roster unknown»: a returned CourseRoster means success, an exception means unknown (I-6, I-7). CourseSnapshot carries the state as the STRING Google sent, so the use case can apply OD-010; parsing into CourseState happens in the use case, never in the adapter."
+  - "ENTITY MODEL §4.3: the both-rosters tie-break is resolved IN THE USE CASE before the write, because it compares two rosters of one course - knowledge no single entity has. Truncation (VR-002) happens in the Course entity against public Max*Length constants, cutting rather than refusing, on the SyncState.LastError precedent."
+  - "DB_DESIGN §9 for TEST_WRITING - twelve database guards, Testcontainers only (TC-2): duplicate course google_id rejected and a second import UPDATES; duplicate google_user_id rejected; TWO PARTICIPANTS SHARING AN EMAIL MUST SUCCEED (the positive assertion of OD-011, which fails the moment someone adds IsUnique); a second membership of the same person in the same course rejected; a role outside teacher/student rejected; a course_state outside the five rejected AND the Application skip proven separately; last_seen_at before first_seen_at rejected; a course with no owner/creation/update time IS storable; deleting a course with memberships REFUSED (Restrict); AppUserMigrationTests six to SEVEN migrations with _AddCoursesAndRosters last and three tables added - an EXPECTED change to an existing test; sync_state unchanged with no pending model changes; audit_event gains no row and no member."
   - "API_DESIGN attempt 2: NOT_APPLICABLE again, now recorded against Specification v2. The stage RE-RAN rather than having v1's input version edited in place, because recording that a stage read a version it never read would defeat the staleness contract. api_design is now v2 and its §0 holds the reassessment: the uniqueness correction is a unique INDEX plus an Application-side tie-break, so it has no API dimension, and the Specification's four no-surface statements (FR-018, VR-007, S-08, §10) were re-read and are UNCHANGED from v1. The stale input is cleared."
   - "API_DESIGN v2 added ONE forward-looking consequence for EPIC-2: because a person now has ONE membership per course, a roster DTO carries ONE ROLE PER PERSON PER COURSE - US-021 (course detail with roster) must not model a collection of roles per person. Recorded in api_design §0 and §4 so EPIC-2 does not re-derive it."
   - "HUMAN_SPEC_APPROVAL approved AGAIN by Serhii SHYROKOV (/so:approve) at 2026-09-27T17:20:48Z (no comment), this time for Specification v2: the CourseMembership uniqueness correction accepted as PC-8 has it - unique on (course, person), the role a field, teacher winning a both-rosters conflict in Application. Automated verdict PASS, no blocking findings. Specification v2 status is now APPROVED; v1 was never superseded as a separate file, the artifact is revised in place (the US-013 convention)."
@@ -50,5 +65,5 @@ non_blocking_findings:
   - "Carried from the US-012 security review: five Informational observations (I-1 … I-5) stand on the sign-in surface and are not US-014's to correct."
   - "Carried from the US-013 security review: five Informational observations stand - I-1 the tolerated stale Running row, I-2 the deliberately coarse failure diagnosis («RunFailed:» plus a type name, US-017 makes it actionable), I-3 the Guid run identifier, I-4 the 1440-minute interval ceiling as a functional choice, I-5 the bounds spelled in prose beside their constants. None is US-014's to correct."
 started_at: 2026-09-27T16:33:58Z
-updated_at: 2026-09-27T17:22:45Z
+updated_at: 2026-09-27T17:30:24Z
 completed_at: null
