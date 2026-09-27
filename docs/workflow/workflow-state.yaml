@@ -4,20 +4,46 @@
 version: 1
 story: US-014
 workflow: story-delivery
-current_stage: SPECIFICATION
-previous_stage: null
-last_completed_stage: null
-status: IN_PROGRESS
+current_stage: HUMAN_SPEC_APPROVAL
+previous_stage: SPECIFICATION
+last_completed_stage: SPECIFICATION
+status: WAITING_FOR_HUMAN
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: spec-writer
 last_result:
-  verdict: null
-  stage: null
-  recorded_at: null
-last_artifacts: []
-pending_human_gate: null
+  verdict: PASS
+  stage: SPECIFICATION
+  recorded_at: 2026-09-27T16:37:45Z
+last_artifacts:
+  - type: specification
+    path: docs/specifications/US-014-spec.md
+    version: 1
+  - type: open_decisions
+    path: docs/decisions/US-014-open-decisions.md
+    version: 1
+pending_human_gate:
+  stage: HUMAN_SPEC_APPROVAL
+  status: PENDING
+  required_artifacts:
+    - type: specification
+      path: docs/specifications/US-014-spec.md
+      version: 1
+  automated_verdict: PASS
+  blocking_findings: []
+  requested_at: 2026-09-27T16:37:45Z
+  decided_at: null
+  decided_by: null
+  comment: null
 blocking_issues: []
 non_blocking_findings:
+  - "SPECIFICATION: PASS. 20 functional requirements, 7 validation rules, 10 security requirements, interpretations I-1 … I-10, all 9 Acceptance Criteria traced. OD-001 … OD-009 arrived resolved and are carried into docs/decisions/US-014-open-decisions.md unchanged. TWO NEW Open Decisions were raised - OD-010 and OD-011 - and BOTH WERE RESOLVED by the Owner on 2026-09-27 at the gate, before approval, because both change the schema; the Specification and open_decisions were corrected at version 1 while still DRAFT, the US-013 precedent. No automated spec reviewer exists in this variant, so HUMAN_SPEC_APPROVAL is the only check that the Specification reflects trebovaniya.md v79."
+  - "SPECIFICATION raised OD-010 and the Owner RESOLVED it as option 1 with the log level fixed: a course whose courseState is outside the five values §3 lists (ACTIVE, ARCHIVED, PROVISIONED, DECLINED, SUSPENDED) is SKIPPED and the run completes successfully with the other courses; the skip is logged at WARNING - not Information, so it does not sink into a run's ordinary lines - carrying the unrecognised state string and the course's Google id, NEVER the course name (SC-10). Inventing a sixth value is forbidden outright (AGENTS.md Hard Stops), so the real choice was skip-the-course versus fail-the-run, and failing would stop a school receiving ANY data over one unfamiliar course. Noted with the decision: the Classroom API enumeration formally has a sixth member COURSE_STATE_UNSPECIFIED which Google documents as never returned, so the rule guards a FUTURE API change. Accepted cost: such a course is absent from the Dean's list until §3 is extended, and the Warning line is what makes the absence discoverable, because SyncState has ONE counter (OD-005) and cannot carry a skipped count. DB_DESIGN keeps the closed vocabulary with a check constraint; TEST_WRITING asserts the course is absent, the others are imported and the run is completed."
+  - "SPECIFICATION raised OD-011 and the Owner RESOLVED it as option 2: ClassroomParticipant.Email is a PLAIN INDEXED COLUMN, NOT UNIQUE, and the Google userId stays the sole identity of a person (PC-3). The decision CORRECTED the cost this Specification first stated for option 2: PC-12 already supplies Epic 4's rule - a Meet participant is matched by email against the roster of the course ON THE MEETING'S DATE (BR-051), not against the participant table globally - so two people who held one address at different times are disambiguated by the date, not by a unique column. That leaves the costs asymmetric: a unique index would let a legitimately reused school address (Google permits a deleted account's address to be reused with a new userId, and NFR-003 spans several years) stop the WHOLE school's import, while an under-specified report rule is fixable by the Story that builds the report. Option 3 - treating a duplicate address as the same person - stays REJECTED: it would merge two people's memberships, submissions and grades. A future Story that matches an address globally against the participant table would reintroduce this defect."
+  - "SPECIFICATION interpretations API_DESIGN and DB_DESIGN must honour: I-1 (Google's creation and update times are stored as given, in UTC - PC-6 governs the school's time zone for PRESENTATION, not storage); I-2 (a participant's name is ONE string, since §3 says «имя» and no requirement uses given and family names separately); I-3 (first-seen and last-seen come from the injected clock, not from any Google timestamp - BR-051 makes them the program's own observations); I-4 (a course has NO «gone from Google» flag, because §3 defines five states and nothing else); I-5 (a course counts as processed when its TRANSACTION COMMITS, so the counter never overstates the import); I-6 (a FAILED roster read leaves the roster UNKNOWN - no membership of that course is marked off the roster, because marking would record a departure that never happened); I-7 (an EMPTY roster is an answer and DOES mark memberships off the roster - the distinction from I-6 is a read that succeeded versus one that did not); I-8 (ONE instant per run, so «seen in the same run» is expressible in a query); I-9 (a membership's uniqueness INCLUDES the role, so a person on both rosters of one course is two memberships rather than a chosen role); I-10 (the Classroom page size is NOT configuration - it describes how the program talks to Google, so AD-10 does not reach it and DC-3 gains no key)."
+  - "SPECIFICATION FR-018 for API_DESIGN: this Story adds NO endpoint, NO Razor page, NO authorization policy and NO route. SC-4's anonymous list is unchanged and the US-008 endpoint enumeration test gains no row. API_DESIGN may therefore be NOT_APPLICABLE under the stage's optional_when, as US-007 and US-013 already were. The screens are EPIC-2 and Epic 5; the manual trigger is US-019."
+  - "SPECIFICATION FR-014 states explicitly that NFR-010 and NFR-011 are NOT satisfied by this Story: retry with backoff for 429/5xx, the no-retry rule for permission failures and the diagnosable message for the Admin all arrive with US-017 (OD-008). A Classroom read failure propagates and US-013's handler records RunFailed:<type>. The Specification says so rather than implying coverage."
+  - "SPECIFICATION FR-017 for DB_DESIGN: THREE new tables and ONE migration - Course, ClassroomParticipant, CourseMembership - with unique indexes on the Google identifiers (PC-3) and one row per (course, person, role). No existing table is altered; SyncState gains NO column and its migration is NOT amended (FR-013, OD-005); the Control Plane is untouched. FR-019: no audit member and no constraint-amending migration, because a SCHEDULED run writes no audit row. DB_DESIGN must check the new columns against PC-11 as well as §3, because the purge deletes by the course as a unit and a leaver by their own last_seen date, and it must NOT give MeetParticipation a foreign key to ClassroomParticipant (PC-12 calls that a finding)."
+  - "SPECIFICATION VR-002 leaves each string's bound to DB_DESIGN and fixes the POLICY: a value longer than its bound is TRUNCATED, not refused, so a verbose course description cannot make a run fail at the commit - the US-013 precedent for SyncState.LastError."
   - "US-014 carries nine Open Decisions written into the Story, all resolved by the Owner on 2026-09-27 as option 1 before activation: OD-001 (the «course older than N years» rule of §5 v36 is NOT applied here, because this Story sees only the course's own update time - refusing a course on that alone would also hide its coursework from US-015, and the mistake would not self-correct; the retention setting therefore stays unread and the Specification records the limitation that a fresh installation may import a course already past N), OD-002 (courses.list is called with NO courseStates filter and the state is stored as Classroom reports it - §5 purges «в любом статусе» and Epic 2 filters on the stored value), OD-003 (courses.list without a per-user filter; the technical account's Workspace roles are verified at deployment, §7 item 10, which §7 itself says does not block development - an empty import on a live domain is a ROLE problem to diagnose first, not a run failure), OD-004 (the Google ownerId is a plain column on Course with NO foreign key; the owner's membership arrives from the teacher roster like anyone else's), OD-005 (the single SyncState counter counts COURSES processed - §5 makes the course the unit of storage, and US-013's SyncState is not redesigned), OD-006 (the roster is imported as Classroom gives it, including entries outside the school domain and entries with no email, stored by Google userId; «subject of the teaching process» is decided in the reports, BR-064, never as an import filter), OD-007 (a FULL pass every run with idempotent upsert; BR-042 incremental behaviour is entirely US-018), OD-008 (no failure classification, no retry and no Admin-facing diagnosis here - a Classroom read failure propagates and US-013's handler records RunFailed:<type>; US-017 owns error policy), OD-009 (ONE transaction per course through IUnitOfWork.ExecuteInTransactionAsync, covering the course, its participants and its memberships together)."
   - "Existing code the Story builds on, verified before activation: RunSynchronizationUseCase.ExecuteAsync carries the comment marking exactly where the first pipeline step goes, behind the read-only guard that already runs first; PermittedServiceWrites must NOT grow, because the new writes happen inside that guarded use case (US-013 spec FR-006); SyncState has ONE counter (US-013 spec I-8) and its migration is not amended; IUnitOfWork offers SaveChangesAsync and ExecuteInTransactionAsync; GoogleAccessProbe in Infrastructure/Google is the adapter precedent (one shared HttpMessageHandler so tests run offline, the client library's own retry switched off, the key resolved from ISecretStore per request, no Google error text logged or returned); GoogleDelegationScopes fixes the six scopes and courses plus rosters need no seventh; the installation DbContext has four DbSets and six migrations."
   - "The port name is fixed by three approved documents, not chosen by this Story: architecture.md AD-4, package-map.md and TC-4 all name IClassroomReader, declared in Application/Ports and implemented in Infrastructure/Google. A naming drift to record but NOT to fix here: those conventions call the credential port IWorkspaceCredentialProvider, while the code has ISecretStore plus GoogleServiceAccountSettings."
@@ -26,6 +52,6 @@ non_blocking_findings:
   - "Carried from the US-011 security review: F-2 (Minor) - no test resolves a real adapter from the composition root. Not owned by US-014, recorded so it is not lost."
   - "Carried from the US-012 security review: five Informational observations (I-1 … I-5) stand on the sign-in surface and are not US-014's to correct."
   - "Carried from the US-013 security review: five Informational observations stand - I-1 the tolerated stale Running row, I-2 the deliberately coarse failure diagnosis («RunFailed:» plus a type name, US-017 makes it actionable), I-3 the Guid run identifier, I-4 the 1440-minute interval ceiling as a functional choice, I-5 the bounds spelled in prose beside their constants. None is US-014's to correct."
-started_at: null
-updated_at: 2026-09-27T16:26:00Z
+started_at: 2026-09-27T16:33:58Z
+updated_at: 2026-09-27T16:50:05Z
 completed_at: null

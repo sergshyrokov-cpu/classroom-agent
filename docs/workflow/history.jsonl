@@ -131,3 +131,4 @@
 {"timestamp":"2026-09-27T15:58:06Z","story":"US-013","from_stage":"SECURITY_REVIEW","to_stage":"HUMAN_PR_APPROVAL","skill":"security-reviewer","verdict":"PASS","artifacts":["docs/reviews/security/US-013-security-review.md"],"attempt":2}
 {"timestamp":"2026-09-27T16:00:25Z","story":"US-013","from_stage":"HUMAN_PR_APPROVAL","to_stage":"COMPLETED","skill":null,"verdict":"HUMAN_APPROVED","artifacts":["docs/evidence/US-013-implementation-report.md","docs/reviews/security/US-013-security-review.md"],"attempt":2}
 {"timestamp":"2026-09-27T16:26:00Z","story":"US-014","from_stage":null,"to_stage":"SPECIFICATION","skill":null,"verdict":"ACTIVATED","artifacts":[],"attempt":1}
+{"timestamp":"2026-09-27T16:37:45Z","story":"US-014","from_stage":"SPECIFICATION","to_stage":"HUMAN_SPEC_APPROVAL","skill":"spec-writer","verdict":"PASS","artifacts":["docs/specifications/US-014-spec.md","docs/decisions/US-014-open-decisions.md"],"attempt":1}
