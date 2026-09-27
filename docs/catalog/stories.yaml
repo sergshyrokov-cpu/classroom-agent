@@ -160,9 +160,22 @@ stories:
   - id: US-014
     epic: EPIC-1
     title: Sync courses and rosters
-    state: BACKLOG
+    state: IN_PROGRESS
     blocked_by: >
       Depends on US-013.
+    # US-013 COMPLETED. Story file authored:
+    # docs/stories/US-014-sync-courses-and-rosters.md. OD-001 (the "course older
+    # than N years" rule is NOT applied here — this Story sees only the course's
+    # own update time, and refusing a course would also hide its coursework from
+    # US-015), OD-002 (no courseStates filter; the state is stored as Classroom
+    # reports it), OD-003 (courses.list without a per-user filter; verifying the
+    # technical account's Workspace roles stays a deployment task, §7 item 10),
+    # OD-004 (ownerId as a plain column, no foreign key), OD-005 (the run counter
+    # counts courses), OD-006 (the roster is imported as given, including entries
+    # outside the domain and without an email), OD-007 (a full pass here;
+    # BR-042 incremental behaviour is US-018), OD-008 (no failure classification
+    # here; US-017 owns error policy) and OD-009 (one transaction per course)
+    # were all resolved by the Owner on 2026-09-27 as option 1, before activation.
   - id: US-015
     epic: EPIC-1
     title: Sync coursework and submissions
