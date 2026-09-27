@@ -50,6 +50,18 @@ public static class InstallationSettingsReader
     /// <summary>US-008 spec FR-001, VR-004: optional; Ukrainian when absent (NFR-073).</summary>
     public const string DefaultLanguageKey = "Ui:DefaultLanguage";
 
+    /// <summary>US-013 spec FR-013, VR-001: the optional synchronization run interval, in minutes.</summary>
+    public const string SyncIntervalKey = "Sync:IntervalMinutes";
+
+    /// <summary>US-013 spec I-6: one hour when <see cref="SyncIntervalKey"/> is unset, as DC-3 documents it.</summary>
+    public static readonly TimeSpan DefaultSyncInterval = TimeSpan.FromMinutes(60);
+
+    /// <summary>US-013 spec VR-001: the permitted range of <see cref="SyncIntervalKey"/>, in whole minutes.</summary>
+    public const int MinimumSyncIntervalMinutes = 1;
+
+    /// <summary>US-013 spec VR-001: a day is the longest interval the setting accepts.</summary>
+    public const int MaximumSyncIntervalMinutes = 1440;
+
     /// <exception cref="InstallationSettingException">A setting is missing or breaks its rule.</exception>
     public static InstallationSettings Read(IConfiguration configuration, ISecretStore secretStore) =>
         new(
@@ -63,7 +75,8 @@ public static class InstallationSettingsReader
             Required(configuration, OAuthClientIdKey).Trim(),
             OAuthClientSecret(configuration, secretStore),
             DefaultLanguage(configuration),
-            ServiceAccountKeyReference(configuration));
+            ServiceAccountKeyReference(configuration),
+            SyncInterval(configuration));
 
     /// <summary>US-011 spec VR-004: trimmed; blank counts as absent. Resolved per check, not here (spec FR-016).</summary>
     private static string? ServiceAccountKeyReference(IConfiguration configuration) =>
@@ -134,6 +147,28 @@ public static class InstallationSettingsReader
             ?? throw InstallationSettingException.Invalid(
                 OAuthClientSecretReferenceKey,
                 "the configured secret store holds no secret under that reference");
+    }
+
+    /// <summary>
+    /// US-013 spec FR-013, VR-001: optional, in whole minutes - blank or absent yields the one-hour default so an
+    /// installation that never sets it still synchronizes; present, it must fall inside the day it bounds so a
+    /// mistyped value cannot silently stop synchronization from ever running.
+    /// </summary>
+    private static TimeSpan SyncInterval(IConfiguration configuration)
+    {
+        if (configuration[SyncIntervalKey] is not { } configured || string.IsNullOrWhiteSpace(configured))
+        {
+            return DefaultSyncInterval;
+        }
+
+        if (!int.TryParse(configured, NumberStyles.None, CultureInfo.InvariantCulture, out var minutes)
+            || minutes < MinimumSyncIntervalMinutes
+            || minutes > MaximumSyncIntervalMinutes)
+        {
+            throw InstallationSettingException.Invalid(SyncIntervalKey, "expected an integer from 1 to 1440");
+        }
+
+        return TimeSpan.FromMinutes(minutes);
     }
 
     /// <summary>VR-004: <c>uk</c> or <c>en</c>, case-insensitive, or absent - Ukrainian when absent.</summary>

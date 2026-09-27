@@ -10,8 +10,25 @@ namespace ClassroomAgent.Application.UseCases;
 public sealed class LegitimacyCheckMemory
 {
     private readonly Lock _gate = new();
+    private TaskCompletionSource _changed = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private CheckOutcome? _lastOutcome;
     private bool? _lastReadOnly;
+
+    /// <summary>
+    /// A task that completes the next time a check result is remembered. US-013 spec FR-011 waits on it: the
+    /// synchronization service must not start its first run before the first legitimacy determination, and
+    /// polling would need the clock to move, which a test drives by hand (spec I-5).
+    /// </summary>
+    public Task Changed
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _changed.Task;
+            }
+        }
+    }
 
     /// <summary>The result of the last check since startup; null before the first one completes.</summary>
     public CheckOutcome? LastOutcome
@@ -32,6 +49,7 @@ public sealed class LegitimacyCheckMemory
         {
             var previous = _lastOutcome;
             _lastOutcome = outcome;
+            Signal();
             return previous;
         }
     }
@@ -45,5 +63,12 @@ public sealed class LegitimacyCheckMemory
             _lastReadOnly = isReadOnly;
             return previous;
         }
+    }
+
+    private void Signal()
+    {
+        var changed = _changed;
+        _changed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        changed.TrySetResult();
     }
 }

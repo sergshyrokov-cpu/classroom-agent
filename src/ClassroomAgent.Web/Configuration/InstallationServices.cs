@@ -29,6 +29,12 @@ public static class InstallationServices
         services.AddSingleton<LegitimacyCheckMemory>();
         services.AddSingleton<PushCheckCoordinator>();
 
+        // US-013 spec FR-004, FR-013, FR-014, FR-018: the run interval reaches the service as configuration, the
+        // coordinator keeps one run at a time, and the marker is what readiness reads (DC-11).
+        services.AddSingleton(new SyncScheduleSettings(settings.SyncInterval));
+        services.AddSingleton<SyncRunCoordinator>();
+        services.AddSingleton<SynchronizationServiceMemory>();
+
         services.AddSingleton<TimestampInterceptor>();
         services.AddDbContext<ClassroomAgentDbContext>((provider, options) =>
         {
@@ -105,8 +111,13 @@ public static class InstallationServices
         services.AddScoped<CompleteTemporaryPasswordChangeUseCase>();
         services.AddScoped<ChangeOwnPasswordUseCase>();
         services.AddScoped<RunStartupSelfCheckUseCase>();
+
+        // US-013 spec FR-005, FR-006, FR-015: the run and the single sync_state row.
+        services.AddScoped<ISyncStateRepository, SyncStateRepository>();
+        services.AddScoped<RunSynchronizationUseCase>();
         services.AddHostedService<StartupSelfCheckBackgroundService>();
         services.AddHostedService<LegitimacyCheckBackgroundService>();
+        services.AddHostedService<SynchronizationBackgroundService>();
         return services;
     }
 

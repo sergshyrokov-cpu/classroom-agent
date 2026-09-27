@@ -22,11 +22,15 @@ public sealed class ClassroomAgentDbContext(DbContextOptions<ClassroomAgentDbCon
     /// <summary>US-009 entity model §3.3: the connection to the school's Workspace domain.</summary>
     public DbSet<WorkspaceConnection> WorkspaceConnections => Set<WorkspaceConnection>();
 
+    /// <summary>US-013 entity model §1: the state of background synchronization, one row (db-design §3).</summary>
+    public DbSet<SyncState> SyncStates => Set<SyncState>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new LegitimacyStateConfiguration());
         modelBuilder.ApplyConfiguration(new AppUserConfiguration());
         modelBuilder.ApplyConfiguration(new AuditEventConfiguration());
         modelBuilder.ApplyConfiguration(new WorkspaceConnectionConfiguration());
+        modelBuilder.ApplyConfiguration(new SyncStateConfiguration());
     }
 }

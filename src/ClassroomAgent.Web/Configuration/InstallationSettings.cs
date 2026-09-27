@@ -13,6 +13,10 @@ namespace ClassroomAgent.Web.Configuration;
 /// reference names (OD-004, option 1). The reference itself is configuration; the secret never is, and neither is
 /// ever logged (SC-7, SC-10).
 /// </remarks>
+/// <param name="SyncInterval">
+/// US-013 spec FR-013: the optional synchronization run interval; the default is applied by the code that reads
+/// it, not here.
+/// </param>
 public sealed record InstallationSettings(
     Guid InstallationId,
     Uri ControlPlaneAddress,
@@ -24,4 +28,5 @@ public sealed record InstallationSettings(
     string OAuthClientId,
     string OAuthClientSecret,
     UiLanguage DefaultUiLanguage,
-    string? ServiceAccountKeyReference = null);
+    string? ServiceAccountKeyReference = null,
+    TimeSpan SyncInterval = default);

@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-013
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-09-27T08:41:20Z
-updated_at: 2026-09-27T08:41:20Z
+updated_at: 2026-09-27T12:29:57Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-013-background-sync-service.md
@@ -18,9 +18,14 @@ supersedes: null
 
 Story-level Open Decisions for US-013 (Background synchronization service). Every
 item is resolved only by a human; the resolution is written next to the item and
-nothing is deleted. All seven were raised in the Story and resolved by the Owner
-before activation; they are carried here with their `OD-` ids and resolutions
-unchanged.
+nothing is deleted. The first seven were raised in the Story and resolved by the
+Owner before activation; they are carried here with their `OD-` ids and
+resolutions unchanged. OD-008 was raised by TEST_WRITING and resolved on the same
+day.
+
+Version 2 adds OD-008 only. It concerns how TEST_WRITING makes its tests compile
+and changes nothing the Specification, the API design or the database design says,
+so those artifacts, which consumed version 1, are not stale in substance.
 
 | Id | Raised by | Status |
 |---|---|---|
@@ -31,6 +36,7 @@ unchanged.
 | OD-005 What the service records when it cannot run | the Story | RESOLVED 2026-09-27 (option 1) |
 | OD-006 Whether the first run happens at startup | the Story | RESOLVED 2026-09-27 (option 1) |
 | OD-007 Is the trigger seam built now or in US-019 | the Story | RESOLVED 2026-09-27 (option 1) |
+| OD-008 Compile-only skeleton created at TEST_WRITING | TEST_WRITING | RESOLVED 2026-09-27 (option 1) |
 
 ## OD-001 Does this Story import anything, or only run the pipeline?
 
@@ -144,6 +150,48 @@ built here and guarantees one run at a time; US-019 adds only the endpoint, its
 policy and its audit row. AC-002 needs the one-at-a-time guarantee in any case.
 
 **Impact on the Specification:** FR-004, FR-010, §10.
+
+## OD-008 Compile-only skeleton created at TEST_WRITING
+
+Raised by TEST_WRITING on 2026-09-27. The Story's decisive tests substitute the
+ports and call the run use case: read-only mode must write **nothing**, the
+coordinator must refuse a second run, and a failed run must leave the instant of
+the last success alone. Those tests need the types of the entity model, none of
+which exists yet, so the test project cannot compile. The `test-writer` Skill may
+not create production source on its own judgement, and the US-005 OD-002,
+US-007 OD-003, US-011 OD-006 and US-012 OD-005 resolutions were each scoped to
+their own Story.
+
+Options: (1) a compile-only skeleton in `src/` — only the types the tests
+reference, members throwing `NotImplementedException`, nothing registered in DI,
+owned by IMPLEMENTATION from then on; (2) tests written through reflection;
+(3) IMPLEMENTATION writes the tests, which breaks TC-1; (4) option 1 made a
+standing rule in `AGENTS.md`, which is a change to the project's rules and does
+not belong inside a Story.
+
+**Resolution:** option 1, decided by the Owner on 2026-09-27, scoped to US-013
+exactly as the four earlier skeletons were. The skeleton is:
+`Domain/Entities/SyncState.cs`, `Domain/Enums/SyncRunStatus.cs`,
+`Application/Ports/ISyncStateRepository.cs`,
+`Application/Models/SynchronizationRunOutcome.cs`,
+`Application/UseCases/RunSynchronizationUseCase.cs`,
+`Application/UseCases/SynchronizationServiceMemory.cs`,
+`Web/BackgroundServices/SyncRunCoordinator.cs`,
+`Web/BackgroundServices/SynchronizationBackgroundService.cs`,
+`Infrastructure/Persistence/Repositories/SyncStateRepository.cs`, and one new
+member with a default on `Web/Configuration/InstallationSettings.cs` plus the
+configuration-key constant in `InstallationSettingsReader`. IMPLEMENTATION may
+reshape them together with the tests.
+
+**Deliberately not in the skeleton:** `SyncStateConfiguration` and
+`DbSet<SyncState>`. Mapping the entity without its migration would leave the model
+and the database disagreeing; IMPLEMENTATION adds the mapping, the constraints and
+the `AddSyncState` migration as one piece. The schema tests query
+`information_schema` and need no C# type, so nothing depends on the mapping to
+compile.
+
+**Impact on the Specification:** none (FR-002, FR-005, FR-006 and FR-014 already
+require these types; the names there are indicative).
 
 ## `trebovaniya.md` §7 — the open items and this Story
 

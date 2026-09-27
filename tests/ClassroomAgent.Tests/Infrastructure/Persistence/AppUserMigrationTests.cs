@@ -11,6 +11,8 @@ namespace ClassroomAgent.Tests.Infrastructure.Persistence;
 /// </summary>
 public sealed class AppUserMigrationTests(PostgreSqlFixture database)
 {
+    // US-013 db-design §8: the installation's migration and table counts both change here — five to six — with
+    // _AddSyncState last and sync_state added to the table set. Traced here as US-011 and US-012 traced their own.
     [Fact]
     public async Task TheMigrations_CreateLegitimacyStateThenAppUserAndAuditEvent()
     {
@@ -24,16 +26,18 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
             ct);
 
         // US-009 adds workspace_connection in its own migration, as its db-design §7.1 fixes. US-011 adds no table:
-        // its migration only amends two audit_event check constraints (US-011 db-design §7.1).
+        // its migration only amends two audit_event check constraints (US-011 db-design §7.1). US-013 adds
+        // sync_state in its own migration and touches no other table (US-013 db-design §5).
         Assert.Equal(
-            new[] { "__EFMigrationsHistory", "app_user", "audit_event", "legitimacy_state", "workspace_connection" },
+            new[] { "__EFMigrationsHistory", "app_user", "audit_event", "legitimacy_state", "sync_state", "workspace_connection" },
             tables.Order(StringComparer.Ordinal));
-        Assert.Equal(5, migrations.Count);
+        Assert.Equal(6, migrations.Count);
         Assert.EndsWith("_InitialLegitimacyState", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_InitialAppUserAndAuditEvent", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_AddWorkspaceConnection", migrations[2], StringComparison.Ordinal);
         Assert.EndsWith("_AddAccessCheckAudit", migrations[3], StringComparison.Ordinal);
         Assert.EndsWith("_AddDeanAccounts", migrations[4], StringComparison.Ordinal);
+        Assert.EndsWith(SyncTestData.Migration, migrations[5], StringComparison.Ordinal);
     }
 
     /// <summary>db-design 7.1: the migration seeds nothing — the first account appears when a person signs in.</summary>

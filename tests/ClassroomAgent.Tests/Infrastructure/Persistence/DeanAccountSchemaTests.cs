@@ -114,7 +114,10 @@ public sealed class DeanAccountSchemaTests(PostgreSqlFixture database)
         Assert.Contains("uq_app_user_normalized_email", Text(failure), StringComparison.OrdinalIgnoreCase);
     }
 
-    /// <summary>db-design §3.3, §5: this Story adds no table and no index (PC-7).</summary>
+    /// <summary>
+    /// db-design §3.3, §5: this Story adds no table and no index (PC-7). The expected table set gained
+    /// <c>sync_state</c> with US-013, which is the Story that adds it — US-012 still adds none.
+    /// </summary>
     [Fact]
     public async Task TheStory_AddsNoTableAndNoIndex()
     {
@@ -125,7 +128,7 @@ public sealed class DeanAccountSchemaTests(PostgreSqlFixture database)
         var indexes = await InstallationSchemaQueries.IndexNamesAsync(host, "app_user", ct);
 
         Assert.Equal(
-            new[] { "__EFMigrationsHistory", "app_user", "audit_event", "legitimacy_state", "workspace_connection" },
+            new[] { "__EFMigrationsHistory", "app_user", "audit_event", "legitimacy_state", "sync_state", "workspace_connection" },
             tables.Order(StringComparer.Ordinal));
         Assert.Equal(new[] { "pk_app_user", "uq_app_user_normalized_email" }, indexes.Order(StringComparer.Ordinal));
     }

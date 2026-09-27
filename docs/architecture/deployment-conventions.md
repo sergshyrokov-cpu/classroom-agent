@@ -99,7 +99,9 @@ the previous one — the dependency is real, not stylistic
   address, the OAuth client id and the OAuth client secret reference are required: an
   installation without any of them refuses to start (`trebovaniya.md` §5, v73,
   v75, v78). Optional:
-  the school's default UI language (`uk` or `en`, `uk` if unset — NFR-073).
+  the school's default UI language (`uk` or `en`, `uk` if unset — NFR-073), and
+  the synchronization run interval (`Sync:IntervalMinutes`, whole minutes,
+  1 to 1440, 60 — one hour — if unset, US-013).
 - **The public base address is configuration, not a request header** (v78). The
   Google redirect URI is built from it, so deriving it from the incoming request's
   host or forwarded headers — which a reverse proxy makes forgeable — is a
