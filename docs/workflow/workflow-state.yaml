@@ -4,23 +4,32 @@
 version: 1
 story: US-013
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: 2026-09-27T11:55:30Z
+  verdict: PASS
+  stage: DB_DESIGN
+  recorded_at: 2026-09-27T12:10:19Z
 last_artifacts:
-  - type: api_design
-    path: docs/designs/api/US-013-api-design.md
+  - type: database_design
+    path: docs/designs/database/US-013-db-design.md
+    version: 1
+  - type: entity_model
+    path: docs/designs/database/US-013-entity-model.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "DB_DESIGN: PASS. ONE new table sync_state with six check constraints and one unique index, ONE migration AddSyncState (PC-2); installation migrations go from five to six and tables from five to six. No existing table is altered, no new relationship, no new index anywhere else; the Control Plane is untouched. audit_event needs NO amendment, unlike US-009, US-011 and US-012, because a SCHEDULED run writes no audit row (spec FR-017) - US-019 adds the action and its constraint migration."
+  - "DB_DESIGN §3.2 the constraint that earns its place: ck_sync_state_terminal_fields makes the status and the three nullable columns unable to disagree - running cannot carry an end instant or an error, completed cannot carry an error, failed cannot exist without one. last_successful_run_at is DELIBERATELY outside it: a failed row with a non-null last success is the normal informative case (the school succeeded on Tuesday and has failed since, spec FR-008), and a value's provenance cannot be expressed in a row-level check - the entity enforces it."
+  - "DB_DESIGN fixed the two values the Specification left to it: last_error is varchar(512) with a check constraint, long enough for a category plus a sentence and too short for a stack trace or a Google error object (spec S-06, SC-10), and Application TRUNCATES before storing so a long message becomes short instead of throwing at commit; the singleton mechanism is a shadow singleton column with ck_sync_state_singleton and uq_sync_state_singleton, the legitimacy_state pattern."
+  - "DB_DESIGN §3.4 records what is deliberately NOT added: no run-history table (OD-004, and PC-11 gives no retention rule for one), no seeded row (spec I-2 - the row's ABSENCE is the never-synchronized state), no interrupted/cancelled status (spec I-3), no index besides the singleton one (one row, no foreign key, no lookup column), no foreign key to workspace_connection (deleting a connection must not cascade into the run record), no per-entity counters (spec I-8), no next-run-due column (the schedule lives in the process; persisting it would create a second source of truth), and no retention rule for the row (it is overwritten, not accumulated)."
+  - "DB_DESIGN entity model: SyncState gains BeginRun (static and instance - a new run keeps LastSuccessfulRunAt and resets the counter), CompleteRun (the ONLY writer of LastSuccessfulRunAt) and FailRun (leaves it untouched); SyncRunStatus has exactly three members and NO Unknown or None; ISyncStateRepository offers GetAsync, GetForReadAsync and Add, with NO delete member; SynchronizationRunOutcome copies StartupSelfCheckOutcome's three shapes and reuses the EXISTING LegitimacyModeReason and WorkspaceConnectionState types. The entity holds no policy number and no clock - the interval never reaches it and every instant arrives as an argument. There is deliberately no CancelRun."
+  - "DB_DESIGN §8 for TEST_WRITING: AppUserMigrationTests goes from five to six installation migrations with _AddSyncState last and sync_state added to the table set - an EXPECTED change to an existing test - while TheControlPlaneSchema_IsUnchangedByThisStory must keep passing untouched. Three database-level guards are named: a second row rejected, a status outside the three rejected, and each of the three disagreements ck_sync_state_terminal_fields forbids rejected. The ABSENCE of the row must be a tested state (never-synchronized, not an exception), a failed run must be shown to leave last_successful_run_at untouched across a completed-then-failed sequence, and each write must commit exactly one row (carried US-009 F-2). Testcontainers only - the InMemory provider enforces none of the six constraints (TC-2)."
   - "API_DESIGN: NOT_APPLICABLE. The approved Specification states in four places (FR-016, VR-005, §10, S-07) that the Story adds no endpoint, page, policy or route, which is exactly the optional_when of stage-map.yaml. There is deliberately NO docs/designs/api/US-013-openapi.yaml - its absence is the recorded decision, the same one US-007 made; downstream stages that list openapi as an input read the api_design document instead."
   - "API_DESIGN §3 names the ONE thing a reviewer should check: readiness changes which STATES the existing private-port endpoint reports, not its route, method, media type or status mapping. Unhealthy already answers 503 and Degraded/Healthy already answer 200, so FR-014 makes an existing state reachable for a new reason - and read-only mode MUST keep answering Degraded with 200 (DC-7, DC-11). A behaviour change inside an unchanged contract."
   - "API_DESIGN §4 records what US-019 inherits: the coordinator entry point is what its endpoint calls (AD-5 - enqueue and return, never wait); «Запуск синхронизации» belongs to BOTH Admin and Dean (§2, BR-004), unlike the Admin-only settings pages; a MANUAL start is audited (§5, SC-11), so US-019 adds the AuditAction member, its constraint migration and the audit row, none of which US-013 adds; in read-only mode that endpoint answers 409 with the API-6 body, while US-013 turns the same refusal into a silent skip because it has no caller to answer; a POST needs the antiforgery token (API-7)."
@@ -39,5 +48,5 @@ non_blocking_findings:
   - "Carried from the US-011 security review: F-2 (Minor) - no test resolves a real adapter from the composition root. Not owned by US-013, recorded so it is not lost."
   - "Carried from the US-012 security review: five Informational observations (I-1 ... I-5) stand on the sign-in surface and are not US-013's to correct."
 started_at: 2026-09-27T11:33:12Z
-updated_at: 2026-09-27T11:55:30Z
+updated_at: 2026-09-27T12:10:19Z
 completed_at: null
