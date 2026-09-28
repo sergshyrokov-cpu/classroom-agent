@@ -8,8 +8,8 @@ source:
   type: authored
 # Lifecycle status is owned by docs/catalog/stories.yaml (not this file).
 # Aligned with trebovaniya.md v79.
-# DRAFT — OD-001 … OD-009 are NOT yet resolved. The Owner resolves them before
-# activation, as US-013 and US-014 did; /so:start should not run until then.
+# OD-001 … OD-009 were all resolved by the Owner on 2026-09-28, before
+# activation.
 ---
 
 # User Story
@@ -57,7 +57,7 @@ and both were explicitly deferred to this Story:
   "Last activity" is the latest of four dates, and US-014 could see only the
   first of them (US-014 OD-001, resolved as "not here — US-015 at the earliest").
   This Story is the first that can see three of the four; the fourth (Meet) is
-  US-031. Whether it acts on them is OD-001 below.
+  US-031. OD-001 resolves that it does act on them: the rule is implemented here.
 
 ---
 
@@ -89,6 +89,11 @@ and both were explicitly deferred to this Story:
   paging through every list response (VR-005 of US-014);
 - BR-051's off-roster membership for a person who has submissions but was never
   seen on a roster;
+- the §5 age rule for a course **not yet in the database** (OD-001): its last
+  activity is computed from the course, its coursework and its submissions, and
+  a course older than N is not imported at all, while a course already in the
+  database is always updated. This Story is therefore the first to read the
+  retention setting N, which DC-3 and PC-11 make required at startup;
 - read-only mode: the guard already runs first, so this Story must prove the
   **new** reads are never reached in read-only mode (SC-5, AD-6, TC-5);
 - logging per DC-10 and SC-10: no title, no name, no email, **no grade** — a
@@ -297,12 +302,34 @@ courses are fully imported
 - both the allowed case and the read-only refusal are covered in the Application
   layer (TC-5).
 
+## AC-010 A course whose last activity is already older than N is not imported
+
+**Given** an installation whose retention period N is configured, and a course
+Classroom returns that is **not yet in the database**, whose course card, whose
+coursework and materials, and whose submissions were all last changed more than
+N years ago
+
+**When** a synchronization run executes
+
+**Then**:
+
+- nothing is written for that course — no course row, no membership, no
+  coursework, no submission (§5 v36, PC-11, OD-001);
+- a course whose latest of those dates is **within** N is imported in full;
+- a course **already** in the database is updated on every run regardless of its
+  age, until the purge deletes it (§5 v55);
+- an installation with no retention period configured does not start at all
+  (DC-3, PC-11) — the rule has no default and no "keep forever";
+- the run still completes successfully and counts the courses it imported; a
+  skipped course is not a failure.
+
 ---
 
 # Open Decisions
 
-**None of these is resolved.** They are written for the Owner to decide before
-activation, as US-013's and US-014's were.
+All nine were resolved by the Owner on 2026-09-28, before activation, as
+US-013's and US-014's were. Each resolution is written next to its question and
+is never deleted.
 
 ## OD-001 Does this Story apply the "last activity older than N" rule?
 
@@ -340,6 +367,24 @@ Options:
    is not re-read. Cost: the retention rule becomes a side effect of an
    optimisation Story, and an installation deployed before US-018 has no rule.
 
+**Resolution:** option 1, decided by the Owner on 2026-09-28. The rule is applied
+here. For a course **not yet in the database** the run reads its coursework,
+materials and submissions first, computes the last activity from those three
+dates plus the course's own update time, and imports **nothing** for that course
+if the latest of them is more than N years old; a course already in the database
+is always updated until the purge deletes it (§5 v55). Three consequences the
+Specification must carry rather than discover later:
+
+- this Story is the first to **read the retention setting N**, and by DC-3 and
+  PC-11 an installation without it refuses to start — a deployment-affecting
+  change that belongs to this Story because the rule cannot work without it;
+- the import order inverts for an unknown course (read its work, then decide),
+  which is why the rule lands here and not in US-037: that Story would otherwise
+  have to rewrite the pipeline this one builds;
+- the known limitation of §5 v55 is recorded, not worked around — a course silent
+  in Classroom for more than N years but still holding lessons in Meet will not be
+  imported into a new installation, and its meetings stay unlinked.
+
 ## OD-002 How submissions are requested
 
 Classroom exposes `courses.courseWork.studentSubmissions.list`, which accepts
@@ -360,6 +405,14 @@ Options:
    narrower blast radius per failure, at roughly the cost of one API call per
    assignment per run — for a school with 140 courses × 50 assignments that is
    7 000 calls per run, before US-018 makes anything incremental.
+
+**Resolution:** option 1, decided by the Owner on 2026-09-28. Submissions are
+requested once per course with `courseWorkId = "-"`, paged to the end, and each
+returned submission is attributed by its own `courseWorkId`. The Specification
+must record that this call shape is **unverified against a live domain** — the
+prototype only ever called it per assignment — so a first live run is where it is
+confirmed; and that a failure of that one call leaves the whole course's
+submissions unread, which is the boundary AC-007 and OD-003 govern.
 
 ## OD-003 The transaction boundary now that submissions exist
 
@@ -385,6 +438,17 @@ Options:
    introduces a number that no requirement defines and that AD-10 would have to
    place somewhere.
 
+**Resolution:** option 1, decided by the Owner on 2026-09-28. US-014's boundary
+is kept unchanged: **one transaction per course**, through
+`IUnitOfWork.ExecuteInTransactionAsync`, now covering the course, its
+participants, its memberships, its coursework and materials, and its submissions
+together. A run that fails part-way leaves only complete courses behind and the
+next run finishes the job (BR-041), and the unit of the transaction stays the
+unit of storage §5 names. The Specification records the accepted cost — a large
+course holds one long transaction — and states that if it ever becomes a real
+problem the answer is option 3 with a documented size, never a silent split that
+weakens AC-007.
+
 ## OD-004 Coursework whose Classroom state is `DRAFT` or `DELETED`
 
 Classroom returns a `state` on a `courseWork` — `PUBLISHED`, `DRAFT` or
@@ -409,6 +473,15 @@ Options:
    built for a past period still shows work that existed then. The most accurate
    for history, and the most expensive: it needs the state stored *and* a rule
    for how a deleted assignment appears in a cell, which BR-056 does not define.
+
+**Resolution:** option 1, decided by the Owner on 2026-09-28. Only `PUBLISHED`
+coursework and materials are imported, and the Classroom `state` is **not**
+stored — §3 does not list it and no report needs it. A draft is a teacher's
+editing artefact, not part of the teaching process; when it is published, the
+next run imports it. A piece of work deleted in Google keeps the row it already
+has, exactly as US-014 leaves a course Google no longer returns (US-014 AC-005),
+and only the purge removes it. The Specification must state that the filter is
+applied on **import**, so no later Story has to remember to filter drafts out.
 
 ## OD-005 An unrecognised submission state
 
@@ -460,6 +533,30 @@ vocabulary holds and record that BR-056's list is unverified against a live
 Classroom response** — this is the first Story that reads a submission state at
 all, so the discrepancy is real and must not be resolved by guessing.
 
+**Resolution:** option 4, decided by the Owner on 2026-09-28 — deliberately
+**not** the US-014 OD-010 answer, because the failure modes differ. The
+submission row is always stored. Its state is a closed vocabulary with a check
+constraint for every recognised value, plus an explicit "unrecognised" marker
+that keeps the raw string Google sent, and one Warning line carrying that string
+and the submission id and nothing else (SC-10). No cell can silently become
+"не сдано" because of a value the program did not know.
+
+Three obligations follow, all of which the Specification must state rather than
+leave to be discovered:
+
+- it must list the **exact** values of the vocabulary, and record explicitly that
+  BR-056's list — including `STUDENT_EDITED_AFTER_TURN_IN` — is **unverified**
+  against a live Classroom response, since the prototype never read a submission
+  state at all;
+- **US-025 inherits a rule BR-056 does not currently describe**: an unrecognised
+  state is rendered as its own thing, never as "не сдано" and never as a grade. A
+  journal Story that ignores it reintroduces exactly the defect this option
+  avoids;
+- if a live run ever shows that a value in BR-056 does not exist in the API, or
+  that one exists which BR-056 omits, that is a correction to
+  `trebovaniya.md` §3/§4 by a new version — not something a Story fixes on its
+  own (AGENTS.md).
+
 ## OD-006 A submitter who is on no roster: where the name and email come from
 
 AC-004 requires a `ClassroomParticipant` and an off-roster `CourseMembership` for
@@ -484,6 +581,17 @@ Options:
 3. Do not create a participant at all and attach the submission to nothing.
    Rejected: it contradicts BR-051 v56 and leaves the submission unreachable by
    the purge.
+
+**Resolution:** option 1, decided by the Owner on 2026-09-28. The participant is
+created from the Google `userId` alone, with name and email absent — the schema
+US-014 built already allows both (US-014 OD-006, OD-011). No profile call is
+made, so no unverified Workspace role is relied on (§7 item 10). The accepted
+cost is recorded in the Specification: such a person appears in a journal without
+a name until a roster sighting fills it in, and if they never return to a roster,
+never — which for a leaver whose row exists so the purge has a date is the right
+trade. The membership is `student`, off the roster, first and last seen on this
+run's date, and the §3 v56 limitation stands: N is counted from the day of this
+synchronization, not from the day the person actually left.
 
 ## OD-007 Does a `Submission` store Google's update time?
 
@@ -515,6 +623,19 @@ requirements. Whatever is decided, `trebovaniya.md` §5 wins and the losing
 convention (PC-11 or PC-13) must be corrected** — the derived document is the one
 that gets fixed (AGENTS.md).
 
+**Resolution:** option 1, decided by the Owner on 2026-09-28. A `Submission`
+stores Google's `updateTime`, because it is the only value that means what §5
+says — when the submission changed **in Google**. PC-6's local `updated_at`
+records when this program wrote the row, and using it would tie a school's
+retention to the installation's sync history: reimporting a school would refresh
+every row and postpone every expiry, a purge wrong in a way nobody could see.
+
+**`persistence-conventions.md` PC-13 is the document that must be corrected** —
+its list of what a `Submission` stores is missing this column while PC-11, from
+the same §5, requires it. The correction is a documentation change that this
+Story carries, not a new requirement: §5 v36 already defines a course's last
+activity as including "изменение любой сдачи".
+
 ## OD-008 One entity for coursework and materials, or two
 
 §3 models a single concept — "**CourseWork** — задание или учебный материал
@@ -534,6 +655,15 @@ Options:
    expressible.
 2. Two entities and two tables. Cleaner per-resource fields, but every journal
    query becomes a union, and `package-map.md` would have to change.
+
+**Resolution:** option 1, decided by the Owner on 2026-09-28. One `CourseWork`
+entity and one table, with a stored field saying which Classroom resource the row
+came from (`courseWork` or `courseWorkMaterials`) and PC-3's unique key on
+(resource, Google id). The kind of BR-052 — graded work, ungraded work,
+material — is **derived and never stored**: it follows from the resource and from
+whether maximum points are set, so a teacher adding or removing points updates
+the same row (PC-3, §3 v32). `package-map.md` already describes exactly this
+(`CourseWorkKind` "computed … never stored"), so no convention changes.
 
 ## OD-009 Reading the last turn-in date
 
@@ -557,6 +687,18 @@ Options:
    the teacher entering a grade.
 3. Defer the date to Epic 12 with the rest of the history. Rejected: BR-058 and
    the journal need it in the first version, and it is a stored field of §3.
+
+**Resolution:** option 1, decided by the Owner on 2026-09-28. The history is
+taken from the submission resource itself, the **latest** transition to
+`TURNED_IN` is kept as the submission date (BR-058: turned in, reclaimed, turned
+in again shows the second date), and everything else is discarded in memory —
+the history is never stored (PC-13, BR-059, Epic 12). A submission whose history
+Google omits or truncates has **no date**, stored as absent and never invented.
+The Specification records that the inline availability of the history is
+unverified against a live domain, since the prototype never read it: if a live
+run shows it needs a separate request, that is a fact for US-017/US-018 to
+absorb, not a licence to substitute `updateTime`, which changes when a teacher
+enters a grade.
 
 ---
 
@@ -609,5 +751,11 @@ Options:
 - **Known limitation to carry into the Specification** (§5 v55): submissions of
   people still on a roster have no expiry of their own — they live until the
   course expires or the person expires as a leaver.
+- **One derived document must be corrected by this Story** (OD-007):
+  `persistence-conventions.md` PC-13 lists what a `Submission` stores and omits
+  Google's `updateTime`, while PC-11 — from the same §5 — requires it for a
+  course's last activity. §5 v36 already says "изменение любой сдачи", so the
+  requirement is unchanged and only the convention is wrong. Per AGENTS.md the
+  derived document is the one that gets fixed.
 - Nothing in this Story touches the Control Plane, the service channel or
   `ClassroomAgent.Contracts`.
