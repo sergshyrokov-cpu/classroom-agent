@@ -179,9 +179,27 @@ stories:
   - id: US-015
     epic: EPIC-1
     title: Sync coursework and submissions
-    state: BACKLOG
+    state: IN_PROGRESS
     blocked_by: >
       Depends on US-014 (courses and memberships the submissions belong to).
+    # US-014 COMPLETED. Story file authored:
+    # docs/stories/US-015-sync-coursework-and-submissions.md. OD-001 (the §5 age
+    # rule IS applied here — a course not yet in the database whose last
+    # activity is older than N is not imported at all, so this Story is the
+    # first to read the retention setting N), OD-002 (submissions requested once
+    # per course with courseWorkId = "-"), OD-003 (US-014's boundary kept — one
+    # transaction per course, now including its work and submissions), OD-004
+    # (only PUBLISHED work and materials are imported; the Classroom state is
+    # not stored), OD-006 (a submitter never seen on a roster gets a participant
+    # from the Google userId alone), OD-007 (a Submission stores Google's
+    # updateTime, and PC-13 is corrected), OD-008 (one CourseWork entity, the
+    # kind derived) and OD-009 (the last turn-in date comes from the history
+    # inline in the submission, which is never stored) were resolved by the
+    # Owner on 2026-09-28 as option 1, before activation. OD-005 was resolved as
+    # option 4 — deliberately not the US-014 OD-010 answer: an unrecognised
+    # submission state is STORED with a marker and the raw string, because a
+    # skipped submission would read as «не сдано» (BR-056) and state something
+    # false about a child's work.
   - id: US-017
     epic: EPIC-1
     title: Retry, backoff and permission-error handling
