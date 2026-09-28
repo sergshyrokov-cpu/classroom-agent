@@ -1,10 +1,10 @@
 ---
 artifact_type: specification
 story: US-015
-version: 1
+version: 2
 status: APPROVED
 created_at: 2026-09-28T11:28:43Z
-updated_at: 2026-09-28T12:33:56Z
+updated_at: 2026-09-28T12:58:56Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-015-sync-coursework-and-submissions.md
@@ -49,6 +49,24 @@ submission states) — and both were **resolved by the Owner at
 `HUMAN_SPEC_APPROVAL` on 2026-09-28, before approval**, because each fixes what
 is stored or what a check constraint allows. This document was corrected at
 version 1 while still `DRAFT`; §12 carries both.
+
+**Version 2** corrects one thing and nothing else: **the scope of the two natural
+keys**. FR-005, FR-006, FR-010, VR-003 and FR-022 now key a `CourseWork` on
+`(course_id, resource, google_id)` and a `Submission` on
+`(course_work_id, google_id)`.
+
+Version 1 keyed them globally — (resource, Google id) and the submission id
+alone — which Classroom's own documentation does not support: a `courseWork.id`
+is unique *per course* and a `studentSubmission.id` only among the submissions of
+its course work. `db-designer` reported the contradiction at `DB_DESIGN` instead
+of designing around it, and the Owner resolved it on 2026-09-28 by scoping each
+key with its parent. The reasoning is worth keeping: the defensive key costs
+almost nothing, because the upsert already runs inside one course's transaction
+and looks up per course, while the global key would let a single Google-side id
+repetition fail a **whole school's** import — the failure shape US-014 OD-011
+deliberately avoided when it refused to make a participant's email unique.
+Nothing in this project verifies Google's behaviour here: the prototype stored no
+coursework or submission at all. No other requirement changed.
 
 ## 2. Business Goal
 
@@ -159,9 +177,13 @@ attributed by it. Materials have no submissions and none are requested for them
 
 One entity and one table for both resources (OD-008), storing:
 
-- the Google id and **which Classroom resource** it came from — together the
-  natural key (PC-3), because ids from the two resources may collide;
-- the course it belongs to;
+- the course it belongs to, the Google id and **which Classroom resource** it
+  came from — the three together are the natural key,
+  `(course_id, resource, google_id)` (§1 v2). The resource is part of it because
+  ids from the two Classroom resources may collide (PC-3); the **course** is part
+  of it because Classroom documents `courseWork.id` as unique *per course*, so a
+  key without it would let one Google-side id repetition fail a whole school's
+  import;
 - the title;
 - **the item date**, by the cascade `scheduledTime` → `dueDate` → `updateTime` →
   `creationTime` (§3, BR-052);
@@ -177,8 +199,11 @@ stored**: it follows from the resource and from whether maximum points are set
 
 One entity and one table, storing exactly (PC-13, §3, and OD-007):
 
-- Google's submission id (the natural key, PC-3);
-- the `CourseWork` it belongs to and the person who submitted it;
+- the `CourseWork` it belongs to and Google's submission id — the two together
+  are the natural key, `(course_work_id, google_id)` (§1 v2), because Classroom
+  documents a submission id as unique only among the submissions of its own
+  course work;
+- the person who submitted it;
 - the Classroom **state** (VR-004);
 - `assignedGrade` and `draftGrade`, as **raw points exactly as Google gives
   them**;
@@ -216,7 +241,8 @@ grade (OD-009).
 ### FR-010 Upsert and identity
 
 Every write is an upsert on the Google-side natural key (BR-041, PC-10):
-`CourseWork` on (resource, Google id), `Submission` on the Google submission id.
+`CourseWork` on `(course_id, resource, google_id)`, `Submission` on
+`(course_work_id, google_id)` — each key scoped by its parent (§1 v2).
 A row updated in place keeps its surrogate identity, so anything referring to it
 still does. A second run with nothing changed in Google produces no duplicate and
 no new row.
@@ -304,12 +330,20 @@ DI composition. **No user-visible string is added**, so no translation key is
 created; if any message did reach a user, NFR-073 would apply in full and both
 language files would grow together.
 
-### FR-022 The PC-13 correction
+### FR-022 Two corrections to `persistence-conventions.md`
 
-`persistence-conventions.md` PC-13 is corrected to include Google's `updateTime`
-in what a `Submission` stores (OD-007). The requirement is unchanged — §5 v36
-already says «изменение любой сдачи» — and only the derived convention was wrong
-(AGENTS.md).
+Both are documentation corrections this Story owns. In each case the requirement
+is unchanged and only the derived convention was wrong, which is the direction
+AGENTS.md fixes things in.
+
+- **PC-13** gains Google's `updateTime` in what a `Submission` stores (OD-007).
+  §5 v36 already says «изменение любой сдачи», and PC-11 — derived from the same
+  §5 — needs that date for a course's last activity.
+- **PC-3** gains the **parent scope** of the two natural keys (§1 v2): a
+  `CourseWork` is unique on `(course_id, resource, google_id)` and a `Submission`
+  on `(course_work_id, google_id)`. PC-3's existing sentence names only the
+  Classroom resource, because it was written about the collision *between the two
+  resources*, not about an id repeating in another course.
 
 ## 5. Acceptance Criteria
 
@@ -347,7 +381,9 @@ optional and stored only when Google sets them.
 
 ### VR-003 `Submission` fields
 
-The Google submission id, the `courseWorkId` and the `userId` are **required**.
+The Google submission id, the `courseWorkId` and the `userId` are **required**;
+the submission id is unique **within its course work**, not globally, and the
+unique index is `(course_work_id, google_id)` accordingly (§1 v2, FR-006).
 `assignedGrade` and `draftGrade` are optional and stored as given, with no
 conversion to any school scale (PC-13). `late` is stored as Google computed it,
 never recomputed from the due date (§4 Epic 3). The last turn-in date is optional

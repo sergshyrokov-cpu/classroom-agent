@@ -4,23 +4,26 @@
 version: 1
 story: US-015
 workflow: story-delivery
-current_stage: SPECIFICATION
-previous_stage: DB_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
 status: IN_PROGRESS
 attempt: 2
-last_invoked_skill: db-designer
+last_invoked_skill: null
 last_result:
-  verdict: BLOCKED
-  stage: DB_DESIGN
-  recorded_at: 2026-09-28T12:45:34Z
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: 2026-09-28T12:58:56Z
 last_artifacts:
-  - type: api_design
-    path: docs/designs/api/US-015-api-design.md
-    version: 1
+  - type: specification
+    path: docs/specifications/US-015-spec.md
+    version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "HUMAN_SPEC_APPROVAL approved AGAIN by Serhii SHYROKOV (/so:approve) at 2026-09-28T12:58:56Z (no comment), this time for Specification v2: the natural-key correction accepted as the Owner decided at DB_DESIGN - CourseWork unique on (course_id, resource, google_id), Submission on (course_work_id, google_id), each key scoped by its parent so one Google-side id repetition cannot fail a whole school's import. Automated verdict PASS, no blocking findings. Specification v2 status is now APPROVED; v1 was never superseded as a separate file, the artifact is revised in place (the US-013 / US-014 convention). API_DESIGN now re-runs at attempt 2 to clear the stale input."
+  - "SPECIFICATION attempt 2: PASS. The Specification is now v2 and changes ONE thing - the SCOPE of the two natural keys - and nothing else; §1 records why. FR-005 keys CourseWork on (course_id, resource, google_id), FR-006 and VR-003 key Submission on (course_work_id, google_id), FR-010 restates the upsert on those keys, and FR-022 grew from one correction to TWO: PC-13 gains Google's updateTime (OD-007) and PC-3 gains the PARENT SCOPE of both keys, because PC-3's sentence was written about the collision between the two Classroom RESOURCES, not about an id repeating in another course. Because the correction touched an artifact that had already passed HUMAN_SPEC_APPROVAL, the Specification returned to DRAFT and THE GATE MUST BE RECORDED AGAIN - the US-014 precedent."
+  - "SPECIFICATION v2 leaves everything else untouched, which TEST_WRITING should rely on: the six-value submission-state vocabulary (OD-011), the unrecognised marker (OD-005), the age rule and the retention setting (OD-001, FR-011, FR-012), the off-roster membership for a submitter never seen (FR-007, OD-010), the transaction boundary (FR-013), the counter counting courses (FR-014), and interpretations I-1 … I-10 are all unchanged from v1."
   - "DB_DESIGN attempt 1: BLOCKED, and the Owner routed the workflow back to SPECIFICATION on 2026-09-28. db-designer found that the approved Specification fixes natural keys Google's own documentation does not support: FR-005 keys CourseWork on (Classroom resource, Google id) and FR-006 / VR-003 key Submission on the Google submission id ALONE, while Classroom documents courseWork.id as «unique per course» and studentSubmission.id as unique only among the submissions of its course work. If that is so, the FIRST collision across two courses violates the unique index and fails the WHOLE SCHOOL's import - the same failure shape US-014 OD-011 deliberately avoided by refusing to make the participant email unique. Nothing in the repository settles it: the prototype stored no coursework or submission at all, §3 lists fields without saying what scopes an id, and PC-3's «(resource, Google id)» was written about the collision BETWEEN THE TWO RESOURCES, not about an id repeating in another course. Changing an approved Specification is not a stage Skill's to make, so NO design artifact was produced at attempt 1."
   - "The Owner resolved it on 2026-09-28 by SCOPING EACH KEY WITH ITS PARENT: course_work is unique on (course_id, resource, google_id) and submission on (course_work_id, google_id). The reasoning recorded with the decision: the defensive key costs almost nothing, because the upsert already runs inside one course's transaction and looks up per course, while the global key risks a school-wide import failure over a Google-side reality that no document in this project verifies. SPECIFICATION therefore re-runs at attempt 2 and produces v2, correcting FR-005, FR-006 and VR-003 only; persistence-conventions.md PC-3 gains the course scope as a documentation correction, alongside the PC-13 correction FR-022 already owns."
   - "STALE INPUT this loop-back creates, to clear before DB_DESIGN: docs/designs/api/US-015-api-design.md (v1) records specification version 1 in its inputs, so once the Specification is v2 that artifact is STALE by the artifact-schema.md contract and API_DESIGN must RE-RUN at attempt 2 against v2 - exactly as US-014 did. The verdict is expected to stay NOT_APPLICABLE, because a unique index has no API dimension, but the artifact must RECORD specification v2 rather than be assumed current."
@@ -50,5 +53,5 @@ non_blocking_findings:
   - "Carried from the US-011 security review: F-2 (Minor) - no test resolves a real adapter from the composition root. Not owned by US-015, recorded so it is not lost."
   - "State-file drift corrected by this activation: active-story.yaml still named US-014 with status IN_PROGRESS after that Story reached COMPLETED, while workflow-state.yaml and docs/catalog/stories.yaml both said COMPLETED. /so:status reported it on 2026-09-28; the rewrite performed here clears it."
 started_at: 2026-09-28T11:28:43Z
-updated_at: 2026-09-28T12:45:34Z
+updated_at: 2026-09-28T12:58:56Z
 completed_at: null
