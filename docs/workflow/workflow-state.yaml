@@ -4,38 +4,28 @@
 version: 1
 story: US-015
 workflow: story-delivery
-current_stage: HUMAN_SPEC_APPROVAL
-previous_stage: SPECIFICATION
-last_completed_stage: SPECIFICATION
-status: WAITING_FOR_HUMAN
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-writer
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: PASS
-  stage: SPECIFICATION
-  recorded_at: 2026-09-28T11:32:16Z
+  verdict: NOT_APPLICABLE
+  stage: API_DESIGN
+  recorded_at: 2026-09-28T12:37:36Z
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-015-spec.md
+  - type: api_design
+    path: docs/designs/api/US-015-api-design.md
     version: 1
-  - type: open_decisions
-    path: docs/decisions/US-015-open-decisions.md
-    version: 1
-pending_human_gate:
-  stage: HUMAN_SPEC_APPROVAL
-  status: PENDING
-  required_artifacts:
-    - type: specification
-      path: docs/specifications/US-015-spec.md
-      version: 1
-  automated_verdict: PASS
-  blocking_findings: []
-  requested_at: 2026-09-28T11:32:16Z
-  decided_at: null
-  decided_by: null
-  comment: null
+pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "API_DESIGN: NOT_APPLICABLE. The approved Specification states in four places (FR-019, S-01, S-08, §10) that the Story adds no endpoint, page, policy or route, which is exactly the optional_when of stage-map.yaml. There is deliberately NO docs/designs/api/US-015-openapi.yaml - its absence is the recorded decision, the same one US-007, US-013 and US-014 made; downstream stages that list openapi as an input read the api_design document instead."
+  - "API_DESIGN §3 examined the ONE thing that deserved a second look rather than waving it away: FR-012 makes Retention:Years required, so a misconfigured installation REFUSES TO START (DC-3, PC-11). That is a deployment behaviour change, NOT an API change - no endpoint answers differently, because a process that does not start serves nothing, and DC-11's health endpoints keep their contract exactly as they already do when the installation id or the OAuth client id is missing. The deployment note belongs in deployment-conventions.md DC-3 (the key name, as US-013 added Sync:IntervalMinutes), never in a contract."
+  - "API_DESIGN §4 records what EPIC-3 inherits so it is not re-derived: US-025 is the FIRST consumer and owns BOTH obligations the Open Decisions pushed out of the import layer - the cell rule for NEW (BR-056 does not describe it, and rendering NEW as «не сдано» without writing that rule decides it silently) and the rendering of an unrecognised state (its own thing, never «не сдано», never a grade). Also: a journal DTO returns RAW POINTS with the coursework's maximum and never a converted school grade (PC-13, VR-007), because conversion lives in report templates; any endpoint exposing a Submission is Admin/Dean only and a grade never reaches a log or an error body (SC-2, SC-4, SC-10); API-8 pagination (default 20, max 100) applies, since submissions are the largest collection in the system (NFR-002); DTOs never entities (AD-8); and US-024 must not present the SyncState counter as «everything Google has», because a course skipped by the age rule is not counted and leaves no trace (I-5)."
+  - "API_DESIGN confirmed the no-change list one by one: readiness and liveness on the private port (US-005, DC-11) are UNTOUCHED - this is a stricter NOT_APPLICABLE than US-013's, which changed which STATES readiness reports; the push receiver (US-006); the public-port pages of US-008 … US-012; the service channel and ClassroomAgent.Contracts (ContractVersion stays 1); and the Control Plane. DB_DESIGN owns what this stage did not: the two tables, the natural key on (Classroom resource, Google id) for CourseWork per PC-3, the six-value submission-state vocabulary with its check constraint plus the unrecognised marker, Google's updateTime on Submission (OD-007), the columns PC-11's purge needs, and the single migration."
+  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-09-28T12:33:56Z (no comment): Specification v1 and open decisions v1 accepted; automated verdict PASS with no blocking findings. OD-001 … OD-009 arrived resolved before activation; OD-010 and OD-011 were raised while writing the Specification and RESOLVED AT THIS GATE - OD-010 as «proceed, §7 item 14 stays a verify-at-onboarding item», OD-011 as the six-value vocabulary with the NEW cell rule carried to US-025. Both corrections were made before approval, so the Specification was approved at version 1 (it was still DRAFT and the gate had not passed). Interpretations I-1 … I-10 accepted as written. The Specification's status is now APPROVED; open_decisions stays DRAFT, the US-013 / US-014 precedent."
   - "SPECIFICATION: PASS. 22 functional requirements, 8 validation rules, 11 security requirements, interpretations I-1 … I-10, all 10 Acceptance Criteria traced. OD-001 … OD-009 arrived resolved and are carried into docs/decisions/US-015-open-decisions.md unchanged. TWO NEW Open Decisions were raised - OD-010 and OD-011 - and BOTH WERE RESOLVED by the Owner on 2026-09-28 AT THIS GATE, before approval, because each fixes what is stored or what a check constraint allows; the Specification and open_decisions were corrected at version 1 while still DRAFT, the US-014 precedent. No automated spec reviewer exists in this variant, so HUMAN_SPEC_APPROVAL is the only check that the Specification reflects trebovaniya.md v79."
   - "SPECIFICATION OD-010 RESOLVED at the gate (2026-09-28): proceed as specified; trebovaniya.md §7 item 14 stays a verify-at-onboarding item, as US-014 OD-003 left §7 item 10, and THE ITEM ITSELF IS NOT CLOSED - only the Story's dependence on it. The decisive point, recorded so it is not re-litigated: the IMPLEMENTATION IS IDENTICAL either way, because FR-007 creates the off-roster membership WHEN such a submission arrives and does nothing when none does, so no line of code depends on the answer. What the answer changes is only what may be claimed about coverage, so AC-004's test uses synthetic fixtures and proves the PROGRAM's rule, never Google's behaviour (TC-4) - and an installation that never produces such a membership on a live domain is evidence about Classroom, not a defect."
   - "SPECIFICATION OD-011 RESOLVED at the gate (2026-09-28): the vocabulary is SIX values - the five the Classroom API documents (NEW, CREATED, TURNED_IN, RETURNED, RECLAIMED_BY_STUDENT) plus STUDENT_EDITED_AFTER_TURN_IN, which BR-056 names - so the OD-005 «unrecognised» marker catches only a value Google genuinely adds later, never the ordinary state of untouched work. The split of ownership is the reasoning: WHAT TO STORE is this Story's question, WHAT A CELL SHOWS is BR-056's, and deciding that a NEW cell reads «не сдано» is a change to §4 Epic 3 that only the Owner makes - better made when the whole journal is designed. STUDENT_EDITED_AFTER_TURN_IN stays permitted even though it may not exist in the API: an unused permitted value costs nothing, while omitting it would flag a real value as unrecognised. TWO obligations are carried to US-025: the cell rule for NEW, and the OD-005 rule that an unrecognised state is rendered as its own thing, never as «не сдано» and never as a grade."
@@ -57,5 +47,5 @@ non_blocking_findings:
   - "Carried from the US-011 security review: F-2 (Minor) - no test resolves a real adapter from the composition root. Not owned by US-015, recorded so it is not lost."
   - "State-file drift corrected by this activation: active-story.yaml still named US-014 with status IN_PROGRESS after that Story reached COMPLETED, while workflow-state.yaml and docs/catalog/stories.yaml both said COMPLETED. /so:status reported it on 2026-09-28; the rewrite performed here clears it."
 started_at: 2026-09-28T11:28:43Z
-updated_at: 2026-09-28T11:32:16Z
+updated_at: 2026-09-28T12:37:36Z
 completed_at: null

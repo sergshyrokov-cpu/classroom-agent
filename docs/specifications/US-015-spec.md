@@ -2,9 +2,9 @@
 artifact_type: specification
 story: US-015
 version: 1
-status: DRAFT
+status: APPROVED
 created_at: 2026-09-28T11:28:43Z
-updated_at: 2026-09-28T12:30:56Z
+updated_at: 2026-09-28T12:33:56Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-015-sync-coursework-and-submissions.md
