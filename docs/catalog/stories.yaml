@@ -160,7 +160,7 @@ stories:
   - id: US-014
     epic: EPIC-1
     title: Sync courses and rosters
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: >
       Depends on US-013.
     # US-013 COMPLETED. Story file authored:

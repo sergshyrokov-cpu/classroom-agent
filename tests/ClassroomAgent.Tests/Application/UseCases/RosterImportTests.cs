@@ -75,8 +75,10 @@ public sealed class RosterImportTests
 
         Assert.Single(world.Participants.Added);
         Assert.Equal(2, world.Memberships.Stored.Count);
+        // Ordered by the enum's own values, which entity model §5 fixes as Teacher then Student — unlike the
+        // schema tests, where ORDER BY role sorts the stored codes 'student' before 'teacher' alphabetically.
         Assert.Equal(
-            new[] { ClassroomRole.Student, ClassroomRole.Teacher },
+            new[] { ClassroomRole.Teacher, ClassroomRole.Student },
             world.Memberships.Stored.Select(m => m.Role).Order());
     }
 

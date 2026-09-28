@@ -25,6 +25,15 @@ public sealed class ClassroomAgentDbContext(DbContextOptions<ClassroomAgentDbCon
     /// <summary>US-013 entity model §1: the state of background synchronization, one row (db-design §3).</summary>
     public DbSet<SyncState> SyncStates => Set<SyncState>();
 
+    /// <summary>US-014 entity model §1: the school's Classroom courses (db-design §3).</summary>
+    public DbSet<Course> Courses => Set<Course>();
+
+    /// <summary>US-014 entity model §3: the people synchronization brought in (db-design §4).</summary>
+    public DbSet<ClassroomParticipant> ClassroomParticipants => Set<ClassroomParticipant>();
+
+    /// <summary>US-014 entity model §4: one person's participation in one course (db-design §5).</summary>
+    public DbSet<CourseMembership> CourseMemberships => Set<CourseMembership>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new LegitimacyStateConfiguration());
@@ -32,5 +41,8 @@ public sealed class ClassroomAgentDbContext(DbContextOptions<ClassroomAgentDbCon
         modelBuilder.ApplyConfiguration(new AuditEventConfiguration());
         modelBuilder.ApplyConfiguration(new WorkspaceConnectionConfiguration());
         modelBuilder.ApplyConfiguration(new SyncStateConfiguration());
+        modelBuilder.ApplyConfiguration(new CourseConfiguration());
+        modelBuilder.ApplyConfiguration(new ClassroomParticipantConfiguration());
+        modelBuilder.ApplyConfiguration(new CourseMembershipConfiguration());
     }
 }

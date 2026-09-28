@@ -8,9 +8,6 @@ namespace ClassroomAgent.Application.Ports;
 /// marker, so US-007 FR-007 binds it: a use case holding it also takes <c>IReadOnlyModeGuard</c> and calls it
 /// first (FR-015).
 /// </summary>
-/// <remarks>
-/// Compile-only skeleton created at TEST_WRITING under US-014 OD-012; IMPLEMENTATION owns it from here.
-/// </remarks>
 public interface IClassroomReader : IGoogleDataPort
 {
     /// <summary>

@@ -174,7 +174,15 @@ public sealed partial class SynchronizationBackgroundService(
         }
         else
         {
-            LogRunCompleted(logger, runId, outcome.ProcessedCount ?? 0);
+            // US-014 spec FR-003, OD-010: one Warning line per skipped course — not Information, so it does not
+            // sink into a run's ordinary lines — carrying the unrecognised state and the course's Google id,
+            // never its name (SC-10).
+            foreach (var skipped in outcome.SkippedCourses)
+            {
+                LogCourseSkipped(logger, runId, skipped.GoogleId, skipped.State);
+            }
+
+            LogRunCompleted(logger, runId, outcome.ProcessedCount ?? 0, outcome.MembershipsMarkedOffRoster);
         }
     }
 
@@ -189,8 +197,23 @@ public sealed partial class SynchronizationBackgroundService(
         EventId = 5122,
         EventName = "SyncRunCompleted",
         Level = LogLevel.Information,
-        Message = "Synchronization run {RunId} completed, {ProcessedCount} processed")]
-    private static partial void LogRunCompleted(ILogger logger, Guid runId, int processedCount);
+        Message = "Synchronization run {RunId} completed, {ProcessedCount} processed, {MarkedOffRoster} off a roster")]
+    private static partial void LogRunCompleted(
+        ILogger logger,
+        Guid runId,
+        int processedCount,
+        int markedOffRoster);
+
+    [LoggerMessage(
+        EventId = 5126,
+        EventName = "SyncCourseSkipped",
+        Level = LogLevel.Warning,
+        Message = "Synchronization run {RunId} skipped course {CourseGoogleId}: unrecognised state {CourseState}")]
+    private static partial void LogCourseSkipped(
+        ILogger logger,
+        Guid runId,
+        string courseGoogleId,
+        string courseState);
 
     [LoggerMessage(
         EventId = 5123,

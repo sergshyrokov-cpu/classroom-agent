@@ -11,9 +11,6 @@ namespace ClassroomAgent.Domain.Entities;
 /// Truncation happens here: each string is bounded by a public constant and a longer value is cut, not refused
 /// (VR-002). There is deliberately no <c>MarkMissing</c> and no <c>Delete</c>: a course Google stopped returning
 /// is left untouched (FR-011, I-4), and deletion belongs to the purge (PC-11, US-037).
-/// <para>
-/// Compile-only skeleton created at TEST_WRITING under US-014 OD-012; IMPLEMENTATION owns it from here.
-/// </para>
 /// </remarks>
 public sealed class Course
 {
@@ -96,12 +93,53 @@ public sealed class Course
     public DateTimeOffset UpdatedAt { get; private set; }
 
     /// <summary>Creates the row for a course not seen before. <paramref name="googleId"/> is required and non-blank.</summary>
-    public static Course Import(string googleId, CourseState state, CourseDetails details) =>
-        throw new NotImplementedException();
+    public static Course Import(string googleId, CourseState state, CourseDetails details)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(googleId);
+        ArgumentNullException.ThrowIfNull(details);
+
+        // The identifier is the one value a course cannot be imported without: it is the upsert key (VR-002, PC-3).
+        var course = new Course { GoogleId = Cut(googleId.Trim(), MaxGoogleIdLength) };
+        course.Apply(state, details);
+        return course;
+    }
 
     /// <summary>
     /// The upsert's update half. The surrogate identity and <see cref="GoogleId"/> are untouched, so every
     /// reference to the course survives (FR-008).
     /// </summary>
-    public void UpdateFrom(CourseState state, CourseDetails details) => throw new NotImplementedException();
+    public void UpdateFrom(CourseState state, CourseDetails details)
+    {
+        ArgumentNullException.ThrowIfNull(details);
+        Apply(state, details);
+    }
+
+    /// <summary>
+    /// A value longer than its bound is <b>cut, not refused</b> (VR-002): a verbose course description must not
+    /// make a run fail at the commit — the <c>SyncState.LastError</c> precedent.
+    /// </summary>
+    private static string Cut(string value, int maxLength) =>
+        value.Length <= maxLength ? value : value[..maxLength];
+
+    private static string? CutOptional(string? value, int maxLength) =>
+        string.IsNullOrWhiteSpace(value) ? null : Cut(value, maxLength);
+
+    private void Apply(CourseState state, CourseDetails details)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(details.Name);
+
+        Name = Cut(details.Name, MaxNameLength);
+        Section = CutOptional(details.Section, MaxSectionLength);
+        DescriptionHeading = CutOptional(details.DescriptionHeading, MaxDescriptionHeadingLength);
+        Description = CutOptional(details.Description, MaxDescriptionLength);
+        Room = CutOptional(details.Room, MaxRoomLength);
+        OwnerGoogleId = CutOptional(details.OwnerGoogleId, MaxOwnerGoogleIdLength);
+        CreationTime = details.CreationTime;
+        UpdateTime = details.UpdateTime;
+        State = state;
+        AlternateLink = CutOptional(details.AlternateLink, MaxAlternateLinkLength);
+        TeacherFolderId = CutOptional(details.TeacherFolderId, MaxTeacherFolderIdLength);
+        TeacherFolderTitle = CutOptional(details.TeacherFolderTitle, MaxTeacherFolderTitleLength);
+        CalendarId = CutOptional(details.CalendarId, MaxCalendarIdLength);
+    }
 }

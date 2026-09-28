@@ -6,7 +6,9 @@ namespace ClassroomAgent.Application.Models;
 /// connection with its state.
 /// </summary>
 /// <remarks>
-/// Compile-only skeleton created at TEST_WRITING under US-013 OD-008; IMPLEMENTATION owns it from here.
+/// US-014 adds what the host must log about the import but the Application layer cannot log itself: the courses a
+/// run skipped because of an unrecognised state (spec FR-003, OD-010) and how many memberships it marked off a
+/// roster (spec FR-016). Both are counters and identifiers only, never personal data (SC-10).
 /// </remarks>
 public sealed class SynchronizationRunOutcome
 {
@@ -15,13 +17,17 @@ public sealed class SynchronizationRunOutcome
         int? processedCount,
         string? error,
         LegitimacyModeReason? readOnlyReason,
-        WorkspaceConnectionState? connectionState)
+        WorkspaceConnectionState? connectionState,
+        IReadOnlyList<SkippedCourse>? skippedCourses = null,
+        int membershipsMarkedOffRoster = 0)
     {
         RunId = runId;
         ProcessedCount = processedCount;
         Error = error;
         ReadOnlyReason = readOnlyReason;
         ConnectionState = connectionState;
+        SkippedCourses = skippedCourses ?? [];
+        MembershipsMarkedOffRoster = membershipsMarkedOffRoster;
     }
 
     public Guid? RunId { get; }
@@ -34,10 +40,21 @@ public sealed class SynchronizationRunOutcome
 
     public WorkspaceConnectionState? ConnectionState { get; }
 
+    /// <summary>US-014 spec FR-003, OD-010: the courses an unrecognised state made unimportable, for one Warning line each.</summary>
+    public IReadOnlyList<SkippedCourse> SkippedCourses { get; }
+
+    /// <summary>US-014 spec FR-010, FR-016: how many memberships this run marked as no longer on a roster.</summary>
+    public int MembershipsMarkedOffRoster { get; }
+
     public bool Failed => Error is not null;
 
-    public static SynchronizationRunOutcome Ran(Guid runId, int processedCount, string? error) =>
-        new(runId, processedCount, error, null, null);
+    public static SynchronizationRunOutcome Ran(
+        Guid runId,
+        int processedCount,
+        string? error,
+        IReadOnlyList<SkippedCourse>? skippedCourses = null,
+        int membershipsMarkedOffRoster = 0) =>
+        new(runId, processedCount, error, null, null, skippedCourses, membershipsMarkedOffRoster);
 
     public static SynchronizationRunOutcome SkippedReadOnly(LegitimacyModeReason reason) =>
         new(null, null, null, reason, null);

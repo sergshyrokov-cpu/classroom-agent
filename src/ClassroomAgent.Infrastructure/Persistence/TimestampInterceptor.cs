@@ -37,8 +37,14 @@ public sealed class TimestampInterceptor(TimeProvider timeProvider) : SaveChange
         foreach (var entry in context.ChangeTracker.Entries())
         {
             // US-008 db-design §7.1: the two new entities are stamped by the same interceptor. An audit row is
-            // never Modified, so ck_audit_event_immutable holds (§4.2).
-            if (entry.Entity is not (LegitimacyState or AppUser or AuditEvent))
+            // never Modified, so ck_audit_event_immutable holds (§4.2). US-014 db-design §3.1, §4.1, §5.1 add the
+            // three tables of courses and rosters, whose created_at / updated_at are stamped the same way (PC-6).
+            if (entry.Entity is not (LegitimacyState
+                or AppUser
+                or AuditEvent
+                or Course
+                or ClassroomParticipant
+                or CourseMembership))
             {
                 continue;
             }

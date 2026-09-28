@@ -1,5 +1,6 @@
 using ClassroomAgent.Application.Ports;
 using ClassroomAgent.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClassroomAgent.Infrastructure.Persistence.Repositories;
 
@@ -7,18 +8,14 @@ namespace ClassroomAgent.Infrastructure.Persistence.Repositories;
 /// The installation's <c>course_membership</c> table (US-014 entity model §7). Stages changes; never saves
 /// (AD-7).
 /// </summary>
-/// <remarks>
-/// Compile-only skeleton created at TEST_WRITING under US-014 OD-012; IMPLEMENTATION owns it from here. There is
-/// no <c>DbSet&lt;CourseMembership&gt;</c> and no EF Core configuration yet — mapping without a migration would
-/// desync the model from the database, so both members throw until IMPLEMENTATION adds the mapping and the
-/// migration together (PC-2).
-/// </remarks>
-#pragma warning disable CS9113 // Parameter is unread: db is not yet used by this compile-only skeleton.
 public sealed class CourseMembershipRepository(ClassroomAgentDbContext db) : ICourseMembershipRepository
-#pragma warning restore CS9113
 {
-    public Task<IReadOnlyList<CourseMembership>> GetByCourseAsync(long courseId, CancellationToken cancellationToken) =>
-        throw new NotImplementedException();
+    /// <summary>
+    /// The course's current memberships, tracked: this run advances the ones it sees again and marks the ones it
+    /// did not see off the roster (spec FR-009, FR-010).
+    /// </summary>
+    public async Task<IReadOnlyList<CourseMembership>> GetByCourseAsync(long courseId, CancellationToken cancellationToken) =>
+        await db.CourseMemberships.Where(m => m.CourseId == courseId).ToListAsync(cancellationToken);
 
-    public void Add(CourseMembership membership) => throw new NotImplementedException();
+    public void Add(CourseMembership membership) => db.CourseMemberships.Add(membership);
 }

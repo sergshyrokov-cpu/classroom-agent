@@ -1,23 +1,17 @@
 using ClassroomAgent.Application.Ports;
 using ClassroomAgent.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClassroomAgent.Infrastructure.Persistence.Repositories;
 
 /// <summary>
 /// The installation's <c>course</c> table (US-014 entity model §7). Stages changes; never saves (AD-7).
 /// </summary>
-/// <remarks>
-/// Compile-only skeleton created at TEST_WRITING under US-014 OD-012; IMPLEMENTATION owns it from here. There is
-/// no <c>DbSet&lt;Course&gt;</c> and no EF Core configuration yet — mapping without a migration would desync the
-/// model from the database, so both members throw until IMPLEMENTATION adds the mapping and the migration
-/// together (PC-2).
-/// </remarks>
-#pragma warning disable CS9113 // Parameter is unread: db is not yet used by this compile-only skeleton.
 public sealed class CourseRepository(ClassroomAgentDbContext db) : ICourseRepository
-#pragma warning restore CS9113
 {
+    /// <summary>Tracked, because the upsert's update half changes the row it finds (spec FR-008).</summary>
     public Task<Course?> GetByGoogleIdAsync(string googleId, CancellationToken cancellationToken) =>
-        throw new NotImplementedException();
+        db.Courses.SingleOrDefaultAsync(c => c.GoogleId == googleId, cancellationToken);
 
-    public void Add(Course course) => throw new NotImplementedException();
+    public void Add(Course course) => db.Courses.Add(course);
 }

@@ -10,7 +10,4 @@ namespace ClassroomAgent.Application.Models;
 /// <param name="GoogleId">The Classroom course id.</param>
 /// <param name="State">The state as the string Google sent, not yet parsed into <c>CourseState</c>.</param>
 /// <param name="Details">The course's other fields.</param>
-/// <remarks>
-/// Compile-only skeleton created at TEST_WRITING under US-014 OD-012; IMPLEMENTATION owns it from here.
-/// </remarks>
 public sealed record CourseSnapshot(string GoogleId, string State, CourseDetails Details);

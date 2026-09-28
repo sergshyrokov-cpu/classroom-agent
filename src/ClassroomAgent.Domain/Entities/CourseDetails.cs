@@ -19,9 +19,6 @@ namespace ClassroomAgent.Domain.Entities;
 /// <param name="TeacherFolderId">§3's teacher folder id.</param>
 /// <param name="TeacherFolderTitle">§3's teacher folder title.</param>
 /// <param name="CalendarId">§3's calendar id.</param>
-/// <remarks>
-/// Compile-only skeleton created at TEST_WRITING under US-014 OD-012; IMPLEMENTATION owns it from here.
-/// </remarks>
 public sealed record CourseDetails(
     string Name,
     string? Section,

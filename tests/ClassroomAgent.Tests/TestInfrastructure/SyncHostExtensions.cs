@@ -22,7 +22,9 @@ public static class SyncHostExtensions
         ReadOnlyModeHost.Cause cause = ReadOnlyModeHost.Cause.NotReadOnly,
         SeededConnection connection = SeededConnection.Usable,
         int? intervalMinutes = null,
-        bool? replySuccess = null)
+        bool? replySuccess = null,
+        Func<InstallationTestHost, CancellationToken, Task>? seed = null,
+        Action<FakeClassroomReader>? classroom = null)
     {
         var host = await InstallationTestHost.CreateAsync(database, cancellationToken);
         await ReadOnlyModeHost.SeedAsync(host, cause, cancellationToken);
@@ -48,6 +50,14 @@ public static class SyncHostExtensions
                 .ReplyFailure(CheckFailureCategory.Unreachable)
                 .ReplyFailure(CheckFailureCategory.Unreachable)
                 .ReplyFailure(CheckFailureCategory.Unreachable);
+        }
+
+        // US-014: the Classroom port and the database are seeded BEFORE the host starts, because the first run
+        // may begin as soon as it has (spec FR-011). Nothing reaches Google either way (TC-4).
+        classroom?.Invoke(host.Classroom);
+        if (seed is not null)
+        {
+            await seed(host, cancellationToken);
         }
 
         host.Start();

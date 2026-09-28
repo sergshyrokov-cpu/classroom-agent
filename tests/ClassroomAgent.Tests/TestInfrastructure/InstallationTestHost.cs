@@ -79,6 +79,9 @@ public sealed class InstallationTestHost : IAsyncDisposable
     /// <summary>US-008: the real Google handler, driven offline. Call <see cref="UseGoogleStub"/> after starting.</summary>
     public GoogleSignInStub Google { get; } = new();
 
+    /// <summary>US-014: the Classroom port of this host, empty unless a test seeds it before <see cref="Start"/> (TC-4).</summary>
+    public FakeClassroomReader Classroom { get; } = new();
+
     public IServiceProvider Services => Factory.Services;
 
     private InstallationFactory Factory => _factory ?? throw new InvalidOperationException("The host is not started.");
@@ -114,7 +117,7 @@ public sealed class InstallationTestHost : IAsyncDisposable
     /// <summary>Builds and starts the host; throws when the host refuses to start (AC-001).</summary>
     public void Start()
     {
-        _factory = new InstallationFactory(Settings, Time, ControlPlane, ConfigureServices, ControlPlaneHandler);
+        _factory = new InstallationFactory(Settings, Time, ControlPlane, Classroom, ConfigureServices, ControlPlaneHandler);
         try
         {
             _ = _factory.Server;

@@ -21,6 +21,7 @@ public sealed class InstallationFactory(
     IReadOnlyDictionary<string, string?> settings,
     TimeProvider timeProvider,
     IControlPlaneClient controlPlaneClient,
+    FakeClassroomReader classroomReader,
     Action<IServiceCollection>? configureServices = null,
     HttpMessageHandler? controlPlaneHandler = null) : WebApplicationFactory<ClassroomAgent.Web.Program>
 {
@@ -54,6 +55,12 @@ public sealed class InstallationFactory(
                 services.AddHttpClient(ControlPlaneClientName)
                     .ConfigurePrimaryHttpMessageHandler(() => controlPlaneHandler);
             }
+
+            // US-014, TC-4: the Classroom port is substituted in every host test. Once the import step exists a
+            // run would otherwise try to reach a live Google API from the host's own composition root.
+            services.RemoveAll<IClassroomReader>();
+            services.AddSingleton(classroomReader);
+            services.AddSingleton<IClassroomReader>(p => p.GetRequiredService<FakeClassroomReader>());
 
             // US-007: the synthetic write and Google use cases the enforcement is proven on (test strategy 3).
             configureServices?.Invoke(services);
