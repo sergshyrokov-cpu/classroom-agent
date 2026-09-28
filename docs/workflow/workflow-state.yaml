@@ -4,16 +4,16 @@
 version: 1
 story: US-015
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
+current_stage: SPECIFICATION
+previous_stage: DB_DESIGN
 last_completed_stage: API_DESIGN
 status: IN_PROGRESS
-attempt: 1
-last_invoked_skill: openapi-designer
+attempt: 2
+last_invoked_skill: db-designer
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: 2026-09-28T12:37:36Z
+  verdict: BLOCKED
+  stage: DB_DESIGN
+  recorded_at: 2026-09-28T12:45:34Z
 last_artifacts:
   - type: api_design
     path: docs/designs/api/US-015-api-design.md
@@ -21,6 +21,9 @@ last_artifacts:
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "DB_DESIGN attempt 1: BLOCKED, and the Owner routed the workflow back to SPECIFICATION on 2026-09-28. db-designer found that the approved Specification fixes natural keys Google's own documentation does not support: FR-005 keys CourseWork on (Classroom resource, Google id) and FR-006 / VR-003 key Submission on the Google submission id ALONE, while Classroom documents courseWork.id as «unique per course» and studentSubmission.id as unique only among the submissions of its course work. If that is so, the FIRST collision across two courses violates the unique index and fails the WHOLE SCHOOL's import - the same failure shape US-014 OD-011 deliberately avoided by refusing to make the participant email unique. Nothing in the repository settles it: the prototype stored no coursework or submission at all, §3 lists fields without saying what scopes an id, and PC-3's «(resource, Google id)» was written about the collision BETWEEN THE TWO RESOURCES, not about an id repeating in another course. Changing an approved Specification is not a stage Skill's to make, so NO design artifact was produced at attempt 1."
+  - "The Owner resolved it on 2026-09-28 by SCOPING EACH KEY WITH ITS PARENT: course_work is unique on (course_id, resource, google_id) and submission on (course_work_id, google_id). The reasoning recorded with the decision: the defensive key costs almost nothing, because the upsert already runs inside one course's transaction and looks up per course, while the global key risks a school-wide import failure over a Google-side reality that no document in this project verifies. SPECIFICATION therefore re-runs at attempt 2 and produces v2, correcting FR-005, FR-006 and VR-003 only; persistence-conventions.md PC-3 gains the course scope as a documentation correction, alongside the PC-13 correction FR-022 already owns."
+  - "STALE INPUT this loop-back creates, to clear before DB_DESIGN: docs/designs/api/US-015-api-design.md (v1) records specification version 1 in its inputs, so once the Specification is v2 that artifact is STALE by the artifact-schema.md contract and API_DESIGN must RE-RUN at attempt 2 against v2 - exactly as US-014 did. The verdict is expected to stay NOT_APPLICABLE, because a unique index has no API dimension, but the artifact must RECORD specification v2 rather than be assumed current."
   - "API_DESIGN: NOT_APPLICABLE. The approved Specification states in four places (FR-019, S-01, S-08, §10) that the Story adds no endpoint, page, policy or route, which is exactly the optional_when of stage-map.yaml. There is deliberately NO docs/designs/api/US-015-openapi.yaml - its absence is the recorded decision, the same one US-007, US-013 and US-014 made; downstream stages that list openapi as an input read the api_design document instead."
   - "API_DESIGN §3 examined the ONE thing that deserved a second look rather than waving it away: FR-012 makes Retention:Years required, so a misconfigured installation REFUSES TO START (DC-3, PC-11). That is a deployment behaviour change, NOT an API change - no endpoint answers differently, because a process that does not start serves nothing, and DC-11's health endpoints keep their contract exactly as they already do when the installation id or the OAuth client id is missing. The deployment note belongs in deployment-conventions.md DC-3 (the key name, as US-013 added Sync:IntervalMinutes), never in a contract."
   - "API_DESIGN §4 records what EPIC-3 inherits so it is not re-derived: US-025 is the FIRST consumer and owns BOTH obligations the Open Decisions pushed out of the import layer - the cell rule for NEW (BR-056 does not describe it, and rendering NEW as «не сдано» without writing that rule decides it silently) and the rendering of an unrecognised state (its own thing, never «не сдано», never a grade). Also: a journal DTO returns RAW POINTS with the coursework's maximum and never a converted school grade (PC-13, VR-007), because conversion lives in report templates; any endpoint exposing a Submission is Admin/Dean only and a grade never reaches a log or an error body (SC-2, SC-4, SC-10); API-8 pagination (default 20, max 100) applies, since submissions are the largest collection in the system (NFR-002); DTOs never entities (AD-8); and US-024 must not present the SyncState counter as «everything Google has», because a course skipped by the age rule is not counted and leaves no trace (I-5)."
@@ -47,5 +50,5 @@ non_blocking_findings:
   - "Carried from the US-011 security review: F-2 (Minor) - no test resolves a real adapter from the composition root. Not owned by US-015, recorded so it is not lost."
   - "State-file drift corrected by this activation: active-story.yaml still named US-014 with status IN_PROGRESS after that Story reached COMPLETED, while workflow-state.yaml and docs/catalog/stories.yaml both said COMPLETED. /so:status reported it on 2026-09-28; the rewrite performed here clears it."
 started_at: 2026-09-28T11:28:43Z
-updated_at: 2026-09-28T12:37:36Z
+updated_at: 2026-09-28T12:45:34Z
 completed_at: null
