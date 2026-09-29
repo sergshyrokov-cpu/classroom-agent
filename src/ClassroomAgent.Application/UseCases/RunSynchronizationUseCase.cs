@@ -22,6 +22,10 @@ namespace ClassroomAgent.Application.UseCases;
 /// transaction (spec FR-001, FR-012, OD-009), counted as courses processed (spec FR-013, OD-005).
 /// </para>
 /// </remarks>
+// US-015 OD-012 skeleton: courseWork, submissions and retention are unread until IMPLEMENTATION adds the
+// coursework/submission pipeline step and the FR-011 age rule; IMPLEMENTATION must remove this suppression once
+// they are.
+#pragma warning disable CS9113 // Parameter is unread.
 public sealed class RunSynchronizationUseCase(
     ISyncStateRepository syncStates,
     GetWorkspaceConnectionQuery connectionQuery,
@@ -31,7 +35,11 @@ public sealed class RunSynchronizationUseCase(
     IClassroomReader classroom,
     ICourseRepository courses,
     IClassroomParticipantRepository participants,
-    ICourseMembershipRepository memberships)
+    ICourseMembershipRepository memberships,
+    ICourseWorkRepository courseWork,
+    ISubmissionRepository submissions,
+    RetentionSettings retention)
+#pragma warning restore CS9113
 {
     /// <summary>The operation name the read-only refusal carries (US-007 spec VR-001).</summary>
     public const string Operation = "Sync.Run";

@@ -34,4 +34,30 @@ public interface IClassroomReader : IGoogleDataPort
         string impersonationUser,
         string courseGoogleId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Both Classroom resources of one course, each fully paged (US-015 entity model §6, FR-003, VR-005). A
+    /// returned <see cref="CourseWorkPage"/> means both reads succeeded; an exception means the course's items
+    /// are unknown.
+    /// </summary>
+    /// <param name="impersonationUser">The school's technical account, as above.</param>
+    /// <param name="courseGoogleId">The Classroom course id whose coursework and materials are read.</param>
+    /// <param name="cancellationToken">Cancelled at host shutdown.</param>
+    Task<CourseWorkPage> ReadCourseWorkAsync(
+        string impersonationUser,
+        string courseGoogleId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The whole course's submissions in one paged read, <c>courseWorkId = "-"</c> (US-015 entity model §6,
+    /// OD-002). Each snapshot carries its own <see cref="SubmissionSnapshot.CourseWorkGoogleId"/>, which is how
+    /// the use case attributes it.
+    /// </summary>
+    /// <param name="impersonationUser">The school's technical account, as above.</param>
+    /// <param name="courseGoogleId">The Classroom course id whose submissions are read.</param>
+    /// <param name="cancellationToken">Cancelled at host shutdown.</param>
+    Task<IReadOnlyList<SubmissionSnapshot>> ReadSubmissionsAsync(
+        string impersonationUser,
+        string courseGoogleId,
+        CancellationToken cancellationToken);
 }

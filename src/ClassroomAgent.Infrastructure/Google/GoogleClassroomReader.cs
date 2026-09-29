@@ -101,6 +101,26 @@ public sealed class GoogleClassroomReader : IClassroomReader
         return new CourseRoster(teachers, students);
     }
 
+    /// <summary>
+    /// TEST_WRITING compile-only skeleton (US-015 OD-012): throws <see cref="NotImplementedException"/> until
+    /// IMPLEMENTATION.
+    /// </summary>
+    public Task<CourseWorkPage> ReadCourseWorkAsync(
+        string impersonationUser,
+        string courseGoogleId,
+        CancellationToken cancellationToken) =>
+        throw new NotImplementedException();
+
+    /// <summary>
+    /// TEST_WRITING compile-only skeleton (US-015 OD-012): throws <see cref="NotImplementedException"/> until
+    /// IMPLEMENTATION.
+    /// </summary>
+    public Task<IReadOnlyList<SubmissionSnapshot>> ReadSubmissionsAsync(
+        string impersonationUser,
+        string courseGoogleId,
+        CancellationToken cancellationToken) =>
+        throw new NotImplementedException();
+
     private static async Task<List<RosterEntry>> ReadTeachersAsync(
         ClassroomService service,
         string courseGoogleId,

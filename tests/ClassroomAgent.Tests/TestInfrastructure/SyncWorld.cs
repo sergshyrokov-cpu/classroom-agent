@@ -17,7 +17,8 @@ public sealed class SyncWorld
     public SyncWorld(
         bool readOnly = false,
         SeededConnection connection = SeededConnection.Usable,
-        DateTimeOffset? now = null)
+        DateTimeOffset? now = null,
+        int retentionYears = 5)
     {
         Time = new ManualTimeProvider(now ?? InstallationTestHost.DefaultStart);
         ReadOnly = new Guard(readOnly);
@@ -27,6 +28,7 @@ public sealed class SyncWorld
         // has been saved. Without this, no connection would read as DomainUnknown instead of NotConfigured.
         Legitimacy = new LegitimacyRepository(domainKnown: true);
         Work = new UnitOfWork(States);
+        Retention = new RetentionSettings(retentionYears);
     }
 
     public ManualTimeProvider Time { get; }
@@ -40,6 +42,9 @@ public sealed class SyncWorld
     public LegitimacyRepository Legitimacy { get; }
 
     public UnitOfWork Work { get; }
+
+    /// <summary>The retention period, in memory (US-015 entity model §8). Five years unless a test overrides it.</summary>
+    public RetentionSettings Retention { get; }
 
     public GetWorkspaceConnectionQuery ConnectionQuery => new(Connections, Legitimacy);
 
@@ -55,8 +60,26 @@ public sealed class SyncWorld
 
     public MembershipRepository Memberships { get; } = new();
 
+    /// <summary>The <c>course_work</c> port, in memory (US-015 entity model §7).</summary>
+    public CourseWorkRepository CourseWork { get; } = new();
+
+    /// <summary>The <c>submission</c> port, in memory (US-015 entity model §7).</summary>
+    public SubmissionRepository Submissions { get; } = new();
+
     public RunSynchronizationUseCase Run =>
-        new(States, ConnectionQuery, ReadOnly, Work, Time, Classroom, Courses, Participants, Memberships);
+        new(
+            States,
+            ConnectionQuery,
+            ReadOnly,
+            Work,
+            Time,
+            Classroom,
+            Courses,
+            Participants,
+            Memberships,
+            CourseWork,
+            Submissions,
+            Retention);
 
     /// <summary>A run identifier the assertions can recognise.</summary>
     public static Guid RunId(int ordinal) => new($"00000000-0000-0000-0000-{ordinal:D12}");
@@ -188,12 +211,22 @@ public sealed class SyncWorld
         private readonly List<CourseSnapshot> _courses = [];
         private readonly Dictionary<string, CourseRoster> _rosters = new(StringComparer.Ordinal);
         private readonly Dictionary<string, Exception> _rosterFailures = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, List<CourseWorkSnapshot>> _courseWork = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, Exception> _courseWorkFailures = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, List<SubmissionSnapshot>> _submissions = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, Exception> _submissionsFailures = new(StringComparer.Ordinal);
 
         /// <summary>Set to make <see cref="ReadCoursesAsync"/> fail part-way; the courses before it are yielded.</summary>
         public Exception? FailAfterCourses { get; set; }
 
         /// <summary>The Google course ids whose roster was asked for, in order.</summary>
         public List<string> RostersRead { get; } = [];
+
+        /// <summary>The Google course ids whose coursework and materials were asked for, in order (the read-only tests assert zero).</summary>
+        public List<string> CourseWorkRead { get; } = [];
+
+        /// <summary>The Google course ids whose submissions were asked for, in order (the read-only tests assert zero).</summary>
+        public List<string> SubmissionsRead { get; } = [];
 
         /// <summary>How many times the course list was enumerated at all (the read-only tests assert zero).</summary>
         public int CourseReads { get; private set; }
@@ -242,6 +275,77 @@ public sealed class SyncWorld
             return this;
         }
 
+        /// <summary>Seeds one coursework or material item of a course (US-015 entity model §6).</summary>
+        public ClassroomReader WithCourseWork(
+            string courseGoogleId,
+            string itemGoogleId,
+            CourseWorkResource resource,
+            string title,
+            DateTimeOffset itemDate,
+            DateTimeOffset? dueAt = null,
+            decimal? maxPoints = null,
+            DateTimeOffset? creationTime = null,
+            DateTimeOffset? updateTime = null)
+        {
+            if (!_courseWork.TryGetValue(courseGoogleId, out var items))
+            {
+                items = [];
+                _courseWork[courseGoogleId] = items;
+            }
+
+            items.Add(new CourseWorkSnapshot(
+                itemGoogleId,
+                resource,
+                new CourseWorkDetails(title, itemDate, dueAt, maxPoints, creationTime, updateTime)));
+            return this;
+        }
+
+        /// <summary>Makes one course's coursework read fail (US-015 spec, mirroring <see cref="WithRosterFailure"/>).</summary>
+        public ClassroomReader WithCourseWorkFailure(string courseGoogleId, Exception failure)
+        {
+            _courseWorkFailures[courseGoogleId] = failure;
+            return this;
+        }
+
+        /// <summary>Seeds one submission of a course (US-015 entity model §6).</summary>
+        public ClassroomReader WithSubmission(
+            string courseGoogleId,
+            string courseWorkGoogleId,
+            string googleUserId,
+            string googleId,
+            string state,
+            decimal? assignedGrade = null,
+            decimal? draftGrade = null,
+            DateTimeOffset? turnedInAt = null,
+            bool late = false,
+            DateTimeOffset? updateTime = null)
+        {
+            if (!_submissions.TryGetValue(courseGoogleId, out var items))
+            {
+                items = [];
+                _submissions[courseGoogleId] = items;
+            }
+
+            items.Add(new SubmissionSnapshot(
+                googleId,
+                courseWorkGoogleId,
+                googleUserId,
+                state,
+                assignedGrade,
+                draftGrade,
+                turnedInAt,
+                late,
+                updateTime));
+            return this;
+        }
+
+        /// <summary>Makes one course's submissions read fail (US-015 spec, mirroring <see cref="WithRosterFailure"/>).</summary>
+        public ClassroomReader WithSubmissionsFailure(string courseGoogleId, Exception failure)
+        {
+            _submissionsFailures[courseGoogleId] = failure;
+            return this;
+        }
+
         /// <summary>The impersonation address each call was made with (BR-015): the assertions check it is the one the connection holds.</summary>
         public List<string> ImpersonatedAs { get; } = [];
 
@@ -276,6 +380,32 @@ public sealed class SyncWorld
                 : Task.FromResult(_rosters.TryGetValue(courseGoogleId, out var roster)
                     ? roster
                     : new CourseRoster([], []));
+        }
+
+        public Task<CourseWorkPage> ReadCourseWorkAsync(
+            string impersonationUser,
+            string courseGoogleId,
+            CancellationToken cancellationToken)
+        {
+            CourseWorkRead.Add(courseGoogleId);
+            ImpersonatedAs.Add(impersonationUser);
+            return _courseWorkFailures.TryGetValue(courseGoogleId, out var failure)
+                ? Task.FromException<CourseWorkPage>(failure)
+                : Task.FromResult(new CourseWorkPage(
+                    _courseWork.TryGetValue(courseGoogleId, out var items) ? items : []));
+        }
+
+        public Task<IReadOnlyList<SubmissionSnapshot>> ReadSubmissionsAsync(
+            string impersonationUser,
+            string courseGoogleId,
+            CancellationToken cancellationToken)
+        {
+            SubmissionsRead.Add(courseGoogleId);
+            ImpersonatedAs.Add(impersonationUser);
+            return _submissionsFailures.TryGetValue(courseGoogleId, out var failure)
+                ? Task.FromException<IReadOnlyList<SubmissionSnapshot>>(failure)
+                : Task.FromResult<IReadOnlyList<SubmissionSnapshot>>(
+                    _submissions.TryGetValue(courseGoogleId, out var items) ? items : []);
         }
     }
 
@@ -355,6 +485,66 @@ public sealed class SyncWorld
         /// <summary>The memberships of one course, as the assertions read them.</summary>
         public IReadOnlyList<CourseMembership> OfCourse(long courseId) =>
             Stored.Where(m => m.CourseId == courseId).ToList();
+    }
+
+    /// <summary>
+    /// The coursework and material items, in memory, keyed the way the upsert matches them — course, resource and
+    /// Google id (US-015 db-design §3.5, Specification v2).
+    /// </summary>
+    public sealed class CourseWorkRepository : ICourseWorkRepository
+    {
+        private long _nextId = 1;
+
+        /// <summary>Every item staged for insert, in order.</summary>
+        public List<CourseWork> Added { get; } = [];
+
+        /// <summary>The stored items, as the database would hold them.</summary>
+        public Dictionary<(long CourseId, CourseWorkResource Resource, string GoogleId), CourseWork> Stored { get; } = [];
+
+        public Task<IReadOnlyList<CourseWork>> GetByCourseAsync(long courseId, CancellationToken cancellationToken)
+        {
+            IReadOnlyList<CourseWork> found = Stored.Values.Where(c => c.CourseId == courseId).ToList();
+            return Task.FromResult(found);
+        }
+
+        public void Add(CourseWork courseWork)
+        {
+            Identity.Assign(courseWork, _nextId++);
+            Stored[(courseWork.CourseId, courseWork.Resource, courseWork.GoogleId)] = courseWork;
+            Added.Add(courseWork);
+        }
+    }
+
+    /// <summary>
+    /// The submissions, in memory, keyed the way the upsert matches them — course work and Google id (US-015
+    /// db-design §4.3, Specification v2).
+    /// </summary>
+    public sealed class SubmissionRepository : ISubmissionRepository
+    {
+        private long _nextId = 1;
+
+        /// <summary>Every submission staged for insert, in order.</summary>
+        public List<Submission> Added { get; } = [];
+
+        /// <summary>The stored submissions, as the database would hold them.</summary>
+        public Dictionary<(long CourseWorkId, string GoogleId), Submission> Stored { get; } = [];
+
+        public Task<IReadOnlyList<Submission>> GetByCourseWorkIdsAsync(
+            IReadOnlyCollection<long> courseWorkIds,
+            CancellationToken cancellationToken)
+        {
+            IReadOnlyList<Submission> found = Stored.Values
+                .Where(s => courseWorkIds.Contains(s.CourseWorkId))
+                .ToList();
+            return Task.FromResult(found);
+        }
+
+        public void Add(Submission submission)
+        {
+            Identity.Assign(submission, _nextId++);
+            Stored[(submission.CourseWorkId, submission.GoogleId)] = submission;
+            Added.Add(submission);
+        }
     }
 
     /// <summary>

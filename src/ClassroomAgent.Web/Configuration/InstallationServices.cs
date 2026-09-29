@@ -126,6 +126,13 @@ public static class InstallationServices
         services.AddScoped<IClassroomParticipantRepository, ClassroomParticipantRepository>();
         services.AddScoped<ICourseMembershipRepository, CourseMembershipRepository>();
 
+        // US-015 entity model §7: the two new repositories, registered the same way as their US-014 counterparts.
+        services.AddScoped<ICourseWorkRepository, CourseWorkRepository>();
+        services.AddScoped<ISubmissionRepository, SubmissionRepository>();
+
+        // US-015 OD-012 skeleton: IMPLEMENTATION reads Retention:Years (FR-012, VR-008) and this placeholder goes.
+        services.AddSingleton(new RetentionSettings(0));
+
         services.AddScoped<RunSynchronizationUseCase>();
         services.AddHostedService<StartupSelfCheckBackgroundService>();
         services.AddHostedService<LegitimacyCheckBackgroundService>();

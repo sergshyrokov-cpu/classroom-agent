@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-015
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-09-28T11:28:43Z
-updated_at: 2026-09-28T12:30:56Z
+updated_at: 2026-09-28T13:18:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-015-sync-coursework-and-submissions.md
@@ -28,6 +28,10 @@ Two further gaps were found while writing the Specification — **OD-010** and
 what the program stores or what a check constraint allows, so neither could reach
 `DB_DESIGN` open. The Specification was corrected at version 1, while it was
 still `DRAFT` and the gate had not passed — the US-014 precedent.
+
+**Version 2** adds **OD-012** only, raised at `TEST_WRITING` and resolved by the
+Owner the same day. It changes nothing the Specification or either design
+consumed.
 
 ---
 
@@ -317,3 +321,45 @@ would flag a real value as unrecognised.
   directions: `NEW` is absent from it, and `STUDENT_EDITED_AFTER_TURN_IN` may be
   absent from the API. The first live run is where that is learned, and a
   correction belongs in a new version of `trebovaniya.md`, never in a Story.
+
+---
+
+## Raised at TEST_WRITING — resolved the same day
+
+### OD-012 How TEST_WRITING obtains tests that compile
+
+**Question.** `TEST_WRITING` runs before `IMPLEMENTATION` (AGENTS.md), but this
+Story's tests reference types that do not exist: the `CourseWork` and
+`Submission` entities, the three enums, the two new `IClassroomReader` members
+with their Application models, the two repository ports, and
+`RetentionSettings`. A test that does not compile is not a red test — it is not a
+test at all, and the red phase cannot be verified.
+
+**Resolution (Owner, 2026-09-28): option 1 — a compile-only skeleton**, scoped
+exactly as US-005 OD-002, US-007 OD-003, US-011 OD-006, US-012 OD-005, US-013
+OD-008 and US-014 OD-012 scoped theirs.
+
+`TEST_WRITING` may create **signatures only**, taken from `entity-model` v1:
+entities with their properties and factory/behaviour signatures, the enums, the
+new port members with their Application models, the repository ports and their
+Infrastructure implementations, `RetentionSettings`, and whatever DI registration
+the host needs in order to start — with **every body throwing
+`NotImplementedException`**. No behaviour, no mapping, no migration.
+
+**Deliberately outside the skeleton**, exactly as US-014 decided for itself: the
+EF Core configurations, the two `DbSet` properties and the
+`AddCourseWorkAndSubmissions` migration. Mapping an entity without its migration
+would leave the model and the database disagreeing. The consequence must be
+stated plainly in the test-generation report: until the migration exists, the
+schema tests fail on **missing tables**, not on a wrong constraint, so they
+cannot yet tell a correct constraint from an absent one.
+
+**`IMPLEMENTATION` must remove every `NotImplementedException` and every
+`#pragma warning disable` the skeleton introduced.** A remaining one is a
+finding.
+
+**Side effect worth having, and the reason option 1 is not merely convenient:**
+building the skeleton compiles the entity model, which is the only way to verify
+it. US-014 found two real defects in its own entity model exactly this way —
+a `Domain` factory taking an `Application` type (AD-3), and port signatures that
+gave the adapter no way to know whose data it reads.

@@ -29,7 +29,9 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
         // US-009 adds workspace_connection in its own migration, as its db-design §7.1 fixes. US-011 adds no table:
         // its migration only amends two audit_event check constraints (US-011 db-design §7.1). US-013 adds
         // sync_state in its own migration and touches no other table (US-013 db-design §5). US-014 adds three
-        // tables in ONE migration and alters none of the existing ones (US-014 db-design §1, §6).
+        // tables in ONE migration and alters none of the existing ones (US-014 db-design §1, §6). US-015 adds
+        // course_work and submission in one further migration and alters none of the existing tables (US-015
+        // db-design §1, §6).
         Assert.Equal(
             new[]
             {
@@ -37,6 +39,8 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
                 CourseTestData.ParticipantTable,
                 CourseTestData.CourseTable,
                 CourseTestData.MembershipTable,
+                CourseWorkTestData.CourseWorkTable,
+                CourseWorkTestData.SubmissionTable,
                 "app_user",
                 "audit_event",
                 "legitimacy_state",
@@ -44,7 +48,7 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
                 "workspace_connection",
             }.Order(StringComparer.Ordinal),
             tables.Order(StringComparer.Ordinal));
-        Assert.Equal(7, migrations.Count);
+        Assert.Equal(8, migrations.Count);
         Assert.EndsWith("_InitialLegitimacyState", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_InitialAppUserAndAuditEvent", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_AddWorkspaceConnection", migrations[2], StringComparison.Ordinal);
@@ -52,6 +56,7 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
         Assert.EndsWith("_AddDeanAccounts", migrations[4], StringComparison.Ordinal);
         Assert.EndsWith(SyncTestData.Migration, migrations[5], StringComparison.Ordinal);
         Assert.EndsWith(CourseTestData.Migration, migrations[6], StringComparison.Ordinal);
+        Assert.EndsWith(CourseWorkTestData.Migration, migrations[7], StringComparison.Ordinal);
     }
 
     /// <summary>db-design 7.1: the migration seeds nothing — the first account appears when a person signs in.</summary>
