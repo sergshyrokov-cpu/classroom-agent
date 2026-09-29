@@ -1,14 +1,14 @@
 ---
 artifact_type: api_design
 story: US-015
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-09-28T12:37:36Z
-updated_at: 2026-09-28T12:37:36Z
+updated_at: 2026-09-28T13:03:14Z
 produced_by: openapi-designer
 inputs:
   - path: docs/specifications/US-015-spec.md
-    version: 1
+    version: 2
   - path: docs/decisions/US-015-open-decisions.md
     version: 1
   - path: trebovaniya.md
@@ -27,6 +27,40 @@ US-007, US-013 and US-014 recorded for the same reason. A contract file
 describing zero operations would assert a surface this Story does not have.
 Downstream stages that list `openapi` among their inputs read this document
 instead.
+
+## 0. Why this artifact is at version 2
+
+Version 1 recorded **specification version 1** in its `inputs`. The Specification
+is now **v2** — the natural keys are scoped by their parent — so by the staleness
+contract of `artifact-schema.md` version 1 of this document was **stale** and
+would have blocked `DB_DESIGN`.
+
+The stage therefore **re-ran** rather than having v1's input version edited in
+place: recording that a stage read a version it never read would defeat the
+contract it exists to serve. The same choice was made for US-014.
+
+**The reassessment, done rather than assumed.** The v2 correction changes a
+**unique index and an upsert key** — `course_work` on
+`(course_id, resource, google_id)` and `submission` on
+`(course_work_id, google_id)`. Neither is an API concern:
+
+- no endpoint, path, request body or response body exists in this Story to carry
+  an id at all (FR-019);
+- the keys are Google-side natural keys used by synchronization, not resource
+  identifiers a client would ever send — API-3 identifies a resource by its
+  surrogate `Id`, and no path template is introduced here;
+- the Specification's four no-surface statements (FR-019, S-01, S-08, §10) were
+  **re-read against v2** and are unchanged from v1.
+
+The verdict is unchanged: **NOT_APPLICABLE**. The stale input is cleared.
+
+**One forward-looking consequence v2 adds for EPIC-3**, recorded here so it is
+not re-derived: because a Google `courseWork.id` is unique only *within its
+course* and a `studentSubmission.id` only *within its course work*, a future
+endpoint **must not address either resource by its Google id alone**. It uses the
+surrogate `Id` (PC-3, API-3), or a path nested under the course — a flat
+`/coursework/{googleId}` would be ambiguous across courses. This is the API-side
+shadow of the same fact that produced v2, and it binds US-025 and US-026.
 
 ## 1. Why the stage does not apply
 
@@ -113,6 +147,9 @@ Recorded so EPIC-3 does not re-derive it:
   courses × assignments × students (NFR-002) — so an unpaginated journal
   endpoint would be a finding.
 - **DTOs, never entities** (AD-8), mapped in `Application`.
+- **Neither coursework nor a submission is addressed by its Google id alone**
+  (§0): those ids are unique only within their parent, so an endpoint uses the
+  surrogate `Id` or a course-nested path.
 - **US-024 (statistics)** still shows the `SyncState` counter labelled "courses
   processed" — unchanged by this Story (FR-014, US-014 OD-005). A course skipped
   by the age rule is not counted and leaves no trace in `SyncState` (I-5), so a
