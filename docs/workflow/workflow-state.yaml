@@ -2,35 +2,31 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-039
+story: US-017
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
+last_invoked_skill: spec-writer
 last_result:
   verdict: PASS
-  stage: SECURITY_REVIEW
-  recorded_at: 2026-10-03T14:32:10Z
+  stage: SPECIFICATION
+  recorded_at: 2026-10-03T14:52:59Z
 last_artifacts:
-  - type: security_review
-    path: docs/reviews/security/US-039-security-review.md
+  - type: specification
+    path: docs/specifications/US-017-spec.md
+    version: 1
+  - type: open_decisions
+    path: docs/decisions/US-017-open-decisions.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "HUMAN_PR_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-10-03T14:35:57Z (no comment): implementation report v1 and security review v1 (PASS, 0 Critical, 0 Major, 0 Minor, 3 Informational) accepted. INFO-1 (switcher echoes the query string) kept in the agent's project memory for future Stories with personal data in a query string. Approved, NOT Done until the final commit lands on master (AGENTS.md DoD item 10)."
-  - "SECURITY_REVIEW: PASS, 0 critical / 0 major / 0 minor / 3 informational, runtime_checks FULL (suite 2545/2545, no vulnerable packages). INFO-1: the switcher echoes the page query string (encoded) into its hidden returnPath - safe today, note it for any future screen with personal data in a query string. INFO-2: a self-crafted returnPath with CR/LF gives a 500 after the choice is stored (no header injection, own session only). INFO-3: re-issued claims drop ValueType/Issuer, unused."
-  - "IMPLEMENTATION: PASS. Both hosts: header switcher (one POST form per offered language, aria-current on the current), POST /account/language (AuthenticatedUser / Owner policy, global antiforgery), choice stored on the session's own account, session re-issued copying every claim but the language (sign-in time, stamp, role, temporary-password claim kept), return path followed only if 1..2048 chars and Url.IsLocalUrl. ChooseUiLanguageUseCase registered in DI and in PermittedServiceWrites (7th entry, SignInBookkeeping). TemporaryPasswordMiddleware admits /account/language. Dates: Home/Index and DeanAccounts/Index now use the request culture; FR-009 inventory in the report. No schema change, no package, no config. Build 0/0; full suite 2545/2545; format clean. Two TEST_WRITING gaps corrected by Owner decision in conversation: WorkspaceConnectionReadOnlyTests registry count 6->7; ConnectionInstructionAuthorizationTests.AQueryStringIsIgnored and InstallationStatusUnchangedTests notice cases now assert on the page without the switcher (which carries path+query per FR-006/I-4, HTML-encoded), plus a raw <script> check. SECURITY_REVIEW should look at the query reflection in the switcher's hidden input and the re-issue."
-  - "TEST_WRITING: PASS. 117 new test cases in 9 classes plus two fixtures (UiLanguageTestData, UiLanguageHostExtensions); PermittedServiceWriteTests modified to name the seventh registry entry. OD-008 raised by this stage and resolved by the Owner (option 1): compile-only skeleton AppUser.ChooseUiLanguage + ChooseUiLanguageUseCase, bodies throw NotImplementedException, not in DI. Build 0/0. Full suite 2545 total, 2428 passed, 117 failed, 0 skipped: 115 new tests red for the expected reasons (NotImplemented, missing DI service, 404 on the absent action, no switcher, missing keys, dates), plus PermittedServiceWriteTests (registry entry) and the existing US-007 ReadOnlyEnforcementTests.TheApplicationAssembly_HasNoUnprotectedWritePath, which now sees the unregistered skeleton use case - the guardrail working, green once FR-007 registers it. No regression. Two new tests pass legitimately: the Ukrainian landing date (already dd.MM.yyyy) and a data guard. The fixtures fix the switcher markup contract for IMPLEMENTATION: one POST form per offered language with input name=language and input name=returnPath, aria-current=true on the current one, keys Layout.Language.Uk/.En/.Switcher on both hosts."
-  - "DB_DESIGN: PASS with NO schema change and no migration (OD-003) - deliberately not NOT_APPLICABLE, because the Story adds a new WRITE to two existing columns (app_user.ui_language, owner.ui_language, both already varchar(8) NOT NULL with check constraints IN (uk, en)). New domain method AppUser.ChooseUiLanguage(UiLanguage): sets the language and renews ConcurrencyStamp only - no SecurityStamp rotation (I-3); UpdatedAt by the existing TimestampInterceptor. Control Plane: the Services method assigns Owner.UiLanguage and OwnerStamps.New(). A concurrency conflict (e.g. sign-out in another tab) is not retried: 500, nothing stored. Tests may assert the EF model snapshot of both contexts is unchanged."
-  - "API_DESIGN: PASS. One operation, POST /account/language, identical on both hosts (installation: AuthenticatedUser policy; Control Plane: Owner policy); no GET, no /api/v1, no anonymous endpoint, no antiforgery exemption. 302 Post-Redirect-Get to the validated return path or /; 400 with Error.PageExpired for a bad token OR a bad code (no new error text); GET answers 404 or 405 and changes nothing; never 409 (BR-026). Decisions: the re-issue copies the principal and must NOT reuse the existing SignInAsync helpers as they stand, because they stamp a new sign-in time (AC-009); language and returnPath bound as strings, not the enum (enum binding accepts numbers and any case); TemporaryPasswordMiddleware admits /account/language (OD-007); the layout shows the switcher by endpoint, not just by User.Identity, since a signed-in user also sees the anonymous error page. No schema change expected for DB_DESIGN."
-  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-10-03T08:50:09Z (no comment): Specification v1 accepted; automated verdict PASS with no blocking findings. OD-001 … OD-006 arrived resolved; OD-007, raised by the Specification, was RESOLVED AT THIS GATE by the Owner as option 1 — the switcher is offered on the forced password change page, the temporary-password gate lets the language action through, and the re-issued session keeps the temporary-password claim (new FR-012). The correction was made at version 1 while still DRAFT, the US-015 precedent. Interpretations I-1 … I-7 accepted as written. The Specification is now APPROVED; open_decisions stays DRAFT."
-  - "SPECIFICATION: PASS. 11 functional requirements, 3 validation rules, interpretations I-1 … I-7, the Story's AC-001 … AC-008 traced plus two derived criteria (AC-009 the re-issued session keeps the original sign-in time; AC-010 no open redirect). OD-001 … OD-006 arrived resolved and are carried into docs/decisions/US-039-open-decisions.md unchanged. No schema change (OD-003); trebovaniya.md and the PermittedServiceWrite enum do not change — only the PermittedServiceWrites registry gains the installation use case (BR-026 already names the write)."
-  - "SPECIFICATION raised OD-007 (OPEN): whether the switcher is offered on the forced password change page of a Dean with a temporary password (US-012 FR-006 lets that session reach nothing else). Recommended option 1 — offer it; the middleware also lets the language action through. Must be resolved at HUMAN_SPEC_APPROVAL before API_DESIGN."
-  - "SPECIFICATION interpretations for the gate to confirm: I-1 the session cookie is re-issued with only the language claim replaced; I-2 the re-issue KEEPS the original sign-in time so switching language cannot extend the 8-hour absolute limit (the existing password-change re-issue renews it — not touched here); I-3 the security stamp is not rotated, so other open sessions keep their language until next sign-in; I-4 return to the same page via a validated local path, landing page otherwise; I-5 no switcher on the error page; I-6 an invalid code is 400 with the error page. FR-009 lists two installation screens to correct (landing last-check time, Dean list last sign-in) and the Control Plane's InstallationDisplay as already compliant."
-started_at: 2026-10-03T08:47:44Z
-updated_at: 2026-10-03T14:35:57Z
-completed_at: 2026-10-03T14:35:57Z
+  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-10-03T14:58:23Z (no comment): Specification v1 accepted; automated verdict PASS with no blocking findings. OD-001 … OD-009 arrived resolved; no new Open Decision. Interpretations I-1 … I-8 accepted as written. The Specification is now APPROVED; open_decisions stays DRAFT."
+  - "SPECIFICATION: PASS. 13 functional requirements, 4 validation rules, the Story's AC-001 … AC-011 traced plus three derived (AC-012 shutdown during a retry pause, AC-013 legacy RunFailed value shown as Unexpected, AC-014 retry/classification proven through the real adapter over a scripted HTTP handler). OD-001 … OD-009 arrived resolved and are carried unchanged; no new Open Decision. Classification reuses GoogleAccessProbe's rules (configuration outcomes), with unclassifiable answers = Unexpected in sync; retry inside the Infrastructure adapter on TimeProvider; SyncState.LastError holds a closed diagnosis code; Admin block on the connection page reusing AccessCheck.Outcome.* texts; failed-run log level split (Warning for final transient, Error for configuration/unexpected)."
+  - "SPECIFICATION interpretations for the gate to confirm: I-1 one call = one HTTP request (page or token); I-2 jitter ±20 %; I-3 Retry-After above 2 min is waited as 2 min; I-4 log bound 64 chars; I-5 a failed run records the courses committed before the stop (today 0); I-6 legacy RunFailed:… not migrated, shown as Unexpected; I-7 GoogleUnavailable gets a sync-specific text, the six configuration outcomes reuse Check access texts; I-8 skipped runs (read-only, unusable connection) do not touch SyncState."
+started_at: 2026-10-03T14:52:59Z
+updated_at: 2026-10-03T14:58:23Z
+completed_at: null
