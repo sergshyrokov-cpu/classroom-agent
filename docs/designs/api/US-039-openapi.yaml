@@ -1,0 +1,301 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Choose UI language (US-039)
+  version: "1"
+  description: >
+    HTTP contract of US-039: one server-rendered POST action per host that stores
+    the signed-in user's UI language on their own account and re-issues the
+    session, plus the header switcher every signed-in page renders. No JSON API —
+    the same split US-009 … US-012 used (§8: screens on Razor, `/api/v1` only for
+    what a client consumes as data). The host-wide rules of
+    docs/designs/api/US-008-openapi.yaml (installation) and
+    docs/designs/api/US-001-openapi.yaml (Control Plane) apply unchanged — deny
+    by default, global antiforgery, the single translated error page, the
+    anonymous catch-all `404`, the session policy. Neither the SC-4 anonymous
+    list nor the antiforgery exemption list changes. Companion document:
+    docs/designs/api/US-039-api-design.md.
+x-story: US-039
+x-source-specification: docs/specifications/US-039-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-039-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 79
+x-produced-by: openapi-designer
+x-extends:
+  - docs/designs/api/US-008-openapi.yaml
+  - docs/designs/api/US-001-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type of
+  the service channel changes; the operations below are each host's own screens
+  (DC-12).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port (illustrative; the configured public base address)."
+  - url: https://control-plane.example
+    description: "Control Plane (illustrative; private network)."
+
+tags:
+  - name: account
+    description: "What a signed-in user may do to their own account"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 (installation) and US-001 (Control Plane) configured
+    host-wide applies and is not restated per operation: the deny-by-default
+    fallback policy (SC-4, API-9), the global antiforgery filter, the single
+    translated error page, the anonymous catch-all `404`, the non-persistent
+    session cookie and its idle and absolute limits, and the per-request
+    security-stamp check.
+
+  anonymous-list-unchanged: >
+    No operation here is anonymous. SC-4's closed list gains nothing (spec AC-004,
+    §7). The US-008 / US-001 endpoint enumeration tests gain one authenticated row
+    each.
+
+  antiforgery-list-unchanged: >
+    Both POSTs carry the antiforgery token; the exemption list is unchanged
+    (SC-4, API-7, spec VR-003).
+
+  temporary-password-gate: >
+    Installation only (spec FR-012, OD-007). `TemporaryPasswordMiddleware` lets
+    `/account/language` through for a temporary-password session, in addition to
+    the forced change form, sign-out and sign-in. Every other path of that
+    session is still redirected to `/sign-in/change-password`, so the redirect
+    this action answers with lands the Dean back on the form whatever the return
+    path names.
+
+  culture-sources-unchanged: >
+    The culture providers still read only the session's language claim and the
+    default (spec FR-008). No operation sets a culture cookie or reads
+    `Accept-Language` or a query parameter.
+
+paths:
+
+  /account/language:
+
+    post:
+      tags: [account]
+      operationId: chooseUiLanguage
+      summary: "Choose one's own UI language"
+      description: >
+        Exists on **both hosts with the same path and shape**: the installation
+        (Admin, Dean) and the Control Plane (Owner) — `x-hosts` below. Stores the
+        language on the signed-in user's own account — `AppUser.UiLanguage` or
+        `Owner.UiLanguage` — and re-issues the session cookie from the current
+        one with only the language claim replaced: role, email, account id,
+        security stamp, sign-in time and (installation) the temporary-password
+        claim are copied unchanged, so the 8-hour absolute limit still counts from
+        the original sign-in and no other session ends (spec FR-004, FR-005,
+        I-2, I-3). The request names no account: the target is always the
+        session's own (spec AC-004). Choosing the language already stored
+        succeeds the same way (idempotent).
+      x-hosts:
+        - host: ClassroomAgent.Web
+          port: public
+          policy: AuthenticatedUser
+          policy-note: >
+            The existing installation policy for any signed-in Admin or Dean
+            (`InstallationPolicies.AuthenticatedUser`). A temporary-password
+            session reaches the action through the gate exception above.
+          sign-in-path: /sign-in
+          landing-path: /
+          writes: >
+            `AppUser.UiLanguage` of the session's account, nothing else — no audit
+            row (OD-005), no stamp rotation, no sign-in time. Declared as BR-026
+            sign-in bookkeeping and **permitted in read-only mode**: never `409`
+            (spec FR-007).
+        - host: ClassroomAgent.ControlPlane
+          port: private
+          policy: Owner
+          policy-note: "`OwnerSession.OwnerPolicy`; the write goes through a `Services` method, never `DbContext` in a controller (AD-3)."
+          sign-in-path: /sign-in
+          landing-path: /
+          writes: "`Owner.UiLanguage` of the session's Owner, nothing else. The Control Plane has no read-only mode."
+      x-anonymous: false
+      x-antiforgery: required
+      x-calls-google: false
+      x-audit: none
+      x-spec: [FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-011, FR-012]
+      x-acceptance-criteria: [AC-001, AC-002, AC-003, AC-004, AC-005, AC-009, AC-010]
+      security:
+        - installationSession: []
+        - controlPlaneSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ChooseUiLanguageForm"
+      responses:
+        "302":
+          description: >
+            Two different cases share this status:
+
+            1. **Chosen.** The language is stored, `Set-Cookie` carries the
+            re-issued session cookie, and `Location` is the validated return path,
+            or the landing page `/` when the return path is missing or fails
+            VR-002 (spec FR-006, AC-010). In read-only mode the installation
+            stores the choice and answers this way too (AC-003).
+
+            2. **Not signed in**, or the session was rejected by the stamp check or
+            the absolute limit: the host's challenge, `Location: /sign-in`.
+            Nothing is stored (spec §8).
+          headers:
+            Location:
+              schema:
+                type: string
+                description: >
+                  Case 1: an application-relative path (`/…`, never `//…`,
+                  never absolute). Case 2: `/sign-in`.
+            Set-Cookie:
+              schema:
+                type: string
+                description: >
+                  Case 1 only: the re-issued session cookie with the host's SC-2
+                  attributes unchanged — installation `__Host-ca-session`,
+                  `SameSite=Lax`; Control Plane `__Host-cp-session`,
+                  `SameSite=Strict`; both `Secure`, `HttpOnly`, no `Expires` /
+                  `Max-Age` (non-persistent).
+        "400":
+          description: >
+            Two cases, the same answer — the host's translated error page with the
+            `Error.PageExpired` text and nothing stored (spec I-6, VR-001,
+            VR-003, §8):
+
+            - the antiforgery token is missing or invalid (SC-4, API-7);
+            - `language` is missing, empty, or not exactly `uk` or `en`.
+
+            The rejected value is neither echoed in the page nor written to a log
+            (SC-10, spec AC-005).
+          content:
+            text/html: {}
+        "500":
+          description: "A database failure: the error page, `Error.Unexpected` (AD-9). Nothing stored, the session unchanged."
+          content:
+            text/html: {}
+    x-get-behaviour: >
+      There is no GET operation, on either host. A GET (or any method other than
+      POST) to `/account/language` does not reach the action: it is answered by
+      the anonymous catch-all `404` or by routing's `405`, with the error page,
+      and changes nothing — not the stored language, not the session (API-4,
+      SC-4: "choosing the UI language" reachable by GET is a finding; spec
+      VR-003). TEST_WRITING asserts the status is one of `404` / `405` and that
+      nothing changed.
+
+x-ui-elements:
+
+  LanguageSwitcher:
+    description: >
+      Not an operation: the header element every page that requires sign-in
+      renders on both hosts (spec FR-002). One POST form per language to
+      `/account/language`, each a plain `<form method="post">` working without
+      JavaScript, carrying the antiforgery hidden field, `language` and
+      `returnPath` = the current request's path and query. The current language
+      is marked (`aria-current="true"`) and is not a submit control. Labels come
+      from both translation files: «УКР» and «ENG» in each (spec FR-010).
+    x-view-model:
+      $ref: "#/components/schemas/LanguageSwitcherModel"
+    rendered-on: >
+      Every page whose endpoint requires sign-in, including the installation's
+      forced password change page (OD-007, spec FR-012).
+    not-rendered-on: >
+      The sign-in pages of both hosts, the Control Plane first-run setup, and the
+      error page of both hosts (spec FR-002, I-5, OD-002) — every page on SC-4's
+      anonymous list. An anonymous visitor therefore never sees it (AC-006).
+
+x-existing-screens-changed:
+  description: >
+    No operation's contract changes. Two installation views change only how they
+    format a date (spec FR-009); listed so the change is not mistaken for scope
+    creep.
+  screens:
+    - path: "GET /"
+      element: "read-only notice — last successful legitimacy check"
+      from: "fixed `dd.MM.yyyy HH:mm`, invariant culture, `UTC`"
+      to: "request culture's short date pattern + ` HH:mm` + ` UTC` — the same rule as the Control Plane's `InstallationDisplay.UtcTime`"
+    - path: "GET /settings/deans"
+      element: "last successful sign-in column"
+      from: "fixed `yyyy-MM-dd`"
+      to: "request culture's short date pattern; `—` when absent stays"
+
+x-operations-deliberately-absent:
+
+  get-language: >
+    No GET of any kind, and no `?lang=` / `?culture=` query parameter on any page:
+    a GET never changes state (API-4) and the culture sources are closed (spec
+    FR-008).
+  api-v1-surface: >
+    No `/api/v1` path. Nothing consumes the choice as data.
+  anonymous-switch: >
+    No switch for an anonymous visitor and no culture cookie (OD-002).
+  other-account: >
+    No path, route or form field names an account. Setting another user's
+    language is not an operation that exists (spec AC-004).
+  settings-page: >
+    No "My settings" page (OD-001).
+
+x-error-body-note: >
+  Neither operation is under `/api/v1`, so none uses the API-6 JSON body; every
+  refusal is the host's translated error page (SC-4, v66).
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: __Host-ca-session
+      description: "The installation's session cookie (US-008 spec FR-015)."
+    controlPlaneSession:
+      type: apiKey
+      in: cookie
+      name: __Host-cp-session
+      description: "The Owner's session cookie (US-001 spec FR-010)."
+
+  schemas:
+
+    ChooseUiLanguageForm:
+      type: object
+      description: >
+        The form the switcher posts. Bound as two **strings** — never as an enum —
+        and compared against the two codes, so no numeric or case-insensitive
+        coercion can make an invalid value valid (spec VR-001). Any other field,
+        an account id included, is ignored (VR-003). The antiforgery hidden field
+        is validated by the global filter and is not part of this model.
+      properties:
+        language:
+          type: string
+          enum: [uk, en]
+          minLength: 2
+          maxLength: 2
+          description: "Exactly `uk` or `en`, lower case, no whitespace. Anything else → `400`, nothing stored."
+        returnPath:
+          type: [string, "null"]
+          maxLength: 2048
+          description: >
+            The path and query of the page the switcher was on. Used only when it
+            starts with a single `/`, is not `//…` or `/\…`, and passes the
+            framework's local-URL check; otherwise — and when longer than 2048 or
+            missing — the landing page `/`. An invalid return path is **not** a
+            `400`: the choice is still stored (spec VR-002, FR-006).
+      required: [language]
+
+    LanguageSwitcherModel:
+      type: object
+      additionalProperties: false
+      description: >
+        What the layout needs to render the switcher. Built from the request — its
+        culture and its path — never from an entity (AD-8); it carries no account
+        data.
+      properties:
+        currentLanguage:
+          type: string
+          enum: [uk, en]
+          description: "The request's UI culture."
+        returnPath:
+          type: string
+          description: "The current request's path and query."
+      required: [currentLanguage, returnPath]
