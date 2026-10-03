@@ -134,7 +134,7 @@ stories:
   - id: US-039
     epic: EPIC-6
     title: Choose UI language (Admin, Dean and Owner)
-    state: BACKLOG
+    state: IN_PROGRESS
     blocked_by: >
       Depends on US-001 (Owner account), US-008 / US-012 (Admin and Dean
       accounts exist) and US-007 (read-only enforcement — choosing a language
