@@ -22,10 +22,6 @@ namespace ClassroomAgent.Application.UseCases;
 /// transaction (spec FR-001, FR-012, OD-009), counted as courses processed (spec FR-013, OD-005).
 /// </para>
 /// </remarks>
-// US-015 OD-012 skeleton: courseWork, submissions and retention are unread until IMPLEMENTATION adds the
-// coursework/submission pipeline step and the FR-011 age rule; IMPLEMENTATION must remove this suppression once
-// they are.
-#pragma warning disable CS9113 // Parameter is unread.
 public sealed class RunSynchronizationUseCase(
     ISyncStateRepository syncStates,
     GetWorkspaceConnectionQuery connectionQuery,
@@ -39,7 +35,6 @@ public sealed class RunSynchronizationUseCase(
     ICourseWorkRepository courseWork,
     ISubmissionRepository submissions,
     RetentionSettings retention)
-#pragma warning restore CS9113
 {
     /// <summary>The operation name the read-only refusal carries (US-007 spec VR-001).</summary>
     public const string Operation = "Sync.Run";
@@ -75,7 +70,9 @@ public sealed class RunSynchronizationUseCase(
                 import.ProcessedCount,
                 null,
                 import.SkippedCourses,
-                import.MembershipsMarkedOffRoster);
+                import.MembershipsMarkedOffRoster,
+                import.CoursesSkippedByAge,
+                import.UnrecognisedSubmissions);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -176,6 +173,8 @@ public sealed class RunSynchronizationUseCase(
         var processedCount = 0;
         var markedOffRoster = 0;
         var skipped = new List<SkippedCourse>();
+        var agedOut = new List<string>();
+        var unrecognisedSubmissions = new List<UnrecognisedSubmission>();
 
         await foreach (var snapshot in classroom.ReadCoursesAsync(impersonationUser, cancellationToken)
             .WithCancellation(cancellationToken))
@@ -192,32 +191,67 @@ public sealed class RunSynchronizationUseCase(
             // course is not committed and none of its memberships is marked off the roster (spec FR-010, I-6).
             var roster = await classroom.ReadRosterAsync(impersonationUser, snapshot.GoogleId, cancellationToken);
 
-            var marked = 0;
-            await unitOfWork.ExecuteInTransactionAsync(
-                async transaction => marked = await ImportCourseAsync(snapshot, state, roster, observedAt, transaction),
+            // US-015 spec FR-003, FR-004: the course's items and its submissions, both read before anything is
+            // written — which is also what lets FR-011 judge an unknown course's age from Google's data alone.
+            var items = await classroom.ReadCourseWorkAsync(impersonationUser, snapshot.GoogleId, cancellationToken);
+            var submissionSnapshots = await classroom.ReadSubmissionsAsync(
+                impersonationUser,
+                snapshot.GoogleId,
                 cancellationToken);
 
-            markedOffRoster += marked;
+            var result = default(CourseResult);
+            await unitOfWork.ExecuteInTransactionAsync(
+                async transaction => result = await ImportCourseAsync(
+                    snapshot,
+                    state,
+                    roster,
+                    items,
+                    submissionSnapshots,
+                    observedAt,
+                    transaction),
+                cancellationToken);
+
+            if (result.SkippedByAge)
+            {
+                // US-015 spec FR-011, I-5: nothing was written and the course is not counted, so the counter never
+                // claims data the installation does not hold. The host writes the one line that makes it visible.
+                agedOut.Add(snapshot.GoogleId);
+                continue;
+            }
+
+            markedOffRoster += result.MembershipsMarkedOffRoster;
+            unrecognisedSubmissions.AddRange(result.UnrecognisedSubmissions);
             processedCount++;
         }
 
-        return new ImportResult(processedCount, skipped, markedOffRoster);
+        return new ImportResult(processedCount, skipped, markedOffRoster, agedOut, unrecognisedSubmissions);
     }
 
     /// <summary>
     /// One course, the people it introduced and its memberships, committed together (spec FR-012, OD-009). Returns
     /// how many memberships this course's roster marked as no longer on it (spec FR-010).
     /// </summary>
-    private async Task<int> ImportCourseAsync(
+    private async Task<CourseResult> ImportCourseAsync(
         CourseSnapshot snapshot,
         CourseState state,
         CourseRoster roster,
+        CourseWorkPage items,
+        IReadOnlyList<SubmissionSnapshot> submissionSnapshots,
         DateTimeOffset observedAt,
         CancellationToken cancellationToken)
     {
         // The upsert on the Google id: an already known course is updated in place and keeps its surrogate
         // identity, so everything referring to it still does (spec FR-008).
         var course = await courses.GetByGoogleIdAsync(snapshot.GoogleId, cancellationToken);
+
+        // US-015 spec FR-011, §5 v55: the age rule applies ONLY to a course the database does not hold. One
+        // already imported is updated for ever, until the purge deletes it (I-4) — otherwise a course kept alive
+        // by recent Meet sessions would have its roster go stale.
+        if (course is null && IsOlderThanRetention(snapshot, items, submissionSnapshots, observedAt))
+        {
+            return CourseResult.AgedOut;
+        }
+
         if (course is null)
         {
             course = Course.Import(snapshot.GoogleId, state, snapshot.Details);
@@ -267,8 +301,218 @@ public sealed class RunSynchronizationUseCase(
             marked++;
         }
 
+        // The course, its people and its memberships are persisted first so their generated identities exist for
+        // the rows that reference them; everything still commits inside the one transaction of OD-003.
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return marked;
+
+        var storedItems = await ImportCourseWorkAsync(course.Id, items, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        var unrecognised = await ImportSubmissionsAsync(
+            course,
+            storedItems,
+            submissionSnapshots,
+            stored,
+            observedAt,
+            cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return new CourseResult(false, marked, unrecognised);
+    }
+
+    /// <summary>
+    /// US-015 spec FR-011: a course the database does not hold is judged by Google's data alone — its own update
+    /// time, the creation or update of any of its items, and the update of any of its submissions (§5 v36, v55).
+    /// </summary>
+    /// <remarks>
+    /// "Older than N" is strict, so a course whose last activity falls exactly on the boundary is imported (I-3).
+    /// A course for which Google carries <b>no</b> date at all is imported too: refusing on absent evidence is the
+    /// failure mode OD-001 rejected, and it would hide a live course for ever.
+    /// </remarks>
+    private bool IsOlderThanRetention(
+        CourseSnapshot snapshot,
+        CourseWorkPage items,
+        IReadOnlyList<SubmissionSnapshot> submissionSnapshots,
+        DateTimeOffset observedAt)
+    {
+        DateTimeOffset? lastActivity = snapshot.Details.UpdateTime;
+
+        foreach (var item in items.Items)
+        {
+            lastActivity = Later(lastActivity, item.Details.CreationTime);
+            lastActivity = Later(lastActivity, item.Details.UpdateTime);
+        }
+
+        foreach (var submission in submissionSnapshots)
+        {
+            lastActivity = Later(lastActivity, submission.UpdateTime);
+        }
+
+        return lastActivity is { } activity && activity < observedAt.AddYears(-retention.Years);
+    }
+
+    private static DateTimeOffset? Later(DateTimeOffset? current, DateTimeOffset? candidate) =>
+        candidate is null ? current : current is null || candidate > current ? candidate : current;
+
+    /// <summary>
+    /// US-015 spec FR-003, FR-005, FR-010: the course's items of both Classroom resources, upserted on the
+    /// natural key Specification v2 fixes — (course, resource, Google id). Returns them by that key, so the
+    /// submissions can be attributed without a second query.
+    /// </summary>
+    private async Task<Dictionary<(CourseWorkResource Resource, string GoogleId), CourseWork>> ImportCourseWorkAsync(
+        long courseId,
+        CourseWorkPage items,
+        CancellationToken cancellationToken)
+    {
+        var existing = await courseWork.GetByCourseAsync(courseId, cancellationToken);
+        var byKey = existing.ToDictionary(i => (i.Resource, i.GoogleId));
+
+        foreach (var snapshot in items.Items)
+        {
+            var key = (snapshot.Resource, snapshot.GoogleId);
+            if (byKey.TryGetValue(key, out var item))
+            {
+                // The same row is updated, so an item that gained or lost maximum points keeps its identity and
+                // simply changes the kind it derives (spec FR-005, FR-010, PC-3).
+                item.UpdateFrom(snapshot.Details);
+            }
+            else
+            {
+                item = CourseWork.Import(courseId, snapshot.GoogleId, snapshot.Resource, snapshot.Details);
+                courseWork.Add(item);
+                byKey[key] = item;
+            }
+        }
+
+        return byKey;
+    }
+
+    /// <summary>
+    /// US-015 spec FR-004, FR-006, FR-007: every submission of the course, attributed by its own
+    /// <c>courseWorkId</c> and by the Google <c>userId</c> of the person who made it (I-7). Returns the ones whose
+    /// state Classroom reported outside the vocabulary, for the host's one Warning line each (OD-005).
+    /// </summary>
+    private async Task<List<UnrecognisedSubmission>> ImportSubmissionsAsync(
+        Course course,
+        Dictionary<(CourseWorkResource Resource, string GoogleId), CourseWork> storedItems,
+        IReadOnlyList<SubmissionSnapshot> submissionSnapshots,
+        Dictionary<string, ClassroomParticipant> rosterPeople,
+        DateTimeOffset observedAt,
+        CancellationToken cancellationToken)
+    {
+        var unrecognised = new List<UnrecognisedSubmission>();
+        if (submissionSnapshots.Count == 0)
+        {
+            return unrecognised;
+        }
+
+        var itemIds = storedItems.Values.Select(i => i.Id).ToList();
+        var existing = await submissions.GetByCourseWorkIdsAsync(itemIds, cancellationToken);
+        var byKey = existing.ToDictionary(s => (s.CourseWorkId, s.GoogleId));
+        var people = new Dictionary<string, ClassroomParticipant>(rosterPeople, StringComparer.Ordinal);
+
+        foreach (var snapshot in submissionSnapshots)
+        {
+            // A submission whose item is not among the course's own is attributed to nothing and is skipped: the
+            // alternative would be inventing a parent row no Classroom resource reported.
+            if (!storedItems.TryGetValue((CourseWorkResource.CourseWork, snapshot.CourseWorkGoogleId), out var item))
+            {
+                continue;
+            }
+
+            var participant = await ResolveSubmitterAsync(course, people, snapshot.GoogleUserId, observedAt, cancellationToken);
+
+            if (!TryParseSubmissionState(snapshot.State, out var state))
+            {
+                state = SubmissionState.Unrecognised;
+                unrecognised.Add(new UnrecognisedSubmission(snapshot.GoogleId, snapshot.State));
+            }
+
+            var details = new SubmissionDetails(
+                state,
+                state == SubmissionState.Unrecognised ? snapshot.State : null,
+                snapshot.AssignedGrade,
+                snapshot.DraftGrade,
+                snapshot.TurnedInAt,
+                snapshot.Late,
+                snapshot.UpdateTime);
+
+            if (byKey.TryGetValue((item.Id, snapshot.GoogleId), out var submission))
+            {
+                // A grade changed in Google replaces the stored one; the previous value is kept nowhere (BR-059).
+                submission.UpdateFrom(details);
+            }
+            else
+            {
+                submission = Submission.Import(item.Id, participant.Id, snapshot.GoogleId, details);
+                submissions.Add(submission);
+                byKey[(item.Id, snapshot.GoogleId)] = submission;
+            }
+        }
+
+        return unrecognised;
+    }
+
+    /// <summary>
+    /// US-015 spec FR-007, BR-051 v56: the person who made a submission. One never seen on this course's roster —
+    /// they left before the first synchronization — gets a <c>student</c> membership marked <b>off</b> the roster,
+    /// first and last seen at this run's instant, so the leaver expiry of PC-11 has a date to count from.
+    /// </summary>
+    /// <remarks>
+    /// The participant is created from the Google <c>userId</c> alone, with no name and no email (OD-006): a
+    /// submission carries neither, and asking Google for a profile would rely on a Workspace role §7 item 10
+    /// records as unverified.
+    /// </remarks>
+    private async Task<ClassroomParticipant> ResolveSubmitterAsync(
+        Course course,
+        Dictionary<string, ClassroomParticipant> people,
+        string googleUserId,
+        DateTimeOffset observedAt,
+        CancellationToken cancellationToken)
+    {
+        if (people.TryGetValue(googleUserId, out var known))
+        {
+            return known;
+        }
+
+        var stored = await participants.GetByGoogleUserIdsAsync([googleUserId], cancellationToken);
+        var participant = stored.FirstOrDefault();
+        if (participant is null)
+        {
+            participant = ClassroomParticipant.Import(googleUserId, null, null);
+            participants.Add(participant);
+        }
+
+        people[googleUserId] = participant;
+
+        var existing = await memberships.GetByCourseAsync(course.Id, cancellationToken);
+        if (existing.All(m => m.ParticipantId != participant.Id))
+        {
+            var membership = CourseMembership.FirstSeen(course, participant, ClassroomRole.Student, observedAt);
+            membership.NotOnRoster();
+            memberships.Add(membership);
+        }
+
+        return participant;
+    }
+
+    /// <summary>
+    /// US-015 spec VR-004, OD-011: the six values the vocabulary holds — the five the Classroom API documents and
+    /// the one BR-056 names. Anything else is stored with OD-005's marker rather than skipped, because a missing
+    /// submission would read as «не сдано» and state something false about a student's work.
+    /// </summary>
+    private static bool TryParseSubmissionState(string reported, out SubmissionState state)
+    {
+        switch (reported?.Trim().ToUpperInvariant())
+        {
+            case "NEW": state = SubmissionState.New; return true;
+            case "CREATED": state = SubmissionState.Created; return true;
+            case "TURNED_IN": state = SubmissionState.TurnedIn; return true;
+            case "RETURNED": state = SubmissionState.Returned; return true;
+            case "RECLAIMED_BY_STUDENT": state = SubmissionState.ReclaimedByStudent; return true;
+            case "STUDENT_EDITED_AFTER_TURN_IN": state = SubmissionState.StudentEditedAfterTurnIn; return true;
+            default: state = SubmissionState.Unrecognised; return false;
+        }
     }
 
     /// <summary>
@@ -308,5 +552,17 @@ public sealed class RunSynchronizationUseCase(
     private sealed record ImportResult(
         int ProcessedCount,
         IReadOnlyList<SkippedCourse> SkippedCourses,
-        int MembershipsMarkedOffRoster);
+        int MembershipsMarkedOffRoster,
+        IReadOnlyList<string> CoursesSkippedByAge,
+        IReadOnlyList<UnrecognisedSubmission> UnrecognisedSubmissions);
+
+    /// <summary>What one course's transaction did (US-015 spec FR-011, FR-016, OD-005).</summary>
+    private readonly record struct CourseResult(
+        bool SkippedByAge,
+        int MembershipsMarkedOffRoster,
+        IReadOnlyList<UnrecognisedSubmission> UnrecognisedSubmissions)
+    {
+        /// <summary>Nothing was written for the course, so it is not counted (spec FR-011, I-5).</summary>
+        public static CourseResult AgedOut => new(true, 0, []);
+    }
 }

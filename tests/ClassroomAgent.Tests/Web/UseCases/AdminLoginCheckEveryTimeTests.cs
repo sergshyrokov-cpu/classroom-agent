@@ -91,7 +91,7 @@ public sealed class AdminLoginCheckEveryTimeTests(PostgreSqlFixture database)
 
     /// <summary>
     /// AC-004, S-02: no table in the installation holds a copy of AllowedAdmin. The expected table set gained
-    /// <c>sync_state</c> with US-013 and the three course tables with US-014; the two assertions that no table
+    /// <c>sync_state</c> with US-013, the three course tables with US-014 and <c>course_work</c> and <c>submission</c> with US-015; the two assertions that no table
     /// names "allowed" or "admin" are unchanged.
     /// </summary>
     [Fact]
@@ -113,7 +113,9 @@ public sealed class AdminLoginCheckEveryTimeTests(PostgreSqlFixture database)
                 "classroom_participant",
                 "course",
                 "course_membership",
+                "course_work",
                 "legitimacy_state",
+                "submission",
                 "sync_state",
                 "workspace_connection",
             },

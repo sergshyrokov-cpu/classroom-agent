@@ -130,8 +130,9 @@ public static class InstallationServices
         services.AddScoped<ICourseWorkRepository, CourseWorkRepository>();
         services.AddScoped<ISubmissionRepository, SubmissionRepository>();
 
-        // US-015 OD-012 skeleton: IMPLEMENTATION reads Retention:Years (FR-012, VR-008) and this placeholder goes.
-        services.AddSingleton(new RetentionSettings(0));
+        // US-015 spec FR-012: the retention period the FR-011 age rule compares against, as its own narrow record
+        // rather than the whole settings object, which SC-7 keeps out of the container (US-013 security review F-1).
+        services.AddSingleton(new RetentionSettings(settings.RetentionYears));
 
         services.AddScoped<RunSynchronizationUseCase>();
         services.AddHostedService<StartupSelfCheckBackgroundService>();

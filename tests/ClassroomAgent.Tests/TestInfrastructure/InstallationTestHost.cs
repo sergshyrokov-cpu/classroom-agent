@@ -44,6 +44,10 @@ public sealed class InstallationTestHost : IAsyncDisposable
             [InstallationConfigurationKeys.PublicBaseAddress] = InstallationConfigurationKeys.PublicBaseAddressValue,
             [InstallationConfigurationKeys.OAuthClientId] = InstallationConfigurationKeys.OAuthClientIdValue,
             [InstallationConfigurationKeys.OAuthClientSecretReference] = InstallationConfigurationKeys.OAuthClientSecretReferenceValue,
+
+            // US-015 spec FR-012, VR-008: required with no default, so every host test must carry it or the
+            // installation refuses to start. RetentionConfigurationTests removes or corrupts it on purpose.
+            ["Retention:Years"] = "5",
         };
     }
 

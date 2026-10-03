@@ -20,13 +20,17 @@ public sealed class InstallationConfigurationTests(PostgreSqlFixture database)
         Assert.NotNull(host.Services);
     }
 
-    /// <summary>US-008 spec FR-001 adds four required settings; the time zone, the retention period and the language stay out.</summary>
+    /// <summary>
+    /// US-008 spec FR-001 adds four required settings; the time zone and the language stay out. The retention period
+    /// stayed out too until US-015 spec FR-012 made <c>Retention:Years</c> required, which is the one setting the
+    /// count grew by.
+    /// </summary>
     [Fact]
-    public async Task OnlyTheSettingsOfThisStoryAreRequired_NoTimeZoneRetentionOrLanguage()
+    public async Task OnlyTheSettingsOfThisStoryAreRequired_NoTimeZoneOrLanguage()
     {
         var ct = TestContext.Current.CancellationToken;
         await using var host = await InstallationTestHost.CreateAsync(database, ct);
-        Assert.Equal(10, host.Settings.Count);
+        Assert.Equal(11, host.Settings.Count);
         Assert.DoesNotContain(InstallationConfigurationKeys.DefaultLanguage, host.Settings.Keys);
 
         host.Start();

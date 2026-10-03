@@ -102,7 +102,7 @@ public sealed class AccessCheckAuditSchemaTests(PostgreSqlFixture database)
 
     /// <summary>
     /// db-design §1, §4: no table is added — nothing about a check is stored (OD-003). The expected table set
-    /// gained <c>sync_state</c> with US-013 and the three course tables with US-014, which are the Stories
+    /// gained <c>sync_state</c> with US-013 and the three course tables with US-014 and <c>course_work</c> and <c>submission</c> with US-015, which are the Stories
     /// that add them — US-011 still adds none.
     /// </summary>
     [Fact]
@@ -120,7 +120,9 @@ public sealed class AccessCheckAuditSchemaTests(PostgreSqlFixture database)
                 "classroom_participant",
                 "course",
                 "course_membership",
+                "course_work",
                 "legitimacy_state",
+                "submission",
                 "sync_state",
                 "workspace_connection",
             },

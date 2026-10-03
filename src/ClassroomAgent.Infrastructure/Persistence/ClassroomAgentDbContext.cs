@@ -34,6 +34,12 @@ public sealed class ClassroomAgentDbContext(DbContextOptions<ClassroomAgentDbCon
     /// <summary>US-014 entity model §4: one person's participation in one course (db-design §5).</summary>
     public DbSet<CourseMembership> CourseMemberships => Set<CourseMembership>();
 
+    /// <summary>US-015 entity model §1: a course's items — assignments and materials (db-design §3).</summary>
+    public DbSet<CourseWork> CourseWorks => Set<CourseWork>();
+
+    /// <summary>US-015 entity model §4: one student's submission of one item (db-design §4).</summary>
+    public DbSet<Submission> Submissions => Set<Submission>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new LegitimacyStateConfiguration());
@@ -44,5 +50,7 @@ public sealed class ClassroomAgentDbContext(DbContextOptions<ClassroomAgentDbCon
         modelBuilder.ApplyConfiguration(new CourseConfiguration());
         modelBuilder.ApplyConfiguration(new ClassroomParticipantConfiguration());
         modelBuilder.ApplyConfiguration(new CourseMembershipConfiguration());
+        modelBuilder.ApplyConfiguration(new CourseWorkConfiguration());
+        modelBuilder.ApplyConfiguration(new SubmissionConfiguration());
     }
 }

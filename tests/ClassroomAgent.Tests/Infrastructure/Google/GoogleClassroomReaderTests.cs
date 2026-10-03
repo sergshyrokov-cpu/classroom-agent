@@ -1,13 +1,15 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using ClassroomAgent.Domain.Enums;
+using ClassroomAgent.Domain.Rules;
 using ClassroomAgent.Infrastructure.Google;
 using ClassroomAgent.Tests.TestInfrastructure;
 
 namespace ClassroomAgent.Tests.Infrastructure.Google;
 
 /// <summary>
-/// US-014 spec FR-002, FR-003, FR-004, VR-005: the Google implementation of the Classroom port, driven offline
+/// US-014 and US-015 spec FR-002, FR-003, FR-004, VR-005: the Google implementation of the Classroom port, driven offline
 /// through a scripted transport with a key generated at run time (TC-4). It proves what an Application-layer test
 /// cannot — that <b>every page</b> of a list answer is followed, that the impersonated subject is the school's
 /// technical account (BR-015), and that a course's state is handed on as the string Google sent so the use case can
@@ -196,6 +198,252 @@ public sealed class GoogleClassroomReaderTests
             transport.Requests,
             r => Assert.EndsWith("googleapis.com", r.Uri!.Host, StringComparison.Ordinal));
     }
+
+    /// <summary>
+    /// US-015 spec FR-003, VR-005: both Classroom resources are read and each is paged to the end; the resource
+    /// travels with the item. A single-page implementation fails this test, which the Application-layer paging
+    /// tests cannot prove because they run against an in-memory reader.
+    /// </summary>
+    [Fact]
+    public async Task CourseWorkAndMaterials_ArePagedToTheEnd()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var transport = ScriptedHttpHandler.Sequence(
+            _ => TokenIssued(),
+            _ => ItemPage("courseWork", "page-2", Item(1)),
+            _ => ItemPage("courseWork", null, Item(2)),
+            _ => ItemPage("courseWorkMaterial", "page-2", Item(3)),
+            _ => ItemPage("courseWorkMaterial", null, Item(4)));
+        var reader = ReaderWith(transport);
+
+        var page = await reader.ReadCourseWorkAsync(TechnicalAccount, CourseTestData.CourseId(1), ct);
+
+        Assert.Equal(
+            new[]
+            {
+                (CourseWorkTestData.ItemId(1), CourseWorkResource.CourseWork),
+                (CourseWorkTestData.ItemId(2), CourseWorkResource.CourseWork),
+                (CourseWorkTestData.ItemId(3), CourseWorkResource.CourseWorkMaterial),
+                (CourseWorkTestData.ItemId(4), CourseWorkResource.CourseWorkMaterial),
+            },
+            page.Items.Select(i => (i.GoogleId, i.Resource)));
+        var pagedRequests = transport.Requests
+            .Where(r => r.Uri?.Query.Contains("pageToken=page-2", StringComparison.Ordinal) == true);
+        Assert.Equal(2, pagedRequests.Count());
+    }
+
+    /// <summary>US-015 OD-004: only PUBLISHED items are handed on, whatever else Classroom lists.</summary>
+    [Fact]
+    public async Task OnlyPublishedItems_AreHandedOn()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var transport = ScriptedHttpHandler.Sequence(
+            _ => TokenIssued(),
+            _ => ItemPage("courseWork", null, Item(1), Item(2, state: "DRAFT")),
+            _ => ItemPage("courseWorkMaterial", null, Item(3, state: "DELETED"), Item(4)));
+        var reader = ReaderWith(transport);
+
+        var page = await reader.ReadCourseWorkAsync(TechnicalAccount, CourseTestData.CourseId(1), ct);
+
+        Assert.Equal(
+            new[] { CourseWorkTestData.ItemId(1), CourseWorkTestData.ItemId(4) },
+            page.Items.Select(i => i.GoogleId));
+    }
+
+    /// <summary>
+    /// US-015 FR-008, db-design §3.4: the item date is the first of scheduledTime, due date, updateTime and
+    /// creationTime; a due date with a time is one UTC instant, and a due date without a time is no due date at all.
+    /// </summary>
+    [Fact]
+    public async Task TheItemDateCascade_AndTheDueDate_AreAppliedInTheAdapter()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var transport = ScriptedHttpHandler.Sequence(
+            _ => TokenIssued(),
+            _ => ItemPage(
+                "courseWork",
+                null,
+                Item(1, scheduled: "2026-03-01T08:00:00Z", due: true),
+                Item(2, due: true, maxPoints: 12),
+                Item(3, dueWithoutTime: true),
+                Item(4, updated: null)),
+            _ => ItemPage("courseWorkMaterial", null));
+        var reader = ReaderWith(transport);
+
+        var items = (await reader.ReadCourseWorkAsync(TechnicalAccount, CourseTestData.CourseId(1), ct)).Items;
+
+        var dueInstant = new DateTimeOffset(2026, 3, 20, 14, 30, 0, TimeSpan.Zero);
+        Assert.Equal(new DateTimeOffset(2026, 3, 1, 8, 0, 0, TimeSpan.Zero), items[0].Details.ItemDate);
+        Assert.Equal(dueInstant, items[0].Details.DueAt);
+        Assert.Equal(dueInstant, items[1].Details.ItemDate);
+        Assert.Equal(12m, items[1].Details.MaxPoints);
+        Assert.Null(items[2].Details.DueAt);
+        Assert.Equal(Updated, items[2].Details.ItemDate);
+        Assert.Equal(Created, items[3].Details.ItemDate);
+        Assert.Null(items[3].Details.MaxPoints);
+    }
+
+    /// <summary>
+    /// US-015 FR-004, OD-002, VR-005: the course's submissions are read once with courseWorkId "-" and paged to the
+    /// end; each snapshot keeps its own courseWorkId.
+    /// </summary>
+    [Fact]
+    public async Task Submissions_AreReadOncePerCourse_AndPagedToTheEnd()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var transport = ScriptedHttpHandler.Sequence(
+            _ => TokenIssued(),
+            _ => SubmissionPage("page-2", Submission(1, CourseWorkTestData.ItemId(1))),
+            _ => SubmissionPage(null, Submission(2, CourseWorkTestData.ItemId(2))));
+        var reader = ReaderWith(transport);
+
+        var submissions = await reader.ReadSubmissionsAsync(TechnicalAccount, CourseTestData.CourseId(1), ct);
+
+        Assert.Equal(
+            new[] { CourseWorkTestData.ItemId(1), CourseWorkTestData.ItemId(2) },
+            submissions.Select(s => s.CourseWorkGoogleId));
+        var listRequests = transport.Requests
+            .Where(r => r.Uri?.AbsolutePath.EndsWith("/studentSubmissions", StringComparison.Ordinal) == true)
+            .ToList();
+        Assert.Equal(2, listRequests.Count);
+        Assert.All(listRequests, r => Assert.Contains("/courseWork/-/", r.Uri!.AbsolutePath, StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// US-015 FR-009, OD-009: the stored turn-in is the latest transition to TURNED_IN in the history; a submission
+    /// with no history has no date, never its update time. The state, grades and late flag pass through as given.
+    /// </summary>
+    [Fact]
+    public async Task TheLastTurnIn_IsTheLatestTurnedInTransition()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var transport = ScriptedHttpHandler.Sequence(
+            _ => TokenIssued(),
+            _ => SubmissionPage(
+                null,
+                Submission(
+                    1,
+                    CourseWorkTestData.ItemId(1),
+                    [
+                        ("TURNED_IN", "2026-03-10T09:00:00Z"),
+                        ("RECLAIMED_BY_STUDENT", "2026-03-11T09:00:00Z"),
+                        ("TURNED_IN", "2026-03-12T09:00:00Z"),
+                    ]),
+                Submission(2, CourseWorkTestData.ItemId(1))));
+        var reader = ReaderWith(transport);
+
+        var submissions = await reader.ReadSubmissionsAsync(TechnicalAccount, CourseTestData.CourseId(1), ct);
+
+        Assert.Equal(new DateTimeOffset(2026, 3, 12, 9, 0, 0, TimeSpan.Zero), submissions[0].TurnedInAt);
+        Assert.Equal("TURNED_IN", submissions[0].State);
+        Assert.Equal(91.25m, submissions[0].AssignedGrade);
+        Assert.True(submissions[0].Late);
+        Assert.Null(submissions[1].TurnedInAt);
+        Assert.Equal(Updated, submissions[1].UpdateTime);
+    }
+
+    /// <summary>
+    /// US-015 FR-002, S-04, S-11: the coursework token asks for exactly the two read-only coursework scopes of §6,
+    /// on behalf of the technical account (BR-015), and nothing but Google is reached (SC-13).
+    /// </summary>
+    [Fact]
+    public async Task TheCourseWorkToken_AsksOnlyForTheReadOnlyCourseWorkScopes()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var transport = ScriptedHttpHandler.Sequence(
+            _ => TokenIssued(),
+            _ => SubmissionPage(null));
+        var reader = ReaderWith(transport);
+
+        await reader.ReadSubmissionsAsync(TechnicalAccount, CourseTestData.CourseId(1), ct);
+
+        var tokenRequest = Assert.Single(transport.Requests, r => r.Uri?.Host == "oauth2.googleapis.com");
+        var claims = ClaimsOf(tokenRequest);
+        Assert.Equal(TechnicalAccount, claims.GetProperty("sub").GetString());
+        Assert.Equal(
+            new[] { GoogleDelegationScopes.CourseWorkStudentsReadonly, GoogleDelegationScopes.CourseWorkMaterialsReadonly },
+            claims.GetProperty("scope").GetString()!.Split(' '));
+        Assert.All(
+            transport.Requests,
+            r => Assert.EndsWith("googleapis.com", r.Uri!.Host, StringComparison.Ordinal));
+    }
+
+    private static readonly DateTimeOffset Created = new(2026, 2, 1, 7, 0, 0, TimeSpan.Zero);
+    private static readonly DateTimeOffset Updated = new(2026, 2, 2, 7, 0, 0, TimeSpan.Zero);
+
+    private static Dictionary<string, object?> Item(
+        int ordinal,
+        string state = "PUBLISHED",
+        string? scheduled = null,
+        bool due = false,
+        bool dueWithoutTime = false,
+        double? maxPoints = null,
+        string? updated = "2026-02-02T07:00:00Z")
+    {
+        var item = new Dictionary<string, object?>
+        {
+            ["id"] = CourseWorkTestData.ItemId(ordinal),
+            ["title"] = CourseWorkTestData.Title(ordinal),
+            ["state"] = state,
+            ["creationTime"] = "2026-02-01T07:00:00Z",
+            ["updateTime"] = updated,
+            ["scheduledTime"] = scheduled,
+            ["maxPoints"] = maxPoints,
+        };
+        if (due || dueWithoutTime)
+        {
+            item["dueDate"] = new Dictionary<string, object?> { ["year"] = 2026, ["month"] = 3, ["day"] = 20 };
+        }
+
+        if (due)
+        {
+            item["dueTime"] = new Dictionary<string, object?> { ["hours"] = 14, ["minutes"] = 30 };
+        }
+
+        return item;
+    }
+
+    private static HttpResponseMessage ItemPage(
+        string collection,
+        string? nextPageToken,
+        params Dictionary<string, object?>[] items) =>
+        ScriptedHttpHandler.JsonResponse(
+            HttpStatusCode.OK,
+            JsonSerializer.Serialize(new Dictionary<string, object?>
+            {
+                [collection] = items,
+                ["nextPageToken"] = nextPageToken,
+            }));
+
+    private static Dictionary<string, object?> Submission(
+        int ordinal,
+        string courseWorkId,
+        (string State, string At)[]? history = null) =>
+        new()
+        {
+            ["id"] = CourseWorkTestData.SubmissionId(ordinal),
+            ["courseWorkId"] = courseWorkId,
+            ["userId"] = CourseTestData.UserId(ordinal),
+            ["state"] = "TURNED_IN",
+            ["assignedGrade"] = 91.25,
+            ["late"] = true,
+            ["updateTime"] = "2026-02-02T07:00:00Z",
+            ["submissionHistory"] = history?.Select(h => new Dictionary<string, object?>
+            {
+                ["stateHistory"] = new Dictionary<string, object?> { ["state"] = h.State, ["stateTimestamp"] = h.At },
+            }).ToArray(),
+        };
+
+    private static HttpResponseMessage SubmissionPage(
+        string? nextPageToken,
+        params Dictionary<string, object?>[] submissions) =>
+        ScriptedHttpHandler.JsonResponse(
+            HttpStatusCode.OK,
+            JsonSerializer.Serialize(new Dictionary<string, object?>
+            {
+                ["studentSubmissions"] = submissions,
+                ["nextPageToken"] = nextPageToken,
+            }));
 
     private static HttpResponseMessage RosterPage(string collection, string? nextPageToken, string userId) =>
         ScriptedHttpHandler.JsonResponse(

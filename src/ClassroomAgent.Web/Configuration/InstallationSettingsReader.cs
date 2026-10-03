@@ -53,6 +53,12 @@ public static class InstallationSettingsReader
     /// <summary>US-013 spec FR-013, VR-001: the optional synchronization run interval, in minutes.</summary>
     public const string SyncIntervalKey = "Sync:IntervalMinutes";
 
+    /// <summary>
+    /// US-015 spec FR-012, VR-008, I-2: the retention period N, in whole years. <b>Required</b> — unlike
+    /// <see cref="SyncIntervalKey"/> there is no default and no "keep for ever" (DC-3, PC-11).
+    /// </summary>
+    public const string RetentionYearsKey = "Retention:Years";
+
     /// <summary>US-013 spec I-6: one hour when <see cref="SyncIntervalKey"/> is unset, as DC-3 documents it.</summary>
     public static readonly TimeSpan DefaultSyncInterval = TimeSpan.FromMinutes(60);
 
@@ -75,8 +81,26 @@ public static class InstallationSettingsReader
             Required(configuration, OAuthClientIdKey).Trim(),
             OAuthClientSecret(configuration, secretStore),
             DefaultLanguage(configuration),
+            RetentionYears(configuration),
             ServiceAccountKeyReference(configuration),
             SyncInterval(configuration));
+
+    /// <summary>
+    /// VR-008: a positive whole number of years. Absent, unparsable or non-positive stops the start, because the
+    /// school's retention period is an obligation the product enforces and there is nothing safe to assume
+    /// (DC-3, PC-11, §5).
+    /// </summary>
+    private static int RetentionYears(IConfiguration configuration)
+    {
+        var configured = Required(configuration, RetentionYearsKey).Trim();
+
+        if (!int.TryParse(configured, NumberStyles.None, CultureInfo.InvariantCulture, out var years) || years < 1)
+        {
+            throw InstallationSettingException.Invalid(RetentionYearsKey, "expected a whole number of years, 1 or more");
+        }
+
+        return years;
+    }
 
     /// <summary>US-011 spec VR-004: trimmed; blank counts as absent. Resolved per check, not here (spec FR-016).</summary>
     private static string? ServiceAccountKeyReference(IConfiguration configuration) =>

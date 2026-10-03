@@ -19,7 +19,9 @@ public sealed class SynchronizationRunOutcome
         LegitimacyModeReason? readOnlyReason,
         WorkspaceConnectionState? connectionState,
         IReadOnlyList<SkippedCourse>? skippedCourses = null,
-        int membershipsMarkedOffRoster = 0)
+        int membershipsMarkedOffRoster = 0,
+        IReadOnlyList<string>? coursesSkippedByAge = null,
+        IReadOnlyList<UnrecognisedSubmission>? unrecognisedSubmissions = null)
     {
         RunId = runId;
         ProcessedCount = processedCount;
@@ -28,6 +30,8 @@ public sealed class SynchronizationRunOutcome
         ConnectionState = connectionState;
         SkippedCourses = skippedCourses ?? [];
         MembershipsMarkedOffRoster = membershipsMarkedOffRoster;
+        CoursesSkippedByAge = coursesSkippedByAge ?? [];
+        UnrecognisedSubmissions = unrecognisedSubmissions ?? [];
     }
 
     public Guid? RunId { get; }
@@ -46,6 +50,16 @@ public sealed class SynchronizationRunOutcome
     /// <summary>US-014 spec FR-010, FR-016: how many memberships this run marked as no longer on a roster.</summary>
     public int MembershipsMarkedOffRoster { get; }
 
+    /// <summary>
+    /// US-015 spec FR-011, I-5: the Google ids of courses the §5 age rule left unimported. <c>SyncState</c> has
+    /// one counter and cannot carry them, so the log line the host writes from this list is what makes the skip
+    /// discoverable at all.
+    /// </summary>
+    public IReadOnlyList<string> CoursesSkippedByAge { get; }
+
+    /// <summary>US-015 spec VR-004, OD-005: the submissions stored with the unrecognised marker, one Warning line each.</summary>
+    public IReadOnlyList<UnrecognisedSubmission> UnrecognisedSubmissions { get; }
+
     public bool Failed => Error is not null;
 
     public static SynchronizationRunOutcome Ran(
@@ -53,8 +67,19 @@ public sealed class SynchronizationRunOutcome
         int processedCount,
         string? error,
         IReadOnlyList<SkippedCourse>? skippedCourses = null,
-        int membershipsMarkedOffRoster = 0) =>
-        new(runId, processedCount, error, null, null, skippedCourses, membershipsMarkedOffRoster);
+        int membershipsMarkedOffRoster = 0,
+        IReadOnlyList<string>? coursesSkippedByAge = null,
+        IReadOnlyList<UnrecognisedSubmission>? unrecognisedSubmissions = null) =>
+        new(
+            runId,
+            processedCount,
+            error,
+            null,
+            null,
+            skippedCourses,
+            membershipsMarkedOffRoster,
+            coursesSkippedByAge,
+            unrecognisedSubmissions);
 
     public static SynchronizationRunOutcome SkippedReadOnly(LegitimacyModeReason reason) =>
         new(null, null, null, reason, null);

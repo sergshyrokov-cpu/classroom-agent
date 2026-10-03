@@ -182,6 +182,21 @@ public sealed partial class SynchronizationBackgroundService(
                 LogCourseSkipped(logger, runId, skipped.GoogleId, skipped.State);
             }
 
+            // US-015 spec VR-004, OD-005: one Warning line per submission whose state Classroom reported outside
+            // the six values. The submission itself IS stored — skipping it would read as «не сдано» in a journal
+            // — so this line is what makes the unfamiliar value discoverable. Two identifiers, nothing else (SC-10).
+            foreach (var unrecognised in outcome.UnrecognisedSubmissions)
+            {
+                LogSubmissionStateUnrecognised(logger, runId, unrecognised.GoogleId, unrecognised.State);
+            }
+
+            // US-015 spec FR-011, I-5: SyncState has one counter and cannot carry a skipped count, so a course the
+            // age rule left unimported is visible only here. Information, not Warning: it is the rule working.
+            foreach (var googleId in outcome.CoursesSkippedByAge)
+            {
+                LogCourseSkippedByAge(logger, runId, googleId);
+            }
+
             LogRunCompleted(logger, runId, outcome.ProcessedCount ?? 0, outcome.MembershipsMarkedOffRoster);
         }
     }
@@ -203,6 +218,24 @@ public sealed partial class SynchronizationBackgroundService(
         Guid runId,
         int processedCount,
         int markedOffRoster);
+
+    [LoggerMessage(
+        EventId = 5127,
+        EventName = "SyncSubmissionStateUnrecognised",
+        Level = LogLevel.Warning,
+        Message = "Synchronization run {RunId} stored submission {SubmissionGoogleId} with an unrecognised state {RawState}")]
+    private static partial void LogSubmissionStateUnrecognised(
+        ILogger logger,
+        Guid runId,
+        string submissionGoogleId,
+        string rawState);
+
+    [LoggerMessage(
+        EventId = 5128,
+        EventName = "SyncCourseSkippedByAge",
+        Level = LogLevel.Information,
+        Message = "Synchronization run {RunId} did not import course {CourseGoogleId}: last activity older than the retention period")]
+    private static partial void LogCourseSkippedByAge(ILogger logger, Guid runId, string courseGoogleId);
 
     [LoggerMessage(
         EventId = 5126,

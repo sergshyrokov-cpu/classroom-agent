@@ -80,10 +80,18 @@ public sealed class CourseWorkInvariantTests
     /// <see cref="CourseWorkDetails.ItemDate"/> is a non-nullable <see cref="DateTimeOffset"/>, the absent case is
     /// the type's own default instant — the only value that can represent "no cascade source produced anything".
     /// </summary>
+    /// <remarks>
+    /// The details record is built directly rather than through <see cref="Details"/>: that helper's parameter is
+    /// a <c>DateTimeOffset?</c>, so passing <c>default</c> to it means <see langword="null"/> and the helper
+    /// substitutes a real instant — the test would then assert nothing (IMPLEMENTATION deviation D-1).
+    /// </remarks>
     [Fact]
     public void ItemWithNoCascadeDate_IsRefused() =>
-        Assert.ThrowsAny<ArgumentException>(() =>
-            CourseWork.Import(1, CourseWorkTestData.ItemId(1), CourseWorkResource.CourseWork, Details(itemDate: default)));
+        Assert.ThrowsAny<ArgumentException>(() => CourseWork.Import(
+            1,
+            CourseWorkTestData.ItemId(1),
+            CourseWorkResource.CourseWork,
+            new CourseWorkDetails(CourseWorkTestData.Title(1), default, null, null, null, null)));
 
     /// <summary>
     /// db-design §3.4: when Google does not carry both a due date and a due time, the adapter has already reduced

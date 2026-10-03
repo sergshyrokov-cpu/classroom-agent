@@ -4,29 +4,32 @@
 version: 1
 story: US-015
 workflow: story-delivery
-current_stage: IMPLEMENTATION
-previous_stage: TEST_WRITING
-last_completed_stage: TEST_WRITING
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: test-writer
+last_invoked_skill: security-reviewer
 last_result:
   verdict: PASS
-  stage: TEST_WRITING
-  recorded_at: 2026-09-28T15:03:58Z
+  stage: SECURITY_REVIEW
+  recorded_at: 2026-10-03T07:07:31Z
 last_artifacts:
-  - type: test_strategy
-    path: docs/tests/US-015-test-strategy.md
-    version: 1
-  - type: ac_test_matrix
-    path: docs/tests/US-015-ac-test-matrix.md
-    version: 1
-  - type: test_generation_report
-    path: docs/evidence/US-015-test-generation-report.md
+  - type: security_review
+    path: docs/reviews/security/US-015-security-review.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "HUMAN_PR_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-10-03T08:33:22Z (no comment): implementation report v1 and security review v1 (PASS, 0 Critical, 0 Major) accepted. F-1 (unbounded raw state in the Warning line) is left open, to be fixed together with US-014 F-1, here or in US-017. Approved, NOT Done until the final commit lands on master (AGENTS.md DoD item 10)."
+  - "SECURITY_REVIEW: PASS - 0 Critical, 0 Major, 1 Minor, 3 Informational; runtime_checks FULL. Every touched SC item PASS (SC-4, SC-5, SC-7, SC-8, SC-10, SC-11, SC-12, SC-13); no package or project reference changed; dotnet list package --vulnerable clean for all 7 projects; repository hygiene clean (credential files, cache db and telemetry ignored; only the versioned report template .xlsx tracked)."
+  - "SECURITY_REVIEW F-1 (Minor, LOGGING, SC-10): the SyncSubmissionStateUnrecognised Warning line writes Google's raw state and submission id UNBOUNDED - truncation to 64 lives only in the Submission entity. The log is CompactJsonFormatter, so no line forging; log growth only. Same shape as the open US-014 F-1; fix both together here or in US-017 (pass truncated values; test: an oversized state logs <= 64 chars)."
+  - "SECURITY_REVIEW I-1 (Informational, CONFIGURATION): Retention:Years has no upper bound; a value above ~2000 makes AddYears throw and every run fails as RunFailed:ArgumentOutOfRangeException. Owner-set config, availability only; a bound (e.g. 100) would turn it into a startup refusal. I-2: US-011 F-2 (no composition-root test of the real Google adapter) still applies, now to two more members. I-3: paging must be proved at the adapter, not through SyncWorld."
+  - "IMPLEMENTATION: PASS. Build 0 errors / 0 warnings; dotnet test 2428 total, 2428 passed, 0 failed, 0 skipped; dotnet format --verify-no-changes clean. All AC-001 … AC-010 mapped to passing tests (implementation report §3). The skeleton debt of the test generation report §4 is cleared - no NotImplementedException, no #pragma CS9113, no RetentionSettings(0) placeholder remains in src/."
+  - "IMPLEMENTATION D-2, a coverage gap CLOSED: the TEST_WRITING paging tests ran against the in-memory SyncWorld reader, so a single-page Google adapter would have passed them, although VR-005 says the proving test constructs the adapter. Six adapter tests were added to GoogleClassroomReaderTests (paging of both resources and of submissions, the '-' wildcard, the PUBLISHED filter, the date cascade with both due-date cases, latest TURNED_IN, token subject and exact scopes)."
+  - "IMPLEMENTATION D-3 / D-4: four earlier-Story guards updated on the US-013 D-2 precedent - three table-set guards grew by course_work and submission keeping their own assertions; InstallationConfigurationTests (US-008) counts eleven settings and was renamed ..._NoTimeZoneOrLanguage because FR-012 made Retention:Years required. D-1: CourseWorkInvariantTests.ItemWithNoCascadeDate_IsRefused was vacuous (default through a DateTimeOffset? helper meant null) and now builds the record directly."
+  - "IMPLEMENTATION for SECURITY_REVIEW: the Google adapter now requests per-call scope sets - courses/rosters keep their three, the coursework reads ask only for classroom.coursework.students.readonly and classroom.courseworkmaterials.readonly; no seventh scope. Two new log lines: SyncSubmissionStateUnrecognised (Warning 5127: run id, submission Google id, raw state) and SyncCourseSkippedByAge (Information 5128: run id, course Google id). The raw state is logged unbounded - the same shape as the carried US-014 SECURITY_REVIEW F-1 (Minor) on the skipped-course Warning line, worth a look together."
+  - "IMPLEMENTATION FR-022 / FR-012 documentation done: persistence-conventions.md PC-3 gains the parent-scoped keys and PC-13 gains Google's updateTime; deployment-conventions.md DC-3 names Retention:Years. An initial test run failed every test on DockerUnavailableException (Docker Desktop not running) - an environment fault, not a code one."
   - "TEST_WRITING: PASS. 85 new tests in 12 classes plus 2 new fixtures (CourseWorkTestData, CourseWorkRows); 3 existing test files modified - SyncWorld and FakeClassroomReader gain the two new port members, and AppUserMigrationTests takes the expected table/migration count change db-design §10 item 14 foresaw (seven migrations to EIGHT, nine tables to ELEVEN), keeping its own assertions and growing only the sample set. Build 0 errors / 0 warnings. Whole suite 2422 total, 2338 passed, 84 failed, 0 skipped; every failure expected and classified by class in the report."
   - "TEST_WRITING raised OD-012 (compile-only skeleton) and the Owner resolved it on 2026-09-28 as option 1, scoped like US-005 OD-002, US-007 OD-003, US-011 OD-006, US-012 OD-005, US-013 OD-008 and US-014 OD-012. open_decisions is now v2 - it adds OD-012 only. The skeleton grew ONCE beyond its first description, out of necessity: RunSynchronizationUseCase had to gain the two repositories and RetentionSettings as constructor parameters, because SyncWorld constructs that use case directly and without them the test project cannot express the wiring at all (the same reason US-014's skeleton had to register its repositories in the host)."
   - "TEST_WRITING debt IMPLEMENTATION must clear, listed so a reviewer can check each: every NotImplementedException from the skeleton; THREE #pragma warning disable CS9113 (CourseWorkRepository, SubmissionRepository, RunSynchronizationUseCase); the placeholder services.AddSingleton(new RetentionSettings(0)) in InstallationServices, which exists only so the host still starts; the log event name SyncSubmissionStateUnrecognised, which NO document fixes - the tests expect it, so IMPLEMENTATION matches the tests or changes both together; and the Retention:Years literal, which has no constant in InstallationSettingsReader yet."
@@ -80,5 +83,5 @@ non_blocking_findings:
   - "Carried from the US-011 security review: F-2 (Minor) - no test resolves a real adapter from the composition root. Not owned by US-015, recorded so it is not lost."
   - "State-file drift corrected by this activation: active-story.yaml still named US-014 with status IN_PROGRESS after that Story reached COMPLETED, while workflow-state.yaml and docs/catalog/stories.yaml both said COMPLETED. /so:status reported it on 2026-09-28; the rewrite performed here clears it."
 started_at: 2026-09-28T11:28:43Z
-updated_at: 2026-09-28T15:03:58Z
-completed_at: null
+updated_at: 2026-10-03T08:33:22Z
+completed_at: 2026-10-03T08:33:22Z

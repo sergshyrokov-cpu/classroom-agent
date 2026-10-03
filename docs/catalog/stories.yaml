@@ -179,7 +179,7 @@ stories:
   - id: US-015
     epic: EPIC-1
     title: Sync coursework and submissions
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: >
       Depends on US-014 (courses and memberships the submissions belong to).
     # US-014 COMPLETED. Story file authored:

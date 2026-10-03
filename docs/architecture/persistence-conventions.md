@@ -61,6 +61,12 @@ Derived from `trebovaniya.md` sections 3, 5 and 9.
   **not** part of the key and is not stored: it follows from whether maximum
   points are set, so a teacher adding or removing points updates the same row
   (`trebovaniya.md` section 3, v32).
+- **Both coursework keys are scoped by their parent.** Classroom documents a
+  `courseWork.id` as unique only within its course and a `studentSubmission.id`
+  only among the submissions of its course work, so a `CourseWork` is unique on
+  (`course_id`, resource, `google_id`) and a `Submission` on (`course_work_id`,
+  `google_id`). A key without the parent would let one Google-side repetition
+  fail a whole school's import (US-015 Specification v2).
 - Meet data is keyed the same way: `MeetSession` on Google's `conference_id`,
   `MeetParticipation` on (`conference_id`, `endpoint_id`), `MeetingCodeLink` on the
   meeting code.
@@ -276,7 +282,9 @@ Decided in `trebovaniya.md` sections 3 and 4 (v23).
 Decided in `trebovaniya.md` sections 3 and 4 (v24).
 
 - A `Submission` row stores only: the Classroom state, `assignedGrade`,
-  `draftGrade`, the date of the last turn-in, and Google's `late` flag.
+  `draftGrade`, the date of the last turn-in, Google's `late` flag, and Google's
+  `updateTime` — which PC-11 needs for a course's last activity, because §5 v36
+  counts «изменение любой сдачи» (US-015 OD-007).
   `CourseWork` stores its due date and `maxPoints`, each only if set.
 - **Grades are stored as raw points** together with the coursework's maximum.
   Conversion to a school scale belongs to report templates, never to stored data.

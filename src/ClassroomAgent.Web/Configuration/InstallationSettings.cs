@@ -13,6 +13,10 @@ namespace ClassroomAgent.Web.Configuration;
 /// reference names (OD-004, option 1). The reference itself is configuration; the secret never is, and neither is
 /// ever logged (SC-7, SC-10).
 /// </remarks>
+/// <param name="RetentionYears">
+/// US-015 spec FR-012, VR-008: the retention period N in whole years. Required with no default — an
+/// installation without it refuses to start (DC-3, PC-11, <c>trebovaniya.md</c> §5).
+/// </param>
 /// <param name="SyncInterval">
 /// US-013 spec FR-013: the optional synchronization run interval; the default is applied by the code that reads
 /// it, not here.
@@ -28,5 +32,6 @@ public sealed record InstallationSettings(
     string OAuthClientId,
     string OAuthClientSecret,
     UiLanguage DefaultUiLanguage,
+    int RetentionYears,
     string? ServiceAccountKeyReference = null,
     TimeSpan SyncInterval = default);
