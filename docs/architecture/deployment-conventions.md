@@ -95,8 +95,8 @@ the previous one — the dependency is real, not stylistic
   public base address, the installation's OAuth client id and the secret-store
   reference for its OAuth client secret. The installation id, the Control Plane
   address, the private
-  port and its address, the retention period (`Retention:Years`, a positive whole
-  number of years, no default — US-015), the time zone, the public base
+  port and its address, the retention period (`Retention:Years`, a whole
+  number of years from 1 to 100, no default — US-015, v81), the time zone, the public base
   address, the OAuth client id and the OAuth client secret reference are required: an
   installation without any of them refuses to start (`trebovaniya.md` §5, v73,
   v75, v78). Optional:
