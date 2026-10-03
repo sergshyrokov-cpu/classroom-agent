@@ -206,6 +206,9 @@ stories:
     state: BACKLOG
     blocked_by: >
       Depends on US-013.
+    # US-013 COMPLETED. Story file authored:
+    # docs/stories/US-017-retry-backoff-permission-errors.md (aligned with v80).
+    # OD-001 … OD-009 resolved by the Owner on 2026-10-03, before activation.
   - id: US-018
     epic: EPIC-1
     title: Incremental synchronization
