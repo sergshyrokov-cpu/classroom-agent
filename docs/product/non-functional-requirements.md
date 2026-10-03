@@ -22,8 +22,9 @@ supported by explicit indexes rather than left to a table scan.
 
 ## Reliability
 
-**NFR-010** Transient Google API failures (`429`, `5xx`) are retried with
-exponential backoff. *(Epic 1)*
+**NFR-010** Transient Google API failures (`429`, `5xx`, timeout, dropped
+connection) are retried with exponential backoff, at most 4 attempts (BR-043).
+*(Epic 1, v80)*
 
 **NFR-011** Permission failures are not retried: they are a configuration
 problem, not a transient one, and are surfaced to the Admin with a diagnosable

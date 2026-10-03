@@ -209,8 +209,9 @@ v50)*
 
 **BR-034** A Google permission failure (`403 unauthorized_client`,
 `access_denied`, missing scope) means delegation is not configured and is never
-retried. It is recorded and surfaced to the Admin with a diagnosable message.
-*(Epic 1, Epic 6)*
+retried. It is recorded and surfaced to the Admin with a diagnosable message on the
+connection page, worded as "Check access" words the same problem. *(Epic 1, Epic 6,
+v80)*
 
 **BR-035** Replacing a service-account key never involves the school's
 super-admin: delegation is authorized for the account's client ID, which a new
@@ -234,8 +235,12 @@ identifier and never duplicate rows. *(Epic 1)*
 **BR-042** Synchronization is incremental — already-known participants are not
 refetched. *(Epic 1)*
 
-**BR-043** Transient Google failures (`429`, `5xx`) are retried with exponential
-backoff. *(Epic 1)*
+**BR-043** Transient Google failures (`429`, `5xx`, timeout, dropped connection)
+are retried with exponential backoff: at most 4 attempts, pauses of about 2 s, 8 s
+and 30 s with jitter, or Google's own requested delay capped at 2 minutes. When the
+attempts run out, or on a permission failure (BR-034), the run ends as failed; work
+already loaded stays and the next run keeps the normal schedule. A course that
+disappears mid-run (`404`) is skipped. *(Epic 1, v80)*
 
 **BR-044** `SyncState` is the only source of synchronization progress, status,
 last error and last successful run. *(§3, Epic 5)*
