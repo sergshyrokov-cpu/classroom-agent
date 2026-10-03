@@ -4,30 +4,36 @@
 version: 1
 story: US-039
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: IMPLEMENTATION
+previous_stage: TEST_WRITING
+last_completed_stage: TEST_WRITING
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-writer
+last_invoked_skill: test-writer
 last_result:
   verdict: PASS
-  stage: SPECIFICATION
-  recorded_at: 2026-10-03T08:47:44Z
+  stage: TEST_WRITING
+  recorded_at: 2026-10-03T09:37:15Z
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-039-spec.md
+  - type: test_strategy
+    path: docs/tests/US-039-test-strategy.md
     version: 1
-  - type: open_decisions
-    path: docs/decisions/US-039-open-decisions.md
+  - type: ac_test_matrix
+    path: docs/tests/US-039-ac-test-matrix.md
+    version: 1
+  - type: test_generation_report
+    path: docs/evidence/US-039-test-generation-report.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "TEST_WRITING: PASS. 117 new test cases in 9 classes plus two fixtures (UiLanguageTestData, UiLanguageHostExtensions); PermittedServiceWriteTests modified to name the seventh registry entry. OD-008 raised by this stage and resolved by the Owner (option 1): compile-only skeleton AppUser.ChooseUiLanguage + ChooseUiLanguageUseCase, bodies throw NotImplementedException, not in DI. Build 0/0. Full suite 2545 total, 2428 passed, 117 failed, 0 skipped: 115 new tests red for the expected reasons (NotImplemented, missing DI service, 404 on the absent action, no switcher, missing keys, dates), plus PermittedServiceWriteTests (registry entry) and the existing US-007 ReadOnlyEnforcementTests.TheApplicationAssembly_HasNoUnprotectedWritePath, which now sees the unregistered skeleton use case - the guardrail working, green once FR-007 registers it. No regression. Two new tests pass legitimately: the Ukrainian landing date (already dd.MM.yyyy) and a data guard. The fixtures fix the switcher markup contract for IMPLEMENTATION: one POST form per offered language with input name=language and input name=returnPath, aria-current=true on the current one, keys Layout.Language.Uk/.En/.Switcher on both hosts."
+  - "DB_DESIGN: PASS with NO schema change and no migration (OD-003) - deliberately not NOT_APPLICABLE, because the Story adds a new WRITE to two existing columns (app_user.ui_language, owner.ui_language, both already varchar(8) NOT NULL with check constraints IN (uk, en)). New domain method AppUser.ChooseUiLanguage(UiLanguage): sets the language and renews ConcurrencyStamp only - no SecurityStamp rotation (I-3); UpdatedAt by the existing TimestampInterceptor. Control Plane: the Services method assigns Owner.UiLanguage and OwnerStamps.New(). A concurrency conflict (e.g. sign-out in another tab) is not retried: 500, nothing stored. Tests may assert the EF model snapshot of both contexts is unchanged."
+  - "API_DESIGN: PASS. One operation, POST /account/language, identical on both hosts (installation: AuthenticatedUser policy; Control Plane: Owner policy); no GET, no /api/v1, no anonymous endpoint, no antiforgery exemption. 302 Post-Redirect-Get to the validated return path or /; 400 with Error.PageExpired for a bad token OR a bad code (no new error text); GET answers 404 or 405 and changes nothing; never 409 (BR-026). Decisions: the re-issue copies the principal and must NOT reuse the existing SignInAsync helpers as they stand, because they stamp a new sign-in time (AC-009); language and returnPath bound as strings, not the enum (enum binding accepts numbers and any case); TemporaryPasswordMiddleware admits /account/language (OD-007); the layout shows the switcher by endpoint, not just by User.Identity, since a signed-in user also sees the anonymous error page. No schema change expected for DB_DESIGN."
   - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-10-03T08:50:09Z (no comment): Specification v1 accepted; automated verdict PASS with no blocking findings. OD-001 … OD-006 arrived resolved; OD-007, raised by the Specification, was RESOLVED AT THIS GATE by the Owner as option 1 — the switcher is offered on the forced password change page, the temporary-password gate lets the language action through, and the re-issued session keeps the temporary-password claim (new FR-012). The correction was made at version 1 while still DRAFT, the US-015 precedent. Interpretations I-1 … I-7 accepted as written. The Specification is now APPROVED; open_decisions stays DRAFT."
   - "SPECIFICATION: PASS. 11 functional requirements, 3 validation rules, interpretations I-1 … I-7, the Story's AC-001 … AC-008 traced plus two derived criteria (AC-009 the re-issued session keeps the original sign-in time; AC-010 no open redirect). OD-001 … OD-006 arrived resolved and are carried into docs/decisions/US-039-open-decisions.md unchanged. No schema change (OD-003); trebovaniya.md and the PermittedServiceWrite enum do not change — only the PermittedServiceWrites registry gains the installation use case (BR-026 already names the write)."
   - "SPECIFICATION raised OD-007 (OPEN): whether the switcher is offered on the forced password change page of a Dean with a temporary password (US-012 FR-006 lets that session reach nothing else). Recommended option 1 — offer it; the middleware also lets the language action through. Must be resolved at HUMAN_SPEC_APPROVAL before API_DESIGN."
   - "SPECIFICATION interpretations for the gate to confirm: I-1 the session cookie is re-issued with only the language claim replaced; I-2 the re-issue KEEPS the original sign-in time so switching language cannot extend the 8-hour absolute limit (the existing password-change re-issue renews it — not touched here); I-3 the security stamp is not rotated, so other open sessions keep their language until next sign-in; I-4 return to the same page via a validated local path, landing page otherwise; I-5 no switcher on the error page; I-6 an invalid code is 400 with the error page. FR-009 lists two installation screens to correct (landing last-check time, Dean list last sign-in) and the Control Plane's InstallationDisplay as already compliant."
 started_at: 2026-10-03T08:47:44Z
-updated_at: 2026-10-03T08:50:09Z
+updated_at: 2026-10-03T09:37:15Z
 completed_at: null

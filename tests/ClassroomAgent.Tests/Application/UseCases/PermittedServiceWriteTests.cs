@@ -61,7 +61,8 @@ public sealed class PermittedServiceWriteTests(PostgreSqlFixture database)
         // (spec FR-013, FR-016), so the registry is named here rather than counted. US-012 added three more,
         // all SignInBookkeeping: the Dean's sign-in and the two password changes — BR-026 names sign-in
         // bookkeeping and "a Dean changing their own password" already, so the closed list itself did not
-        // grow (the enum is asserted unchanged above).
+        // grow (the enum is asserted unchanged above). US-039 added the language choice, which BR-026 also names
+        // ("выбор пользователем языка интерфейса"), again as SignInBookkeeping (US-039 spec FR-007).
         Assert.All(
             PermittedServiceWrites.Declarations,
             entry => Assert.Equal(typeof(GetLegitimacyModeQuery).Namespace, entry.Key.Namespace));
@@ -74,6 +75,7 @@ public sealed class PermittedServiceWriteTests(PostgreSqlFixture database)
                 "AccountSessionService",
                 "ChangeOwnPasswordUseCase",
                 "CheckLegitimacyUseCase",
+                "ChooseUiLanguageUseCase",
                 "CompleteGoogleSignInUseCase",
                 "CompleteTemporaryPasswordChangeUseCase",
                 "SignInDeanUseCase",

@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-039
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-10-03T08:46:05Z
-updated_at: 2026-10-03T08:49:18Z
+updated_at: 2026-10-03T08:57:02Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-039-choose-ui-language.md
@@ -32,6 +32,7 @@ the Owner on 2026-10-03 at HUMAN_SPEC_APPROVAL.
 | OD-005 An audit row for the choice | the Story | RESOLVED 2026-10-03 (option 1) |
 | OD-006 Dates and numbers on existing screens | the Story | RESOLVED 2026-10-03 (option 1) |
 | OD-007 The switcher on the forced password change page | the Specification | RESOLVED 2026-10-03 (option 1) |
+| OD-008 Compile-only skeleton created at TEST_WRITING | TEST_WRITING | RESOLVED 2026-10-03 (option 1) |
 
 ## OD-001 Where the language is chosen
 
@@ -132,3 +133,37 @@ of AC-001 and AC-004 for a temporary-password session.
 
 **Resolution:** option 1, decided by the Owner on 2026-10-03 at
 `HUMAN_SPEC_APPROVAL`.
+
+## OD-008 Compile-only skeleton created at TEST_WRITING
+
+Raised by TEST_WRITING. The tests of AC-003 (read-only mode proven in the
+Application layer, TC-5) and of the entity method must call types that do not
+exist yet. The test-writer may not modify production code, and no artifact says
+who creates them — the same gap US-005 OD-002, US-007 OD-003, US-011 OD-006,
+US-012 and US-015 each resolved for themselves.
+
+Options:
+
+1. **A compile-only skeleton**, as every earlier Story decided: only the types
+   the tests reference, every member throwing `NotImplementedException`,
+   nothing registered in dependency injection, so no existing behaviour changes:
+   - `Domain/Entities/AppUser.ChooseUiLanguage(UiLanguage language)`
+     (entity-model §1);
+   - `Application/UseCases/ChooseUiLanguageUseCase` with
+     `Task<UiLanguage?> ExecuteAsync(long accountId, string? languageCode,
+     CancellationToken cancellationToken)` — `null` when the code is refused
+     (VR-001) or the account does not exist; constructor
+     `(IAppUserRepository, IUnitOfWork, ServiceWriteScope)`.
+   The Control Plane needs no skeleton: its tests are HTTP-only. The
+   `PermittedServiceWrites` registry entry is **not** part of the skeleton —
+   IMPLEMENTATION adds it, and the registry test is red until then.
+2. Write the tests without compiling them, deferring part of the suite.
+3. Implement the production code during TEST_WRITING.
+
+Recommended: option 1. Option 2 breaks TC-1 and the red-phase rule; option 3
+writes the tests against finished code, which `AGENTS.md` forbids.
+
+Impact on the Specification: none — a stage mechanism, not a requirement.
+
+**Resolution:** option 1, decided by the Owner on 2026-10-03.
+

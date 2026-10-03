@@ -217,6 +217,14 @@ public sealed class AppUser
     }
 
     /// <summary>
+    /// The user's own choice of UI language (US-039 spec FR-004). Not a credential change: the security stamp is
+    /// not rotated (spec I-3).
+    /// </summary>
+    /// <remarks>US-039 OD-008: compile-only skeleton; IMPLEMENTATION writes the body.</remarks>
+    public void ChooseUiLanguage(UiLanguage language) =>
+        throw new NotImplementedException();
+
+    /// <summary>
     /// Ends every session issued so far: the stamp travels in the session cookie and is compared with this one on
     /// every request, so rotating it stops a cookie someone kept a copy of (US-008 AC-014, spec FR-016).
     /// </summary>
