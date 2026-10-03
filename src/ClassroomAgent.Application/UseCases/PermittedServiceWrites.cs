@@ -40,5 +40,9 @@ public static class PermittedServiceWrites
             // US-039 spec FR-007: BR-026 names "a user choosing their UI language" in the same entry as the password
             // changes, so the choice works in read-only mode as well. The closed list itself does not grow.
             [typeof(ChooseUiLanguageUseCase)] = PermittedServiceWrite.SignInBookkeeping,
+
+            // US-037 spec FR-011, BR-075: the retention purge and its audit event run in read-only mode too —
+            // retention is an obligation, and a suspended school must not keep data indefinitely.
+            [typeof(RunRetentionPurgeUseCase)] = PermittedServiceWrite.RetentionPurge,
         };
 }

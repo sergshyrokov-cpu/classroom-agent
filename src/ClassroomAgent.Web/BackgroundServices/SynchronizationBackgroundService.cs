@@ -38,9 +38,19 @@ public sealed partial class SynchronizationBackgroundService(
 
             while (true)
             {
+                var changed = runs.Changed;
                 if (runs.TryStartScheduledRun() || runs.TryStartRequestedRun())
                 {
                     await RunOnceAsync(stoppingToken);
+                }
+                else if (runs.IsPurging || changed.IsCompleted)
+                {
+                    // US-037 spec FR-014, OD-002: a run that falls due while the retention purge holds the gate starts
+                    // when the purge ends — it is not pushed back by a whole interval. The signal captured before the
+                    // attempt also covers a purge that ended between the attempt and this check (security review N-2):
+                    // the state changed, so the loop decides again instead of sleeping for an interval.
+                    await changed.WaitAsync(stoppingToken);
+                    continue;
                 }
 
                 var dueAt = timeProvider.GetUtcNow() + schedule.Interval;

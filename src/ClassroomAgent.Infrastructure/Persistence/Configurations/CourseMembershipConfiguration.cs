@@ -63,6 +63,11 @@ public sealed class CourseMembershipConfiguration : IEntityTypeConfiguration<Cou
             .HasDatabaseName("ix_course_membership_course_seen");
 
         builder.HasIndex(m => m.ParticipantId).HasDatabaseName("ix_course_membership_participant_id");
+
+        // US-037 db-design §3: the leaver purge looks for off-roster rows last seen before the cutoff, across courses.
+        builder.HasIndex(m => m.LastSeenAt)
+            .HasFilter("on_roster = false")
+            .HasDatabaseName("ix_course_membership_off_roster_last_seen");
     }
 
     private static string RoleCode(ClassroomRole value) => value switch

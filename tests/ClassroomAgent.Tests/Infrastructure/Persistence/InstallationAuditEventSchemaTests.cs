@@ -36,6 +36,11 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
                 "id bigint - NO -",
                 "occurred_at timestamp with time zone - NO -",
                 "outcome character varying 16 NO -",
+                "purged_accounts integer - YES -",
+                "purged_audit_rows integer - YES -",
+                "purged_courses integer - YES -",
+                "purged_leaver_memberships integer - YES -",
+                "purged_participants integer - YES -",
                 "refusal_category character varying 32 YES -",
                 "request_id character varying 128 YES -",
                 "target_id bigint - YES -",
@@ -82,6 +87,10 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
                 "ck_audit_event_actor_type",
                 "ck_audit_event_immutable",
                 "ck_audit_event_outcome",
+                "ck_audit_event_purge_actor",
+                "ck_audit_event_purge_counts",
+                "ck_audit_event_purge_counts_absent",
+                "ck_audit_event_purge_counts_non_negative",
                 "ck_audit_event_refusal_category",
                 "ck_audit_event_refusal_category_value",
                 "ck_audit_event_target",
@@ -90,16 +99,19 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
             checks.Where(c => c.StartsWith("ck_audit_event", StringComparison.Ordinal)));
     }
 
-    /// <summary>db-design 4.3, PC-7: no index beyond the primary key — the table is write-only in this Story.</summary>
+    /// <summary>
+    /// db-design 4.3, PC-7: the table was write-only until US-037, whose purge brings the one query that needs an
+    /// index — the delete by <c>occurred_at</c> (US-037 db-design §2.5). Nothing else.
+    /// </summary>
     [Fact]
-    public async Task TheTable_HasNoIndexBeyondItsPrimaryKey()
+    public async Task TheTable_HasOnlyThePrimaryKeyAndThePurgeIndex()
     {
         var ct = TestContext.Current.CancellationToken;
         await using var host = await InstallationTestHost.CreateAsync(database, ct);
 
         var indexes = await InstallationSchemaQueries.IndexNamesAsync(host, "audit_event", ct);
 
-        Assert.Equal(new[] { "pk_audit_event" }, indexes);
+        Assert.Equal(new[] { "ix_audit_event_occurred_at", "pk_audit_event" }, indexes);
     }
 
     /// <summary>db-design 4, PC-9: actor_id carries no foreign key — audit rows outlive the accounts they name.</summary>

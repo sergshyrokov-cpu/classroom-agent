@@ -48,7 +48,8 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
                 "workspace_connection",
             }.Order(StringComparer.Ordinal),
             tables.Order(StringComparer.Ordinal));
-        Assert.Equal(8, migrations.Count);
+        // US-037 adds no table: its migration amends audit_event and indexes course_membership (db-design §7).
+        Assert.Equal(9, migrations.Count);
         Assert.EndsWith("_InitialLegitimacyState", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_InitialAppUserAndAuditEvent", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_AddWorkspaceConnection", migrations[2], StringComparison.Ordinal);
@@ -57,6 +58,7 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
         Assert.EndsWith(SyncTestData.Migration, migrations[5], StringComparison.Ordinal);
         Assert.EndsWith(CourseTestData.Migration, migrations[6], StringComparison.Ordinal);
         Assert.EndsWith(CourseWorkTestData.Migration, migrations[7], StringComparison.Ordinal);
+        Assert.EndsWith("_AddRetentionPurge", migrations[8], StringComparison.Ordinal);
     }
 
     /// <summary>db-design 7.1: the migration seeds nothing — the first account appears when a person signs in.</summary>

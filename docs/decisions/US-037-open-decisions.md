@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-037
-version: 3
+version: 4
 status: DRAFT
 created_at: 2026-10-03T16:51:10Z
-updated_at: 2026-10-03T17:03:34Z
+updated_at: 2026-10-03T20:23:35Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-037-retention-purge.md
@@ -163,3 +163,24 @@ Impact on the Specification: none. This is a stage mechanism, plus names the
 Specification left to design.
 
 **Resolution:** option 1, decided by the Owner on 2026-10-03.
+
+---
+
+## Raised at HUMAN_PR_APPROVAL
+
+### OD-008 Upper bound of the retention period N
+
+Raised by the independent security review (finding N-3). `Retention:Years`
+accepts any whole number of 1 or more. Above roughly 2025, computing the cutoff
+(`now.AddYears(-N)`) throws, and the background service then stops the
+installation. No artifact bounds N from above.
+
+Options: (a) accept 1 … 100 years — a larger value refuses to start, as a
+missing or non-positive N already does; (b) leave N unbounded and only keep the
+purge from stopping the host.
+
+**Resolution:** (a), decided by the Owner on 2026-10-03 in the `/so:reject`
+comment at `HUMAN_PR_APPROVAL`: "верхняя граница Retention:Years = 100". The
+cutoff is computed inside the run's error handling as well. Carried into
+`trebovaniya.md` §5 by v81 (commit `2963455`), together with the new §7 item 27
+for finding N-1, which this Story does not decide.

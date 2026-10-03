@@ -4,26 +4,26 @@
 version: 1
 story: US-037
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
-attempt: 1
-last_invoked_skill: db-designer
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
+attempt: 2
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: 2026-10-03T17:00:02Z
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_PR_APPROVAL
+  recorded_at: 2026-10-03T20:47:04Z
+  decided_by: Serhii SHYROKOV (/so:approve)
 last_artifacts:
-  - type: database_design
-    path: docs/designs/database/US-037-db-design.md
-    version: 1
-  - type: entity_model
-    path: docs/designs/database/US-037-entity-model.md
-    version: 1
+  - type: security_review
+    path: docs/reviews/security/US-037-security-review.md
+    version: 2
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings: []
+non_blocking_findings:
+  - "Minor test hardenings open: M-1 (purged account cookie), M-2/N-4 (confinement test misses ExecuteSqlRaw, Remove, RemoveRange), N-5 (no test for the N-2 interleaving)."
+  - "N-1 is trebovaniya.md section 7 item 27 (v81), owned by the Owner."
 started_at: 2026-10-03T16:51:10Z
-updated_at: 2026-10-03T17:00:02Z
-completed_at: null
+updated_at: 2026-10-03T20:47:04Z
+completed_at: 2026-10-03T20:47:04Z

@@ -9,7 +9,8 @@ namespace ClassroomAgent.Infrastructure.Persistence.Configurations;
 /// Table <c>audit_event</c> exactly as US-008 db-design §4 defines it: the installation's own audit trail, not a
 /// copy of the Control Plane's. No column can carry a personal datum, <c>actor_id</c> carries no foreign key
 /// because audit rows outlive the accounts they name (PC-9, PC-11), and there is no index at all — the table is
-/// write-only until the audit viewer (EPIC-9) and the retention purge (EPIC-10) bring their own queries (PC-7).
+/// write-only until the audit viewer (EPIC-9) and the retention purge (US-037, EPIC-5) bring their own queries (PC-7).
+/// US-037 db-design §2 adds the purge row's five counts, its constraints and the one index the purge's delete needs.
 /// </summary>
 public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEvent>
 {
@@ -27,7 +28,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 "ck_audit_event_action",
                 "action IN ('admin_sign_in', 'workspace_connection_saved', 'access_check_run', "
                 + "'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', "
-                + "'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in')");
+                + "'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run')");
 
             // US-009 db-design §4.1: a refused action names WHAT was refused without naming a row that was never
             // created, so a target type without an id is now legal. An id without a type — an identifier belonging
@@ -51,6 +52,28 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
             // catches an update that passes through EF Core, because the interceptor stamps updated_at on a
             // Modified entity. It is not a defence against a hand-written UPDATE that rewrites both (db-design §4.2).
             table.HasCheckConstraint("ck_audit_event_immutable", "updated_at = created_at");
+
+            // US-037 db-design §2.4: the five counts belong to the purge row — all of them there, none anywhere else,
+            // never negative — and the purge row is the system's, with no target, no request and no refusal.
+            table.HasCheckConstraint(
+                "ck_audit_event_purge_counts",
+                "(action = 'retention_purge_run') = (purged_courses IS NOT NULL AND purged_leaver_memberships IS NOT NULL "
+                + "AND purged_participants IS NOT NULL AND purged_accounts IS NOT NULL AND purged_audit_rows IS NOT NULL)");
+            table.HasCheckConstraint(
+                "ck_audit_event_purge_counts_absent",
+                "action = 'retention_purge_run' OR (purged_courses IS NULL AND purged_leaver_memberships IS NULL "
+                + "AND purged_participants IS NULL AND purged_accounts IS NULL AND purged_audit_rows IS NULL)");
+            table.HasCheckConstraint(
+                "ck_audit_event_purge_counts_non_negative",
+                "(purged_courses IS NULL OR purged_courses >= 0) "
+                + "AND (purged_leaver_memberships IS NULL OR purged_leaver_memberships >= 0) "
+                + "AND (purged_participants IS NULL OR purged_participants >= 0) "
+                + "AND (purged_accounts IS NULL OR purged_accounts >= 0) "
+                + "AND (purged_audit_rows IS NULL OR purged_audit_rows >= 0)");
+            table.HasCheckConstraint(
+                "ck_audit_event_purge_actor",
+                "action <> 'retention_purge_run' OR (actor_type = 'system' AND target_type IS NULL "
+                + "AND target_id IS NULL AND outcome = 'succeeded' AND request_id IS NULL)");
         });
 
         builder.HasKey(e => e.Id).HasName("pk_audit_event");
@@ -82,8 +105,16 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
             .HasMaxLength(32)
             .HasConversion(v => NullableRefusalCategoryCode(v), code => NullableRefusalCategoryFromCode(code));
         builder.Property(e => e.RequestId).HasMaxLength(128);
+        builder.Property(e => e.PurgedCourses);
+        builder.Property(e => e.PurgedLeaverMemberships);
+        builder.Property(e => e.PurgedParticipants);
+        builder.Property(e => e.PurgedAccounts);
+        builder.Property(e => e.PurgedAuditRows);
         builder.Property(e => e.CreatedAt).IsRequired();
         builder.Property(e => e.UpdatedAt).IsRequired();
+
+        // US-037 db-design §2.5: the purge deletes by occurred_at once a day over a table that grows for N years.
+        builder.HasIndex(e => e.OccurredAt).HasDatabaseName("ix_audit_event_occurred_at");
     }
 
     private static string ActorTypeCode(AuditActorType value) => value switch
@@ -143,6 +174,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         AuditAction.DeanAccountPasswordReset => "dean_account_password_reset",
         AuditAction.DeanPasswordChanged => "dean_password_changed",
         AuditAction.DeanSignIn => "dean_sign_in",
+        AuditAction.RetentionPurgeRun => "retention_purge_run",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -157,6 +189,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         "dean_account_password_reset" => AuditAction.DeanAccountPasswordReset,
         "dean_password_changed" => AuditAction.DeanPasswordChanged,
         "dean_sign_in" => AuditAction.DeanSignIn,
+        "retention_purge_run" => AuditAction.RetentionPurgeRun,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 

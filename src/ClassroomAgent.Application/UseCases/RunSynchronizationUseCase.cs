@@ -3,6 +3,7 @@ using ClassroomAgent.Application.Models;
 using ClassroomAgent.Application.Ports;
 using ClassroomAgent.Domain.Entities;
 using ClassroomAgent.Domain.Enums;
+using ClassroomAgent.Domain.Rules;
 
 namespace ClassroomAgent.Application.UseCases;
 
@@ -362,7 +363,8 @@ public sealed class RunSynchronizationUseCase(
     /// <remarks>
     /// "Older than N" is strict, so a course whose last activity falls exactly on the boundary is imported (I-3).
     /// A course for which Google carries <b>no</b> date at all is imported too: refusing on absent evidence is the
-    /// failure mode OD-001 rejected, and it would hide a live course for ever.
+    /// failure mode OD-001 rejected, and it would hide a live course for ever. The rule itself is
+    /// <see cref="RetentionRule"/>, shared with the retention purge (US-037 spec FR-002).
     /// </remarks>
     private bool IsOlderThanRetention(
         CourseSnapshot snapshot,
@@ -370,24 +372,15 @@ public sealed class RunSynchronizationUseCase(
         IReadOnlyList<SubmissionSnapshot> submissionSnapshots,
         DateTimeOffset observedAt)
     {
-        DateTimeOffset? lastActivity = snapshot.Details.UpdateTime;
+        var lastActivity = RetentionRule.LatestActivity(
+            items.Items
+                .SelectMany(item => new[] { item.Details.CreationTime, item.Details.UpdateTime })
+                .Concat(submissionSnapshots.Select(submission => submission.UpdateTime))
+                .Prepend(snapshot.Details.UpdateTime));
 
-        foreach (var item in items.Items)
-        {
-            lastActivity = Later(lastActivity, item.Details.CreationTime);
-            lastActivity = Later(lastActivity, item.Details.UpdateTime);
-        }
-
-        foreach (var submission in submissionSnapshots)
-        {
-            lastActivity = Later(lastActivity, submission.UpdateTime);
-        }
-
-        return lastActivity is { } activity && activity < observedAt.AddYears(-retention.Years);
+        return lastActivity is { } activity
+               && RetentionRule.IsExpired(activity, RetentionRule.Cutoff(observedAt, retention.Years));
     }
-
-    private static DateTimeOffset? Later(DateTimeOffset? current, DateTimeOffset? candidate) =>
-        candidate is null ? current : current is null || candidate > current ? candidate : current;
 
     /// <summary>
     /// US-015 spec FR-003, FR-005, FR-010: the course's items of both Classroom resources, upserted on the

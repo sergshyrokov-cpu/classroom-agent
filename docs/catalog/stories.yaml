@@ -255,7 +255,7 @@ stories:
   - id: US-037
     epic: EPIC-5
     title: Retention purge of expired courses, leavers, accounts and audit rows
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: >
       Depends on US-015 (the teaching data it purges).
 

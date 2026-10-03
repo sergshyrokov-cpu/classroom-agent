@@ -62,7 +62,8 @@ public sealed class PermittedServiceWriteTests(PostgreSqlFixture database)
         // all SignInBookkeeping: the Dean's sign-in and the two password changes — BR-026 names sign-in
         // bookkeeping and "a Dean changing their own password" already, so the closed list itself did not
         // grow (the enum is asserted unchanged above). US-039 added the language choice, which BR-026 also names
-        // ("выбор пользователем языка интерфейса"), again as SignInBookkeeping (US-039 spec FR-007).
+        // ("выбор пользователем языка интерфейса"), again as SignInBookkeeping (US-039 spec FR-007). US-037 added the
+        // retention purge as RetentionPurge, a member BR-026 has listed since US-007 (spec FR-011, BR-075).
         Assert.All(
             PermittedServiceWrites.Declarations,
             entry => Assert.Equal(typeof(GetLegitimacyModeQuery).Namespace, entry.Key.Namespace));
@@ -78,6 +79,7 @@ public sealed class PermittedServiceWriteTests(PostgreSqlFixture database)
                 "ChooseUiLanguageUseCase",
                 "CompleteGoogleSignInUseCase",
                 "CompleteTemporaryPasswordChangeUseCase",
+                "RunRetentionPurgeUseCase",
                 "SignInDeanUseCase",
             },
             PermittedServiceWrites.Declarations.Keys.Select(k => k.Name).Order(StringComparer.Ordinal));

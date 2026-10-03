@@ -43,4 +43,10 @@ public enum AuditAction
     /// outcome tells the two apart and the refusal category says why (db-design §4.1).
     /// </summary>
     DeanSignIn,
+
+    /// <summary>
+    /// US-037 spec FR-010: one retention purge run, actor <c>system</c>, carrying only the five counts of
+    /// <see cref="Rules.RetentionPurgeCounts"/> (§5 v47, SC-11).
+    /// </summary>
+    RetentionPurgeRun,
 }

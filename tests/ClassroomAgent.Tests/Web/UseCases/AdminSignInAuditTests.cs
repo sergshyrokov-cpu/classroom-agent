@@ -84,7 +84,9 @@ public sealed class AdminSignInAuditTests(PostgreSqlFixture database)
 
         var rows = await host.AuditRowsAsJsonAsync(ct);
 
-        Assert.Equal(2, rows.Count);
+        // US-037: the retention purge may already have written its own row at start; it is checked for personal data
+        // with the rest, but it is not one of the two sign-ins counted here.
+        Assert.Equal(2, rows.Count(row => !row.Contains("retention_purge_run", StringComparison.Ordinal)));
         Assert.All(rows, row =>
         {
             Assert.DoesNotContain(SignInTestData.AdminEmail, row, StringComparison.OrdinalIgnoreCase);

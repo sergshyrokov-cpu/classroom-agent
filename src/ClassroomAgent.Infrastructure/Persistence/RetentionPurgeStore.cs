@@ -1,0 +1,81 @@
+using ClassroomAgent.Application.Models;
+using ClassroomAgent.Application.Ports;
+using Microsoft.EntityFrameworkCore;
+
+namespace ClassroomAgent.Infrastructure.Persistence;
+
+/// <summary>
+/// US-037 db-design §3 … §6: the purge's grouped read and set-based deletes over this scope's context. Every delete is
+/// a single statement that returns its affected-row count; none loads an entity, and none opens a transaction — the
+/// use case owns every boundary (AD-7). Children go before parents, because every foreign key is <c>Restrict</c>
+/// (PC-8): nothing here relies on a cascade.
+/// </summary>
+/// <remarks>
+/// These statements bypass <c>SaveChangesAsync</c> and therefore the read-only commit backstop (db-design §6). That is
+/// acceptable only because this store is used by the one use case declared as the BR-026 retention purge, and the
+/// architecture test keeps set-based deletes out of every other file.
+/// </remarks>
+public sealed class RetentionPurgeStore(ClassroomAgentDbContext db) : IRetentionPurgeStore
+{
+    public async Task<IReadOnlyList<CourseActivityDates>> GetCourseActivityDatesAsync(CancellationToken cancellationToken) =>
+        await db.Courses
+            .AsNoTracking()
+            .OrderBy(c => c.Id)
+            .Select(c => new CourseActivityDates(
+                c.Id,
+                c.UpdateTime,
+                c.CreatedAt,
+                db.CourseWorks.Where(w => w.CourseId == c.Id).Max(w => w.CreationTime),
+                db.CourseWorks.Where(w => w.CourseId == c.Id).Max(w => w.UpdateTime),
+                db.Submissions
+                    .Where(s => db.CourseWorks.Any(w => w.Id == s.CourseWorkId && w.CourseId == c.Id))
+                    .Max(s => s.UpdateTime)))
+            .ToListAsync(cancellationToken);
+
+    public async Task DeleteCourseAsync(long courseId, CancellationToken cancellationToken)
+    {
+        await db.Submissions
+            .Where(s => db.CourseWorks.Any(w => w.Id == s.CourseWorkId && w.CourseId == courseId))
+            .ExecuteDeleteAsync(cancellationToken);
+        await db.CourseWorks.Where(w => w.CourseId == courseId).ExecuteDeleteAsync(cancellationToken);
+        await db.CourseMemberships.Where(m => m.CourseId == courseId).ExecuteDeleteAsync(cancellationToken);
+        await db.Courses.Where(c => c.Id == courseId).ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<long>> GetCourseIdsWithExpiredLeaversAsync(
+        DateTimeOffset cutoff,
+        CancellationToken cancellationToken) =>
+        await db.CourseMemberships
+            .Where(m => !m.OnRoster && m.LastSeenAt < cutoff)
+            .Select(m => m.CourseId)
+            .Distinct()
+            .OrderBy(id => id)
+            .ToListAsync(cancellationToken);
+
+    public async Task<int> DeleteExpiredLeaversAsync(long courseId, DateTimeOffset cutoff, CancellationToken cancellationToken)
+    {
+        await db.Submissions
+            .Where(s => db.CourseWorks.Any(w => w.Id == s.CourseWorkId && w.CourseId == courseId)
+                        && db.CourseMemberships.Any(m => m.CourseId == courseId
+                                                         && m.ParticipantId == s.ParticipantId
+                                                         && !m.OnRoster
+                                                         && m.LastSeenAt < cutoff))
+            .ExecuteDeleteAsync(cancellationToken);
+        return await db.CourseMemberships
+            .Where(m => m.CourseId == courseId && !m.OnRoster && m.LastSeenAt < cutoff)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public Task<int> DeleteOrphanedParticipantsAsync(CancellationToken cancellationToken) =>
+        db.ClassroomParticipants
+            .Where(p => !db.CourseMemberships.Any(m => m.ParticipantId == p.Id))
+            .ExecuteDeleteAsync(cancellationToken);
+
+    public Task<int> DeleteExpiredAccountsAsync(DateTimeOffset cutoff, CancellationToken cancellationToken) =>
+        db.AppUsers
+            .Where(u => (u.LastSuccessfulSignInAt ?? u.CreatedAt) < cutoff)
+            .ExecuteDeleteAsync(cancellationToken);
+
+    public Task<int> DeleteAuditEventsOlderThanAsync(DateTimeOffset cutoff, CancellationToken cancellationToken) =>
+        db.AuditEvents.Where(e => e.OccurredAt < cutoff).ExecuteDeleteAsync(cancellationToken);
+}

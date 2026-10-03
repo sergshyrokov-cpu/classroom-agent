@@ -145,6 +145,10 @@ public sealed class AccessCheckAuditSchemaTests(PostgreSqlFixture database)
             new[]
             {
                 "action", "actor_id", "actor_role", "actor_type", "created_at", "id", "occurred_at", "outcome",
+
+                // US-037 db-design §2.2: the five counts of the retention purge's own row.
+                "purged_accounts", "purged_audit_rows", "purged_courses", "purged_leaver_memberships",
+                "purged_participants",
                 "refusal_category", "request_id", "target_id", "target_type", "updated_at",
             },
             columns);

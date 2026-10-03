@@ -63,6 +63,32 @@ public sealed class RetentionConfigurationTests(PostgreSqlFixture database)
         Assert.Contains(RetentionYearsKey, ExceptionText(exception), StringComparison.Ordinal);
     }
 
+    /// <summary>US-037 OD-008: above 100 years the installation refuses to start, as it does for a missing N.</summary>
+    [Fact]
+    public async Task RetentionYearsAboveTheBound_RefusesToStart()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var host = await InstallationTestHost.CreateAsync(database, ct);
+        host.Settings[RetentionYearsKey] = "101";
+
+        var exception = Assert.ThrowsAny<Exception>(host.Start);
+
+        Assert.Contains(RetentionYearsKey, ExceptionText(exception), StringComparison.Ordinal);
+    }
+
+    /// <summary>US-037 OD-008: the bound itself is accepted.</summary>
+    [Fact]
+    public async Task RetentionYearsOnTheBound_Starts()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var host = await InstallationTestHost.CreateAsync(database, ct);
+        host.Settings[RetentionYearsKey] = "100";
+
+        host.Start();
+
+        Assert.Equal(100, host.Services.GetRequiredService<RetentionSettings>().Years);
+    }
+
     [Fact]
     public async Task ValidRetentionYears_Starts()
     {

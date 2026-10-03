@@ -152,8 +152,9 @@ public sealed class DeanAccountAuditSchemaTests(PostgreSqlFixture database)
         var columns = await InstallationSchemaQueries.ColumnsAsync(host, "audit_event", ct);
 
         // Thirteen since US-008: id, occurred_at, actor_type, actor_id, actor_role, action,
-        // target_type, target_id, outcome, refusal_category, request_id, created_at, updated_at.
-        Assert.Equal(13, columns.Count);
+        // target_type, target_id, outcome, refusal_category, request_id, created_at, updated_at — plus, since
+        // US-037 (db-design §2.2), the five integer counts of the retention purge's row.
+        Assert.Equal(18, columns.Count);
     }
 
     private static string Text(Exception exception)

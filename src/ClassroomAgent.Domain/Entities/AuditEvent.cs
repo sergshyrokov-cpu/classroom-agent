@@ -1,4 +1,5 @@
 using ClassroomAgent.Domain.Enums;
+using ClassroomAgent.Domain.Rules;
 
 namespace ClassroomAgent.Domain.Entities;
 
@@ -47,9 +48,56 @@ public sealed class AuditEvent
     /// <summary>Ties the row to its log line (SC-11).</summary>
     public string? RequestId { get; private set; }
 
+    /// <summary>US-037 db-design §2.2: expired courses deleted by a purge run; null for every other action.</summary>
+    public int? PurgedCourses { get; private set; }
+
+    /// <summary>US-037 db-design §2.2: leavers' memberships deleted (spec FR-005 only); null for every other action.</summary>
+    public int? PurgedLeaverMemberships { get; private set; }
+
+    /// <summary>US-037 db-design §2.2: orphaned participants deleted; null for every other action.</summary>
+    public int? PurgedParticipants { get; private set; }
+
+    /// <summary>US-037 db-design §2.2: <c>app_user</c> rows deleted; null for every other action.</summary>
+    public int? PurgedAccounts { get; private set; }
+
+    /// <summary>US-037 db-design §2.2: <c>audit_event</c> rows deleted; null for every other action.</summary>
+    public int? PurgedAuditRows { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
+
+    /// <summary>
+    /// US-037 spec FR-010: the one row a retention purge run writes — actor <c>system</c>, no target, succeeded, no
+    /// request id, and the five counts. Rejects a negative count (VR-003).
+    /// </summary>
+    public static AuditEvent RetentionPurgeRun(RetentionPurgeCounts counts, DateTimeOffset occurredAt)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(counts.Courses, nameof(counts));
+        ArgumentOutOfRangeException.ThrowIfNegative(counts.LeaverMemberships, nameof(counts));
+        ArgumentOutOfRangeException.ThrowIfNegative(counts.Participants, nameof(counts));
+        ArgumentOutOfRangeException.ThrowIfNegative(counts.Accounts, nameof(counts));
+        ArgumentOutOfRangeException.ThrowIfNegative(counts.AuditRows, nameof(counts));
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.System,
+            ActorId = null,
+            ActorRole = null,
+            Action = AuditAction.RetentionPurgeRun,
+            TargetType = null,
+            TargetId = null,
+            Outcome = AuditOutcome.Succeeded,
+            RefusalCategory = null,
+            RequestId = null,
+            PurgedCourses = counts.Courses,
+            PurgedLeaverMemberships = counts.LeaverMemberships,
+            PurgedParticipants = counts.Participants,
+            PurgedAccounts = counts.Accounts,
+            PurgedAuditRows = counts.AuditRows,
+        };
+    }
 
     /// <summary>A successful Admin sign-in, attributed to the account it created or reused (db-design §4.4).</summary>
     public static AuditEvent AdminSignInSucceeded(long appUserId, DateTimeOffset occurredAt, string? requestId) =>

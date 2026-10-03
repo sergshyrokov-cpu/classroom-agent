@@ -144,9 +144,15 @@ public static class InstallationServices
         // US-017 spec FR-007: the "Last synchronization" block of the connection page. It reads and writes
         // nothing, so it needs no guard and no unit of work.
         services.AddScoped<GetLastSynchronizationQuery>();
+
+        // US-037: the daily retention purge, its store — the only set-based deletes of the installation (db-design
+        // §6) — and its background service, which shares SyncRunCoordinator with synchronization (spec FR-014).
+        services.AddScoped<IRetentionPurgeStore, RetentionPurgeStore>();
+        services.AddScoped<RunRetentionPurgeUseCase>();
         services.AddHostedService<StartupSelfCheckBackgroundService>();
         services.AddHostedService<LegitimacyCheckBackgroundService>();
         services.AddHostedService<SynchronizationBackgroundService>();
+        services.AddHostedService<RetentionPurgeBackgroundService>();
         return services;
     }
 

@@ -228,12 +228,17 @@ public sealed class InstallationTestHost : IAsyncDisposable
                 r.GetFieldValue<DateTimeOffset>(12)),
             cancellationToken);
 
+    /// <summary>
+    /// The audit rows of user and service actions, <b>without</b> the retention purge's own rows (US-037 OD-007): the
+    /// purge runs at every host start and writes one, which has nothing to do with the action a test is about. The
+    /// purge tests read their rows through <see cref="RetentionPurgeHost.PurgeAuditRowsAsync"/>.
+    /// </summary>
     public Task<IReadOnlyList<InstallationAuditRow>> AuditRowsAsync(CancellationToken cancellationToken) =>
         QueryAsync(
             """
             SELECT id, occurred_at, actor_type, actor_id, actor_role, action, target_type, target_id,
                    outcome, refusal_category, request_id, created_at, updated_at
-            FROM audit_event ORDER BY id
+            FROM audit_event WHERE action <> 'retention_purge_run' ORDER BY id
             """,
             r => new InstallationAuditRow(
                 r.GetInt64(0),

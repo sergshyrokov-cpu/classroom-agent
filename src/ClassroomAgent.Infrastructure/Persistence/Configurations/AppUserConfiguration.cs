@@ -69,8 +69,8 @@ public sealed class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
         builder.Property(u => u.UpdatedAt).IsRequired();
 
         // One account per address, enforced by the database and not only by a check before insert (AC-007). It
-        // is also the only lookup this Story performs, so PC-7 needs no second index; an index on
-        // last_successful_sign_in_at belongs to the retention purge (EPIC-10), with its query.
+        // is also the only lookup this Story performs, so PC-7 needs no second index. The retention purge (US-037,
+        // db-design §5) deliberately adds none either: the table holds a handful of accounts.
         builder.HasIndex(u => u.NormalizedEmail).IsUnique().HasDatabaseName("uq_app_user_normalized_email");
     }
 

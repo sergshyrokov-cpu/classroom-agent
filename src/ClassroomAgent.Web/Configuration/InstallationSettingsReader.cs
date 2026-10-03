@@ -59,6 +59,9 @@ public static class InstallationSettingsReader
     /// </summary>
     public const string RetentionYearsKey = "Retention:Years";
 
+    /// <summary>US-037 OD-008: the largest retention period an installation accepts.</summary>
+    public const int MaxRetentionYears = 100;
+
     /// <summary>US-013 spec I-6: one hour when <see cref="SyncIntervalKey"/> is unset, as DC-3 documents it.</summary>
     public static readonly TimeSpan DefaultSyncInterval = TimeSpan.FromMinutes(60);
 
@@ -88,15 +91,20 @@ public static class InstallationSettingsReader
     /// <summary>
     /// VR-008: a positive whole number of years. Absent, unparsable or non-positive stops the start, because the
     /// school's retention period is an obligation the product enforces and there is nothing safe to assume
-    /// (DC-3, PC-11, §5).
+    /// (DC-3, PC-11, §5). US-037 OD-008: at most <see cref="MaxRetentionYears"/>, so the purge's cutoff is always a
+    /// representable date.
     /// </summary>
     private static int RetentionYears(IConfiguration configuration)
     {
         var configured = Required(configuration, RetentionYearsKey).Trim();
 
-        if (!int.TryParse(configured, NumberStyles.None, CultureInfo.InvariantCulture, out var years) || years < 1)
+        if (!int.TryParse(configured, NumberStyles.None, CultureInfo.InvariantCulture, out var years)
+            || years < 1
+            || years > MaxRetentionYears)
         {
-            throw InstallationSettingException.Invalid(RetentionYearsKey, "expected a whole number of years, 1 or more");
+            throw InstallationSettingException.Invalid(
+                RetentionYearsKey,
+                "expected a whole number of years, from 1 to " + MaxRetentionYears.ToString(CultureInfo.InvariantCulture));
         }
 
         return years;

@@ -10,6 +10,10 @@ namespace ClassroomAgent.Web.BackgroundServices;
 /// A request arriving during a run is <b>remembered</b>, once however many arrive, and becomes startable as soon
 /// as the running one finishes. The shape follows <see cref="PushCheckCoordinator"/>, which does the same job
 /// for US-006, without its minimum interval: a synchronization request carries no such rule.
+/// <para>
+/// US-037 spec FR-014, OD-002: the retention purge takes the same gate, so a purge and a synchronization run never
+/// overlap. <see cref="IsRunning"/> keeps meaning "a synchronization run" — readiness reads it (API design §3).
+/// </para>
 /// </remarks>
 public sealed class SyncRunCoordinator
 {
@@ -17,6 +21,7 @@ public sealed class SyncRunCoordinator
     private TaskCompletionSource _changed = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private bool _running;
     private bool _requested;
+    private bool _purging;
 
     /// <summary>A task that completes the next time the state changes.</summary>
     public Task Changed
@@ -42,6 +47,18 @@ public sealed class SyncRunCoordinator
         }
     }
 
+    /// <summary>US-037 spec FR-014: whether the retention purge holds the gate right now.</summary>
+    public bool IsPurging
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _purging;
+            }
+        }
+    }
+
     /// <summary>Whether an out-of-schedule request is remembered and waiting to start.</summary>
     public bool IsRequested
     {
@@ -49,7 +66,7 @@ public sealed class SyncRunCoordinator
         {
             lock (_gate)
             {
-                return _requested && !_running;
+                return _requested && !_running && !_purging;
             }
         }
     }
@@ -62,7 +79,7 @@ public sealed class SyncRunCoordinator
     {
         lock (_gate)
         {
-            if (_running || !_requested)
+            if (_running || _purging || !_requested)
             {
                 return false;
             }
@@ -98,11 +115,40 @@ public sealed class SyncRunCoordinator
         }
     }
 
+    /// <summary>
+    /// US-037 spec FR-014: the purge begins here unless a synchronization run is in progress; while it runs, no
+    /// synchronization run starts, and a request made meanwhile stays remembered.
+    /// </summary>
+    public bool TryStartPurge()
+    {
+        lock (_gate)
+        {
+            if (_running || _purging)
+            {
+                return false;
+            }
+
+            _purging = true;
+            Signal();
+            return true;
+        }
+    }
+
+    /// <summary>US-037 spec FR-014: the purge that was started has finished, whatever its outcome.</summary>
+    public void PurgeCompleted()
+    {
+        lock (_gate)
+        {
+            _purging = false;
+            Signal();
+        }
+    }
+
     private bool TryStart(bool clearRequest)
     {
         lock (_gate)
         {
-            if (_running)
+            if (_running || _purging)
             {
                 return false;
             }
