@@ -117,12 +117,16 @@ public static class InstallationServices
         services.AddScoped<ISyncStateRepository, SyncStateRepository>();
 
         // US-014 spec FR-002, FR-020: the Classroom port beside the existing Google adapter, over one shared
-        // transport so nothing but Google is reachable (SC-13). It logs nothing itself — no Google error text
-        // reaches a log line (SC-10) — so it takes no logger.
+        // transport so nothing but Google is reachable (SC-13). US-017 spec FR-002, FR-003: it repeats a transient
+        // failure itself, so it takes the clock, the jitter and a logger; the logger never sees Google error text (SC-10).
+        services.AddSingleton<IGoogleRetryJitter, RandomGoogleRetryJitter>();
         services.AddSingleton<IClassroomReader>(provider => new GoogleClassroomReader(
             provider.GetRequiredService<ISecretStore>(),
             provider.GetRequiredService<GoogleServiceAccountSettings>(),
-            new SocketsHttpHandler { AllowAutoRedirect = false, UseCookies = false }));
+            new SocketsHttpHandler { AllowAutoRedirect = false, UseCookies = false },
+            provider.GetRequiredService<TimeProvider>(),
+            provider.GetRequiredService<IGoogleRetryJitter>(),
+            provider.GetRequiredService<ILogger<GoogleClassroomReader>>()));
         services.AddScoped<ICourseRepository, CourseRepository>();
         services.AddScoped<IClassroomParticipantRepository, ClassroomParticipantRepository>();
         services.AddScoped<ICourseMembershipRepository, CourseMembershipRepository>();
@@ -136,6 +140,10 @@ public static class InstallationServices
         services.AddSingleton(new RetentionSettings(settings.RetentionYears));
 
         services.AddScoped<RunSynchronizationUseCase>();
+
+        // US-017 spec FR-007: the "Last synchronization" block of the connection page. It reads and writes
+        // nothing, so it needs no guard and no unit of work.
+        services.AddScoped<GetLastSynchronizationQuery>();
         services.AddHostedService<StartupSelfCheckBackgroundService>();
         services.AddHostedService<LegitimacyCheckBackgroundService>();
         services.AddHostedService<SynchronizationBackgroundService>();

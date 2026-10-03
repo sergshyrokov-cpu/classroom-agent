@@ -60,9 +60,10 @@ public sealed class RunSynchronizationUseCase(
         }
 
         var state = await BeginAsync(runId, cancellationToken);
+        var import = new ImportProgress();
         try
         {
-            var import = await ImportCoursesAsync(impersonationUser, cancellationToken);
+            await ImportCoursesAsync(impersonationUser, import, cancellationToken);
             state.CompleteRun(timeProvider.GetUtcNow(), import.ProcessedCount);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return SynchronizationRunOutcome.Ran(
@@ -72,7 +73,9 @@ public sealed class RunSynchronizationUseCase(
                 import.SkippedCourses,
                 import.MembershipsMarkedOffRoster,
                 import.CoursesSkippedByAge,
-                import.UnrecognisedSubmissions);
+                import.UnrecognisedSubmissions,
+                import.CoursesGone,
+                import.CoursesWithBlankName);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -81,17 +84,30 @@ public sealed class RunSynchronizationUseCase(
         }
         catch (Exception failure)
         {
-            state.FailRun(timeProvider.GetUtcNow(), 0, Diagnosis(failure));
+            // US-017 spec FR-005, FR-006: the run stops; the courses committed before the stop stay and are counted
+            // (I-5). The stored value is a code of the closed list, never the exception's own message or type
+            // (SC-10); the type name travels in the outcome for the host's one Error line (spec FR-010).
+            var diagnosis = DiagnosisOf(failure);
+            state.FailRun(timeProvider.GetUtcNow(), import.ProcessedCount, diagnosis);
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            return SynchronizationRunOutcome.Ran(runId, 0, state.LastError);
+            return SynchronizationRunOutcome.RanAndFailed(
+                runId,
+                import.ProcessedCount,
+                diagnosis,
+                diagnosis == SyncDiagnosis.Unexpected ? failure.GetType().Name : null,
+                import.SkippedCourses,
+                import.CoursesSkippedByAge,
+                import.CoursesGone,
+                import.CoursesWithBlankName);
         }
     }
 
     /// <summary>
-    /// A category and a short sentence, never the exception's own message: SC-10 forbids a raw error text, and a
-    /// Google error object would be the worst of them (US-013 spec FR-008, S-06).
+    /// The adapter's own diagnosis when it classified the failure; anything else, including a classified failure
+    /// that carries none, is <see cref="SyncDiagnosis.Unexpected"/> (US-017 spec FR-006).
     /// </summary>
-    private static string Diagnosis(Exception failure) => "RunFailed:" + failure.GetType().Name;
+    private static SyncDiagnosis DiagnosisOf(Exception failure) =>
+        failure is GoogleReadFailedException { Diagnosis: { } diagnosis } ? diagnosis : SyncDiagnosis.Unexpected;
 
     /// <summary>
     /// US-014 spec VR-002, OD-010: the five values <c>trebovaniya.md</c> §3 lists, as Classroom spells them.
@@ -163,18 +179,18 @@ public sealed class RunSynchronizationUseCase(
 
     /// <summary>
     /// US-014 spec FR-003, FR-004, FR-012: every course of every page, each with both of its rosters, committed one
-    /// course at a time. A read that fails propagates, leaving the courses already committed complete (FR-014).
+    /// course at a time. A read that fails propagates, leaving the courses already committed complete (FR-014), except
+    /// a course Classroom reports gone, which is skipped (US-017 spec FR-005). What was done so far is kept in
+    /// <paramref name="progress"/>, so a failed run can still report the courses committed before it stopped.
     /// </summary>
-    private async Task<ImportResult> ImportCoursesAsync(string impersonationUser, CancellationToken cancellationToken)
+    private async Task ImportCoursesAsync(
+        string impersonationUser,
+        ImportProgress progress,
+        CancellationToken cancellationToken)
     {
         // One instant for every observation of the run, so "seen in the same run" is expressible in a query
         // (spec VR-006, I-8).
         var observedAt = timeProvider.GetUtcNow();
-        var processedCount = 0;
-        var markedOffRoster = 0;
-        var skipped = new List<SkippedCourse>();
-        var agedOut = new List<string>();
-        var unrecognisedSubmissions = new List<UnrecognisedSubmission>();
 
         await foreach (var snapshot in classroom.ReadCoursesAsync(impersonationUser, cancellationToken)
             .WithCancellation(cancellationToken))
@@ -183,21 +199,42 @@ public sealed class RunSynchronizationUseCase(
             {
                 // The one course is skipped and the run completes with the others (spec FR-003, OD-010). It is not
                 // counted, so the counter never overstates what was imported (I-5).
-                skipped.Add(new SkippedCourse(snapshot.GoogleId, snapshot.State));
+                progress.SkippedCourses.Add(new SkippedCourse(snapshot.GoogleId, snapshot.State));
                 continue;
             }
 
-            // Outside the transaction on purpose: a roster read that fails leaves the roster unknown, so that
-            // course is not committed and none of its memberships is marked off the roster (spec FR-010, I-6).
-            var roster = await classroom.ReadRosterAsync(impersonationUser, snapshot.GoogleId, cancellationToken);
+            if (string.IsNullOrWhiteSpace(snapshot.Details.Name))
+            {
+                // US-017 spec FR-012: skipped before its reads and its transaction, so nothing of it is written and
+                // a stored course keeps the name it has. Not counted (I-5).
+                progress.CoursesWithBlankName.Add(snapshot.GoogleId);
+                continue;
+            }
 
-            // US-015 spec FR-003, FR-004: the course's items and its submissions, both read before anything is
-            // written — which is also what lets FR-011 judge an unknown course's age from Google's data alone.
-            var items = await classroom.ReadCourseWorkAsync(impersonationUser, snapshot.GoogleId, cancellationToken);
-            var submissionSnapshots = await classroom.ReadSubmissionsAsync(
-                impersonationUser,
-                snapshot.GoogleId,
-                cancellationToken);
+            CourseRoster roster;
+            CourseWorkPage items;
+            IReadOnlyList<SubmissionSnapshot> submissionSnapshots;
+            try
+            {
+                // Outside the transaction on purpose: a roster read that fails leaves the roster unknown, so that
+                // course is not committed and none of its memberships is marked off the roster (spec FR-010, I-6).
+                roster = await classroom.ReadRosterAsync(impersonationUser, snapshot.GoogleId, cancellationToken);
+
+                // US-015 spec FR-003, FR-004: the course's items and its submissions, both read before anything is
+                // written, which is also what lets FR-011 judge an unknown course's age from Google's data alone.
+                items = await classroom.ReadCourseWorkAsync(impersonationUser, snapshot.GoogleId, cancellationToken);
+                submissionSnapshots = await classroom.ReadSubmissionsAsync(
+                    impersonationUser,
+                    snapshot.GoogleId,
+                    cancellationToken);
+            }
+            catch (GoogleReadFailedException gone) when (gone.Kind == GoogleReadFailureKind.CourseGone)
+            {
+                // US-017 spec FR-005: the course vanished between the listing and its reads. Every read precedes the
+                // transaction, so nothing of it is written and a stored copy stays as it was.
+                progress.CoursesGone.Add(snapshot.GoogleId);
+                continue;
+            }
 
             var result = default(CourseResult);
             await unitOfWork.ExecuteInTransactionAsync(
@@ -215,16 +252,14 @@ public sealed class RunSynchronizationUseCase(
             {
                 // US-015 spec FR-011, I-5: nothing was written and the course is not counted, so the counter never
                 // claims data the installation does not hold. The host writes the one line that makes it visible.
-                agedOut.Add(snapshot.GoogleId);
+                progress.CoursesSkippedByAge.Add(snapshot.GoogleId);
                 continue;
             }
 
-            markedOffRoster += result.MembershipsMarkedOffRoster;
-            unrecognisedSubmissions.AddRange(result.UnrecognisedSubmissions);
-            processedCount++;
+            progress.MembershipsMarkedOffRoster += result.MembershipsMarkedOffRoster;
+            progress.UnrecognisedSubmissions.AddRange(result.UnrecognisedSubmissions);
+            progress.ProcessedCount++;
         }
-
-        return new ImportResult(processedCount, skipped, markedOffRoster, agedOut, unrecognisedSubmissions);
     }
 
     /// <summary>
@@ -548,13 +583,26 @@ public sealed class RunSynchronizationUseCase(
         return resolved;
     }
 
-    /// <summary>What the import did, for the outcome the host logs (spec FR-013, FR-016).</summary>
-    private sealed record ImportResult(
-        int ProcessedCount,
-        IReadOnlyList<SkippedCourse> SkippedCourses,
-        int MembershipsMarkedOffRoster,
-        IReadOnlyList<string> CoursesSkippedByAge,
-        IReadOnlyList<UnrecognisedSubmission> UnrecognisedSubmissions);
+    /// <summary>
+    /// What the import did so far, for the outcome the host logs (spec FR-013, FR-016). A run that stops part-way
+    /// still reports the courses it committed and the ones it skipped (US-017 spec I-5).
+    /// </summary>
+    private sealed class ImportProgress
+    {
+        public int ProcessedCount { get; set; }
+
+        public int MembershipsMarkedOffRoster { get; set; }
+
+        public List<SkippedCourse> SkippedCourses { get; } = [];
+
+        public List<string> CoursesSkippedByAge { get; } = [];
+
+        public List<UnrecognisedSubmission> UnrecognisedSubmissions { get; } = [];
+
+        public List<string> CoursesGone { get; } = [];
+
+        public List<string> CoursesWithBlankName { get; } = [];
+    }
 
     /// <summary>What one course's transaction did (US-015 spec FR-011, FR-016, OD-005).</summary>
     private readonly record struct CourseResult(

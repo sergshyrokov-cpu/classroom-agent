@@ -15,7 +15,7 @@ namespace ClassroomAgent.Domain.Entities;
 /// </remarks>
 public sealed class SyncState
 {
-    /// <summary>The longest error the row stores; a longer message is truncated (db-design §3.3).</summary>
+    /// <summary>The longest error the row stores (db-design §3.3); a diagnosis name is far shorter.</summary>
     public const int MaxErrorLength = 512;
 
     private SyncState()
@@ -35,7 +35,7 @@ public sealed class SyncState
 
     public int ProcessedCount { get; private set; }
 
-    /// <summary>Category and short message of the last failure; null unless the run failed.</summary>
+    /// <summary>The name of the <see cref="SyncDiagnosis"/> of the last failure; null unless the run failed.</summary>
     public string? LastError { get; private set; }
 
     /// <summary>Null until a run completes; never written by a failing run (spec FR-008).</summary>
@@ -67,20 +67,21 @@ public sealed class SyncState
         LastSuccessfulRunAt = finishedAt;
     }
 
-    /// <summary>Records the failure and leaves <see cref="LastSuccessfulRunAt"/> untouched (spec FR-008).</summary>
-    public void FailRun(DateTimeOffset finishedAt, int processedCount, string error)
+    /// <summary>
+    /// Records the failure with its diagnosis (US-017 spec FR-006, entity model §2) and leaves
+    /// <see cref="LastSuccessfulRunAt"/> untouched (spec FR-008). The diagnosis is stored by name; a value the enum
+    /// does not declare is refused and the state is unchanged.
+    /// </summary>
+    public void FailRun(DateTimeOffset finishedAt, int processedCount, SyncDiagnosis diagnosis)
     {
-        if (string.IsNullOrWhiteSpace(error))
+        if (!Enum.IsDefined(diagnosis))
         {
-            throw new ArgumentException("A failed run carries a diagnosis.", nameof(error));
+            throw new ArgumentOutOfRangeException(nameof(diagnosis), diagnosis, null);
         }
 
         Finish(finishedAt, processedCount);
         Status = SyncRunStatus.Failed;
-
-        // Truncated, not refused: a verbose diagnosis must not make the failure fail again at the commit
-        // (db-design §3.3).
-        LastError = error.Length > MaxErrorLength ? error[..MaxErrorLength] : error;
+        LastError = diagnosis.ToString();
     }
 
     private void Begin(Guid runId, DateTimeOffset startedAt)

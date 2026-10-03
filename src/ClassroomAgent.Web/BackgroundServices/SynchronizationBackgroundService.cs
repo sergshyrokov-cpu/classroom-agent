@@ -1,5 +1,6 @@
 using ClassroomAgent.Application.Models;
 using ClassroomAgent.Application.UseCases;
+using ClassroomAgent.Domain.Enums;
 using ClassroomAgent.Web.Configuration;
 
 namespace ClassroomAgent.Web.BackgroundServices;
@@ -11,8 +12,8 @@ namespace ClassroomAgent.Web.BackgroundServices;
 /// or the host.
 /// </summary>
 /// <remarks>
-/// The interval is the same after a success and after a failure (OD-003): retrying the call that actually failed
-/// is US-017's business. A run skipped because of read-only mode or a missing connection writes nothing and says
+/// The interval is the same after a success and after a failure (OD-003); retrying the call that actually failed
+/// is the Google adapter's business (US-017). A run skipped because of read-only mode or a missing connection writes nothing and says
 /// so in one line (OD-005) — the closed list of BR-026 permits no synchronization write.
 /// </remarks>
 public sealed partial class SynchronizationBackgroundService(
@@ -168,18 +169,14 @@ public sealed partial class SynchronizationBackgroundService(
         {
             LogRunSkipped(logger, runId, "Connection:" + state);
         }
-        else if (outcome.Failed)
-        {
-            LogRunFailed(logger, runId, outcome.Error ?? string.Empty);
-        }
         else
         {
-            // US-014 spec FR-003, OD-010: one Warning line per skipped course — not Information, so it does not
-            // sink into a run's ordinary lines — carrying the unrecognised state and the course's Google id,
-            // never its name (SC-10).
-            foreach (var skipped in outcome.SkippedCourses)
+            LogSkippedCourses(runId, outcome);
+
+            if (outcome.Failed)
             {
-                LogCourseSkipped(logger, runId, skipped.GoogleId, skipped.State);
+                LogFailure(runId, outcome);
+                return;
             }
 
             // US-015 spec VR-004, OD-005: one Warning line per submission whose state Classroom reported outside
@@ -187,18 +184,69 @@ public sealed partial class SynchronizationBackgroundService(
             // — so this line is what makes the unfamiliar value discoverable. Two identifiers, nothing else (SC-10).
             foreach (var unrecognised in outcome.UnrecognisedSubmissions)
             {
-                LogSubmissionStateUnrecognised(logger, runId, unrecognised.GoogleId, unrecognised.State);
+                LogSubmissionStateUnrecognised(
+                    logger,
+                    runId,
+                    GoogleLogValue.Bounded(unrecognised.GoogleId),
+                    GoogleLogValue.Bounded(unrecognised.State));
             }
 
             // US-015 spec FR-011, I-5: SyncState has one counter and cannot carry a skipped count, so a course the
             // age rule left unimported is visible only here. Information, not Warning: it is the rule working.
             foreach (var googleId in outcome.CoursesSkippedByAge)
             {
-                LogCourseSkippedByAge(logger, runId, googleId);
+                LogCourseSkippedByAge(logger, runId, GoogleLogValue.Bounded(googleId));
             }
 
             LogRunCompleted(logger, runId, outcome.ProcessedCount ?? 0, outcome.MembershipsMarkedOffRoster);
         }
+    }
+
+    /// <summary>
+    /// One Warning line per skipped course — not Information, so it does not sink into a run's ordinary lines —
+    /// carrying the Google id and, for an unrecognised state, the state; never the course's name (SC-10). Reported
+    /// whether the run completed or stopped later, because the skip happened either way. Every Google-supplied
+    /// value is bounded (US-017 spec FR-011, I-4).
+    /// </summary>
+    private void LogSkippedCourses(Guid runId, SynchronizationRunOutcome outcome)
+    {
+        // US-014 spec FR-003, OD-010: an unrecognised state.
+        foreach (var skipped in outcome.SkippedCourses)
+        {
+            LogCourseSkipped(
+                logger,
+                runId,
+                GoogleLogValue.Bounded(skipped.GoogleId),
+                GoogleLogValue.Bounded(skipped.State));
+        }
+
+        // US-017 spec FR-005, FR-010: Classroom reported the course gone.
+        foreach (var googleId in outcome.CoursesGone)
+        {
+            LogCourseGone(logger, runId, GoogleLogValue.Bounded(googleId));
+        }
+
+        // US-017 spec FR-012, FR-010: the course's name is blank.
+        foreach (var googleId in outcome.CoursesWithBlankName)
+        {
+            LogCourseNameBlank(logger, runId, GoogleLogValue.Bounded(googleId));
+        }
+    }
+
+    /// <summary>
+    /// US-017 spec FR-010, OD-010: a run stopped by a final transient failure is Google's trouble and is a Warning;
+    /// a configuration or unexpected stop is an Error. The diagnosis code is a closed-list name; an unexpected
+    /// failure also carries the exception <b>type</b> name — never a message (SC-10).
+    /// </summary>
+    private void LogFailure(Guid runId, SynchronizationRunOutcome outcome)
+    {
+        var diagnosis = outcome.Diagnosis ?? SyncDiagnosis.Unexpected;
+        LogRunFailed(
+            logger,
+            diagnosis == SyncDiagnosis.GoogleUnavailable ? LogLevel.Warning : LogLevel.Error,
+            runId,
+            diagnosis.ToString(),
+            diagnosis == SyncDiagnosis.Unexpected ? outcome.UnexpectedExceptionType ?? "unknown" : "none");
     }
 
     [LoggerMessage(
@@ -248,12 +296,32 @@ public sealed partial class SynchronizationBackgroundService(
         string courseGoogleId,
         string courseState);
 
+    // One method for the one event: the level is the caller's (Warning for GoogleUnavailable, Error otherwise), because
+    // the generator allows one method per event name (SYSLIB1025).
     [LoggerMessage(
         EventId = 5123,
         EventName = "SyncRunFailed",
-        Level = LogLevel.Error,
-        Message = "Synchronization run {RunId} failed: {Diagnosis}")]
-    private static partial void LogRunFailed(ILogger logger, Guid runId, string diagnosis);
+        Message = "Synchronization run {RunId} failed: {Diagnosis}, exception type {ExceptionType}")]
+    private static partial void LogRunFailed(
+        ILogger logger,
+        LogLevel level,
+        Guid runId,
+        string diagnosis,
+        string exceptionType);
+
+    [LoggerMessage(
+        EventId = 5130,
+        EventName = "SyncCourseGone",
+        Level = LogLevel.Warning,
+        Message = "Synchronization run {RunId} skipped course {CourseGoogleId}: Classroom reports it gone")]
+    private static partial void LogCourseGone(ILogger logger, Guid runId, string courseGoogleId);
+
+    [LoggerMessage(
+        EventId = 5131,
+        EventName = "SyncCourseNameBlank",
+        Level = LogLevel.Warning,
+        Message = "Synchronization run {RunId} skipped course {CourseGoogleId}: its name is blank")]
+    private static partial void LogCourseNameBlank(ILogger logger, Guid runId, string courseGoogleId);
 
     [LoggerMessage(
         EventId = 5124,

@@ -1,3 +1,5 @@
+using ClassroomAgent.Domain.Enums;
+
 namespace ClassroomAgent.Application.Models;
 
 /// <summary>
@@ -9,6 +11,11 @@ namespace ClassroomAgent.Application.Models;
 /// US-014 adds what the host must log about the import but the Application layer cannot log itself: the courses a
 /// run skipped because of an unrecognised state (spec FR-003, OD-010) and how many memberships it marked off a
 /// roster (spec FR-016). Both are counters and identifiers only, never personal data (SC-10).
+/// <para>
+/// US-017 adds what the host logs about a failure: the diagnosis a failed run stored (spec FR-006), the exception
+/// <b>type</b> name of an unexpected one (spec FR-010 — never its message), and the courses skipped because they
+/// are gone or have a blank name (spec FR-005, FR-012).
+/// </para>
 /// </remarks>
 public sealed class SynchronizationRunOutcome
 {
@@ -21,7 +28,11 @@ public sealed class SynchronizationRunOutcome
         IReadOnlyList<SkippedCourse>? skippedCourses = null,
         int membershipsMarkedOffRoster = 0,
         IReadOnlyList<string>? coursesSkippedByAge = null,
-        IReadOnlyList<UnrecognisedSubmission>? unrecognisedSubmissions = null)
+        IReadOnlyList<UnrecognisedSubmission>? unrecognisedSubmissions = null,
+        SyncDiagnosis? diagnosis = null,
+        string? unexpectedExceptionType = null,
+        IReadOnlyList<string>? coursesGone = null,
+        IReadOnlyList<string>? coursesWithBlankName = null)
     {
         RunId = runId;
         ProcessedCount = processedCount;
@@ -32,6 +43,10 @@ public sealed class SynchronizationRunOutcome
         MembershipsMarkedOffRoster = membershipsMarkedOffRoster;
         CoursesSkippedByAge = coursesSkippedByAge ?? [];
         UnrecognisedSubmissions = unrecognisedSubmissions ?? [];
+        Diagnosis = diagnosis;
+        UnexpectedExceptionType = unexpectedExceptionType;
+        CoursesGone = coursesGone ?? [];
+        CoursesWithBlankName = coursesWithBlankName ?? [];
     }
 
     public Guid? RunId { get; }
@@ -60,6 +75,21 @@ public sealed class SynchronizationRunOutcome
     /// <summary>US-015 spec VR-004, OD-005: the submissions stored with the unrecognised marker, one Warning line each.</summary>
     public IReadOnlyList<UnrecognisedSubmission> UnrecognisedSubmissions { get; }
 
+    /// <summary>US-017 spec FR-006: the diagnosis a failed run stored; null unless the run failed.</summary>
+    public SyncDiagnosis? Diagnosis { get; }
+
+    /// <summary>
+    /// US-017 spec FR-010: the exception type name of an <see cref="SyncDiagnosis.Unexpected"/> failure, for the one
+    /// Error line; null otherwise. A type name only — a message may carry remote detail (SC-10).
+    /// </summary>
+    public string? UnexpectedExceptionType { get; }
+
+    /// <summary>US-017 spec FR-005: the Google ids of courses skipped because Classroom reported them gone.</summary>
+    public IReadOnlyList<string> CoursesGone { get; }
+
+    /// <summary>US-017 spec FR-012: the Google ids of courses skipped before their reads because their name is blank.</summary>
+    public IReadOnlyList<string> CoursesWithBlankName { get; }
+
     public bool Failed => Error is not null;
 
     public static SynchronizationRunOutcome Ran(
@@ -69,7 +99,9 @@ public sealed class SynchronizationRunOutcome
         IReadOnlyList<SkippedCourse>? skippedCourses = null,
         int membershipsMarkedOffRoster = 0,
         IReadOnlyList<string>? coursesSkippedByAge = null,
-        IReadOnlyList<UnrecognisedSubmission>? unrecognisedSubmissions = null) =>
+        IReadOnlyList<UnrecognisedSubmission>? unrecognisedSubmissions = null,
+        IReadOnlyList<string>? coursesGone = null,
+        IReadOnlyList<string>? coursesWithBlankName = null) =>
         new(
             runId,
             processedCount,
@@ -79,7 +111,39 @@ public sealed class SynchronizationRunOutcome
             skippedCourses,
             membershipsMarkedOffRoster,
             coursesSkippedByAge,
-            unrecognisedSubmissions);
+            unrecognisedSubmissions,
+            null,
+            null,
+            coursesGone,
+            coursesWithBlankName);
+
+    /// <summary>
+    /// A run that stopped with a diagnosis (US-017 spec FR-005, FR-006): <see cref="Error"/> is the diagnosis name,
+    /// <paramref name="processedCount"/> the courses committed before the stop (I-5).
+    /// </summary>
+    public static SynchronizationRunOutcome RanAndFailed(
+        Guid runId,
+        int processedCount,
+        SyncDiagnosis diagnosis,
+        string? unexpectedExceptionType,
+        IReadOnlyList<SkippedCourse>? skippedCourses = null,
+        IReadOnlyList<string>? coursesSkippedByAge = null,
+        IReadOnlyList<string>? coursesGone = null,
+        IReadOnlyList<string>? coursesWithBlankName = null) =>
+        new(
+            runId,
+            processedCount,
+            diagnosis.ToString(),
+            null,
+            null,
+            skippedCourses,
+            0,
+            coursesSkippedByAge,
+            null,
+            diagnosis,
+            unexpectedExceptionType,
+            coursesGone,
+            coursesWithBlankName);
 
     public static SynchronizationRunOutcome SkippedReadOnly(LegitimacyModeReason reason) =>
         new(null, null, null, reason, null);

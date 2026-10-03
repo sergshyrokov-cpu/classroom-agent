@@ -1,13 +1,17 @@
+using System.Net;
 using System.Runtime.CompilerServices;
 using ClassroomAgent.Application.Models;
 using ClassroomAgent.Application.Ports;
 using ClassroomAgent.Domain.Entities;
 using ClassroomAgent.Domain.Enums;
 using ClassroomAgent.Domain.Rules;
+using Google;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Auth.OAuth2.Responses;
 using Google.Apis.Classroom.v1;
 using Google.Apis.Http;
 using Google.Apis.Services;
+using Microsoft.Extensions.Logging;
 using GoogleCourse = Google.Apis.Classroom.v1.Data.Course;
 using GoogleCourseWork = Google.Apis.Classroom.v1.Data.CourseWork;
 using GoogleCourseWorkMaterial = Google.Apis.Classroom.v1.Data.CourseWorkMaterial;
@@ -23,7 +27,8 @@ namespace ClassroomAgent.Infrastructure.Google;
 /// The Google implementation of <see cref="IClassroomReader"/> (US-014 spec FR-002; entity model §6): the only
 /// place the Google SDK types for Classroom courses and rosters exist (AD-4). Every request goes through the
 /// injected transport, so nothing but Google is reachable from here (SC-13) and the tests drive it offline
-/// (TC-4). The client library's own retries are switched off (retry is US-017, OD-008).
+/// (TC-4). The client library's own retries are switched off; the adapter repeats a transient failure itself and
+/// reports a final one as <see cref="GoogleReadFailedException"/> (US-017 spec FR-001 to FR-004).
 /// </summary>
 /// <remarks>
 /// <see cref="ReadCoursesAsync"/> reports a course's state as the string Google sent, so the use case — not this
@@ -35,7 +40,7 @@ namespace ClassroomAgent.Infrastructure.Google;
 /// of §6 and nothing is added (spec FR-002).
 /// </para>
 /// </remarks>
-public sealed class GoogleClassroomReader : IClassroomReader
+public sealed partial class GoogleClassroomReader : IClassroomReader
 {
     private const string ApplicationName = "classroom-agent";
 
@@ -72,19 +77,40 @@ public sealed class GoogleClassroomReader : IClassroomReader
 
     private readonly ISecretStore _secretStore;
     private readonly GoogleServiceAccountSettings _settings;
-    private readonly TransportFactory _httpClients;
+    private readonly HttpMessageHandler _transport;
+    private readonly TimeProvider _timeProvider;
+    private readonly IGoogleRetryJitter _jitter;
+    private readonly ILogger<GoogleClassroomReader> _logger;
+    private readonly TimeSpan? _attemptTimeout;
 
+    /// <summary>
+    /// The retry seam of US-017 spec FR-002, FR-003: pauses on <paramref name="timeProvider"/>, the random factor from
+    /// <paramref name="jitter"/>, one <c>SyncGoogleRetry</c> warning per retried attempt. <paramref name="attemptTimeout"/>
+    /// bounds one attempt, body included (100 s when omitted); a test shortens it.
+    /// </summary>
     public GoogleClassroomReader(
         ISecretStore secretStore,
         GoogleServiceAccountSettings settings,
-        HttpMessageHandler transport)
+        HttpMessageHandler transport,
+        TimeProvider timeProvider,
+        IGoogleRetryJitter jitter,
+        ILogger<GoogleClassroomReader> logger,
+        TimeSpan? attemptTimeout = null)
     {
         ArgumentNullException.ThrowIfNull(secretStore);
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(transport);
+        ArgumentNullException.ThrowIfNull(timeProvider);
+        ArgumentNullException.ThrowIfNull(jitter);
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(attemptTimeout ?? TimeSpan.FromTicks(1), TimeSpan.Zero);
         _secretStore = secretStore;
         _settings = settings;
-        _httpClients = new TransportFactory(transport);
+        _transport = transport;
+        _timeProvider = timeProvider;
+        _jitter = jitter;
+        _logger = logger;
+        _attemptTimeout = attemptTimeout;
     }
 
     public async IAsyncEnumerable<CourseSnapshot> ReadCoursesAsync(
@@ -93,7 +119,7 @@ public sealed class GoogleClassroomReader : IClassroomReader
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(impersonationUser);
 
-        using var service = CreateService(impersonationUser);
+        using var service = CreateService(impersonationUser, CourseAndRosterScopes);
         string? pageToken = null;
         do
         {
@@ -102,7 +128,7 @@ public sealed class GoogleClassroomReader : IClassroomReader
             var request = service.Courses.List();
             request.PageSize = PageSize;
             request.PageToken = pageToken;
-            var page = await request.ExecuteAsync(cancellationToken);
+            var page = await GuardAsync(() => request.ExecuteAsync(cancellationToken), perCourse: false, cancellationToken);
 
             foreach (var course in page.Courses ?? [])
             {
@@ -122,7 +148,7 @@ public sealed class GoogleClassroomReader : IClassroomReader
         ArgumentException.ThrowIfNullOrWhiteSpace(impersonationUser);
         ArgumentException.ThrowIfNullOrWhiteSpace(courseGoogleId);
 
-        using var service = CreateService(impersonationUser);
+        using var service = CreateService(impersonationUser, CourseAndRosterScopes);
 
         // Both rosters in one call, each paged to the end: a returned roster means the read succeeded, and an
         // exception is what an unknown roster looks like (spec FR-004, I-6, I-7). The course owner is not a
@@ -169,7 +195,7 @@ public sealed class GoogleClassroomReader : IClassroomReader
             var request = service.Courses.CourseWork.StudentSubmissions.List(courseGoogleId, AllCourseWork);
             request.PageSize = PageSize;
             request.PageToken = pageToken;
-            var page = await request.ExecuteAsync(cancellationToken);
+            var page = await GuardAsync(() => request.ExecuteAsync(cancellationToken), perCourse: true, cancellationToken);
             foreach (var submission in page.StudentSubmissions ?? [])
             {
                 snapshots.Add(Snapshot(submission));
@@ -194,7 +220,7 @@ public sealed class GoogleClassroomReader : IClassroomReader
             var request = service.Courses.CourseWork.List(courseGoogleId);
             request.PageSize = PageSize;
             request.PageToken = pageToken;
-            var page = await request.ExecuteAsync(cancellationToken);
+            var page = await GuardAsync(() => request.ExecuteAsync(cancellationToken), perCourse: true, cancellationToken);
             foreach (var work in page.CourseWork ?? [])
             {
                 // Only PUBLISHED items are imported and the state is not stored (OD-004). Classroom's default
@@ -222,7 +248,7 @@ public sealed class GoogleClassroomReader : IClassroomReader
             var request = service.Courses.CourseWorkMaterials.List(courseGoogleId);
             request.PageSize = PageSize;
             request.PageToken = pageToken;
-            var page = await request.ExecuteAsync(cancellationToken);
+            var page = await GuardAsync(() => request.ExecuteAsync(cancellationToken), perCourse: true, cancellationToken);
             foreach (var material in page.CourseWorkMaterial ?? [])
             {
                 if (material.State == PublishedState)
@@ -248,7 +274,7 @@ public sealed class GoogleClassroomReader : IClassroomReader
             var request = service.Courses.Teachers.List(courseGoogleId);
             request.PageSize = PageSize;
             request.PageToken = pageToken;
-            var page = await request.ExecuteAsync(cancellationToken);
+            var page = await GuardAsync(() => request.ExecuteAsync(cancellationToken), perCourse: true, cancellationToken);
             foreach (var teacher in page.Teachers ?? [])
             {
                 entries.Add(Entry(teacher.UserId, teacher.Profile));
@@ -273,7 +299,7 @@ public sealed class GoogleClassroomReader : IClassroomReader
             var request = service.Courses.Students.List(courseGoogleId);
             request.PageSize = PageSize;
             request.PageToken = pageToken;
-            var page = await request.ExecuteAsync(cancellationToken);
+            var page = await GuardAsync(() => request.ExecuteAsync(cancellationToken), perCourse: true, cancellationToken);
             foreach (var student in page.Students ?? [])
             {
                 entries.Add(Entry(student.UserId, student.Profile));
@@ -398,27 +424,112 @@ public sealed class GoogleClassroomReader : IClassroomReader
     private static RosterEntry Entry(string? userId, GoogleUserProfile? profile) =>
         new(userId ?? profile?.Id ?? string.Empty, profile?.EmailAddress, profile?.Name?.FullName);
 
-    private ClassroomService CreateService(string impersonationUser) =>
-        CreateService(impersonationUser, CourseAndRosterScopes);
-
-    private ClassroomService CreateService(string impersonationUser, string[] scopes) =>
-        new(new BaseClientService.Initializer
+    private ClassroomService CreateService(string impersonationUser, string[] scopes)
+    {
+        var httpClients = new TransportFactory(
+            new GoogleRetryHandler(_transport, _timeProvider, _jitter, LogRetry, _attemptTimeout));
+        return new ClassroomService(new BaseClientService.Initializer
         {
             ApplicationName = ApplicationName,
-            HttpClientFactory = _httpClients,
-            HttpClientInitializer = Credential(impersonationUser, scopes),
+            HttpClientFactory = httpClients,
+            HttpClientInitializer = Credential(impersonationUser, scopes, httpClients),
             DefaultExponentialBackOffPolicy = ExponentialBackOffPolicy.None,
             GZipEnabled = false,
+
+            // Spec FR-002: the retry sequence, pauses included, must outlast the library's 100 s default; each
+            // attempt is bounded by GoogleRetryHandler instead.
+            HttpClientTimeout = Timeout.InfiniteTimeSpan,
         });
+    }
+
+    private void LogRetry(int attempt, TimeSpan pause, int? status) =>
+        LogRetryAttempt(_logger, attempt, pause.TotalSeconds, status);
+
+    [LoggerMessage(
+        EventId = 2420,
+        EventName = "SyncGoogleRetry",
+        Level = LogLevel.Warning,
+        Message = "A Google request failed on attempt {Attempt} (HTTP status {Status}); retrying after {PauseSeconds} seconds")]
+    private static partial void LogRetryAttempt(ILogger logger, int attempt, double pauseSeconds, int? status);
+
+    /// <summary>
+    /// Runs one Google request and turns anything that fails into the closed list of US-017 spec FR-001. The
+    /// caller's own cancellation passes through untouched. No exception text, reason or body is carried on (FR-004).
+    /// </summary>
+    private static async Task<T> GuardAsync<T>(Func<Task<T>> read, bool perCourse, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await read();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (GoogleReadFailedException)
+        {
+            throw;
+        }
+        catch (TokenResponseException refusal)
+        {
+            throw FromOutcome(GoogleFailureClassifier.ClassifyTokenError(refusal), refusal.StatusCode);
+        }
+        catch (GoogleApiException refusal)
+        {
+            if (GoogleFailureClassifier.IsUnavailable(refusal.HttpStatusCode))
+            {
+                throw Transient();
+            }
+
+            if (refusal.HttpStatusCode == HttpStatusCode.NotFound && perCourse)
+            {
+                throw new GoogleReadFailedException(GoogleReadFailureKind.CourseGone, null);
+            }
+
+            throw refusal.HttpStatusCode == HttpStatusCode.Forbidden
+                ? FromOutcome(GoogleFailureClassifier.ClassifyApiError(refusal), refusal.HttpStatusCode)
+                : Unexpected();
+        }
+        catch (Exception failure) when (failure is HttpRequestException or OperationCanceledException)
+        {
+            throw Transient();
+        }
+        catch (Exception)
+        {
+            throw Unexpected();
+        }
+    }
+
+    private static GoogleReadFailedException FromOutcome(AccessCheckStepOutcome outcome, HttpStatusCode? status) =>
+        outcome switch
+        {
+            AccessCheckStepOutcome.ScopeNotAuthorized => Configuration(SyncDiagnosis.ScopeNotAuthorized),
+            AccessCheckStepOutcome.TechnicalAccountUnknown => Configuration(SyncDiagnosis.TechnicalAccountUnknown),
+            AccessCheckStepOutcome.TechnicalAccountCannotRead => Configuration(SyncDiagnosis.TechnicalAccountCannotRead),
+            AccessCheckStepOutcome.ApiNotEnabled => Configuration(SyncDiagnosis.ApiNotEnabled),
+            AccessCheckStepOutcome.KeyUnavailable => Configuration(SyncDiagnosis.KeyUnavailable),
+            AccessCheckStepOutcome.KeyRejected => Configuration(SyncDiagnosis.KeyRejected),
+            _ => GoogleFailureClassifier.IsUnavailable(status) ? Transient() : Unexpected(),
+        };
+
+    private static GoogleReadFailedException Configuration(SyncDiagnosis diagnosis) =>
+        new(GoogleReadFailureKind.Configuration, diagnosis);
+
+    private static GoogleReadFailedException Transient() =>
+        new(GoogleReadFailureKind.Transient, SyncDiagnosis.GoogleUnavailable);
+
+    private static GoogleReadFailedException Unexpected() =>
+        new(GoogleReadFailureKind.Unexpected, SyncDiagnosis.Unexpected);
 
     /// <summary>
     /// The delegated credential of one call: the school's technical account as the impersonated subject (BR-015,
-    /// spec S-03), only the read-only scopes that call needs, and no retry of its own (OD-008).
+    /// spec S-03), only the read-only scopes that call needs, and no retry of its own (OD-008). A missing or unusable
+    /// key ends the call before any request is sent.
     /// </summary>
-    private ServiceAccountCredential Credential(string impersonationUser, string[] scopes)
+    private ServiceAccountCredential Credential(string impersonationUser, string[] scopes, IHttpClientFactory httpClients)
     {
         var key = LoadKey()
-            ?? throw new InvalidOperationException("The service-account key is not available to this installation.");
+            ?? throw Configuration(SyncDiagnosis.KeyUnavailable);
 
         return new ServiceAccountCredential(new ServiceAccountCredential.Initializer(key.Id, key.TokenServerUrl)
         {
@@ -426,7 +537,7 @@ public sealed class GoogleClassroomReader : IClassroomReader
             KeyId = key.KeyId,
             User = impersonationUser,
             Scopes = scopes,
-            HttpClientFactory = _httpClients,
+            HttpClientFactory = httpClients,
             DefaultExponentialBackOffPolicy = ExponentialBackOffPolicy.None,
         });
     }
@@ -460,13 +571,28 @@ public sealed class GoogleClassroomReader : IClassroomReader
     }
 
     /// <summary>
-    /// Hands the one configured transport to the Google client library without letting it dispose it. Unlike
-    /// US-011's probe, nothing is classified here: a 5xx or 429 answer is left exactly as the client library sees
-    /// it, because this Story neither retries nor diagnoses a Google failure (spec FR-014, OD-008).
+    /// Hands the retrying transport of one call to the Google client library without letting it dispose the shared
+    /// transport underneath (SC-13).
     /// </summary>
-    private sealed class TransportFactory(HttpMessageHandler transport) : HttpClientFactory
+    private sealed class TransportFactory(HttpMessageHandler transport) : IHttpClientFactory
     {
-        protected override HttpMessageHandler CreateHandler(CreateHttpClientArgs args) => new Borrowed(transport);
+        private readonly Handlers _handlers = new(transport);
+
+        /// <summary>
+        /// Spec FR-002: no client of the library (service or token) may time out the whole retry sequence; the
+        /// per-attempt bound lives in <see cref="GoogleRetryHandler"/>.
+        /// </summary>
+        public ConfigurableHttpClient CreateHttpClient(CreateHttpClientArgs args)
+        {
+            var client = _handlers.CreateHttpClient(args);
+            client.Timeout = Timeout.InfiniteTimeSpan;
+            return client;
+        }
+
+        private sealed class Handlers(HttpMessageHandler transport) : HttpClientFactory
+        {
+            protected override HttpMessageHandler CreateHandler(CreateHttpClientArgs args) => new Borrowed(transport);
+        }
 
         private sealed class Borrowed(HttpMessageHandler inner) : HttpMessageHandler
         {

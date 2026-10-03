@@ -76,7 +76,10 @@ public sealed class CourseWorkFailureTests
         }
     }
 
-    /// <summary>AC-007, FR-015, SC-10: the failed run's diagnosis is a category and a type name, with no personal data.</summary>
+    /// <summary>
+    /// AC-007, FR-015, SC-10; US-017 spec FR-006: a failure that is not a classified Google failure is stored as
+    /// the closed-list code <c>Unexpected</c> — no exception type name, no message, no personal data.
+    /// </summary>
     [Fact]
     public async Task FailedRun_IsRecordedInSyncState()
     {
@@ -93,7 +96,7 @@ public sealed class CourseWorkFailureTests
         Assert.True(outcome.Failed);
         var error = world.States.Stored!.LastError;
         Assert.NotNull(error);
-        Assert.StartsWith("RunFailed:", error, StringComparison.Ordinal);
+        Assert.Equal("Unexpected", error);
         Assert.DoesNotContain(secret, error, StringComparison.Ordinal);
     }
 

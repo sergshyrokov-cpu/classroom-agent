@@ -15,6 +15,7 @@ namespace ClassroomAgent.Web.Controllers;
 /// <param name="ReadOnlyReason">Why, when it is (BR-025).</param>
 /// <param name="MessageKey">The confirmation of a save, or the refusal of a `409`.</param>
 /// <param name="FieldErrorKeys">Per-field validation messages of a `400`, by field name.</param>
+/// <param name="LastSynchronization">The "Last synchronization" block (US-017 spec FR-007), shown on every rendering.</param>
 public sealed record WorkspaceConnectionPageModel(
     WorkspaceConnectionState State,
     string? InstallationDomain,
@@ -23,4 +24,5 @@ public sealed record WorkspaceConnectionPageModel(
     bool IsReadOnly,
     LegitimacyModeReason? ReadOnlyReason,
     string? MessageKey,
-    IReadOnlyList<string> FieldErrorKeys);
+    IReadOnlyList<string> FieldErrorKeys,
+    LastSynchronizationView LastSynchronization);

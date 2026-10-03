@@ -83,8 +83,8 @@ public sealed partial class GoogleAccessProbe : IGoogleAccessProbe
         }
         catch (TokenResponseException refusal)
         {
-            var outcome = ClassifyTokenError(refusal);
-            if (outcome == AccessCheckStepOutcome.GoogleUnavailable && !IsUnavailable(refusal.StatusCode))
+            var outcome = GoogleFailureClassifier.ClassifyTokenError(refusal);
+            if (outcome == AccessCheckStepOutcome.GoogleUnavailable && !GoogleFailureClassifier.IsUnavailable(refusal.StatusCode))
             {
                 LogUnclassified(_logger, AccessCheckStepKind.Delegation, (int?)refusal.StatusCode);
             }
@@ -146,8 +146,8 @@ public sealed partial class GoogleAccessProbe : IGoogleAccessProbe
         }
         catch (GoogleApiException refusal)
         {
-            var outcome = ClassifyApiError(refusal);
-            if (outcome == AccessCheckStepOutcome.GoogleUnavailable && !IsUnavailable(refusal.HttpStatusCode))
+            var outcome = GoogleFailureClassifier.ClassifyApiError(refusal);
+            if (outcome == AccessCheckStepOutcome.GoogleUnavailable && !GoogleFailureClassifier.IsUnavailable(refusal.HttpStatusCode))
             {
                 LogUnclassified(_logger, kind, (int)refusal.HttpStatusCode);
             }
@@ -190,54 +190,6 @@ public sealed partial class GoogleAccessProbe : IGoogleAccessProbe
         }
     }
 
-    /// <summary>Spec FR-005, token endpoint: Google's OAuth error codes and the descriptions it documents for them.</summary>
-    private static AccessCheckStepOutcome ClassifyTokenError(TokenResponseException refusal)
-    {
-        if (IsUnavailable(refusal.StatusCode))
-        {
-            return AccessCheckStepOutcome.GoogleUnavailable;
-        }
-
-        var error = refusal.Error?.Error ?? string.Empty;
-        var description = refusal.Error?.ErrorDescription ?? string.Empty;
-        return error switch
-        {
-            "unauthorized_client" or "access_denied" => AccessCheckStepOutcome.ScopeNotAuthorized,
-            "invalid_grant" when description.Contains("Invalid JWT Signature", StringComparison.OrdinalIgnoreCase) =>
-                AccessCheckStepOutcome.KeyRejected,
-            "invalid_grant" when description.Contains("Invalid email or User ID", StringComparison.OrdinalIgnoreCase)
-                || description.Contains("invalid_user", StringComparison.OrdinalIgnoreCase) =>
-                AccessCheckStepOutcome.TechnicalAccountUnknown,
-            "invalid_client" => AccessCheckStepOutcome.KeyRejected,
-            _ => AccessCheckStepOutcome.GoogleUnavailable,
-        };
-    }
-
-    /// <summary>Spec FR-005, API reads: a disabled API is the Owner's; any other 403 is the account's rights.</summary>
-    private static AccessCheckStepOutcome ClassifyApiError(GoogleApiException refusal)
-    {
-        if (IsUnavailable(refusal.HttpStatusCode))
-        {
-            return AccessCheckStepOutcome.GoogleUnavailable;
-        }
-
-        if (refusal.HttpStatusCode != HttpStatusCode.Forbidden)
-        {
-            return AccessCheckStepOutcome.GoogleUnavailable;
-        }
-
-        var reasons = (refusal.Error?.Errors ?? []).Select(e => e.Reason ?? string.Empty).ToList();
-        var content = refusal.Error?.ErrorResponseContent ?? string.Empty;
-        var disabled = reasons.Contains("accessNotConfigured", StringComparer.Ordinal)
-            || reasons.Contains("SERVICE_DISABLED", StringComparer.Ordinal)
-            || content.Contains("\"SERVICE_DISABLED\"", StringComparison.Ordinal)
-            || content.Contains("\"accessNotConfigured\"", StringComparison.Ordinal);
-        return disabled ? AccessCheckStepOutcome.ApiNotEnabled : AccessCheckStepOutcome.TechnicalAccountCannotRead;
-    }
-
-    private static bool IsUnavailable(HttpStatusCode? status) =>
-        status is HttpStatusCode.TooManyRequests || (status is { } code && (int)code >= 500);
-
     private DelegationAttempt Unclassified(AccessCheckStepKind kind, int? status)
     {
         LogUnclassified(_logger, kind, status);
@@ -268,7 +220,7 @@ public sealed partial class GoogleAccessProbe : IGoogleAccessProbe
             protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
                 var response = await _invoker.SendAsync(request, cancellationToken);
-                if (IsUnavailable(response.StatusCode))
+                if (GoogleFailureClassifier.IsUnavailable(response.StatusCode))
                 {
                     var status = response.StatusCode;
                     response.Dispose();

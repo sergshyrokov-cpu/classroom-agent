@@ -28,7 +28,10 @@ public sealed class GoogleClassroomReaderTests
         new(
             new DictionarySecretStore(new Dictionary<string, string> { [Reference] = SyntheticServiceAccountKey.Create() }),
             new GoogleServiceAccountSettings(Reference),
-            transport);
+            transport,
+            new ManualTimeProvider(new DateTimeOffset(2026, 10, 3, 12, 0, 0, TimeSpan.Zero)),
+            new FixedRetryJitter(1.0),
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<GoogleClassroomReader>.Instance);
 
     private static HttpResponseMessage TokenIssued() =>
         ScriptedHttpHandler.JsonResponse(

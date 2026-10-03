@@ -81,6 +81,25 @@ public sealed class SyncWorld
             Submissions,
             Retention);
 
+    /// <summary>
+    /// The run use case over this world's stores but another Classroom reader — a later run that sees different
+    /// data from Google, with the database kept (the <c>CourseWorkFailureTests</c> precedent).
+    /// </summary>
+    public RunSynchronizationUseCase RunUsing(ClassroomReader reader) =>
+        new(
+            States,
+            ConnectionQuery,
+            ReadOnly,
+            Work,
+            Time,
+            reader,
+            Courses,
+            Participants,
+            Memberships,
+            CourseWork,
+            Submissions,
+            Retention);
+
     /// <summary>A run identifier the assertions can recognise.</summary>
     public static Guid RunId(int ordinal) => new($"00000000-0000-0000-0000-{ordinal:D12}");
 
@@ -219,6 +238,25 @@ public sealed class SyncWorld
         /// <summary>Set to make <see cref="ReadCoursesAsync"/> fail part-way; the courses before it are yielded.</summary>
         public Exception? FailAfterCourses { get; set; }
 
+        /// <summary>
+        /// Set to make <see cref="ReadCoursesAsync"/> fail <b>before</b> yielding any course (US-017 spec FR-005: a
+        /// failure of the listing itself). Counted in <see cref="CourseReads"/>; null by default.
+        /// </summary>
+        public Exception? FailOnListing { get; set; }
+
+        /// <summary>
+        /// Forgets every injected failure, so the same reader answers normally on the next run (US-017: a completed run
+        /// after a failed one). Seeded courses, rosters, items and submissions stay.
+        /// </summary>
+        public void ClearFailures()
+        {
+            FailOnListing = null;
+            FailAfterCourses = null;
+            _rosterFailures.Clear();
+            _courseWorkFailures.Clear();
+            _submissionsFailures.Clear();
+        }
+
         /// <summary>The Google course ids whose roster was asked for, in order.</summary>
         public List<string> RostersRead { get; } = [];
 
@@ -355,6 +393,11 @@ public sealed class SyncWorld
         {
             CourseReads++;
             ImpersonatedAs.Add(impersonationUser);
+            if (FailOnListing is not null)
+            {
+                throw FailOnListing;
+            }
+
             foreach (var course in _courses)
             {
                 cancellationToken.ThrowIfCancellationRequested();

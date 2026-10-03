@@ -1,0 +1,151 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Last synchronization on the connection page (US-017)
+  version: "1"
+  description: >
+    HTTP delta of US-017. No new operation, path, method, status code, policy or
+    antiforgery rule. The one change is the view model of the existing
+    connection settings page (US-009 `getWorkspaceConnectionSettings`): it
+    gains the "Last synchronization" block (spec FR-007), so every HTML
+    response that renders that page — the GET and the re-rendered page of a
+    rejected US-009 save — carries it. The host-wide rules of
+    docs/designs/api/US-008-openapi.yaml and the operation of
+    docs/designs/api/US-009-openapi.yaml apply unchanged. The retry and
+    classification of Google failures are internal to synchronization and never
+    reach HTTP (AD-5; api-conventions: Google's 429 is never forwarded).
+    Companion document: docs/designs/api/US-017-api-design.md.
+x-story: US-017
+x-source-specification: docs/specifications/US-017-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-017-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 80
+x-produced-by: openapi-designer
+x-extends:
+  - docs/designs/api/US-008-openapi.yaml
+  - docs/designs/api/US-009-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**: nothing on the
+  service channel changes (DC-12).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port (illustrative)."
+
+tags:
+  - name: settings
+
+paths:
+
+  /settings/workspace-connection:
+
+    get:
+      tags: [settings]
+      operationId: getWorkspaceConnectionSettings
+      summary: "The connection settings page — now with the last synchronization"
+      description: >
+        Unchanged from US-009 except for the view model: `lastSynchronization`
+        is added. Reading the page writes nothing, also not to `SyncState`.
+        Viewable in read-only mode (BR-026, spec FR-009).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ConfigureWorkspaceConnection
+      x-permission-matrix-row: "Просмотр состояния синхронизации с диагностикой ошибок на странице подключения (v80) — Admin ✔, Dean ✘"
+      x-spec: [FR-007, FR-008, FR-009]
+      x-acceptance-criteria: [AC-006, AC-007, AC-008, AC-013]
+      x-change: view-model-extended
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: >
+            The settings page in the user's language, with the "Last
+            synchronization" block rendered from `lastSynchronization`.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/WorkspaceConnectionPageModel"
+        "302":
+          description: "Not signed in: the challenge sends the visitor to `/sign-in` (US-008). Unchanged."
+        "403":
+          description: >
+            Signed in as a Dean: the translated error page, revealing nothing
+            about the connection or synchronization (AC-007). Unchanged.
+          content:
+            text/html: {}
+
+components:
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: ".ClassroomAgent.Session"
+      description: "As defined in docs/designs/api/US-008-openapi.yaml."
+
+  schemas:
+
+    WorkspaceConnectionPageModel:
+      description: >
+        US-009's view model (see docs/designs/api/US-009-openapi.yaml for every
+        other property, unchanged) plus one property. Still a DTO built in
+        `Application` (AD-8).
+      type: object
+      required: [lastSynchronization]
+      properties:
+        lastSynchronization:
+          $ref: "#/components/schemas/LastSynchronizationView"
+
+    LastSynchronizationView:
+      type: object
+      additionalProperties: false
+      description: >
+        Read from `SyncState` by an `Application` query (spec FR-007). Carries
+        times, a status and a diagnosis code — no personal data, no Google text,
+        no exception detail. Times are UTC instants; the view formats them in
+        the request culture (US-039 FR-009).
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [NeverRun, Running, Completed, Failed]
+          description: "`NeverRun` when no `SyncState` row exists."
+        startedAt:
+          type: [string, "null"]
+          format: date-time
+          description: "Start of the last run; null for `NeverRun`."
+        finishedAt:
+          type: [string, "null"]
+          format: date-time
+          description: "End of the last run; null for `NeverRun` and `Running`."
+        lastSuccessfulRunAt:
+          type: [string, "null"]
+          format: date-time
+          description: "End of the last completed run, or null when there has been none."
+        diagnosis:
+          oneOf:
+            - $ref: "#/components/schemas/SyncDiagnosis"
+            - type: "null"
+          description: >
+            Set only for `Failed`. An unknown stored value (e.g. a legacy
+            `RunFailed:…`) is reported as `Unexpected` (spec FR-006, VR-002,
+            AC-013).
+
+    SyncDiagnosis:
+      type: string
+      description: >
+        The closed list of spec FR-006. The view renders each as a translation
+        key: the six configuration codes use the existing
+        `AccessCheck.Outcome.<Code>` texts of "Check access" (OD-006);
+        `GoogleUnavailable` and `Unexpected` use new synchronization keys
+        (spec I-7). Who acts is part of the text, never a separate field.
+      enum:
+        - ScopeNotAuthorized
+        - TechnicalAccountUnknown
+        - TechnicalAccountCannotRead
+        - ApiNotEnabled
+        - KeyUnavailable
+        - KeyRejected
+        - GoogleUnavailable
+        - Unexpected

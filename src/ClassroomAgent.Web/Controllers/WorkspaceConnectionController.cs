@@ -24,6 +24,7 @@ public sealed class WorkspaceConnectionController(
     GetWorkspaceConnectionQuery connectionQuery,
     SaveWorkspaceConnectionUseCase save,
     GetLegitimacyModeQuery legitimacyMode,
+    GetLastSynchronizationQuery lastSynchronization,
     ILogger<WorkspaceConnectionController> logger) : Controller
 {
     private const string SavedTempDataKey = "WorkspaceConnectionSaved";
@@ -76,6 +77,7 @@ public sealed class WorkspaceConnectionController(
     {
         var view = await connectionQuery.ExecuteAsync(cancellationToken);
         var mode = await legitimacyMode.ExecuteAsync(cancellationToken);
+        var last = await lastSynchronization.ExecuteAsync(cancellationToken);
         return new WorkspaceConnectionPageModel(
             view.State,
             view.InstallationDomain,
@@ -84,7 +86,8 @@ public sealed class WorkspaceConnectionController(
             mode.IsReadOnly,
             mode.Reason,
             messageKey,
-            fieldErrorKeys);
+            fieldErrorKeys,
+            last);
     }
 
     /// <summary>The message keys of the rejected fields; the values themselves never leave the form.</summary>

@@ -248,8 +248,9 @@ public sealed class CourseImportTests
     }
 
     /// <summary>
-    /// AC-007, FR-014, OD-008: the stored diagnosis is a category and a type name, never a Google error text and
-    /// never a payload (SC-10). This Story neither classifies nor retries the failure.
+    /// AC-007, FR-014, OD-008; US-017 spec FR-006: the stored diagnosis is a code of the closed list
+    /// (<c>Unexpected</c> for a failure that is not a classified Google one), never a Google error text and never
+    /// a payload (SC-10).
     /// </summary>
     [Fact]
     public async Task AFailedImport_StoresADiagnosisWithNoPayload()
@@ -265,6 +266,6 @@ public sealed class CourseImportTests
         var error = world.States.Stored!.LastError;
         Assert.NotNull(error);
         Assert.DoesNotContain(secret, error, StringComparison.Ordinal);
-        Assert.Contains(":", error, StringComparison.Ordinal);
+        Assert.Equal("Unexpected", error);
     }
 }

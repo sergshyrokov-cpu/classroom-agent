@@ -92,27 +92,30 @@ public sealed class SynchronizationRunTests
         world.Time.Advance(SyncTestData.DefaultInterval);
 
         world.States.Stored.BeginRun(SyncWorld.RunId(2), world.Time.GetUtcNow());
-        world.States.Stored.FailRun(world.Time.GetUtcNow(), 0, SyncTestData.SyntheticError);
+        world.States.Stored.FailRun(world.Time.GetUtcNow(), 0, SyncDiagnosis.GoogleUnavailable);
 
         Assert.Equal(SyncRunStatus.Failed, world.States.Stored.Status);
         Assert.Equal(lastSuccess, world.States.Stored.LastSuccessfulRunAt);
-        Assert.Equal(SyncTestData.SyntheticError, world.States.Stored.LastError);
+        Assert.Equal("GoogleUnavailable", world.States.Stored.LastError);
     }
 
-    /// <summary>AC-006: the stored message carries a category and a sentence, never a payload (spec S-06).</summary>
+    /// <summary>
+    /// AC-006, US-017 spec FR-006: the stored value is a diagnosis code from the closed list, never a payload (spec
+    /// S-06, SC-10).
+    /// </summary>
     [Fact]
-    public async Task AFailedRun_StoresACategoryAndAShortMessage()
+    public async Task AFailedRun_StoresACodeOfTheClosedList()
     {
         var ct = TestContext.Current.CancellationToken;
         var world = new SyncWorld();
         await world.Run.ExecuteAsync(SyncWorld.RunId(1), ct);
 
         world.States.Stored!.BeginRun(SyncWorld.RunId(2), world.Time.GetUtcNow());
-        world.States.Stored.FailRun(world.Time.GetUtcNow(), 0, SyncTestData.SyntheticError);
+        world.States.Stored.FailRun(world.Time.GetUtcNow(), 0, SyncDiagnosis.KeyRejected);
 
         Assert.NotNull(world.States.Stored.LastError);
+        Assert.Contains(world.States.Stored.LastError, Enum.GetNames<SyncDiagnosis>());
         Assert.True(world.States.Stored.LastError!.Length <= 512);
-        Assert.Contains(":", world.States.Stored.LastError, StringComparison.Ordinal);
     }
 
     /// <summary>AC-003, FR-005: the guard is consulted before the row is ever read.</summary>

@@ -6,8 +6,9 @@ namespace ClassroomAgent.Tests.Application.UseCases;
 
 /// <summary>
 /// US-013 AC-003 and AC-006: the rules of the entity itself (entity model §1.2) — a run is begun once, finished
-/// once, its counter is never negative, its end never precedes its start, and a long error message is shortened
-/// rather than rejected (db-design §3.3). These are the invariants the check constraints cannot express.
+/// once, its counter is never negative, its end never precedes its start. US-017 spec FR-006 replaces the free-text
+/// error with a closed diagnosis list: a failure stores exactly a <see cref="SyncDiagnosis"/> name and an undeclared
+/// value is refused. These are the invariants the check constraints cannot express.
 /// </summary>
 public sealed class SyncStateInvariantTests
 {
@@ -60,10 +61,10 @@ public sealed class SyncStateInvariantTests
     public void FailingATerminalRow_IsRejected()
     {
         var state = SyncState.BeginFirstRun(SyncWorld.RunId(1), Start);
-        state.FailRun(Start + TimeSpan.FromSeconds(3), 0, SyncTestData.SyntheticError);
+        state.FailRun(Start + TimeSpan.FromSeconds(3), 0, SyncDiagnosis.Unexpected);
 
         Assert.ThrowsAny<ArgumentException>(
-            () => state.FailRun(Start + TimeSpan.FromSeconds(4), 0, SyncTestData.SyntheticError));
+            () => state.FailRun(Start + TimeSpan.FromSeconds(4), 0, SyncDiagnosis.Unexpected));
     }
 
     /// <summary>The counter is never negative (spec VR-002).</summary>
@@ -86,30 +87,67 @@ public sealed class SyncStateInvariantTests
         Assert.ThrowsAny<ArgumentException>(() => state.CompleteRun(Start - TimeSpan.FromSeconds(1), 0));
     }
 
-    /// <summary>A failure without a message is not a diagnosis (spec FR-008, VR-002).</summary>
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void AFailureWithoutAMessage_IsRejected(string error)
-    {
-        var state = SyncState.BeginFirstRun(SyncWorld.RunId(1), Start);
+    /// <summary>The eight diagnoses of US-017 spec FR-006, for the theories below.</summary>
+    public static TheoryData<SyncDiagnosis> AllDiagnoses => new(Enum.GetValues<SyncDiagnosis>());
 
-        Assert.ThrowsAny<ArgumentException>(() => state.FailRun(Start + TimeSpan.FromSeconds(1), 0, error));
+    /// <summary>
+    /// US-017 spec FR-006, VR-002: the closed list is exactly the eight names, so a theory over every value covers
+    /// the whole list. A declaration guard — it holds before the behaviour exists.
+    /// </summary>
+    [Fact]
+    public void TheClosedList_IsExactlyTheEightNames()
+    {
+        Assert.Equal(
+            [
+                "ScopeNotAuthorized",
+                "TechnicalAccountUnknown",
+                "TechnicalAccountCannotRead",
+                "ApiNotEnabled",
+                "KeyUnavailable",
+                "KeyRejected",
+                "GoogleUnavailable",
+                "Unexpected",
+            ],
+            Enum.GetNames<SyncDiagnosis>());
     }
 
     /// <summary>
-    /// db-design §3.3: a long message is <b>truncated</b>, not refused — a failing run must not fail again at
-    /// the commit because its diagnosis was verbose.
+    /// US-017 spec FR-006, db-design §2: a failed run stores exactly the diagnosis name — never an exception type
+    /// name, never text.
     /// </summary>
-    [Fact]
-    public void ALongMessage_IsTruncatedToTheStoredLength()
+    [Theory]
+    [MemberData(nameof(AllDiagnoses))]
+    public void AFailure_StoresExactlyTheDiagnosisName(SyncDiagnosis diagnosis)
     {
         var state = SyncState.BeginFirstRun(SyncWorld.RunId(1), Start);
 
-        state.FailRun(Start + TimeSpan.FromSeconds(1), 0, new string('x', SyncState.MaxErrorLength + 100));
+        state.FailRun(Start + TimeSpan.FromSeconds(1), 2, diagnosis);
 
-        Assert.Equal(SyncState.MaxErrorLength, state.LastError!.Length);
-        Assert.Equal(512, SyncState.MaxErrorLength);
+        Assert.Equal(SyncRunStatus.Failed, state.Status);
+        Assert.Equal(diagnosis.ToString(), state.LastError);
+        Assert.Equal(2, state.ProcessedCount);
+        Assert.Equal(Start + TimeSpan.FromSeconds(1), state.FinishedAt);
+    }
+
+    /// <summary>
+    /// US-017 entity model §2: a value outside the declared list is refused and the row is left exactly as it was,
+    /// still running — so the run can still be failed with a real diagnosis.
+    /// </summary>
+    [Fact]
+    public void AnUndeclaredDiagnosis_IsRefused_AndTheStateIsUnchanged()
+    {
+        var state = SyncState.BeginFirstRun(SyncWorld.RunId(1), Start);
+
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => state.FailRun(Start + TimeSpan.FromSeconds(1), 5, (SyncDiagnosis)99));
+
+        Assert.Equal(SyncRunStatus.Running, state.Status);
+        Assert.Null(state.FinishedAt);
+        Assert.Null(state.LastError);
+        Assert.Equal(0, state.ProcessedCount);
+
+        state.FailRun(Start + TimeSpan.FromSeconds(2), 0, SyncDiagnosis.Unexpected);
+        Assert.Equal("Unexpected", state.LastError);
     }
 
     /// <summary>A completed run carries no error; a failed one carries no success (db-design §3.2).</summary>
@@ -119,7 +157,7 @@ public sealed class SyncStateInvariantTests
         var completed = SyncState.BeginFirstRun(SyncWorld.RunId(1), Start);
         completed.CompleteRun(Start + TimeSpan.FromSeconds(1), 3);
         var failed = SyncState.BeginFirstRun(SyncWorld.RunId(2), Start);
-        failed.FailRun(Start + TimeSpan.FromSeconds(1), 1, SyncTestData.SyntheticError);
+        failed.FailRun(Start + TimeSpan.FromSeconds(1), 1, SyncDiagnosis.GoogleUnavailable);
 
         Assert.Null(completed.LastError);
         Assert.NotNull(completed.FinishedAt);

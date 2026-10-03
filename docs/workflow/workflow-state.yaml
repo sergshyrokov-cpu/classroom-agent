@@ -4,29 +4,34 @@
 version: 1
 story: US-017
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: spec-writer
+last_invoked_skill: security-reviewer
 last_result:
   verdict: PASS
-  stage: SPECIFICATION
-  recorded_at: 2026-10-03T14:52:59Z
+  stage: SECURITY_REVIEW
+  recorded_at: 2026-10-03T16:32:20Z
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-017-spec.md
-    version: 1
-  - type: open_decisions
-    path: docs/decisions/US-017-open-decisions.md
-    version: 1
+  - type: security_review
+    path: docs/reviews/security/US-017-security-review.md
+    version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "HUMAN_PR_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-10-03T16:33:29Z (no comment): implementation report v2 and security review v2 (PASS, 0 Critical, 0 Major, 0 Minor, 4 Informational; v1 F-1 resolved) accepted. Approved, NOT Done until the final commit lands on master (AGENTS.md DoD item 10)."
+  - "SECURITY_REVIEW v2: PASS, 0 Critical / 0 Major / 0 Minor / 4 Informational, runtime_checks FULL (build 0/0, 2687/2687, no vulnerable packages). F-1 RESOLVED: body buffered under the attempt token (API and token requests), seam default 100 s, DI passes none, zero/negative/infinite refused; stalled-body tests bounded and fail without the fix; probe ends at the attempt timeout. INFO-1 attempt timer on TimeProvider.System; INFO-2 403 rate/quota reasons = TechnicalAccountCannotRead (not retried, as US-011); INFO-3 view carries Domain enum SyncDiagnosis; INFO-4 same HttpRequestMessage re-sent (safe for GETs and buffered token form)."
+  - "IMPLEMENTATION attempt 2: PASS. F-1 fixed: GoogleRetryHandler buffers the body (LoadIntoBufferAsync) under the attempt token, so the 100 s bound covers the whole attempt incl. token requests; body timeout = transient attempt. Seam: optional attemptTimeout (default 100 s, DI unchanged). One Owner-authorised test pair added (stalled body retried; every body stalling -> 4 attempts, Transient/GoogleUnavailable), proven to fail without the fix. Build 0/0; full suite 2687/2687, 0 skipped; format clean. Implementation report v2."
+  - "SECURITY_REVIEW v1: CHANGES_REQUIRED -> IMPLEMENTATION (attempt 2). 0 Critical, 1 Major, 0 Minor, 4 Informational; runtime_checks FULL (build 0/0, 2685/2685, no vulnerable packages). F-1 (Major): GoogleRetryHandler 100 s per-attempt timeout covers only SendAsync (headers); with HttpClient timeouts infinite, a stalled body / half-open connection hangs the single sync run until restart (SyncState stays Running) - regression from the former 100 s HttpClient bound; fix: bound the whole attempt incl. body (e.g. LoadIntoBufferAsync under the attempt token, timeout there = transient attempt) for API and token requests, plus a test via a seam for the attempt timeout (needs Owner agreement at IMPLEMENTATION). INFO-1 timer on TimeProvider.System; INFO-2 403 rate/quota reasons = TechnicalAccountCannotRead, not retried (as US-011); INFO-3 view carries Domain enum SyncDiagnosis; INFO-4 same HttpRequestMessage re-sent (safe for GETs and buffered token form). Both IMPLEMENTATION test corrections confirmed not weakened."
+  - "IMPLEMENTATION: PASS. Build 0/0; full suite 2685/2685, 0 skipped; format clean. Shared GoogleFailureClassifier (probe behaviour unchanged), GoogleRetryHandler (4 attempts, 2/8/30 s x jitter, Retry-After capped 120 s, on the injected TimeProvider), single GoogleClassroomReader ctor, SyncState.FailRun(SyncDiagnosis) only, use case stop/skip with closed-list diagnosis and committed count, GetLastSynchronizationQuery + Admin block (LastSync.* uk/en), SyncRunFailed level by cause, SyncCourseGone, SyncCourseNameBlank, GoogleLogValue 64-char bound. Closes US-014 F-1, US-015 F-1, US-014 I-5. Deviation found in review: HttpClient 100 s timeout would bound the whole retry sequence - now infinite, with a 100 s per-ATTEMPT timeout in the handler on TimeProvider.System (manual clock broke retry tests); NO test covers that per-attempt timeout firing - SECURITY_REVIEW should weigh it. Two TEST_WRITING defects corrected by Owner decision in conversation: SyncDiagnosisPersistenceTests started a read-only host (now not read-only, no connection); SynchronizationFailureLoggingTests counted the self-check Error line (now Sync* events only)."
+  - "TEST_WRITING: PASS. OD-010 raised and resolved by the Owner (option 1): compile-only skeleton (SyncDiagnosis, FailRun(SyncDiagnosis) overload, GoogleReadFailureKind, GoogleReadFailedException, LastSynchronizationView/Status, GetLastSynchronizationQuery, IGoogleRetryJitter, a new GoogleClassroomReader constructor) and fixed names (log events SyncGoogleRetry, SyncCourseGone, SyncCourseNameBlank; SyncRunFailed Warning for GoogleUnavailable else Error; LastSync.* translation keys). 6 new test classes + 6 fixtures, 4 existing test classes re-expressed (old RunFailed: format). Build 0/0; full suite 2685 total, 2543 passed, 142 failed, 0 skipped - exactly the new/re-expressed red tests, no regression. Tests written by three Sonnet subagents from fixed briefs, reviewed and the full suite run by the orchestrating session. DB design wording corrected (existing length/terminal checks). IMPLEMENTATION: pause via injected TimeProvider (exact nominal x factor, Retry-After capped 120 s, not jittered); register the new reader ctor, remove the old ctor and the string FailRun overload; carry the skip reason up for SyncCourseGone/SyncCourseNameBlank; diagnosis code as a property of SyncRunFailed."
+  - "DB_DESIGN: PASS with NO schema change and no migration (not NOT_APPLICABLE: new values written to sync_state.last_error and a new read). New Domain enum SyncDiagnosis (8 names of spec FR-006); SyncState.FailRun takes SyncDiagnosis instead of string and writes its name (undeclared value -> ArgumentOutOfRangeException). No check constraint and no EF enum converter: legacy RunFailed:... rows must still materialise (spec I-6). Read for the page: exact case-sensitive match against declared names, anything else -> Unexpected (NOT Enum.TryParse, which accepts numerics). Failed run stores the committed course count (I-5). Retries happen before each course transaction opens, so no transaction is held during a pause."
+  - "API_DESIGN: PASS (not NOT_APPLICABLE, unlike US-013..US-015): no new operation, path, status code, policy or antiforgery rule, but the documented view model of US-009 getWorkspaceConnectionSettings gains lastSynchronization (LastSynchronizationView: status NeverRun|Running|Completed|Failed, startedAt, finishedAt, lastSuccessfulRunAt, diagnosis = closed SyncDiagnosis enum of spec FR-006, unknown stored value -> Unexpected). Block built in the page model so the GET and the re-rendered rejected save both show it; Check access page untouched. Configuration codes render AccessCheck.Outcome.<Code>; new keys only for labels, statuses, GoogleUnavailable (sync sense), Unexpected. Dean 403 unchanged (ConfigureWorkspaceConnection)."
   - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-10-03T14:58:23Z (no comment): Specification v1 accepted; automated verdict PASS with no blocking findings. OD-001 … OD-009 arrived resolved; no new Open Decision. Interpretations I-1 … I-8 accepted as written. The Specification is now APPROVED; open_decisions stays DRAFT."
   - "SPECIFICATION: PASS. 13 functional requirements, 4 validation rules, the Story's AC-001 … AC-011 traced plus three derived (AC-012 shutdown during a retry pause, AC-013 legacy RunFailed value shown as Unexpected, AC-014 retry/classification proven through the real adapter over a scripted HTTP handler). OD-001 … OD-009 arrived resolved and are carried unchanged; no new Open Decision. Classification reuses GoogleAccessProbe's rules (configuration outcomes), with unclassifiable answers = Unexpected in sync; retry inside the Infrastructure adapter on TimeProvider; SyncState.LastError holds a closed diagnosis code; Admin block on the connection page reusing AccessCheck.Outcome.* texts; failed-run log level split (Warning for final transient, Error for configuration/unexpected)."
   - "SPECIFICATION interpretations for the gate to confirm: I-1 one call = one HTTP request (page or token); I-2 jitter ±20 %; I-3 Retry-After above 2 min is waited as 2 min; I-4 log bound 64 chars; I-5 a failed run records the courses committed before the stop (today 0); I-6 legacy RunFailed:… not migrated, shown as Unexpected; I-7 GoogleUnavailable gets a sync-specific text, the six configuration outcomes reuse Check access texts; I-8 skipped runs (read-only, unusable connection) do not touch SyncState."
 started_at: 2026-10-03T14:52:59Z
-updated_at: 2026-10-03T14:58:23Z
-completed_at: null
+updated_at: 2026-10-03T16:33:29Z
+completed_at: 2026-10-03T16:33:29Z

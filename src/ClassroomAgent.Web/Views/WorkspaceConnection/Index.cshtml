@@ -1,3 +1,4 @@
+@using ClassroomAgent.Domain.Enums
 @model WorkspaceConnectionPageModel
 @{
     ViewData["Title"] = T[WorkspaceConnectionTextKeys.Title];
@@ -17,6 +18,41 @@
 </p>
 
 <p id="connection-state">@T[StateKey(Model.State)]</p>
+
+@{
+    var last = Model.LastSynchronization;
+}
+<section id="last-synchronization">
+    <h2>@T["LastSync.Title"]</h2>
+    <p id="last-synchronization-status">@T[LastSyncStatusKey(last.Status)]</p>
+    @if (last.Status == LastSynchronizationStatus.Failed && last.Diagnosis is { } diagnosis)
+    {
+        <p id="last-synchronization-diagnosis">@T[LastSyncDiagnosisKey(diagnosis)]</p>
+    }
+    @if (last.Status == LastSynchronizationStatus.Running && last.StartedAt is { } startedAt)
+    {
+        <p>@T["LastSync.StartedAt"]: @FormatInstant(startedAt)</p>
+    }
+    else if (last.FinishedAt is { } finishedAt)
+    {
+        <p>@T["LastSync.FinishedAt"]: @FormatInstant(finishedAt)</p>
+    }
+    @if (last.Status != LastSynchronizationStatus.NeverRun)
+    {
+        if (last.LastSuccessfulRunAt is { } lastSuccess)
+        {
+            <p>@T["LastSync.LastSuccess"]: @FormatInstant(lastSuccess)</p>
+        }
+        else
+        {
+            <p>@T["LastSync.LastSuccess.None"]</p>
+        }
+    }
+    else
+    {
+        <p>@T["LastSync.LastSuccess.None"]</p>
+    }
+</section>
 
 @if (Model.SavedImpersonationUserEmail is { } saved)
 {
@@ -47,6 +83,22 @@
 </form>
 
 @functions {
+    /// <summary>As the landing page shows the last legitimacy check: the request culture's short date, HH:mm, UTC.</summary>
+    private static string FormatInstant(DateTimeOffset instant) =>
+        instant.UtcDateTime.ToString(
+            System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern + " HH:mm",
+            System.Globalization.CultureInfo.CurrentCulture) + " UTC";
+
+    private static string LastSyncStatusKey(LastSynchronizationStatus status) => "LastSync.Status." + status;
+
+    /// <summary>The six configuration outcomes reuse the "Check access" text (spec FR-007, OD-006).</summary>
+    private static string LastSyncDiagnosisKey(SyncDiagnosis diagnosis) => diagnosis switch
+    {
+        SyncDiagnosis.GoogleUnavailable => "LastSync.Diagnosis.GoogleUnavailable",
+        SyncDiagnosis.Unexpected => "LastSync.Diagnosis.Unexpected",
+        _ => "AccessCheck.Outcome." + diagnosis,
+    };
+
     private static string ReasonKey(LegitimacyModeReason? reason) => reason switch
     {
         LegitimacyModeReason.NotYetConfirmed => "Landing.ReadOnly.NotYetConfirmed",

@@ -138,4 +138,15 @@
   <data name="Password.Own.Submit" xml:space="preserve"><value>Змінити пароль</value></data>
   <data name="Password.Own.Changed" xml:space="preserve"><value>Пароль змінено.</value></data>
   <data name="Password.Own.Refused.WrongCurrent" xml:space="preserve"><value>Поточний пароль вказано неправильно.</value></data>
+  <data name="LastSync.Title" xml:space="preserve"><value>Остання синхронізація</value></data>
+  <data name="LastSync.Status.NeverRun" xml:space="preserve"><value>Синхронізація ще не запускалася</value></data>
+  <data name="LastSync.Status.Running" xml:space="preserve"><value>Виконується</value></data>
+  <data name="LastSync.Status.Completed" xml:space="preserve"><value>Завершена успішно</value></data>
+  <data name="LastSync.Status.Failed" xml:space="preserve"><value>Завершилася помилкою</value></data>
+  <data name="LastSync.StartedAt" xml:space="preserve"><value>Початок</value></data>
+  <data name="LastSync.FinishedAt" xml:space="preserve"><value>Завершення</value></data>
+  <data name="LastSync.LastSuccess" xml:space="preserve"><value>Остання успішна синхронізація</value></data>
+  <data name="LastSync.LastSuccess.None" xml:space="preserve"><value>Успішної синхронізації ще не було</value></data>
+  <data name="LastSync.Diagnosis.GoogleUnavailable" xml:space="preserve"><value>Google не відповів після кількох спроб. Наступний запуск спробує ще раз.</value></data>
+  <data name="LastSync.Diagnosis.Unexpected" xml:space="preserve"><value>Запуск зупинила непередбачена помилка. Наступний запуск спробує ще раз.</value></data>
 </root>
