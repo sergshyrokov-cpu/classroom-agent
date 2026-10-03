@@ -71,6 +71,16 @@ public static partial class UiLanguageTestData
     /// <summary>The return path the first switcher form carries, decoded; null when absent.</summary>
     public static string? RenderedReturnPath(string html) => Html.InputValue(html, Fields.ReturnPath);
 
+    /// <summary>
+    /// The page without the switcher. The switcher carries the current path and query as its return path (spec
+    /// FR-006, I-4), HTML-encoded in a hidden input; a test that asserts a query value is never reflected into the
+    /// page checks the rest of the page with this (Owner decision at US-039 IMPLEMENTATION).
+    /// </summary>
+    public static string WithoutSwitcher(string html) => SwitcherBlock().Replace(html, string.Empty);
+
+    [GeneratedRegex("<nav class=\"language-switcher\"[\\s\\S]*?</nav>", RegexOptions.IgnoreCase)]
+    private static partial Regex SwitcherBlock();
+
     [GeneratedRegex("<html[^>]*\\slang=\"([^\"]+)\"", RegexOptions.IgnoreCase)]
     private static partial Regex HtmlLang();
 

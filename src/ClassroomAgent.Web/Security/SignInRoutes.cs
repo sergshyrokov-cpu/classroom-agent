@@ -43,6 +43,9 @@ public static class SignInRoutes
     /// <summary>US-012 openapi: the Dean's own password page.</summary>
     public const string OwnPassword = "/account/password";
 
+    /// <summary>US-039: the signed-in user's own language choice (openapi <c>POST /account/language</c>).</summary>
+    public const string Language = "/account/language";
+
     /// <summary>The key the US-012 message travels under in TempData — never a query parameter (the US-008 rule).</summary>
     public const string MessageTempDataKey = "DeanAccountMessage";
 

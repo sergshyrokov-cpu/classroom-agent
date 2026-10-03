@@ -13,6 +13,9 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Layout.AppName" xml:space="preserve"><value>Моніторинг навчання</value></data>
+  <data name="Layout.Language.Uk" xml:space="preserve"><value>УКР</value></data>
+  <data name="Layout.Language.En" xml:space="preserve"><value>ENG</value></data>
+  <data name="Layout.Language.Switcher" xml:space="preserve"><value>Мова інтерфейсу</value></data>
   <data name="SignIn.Title" xml:space="preserve"><value>Вхід</value></data>
   <data name="SignIn.Google.Button" xml:space="preserve"><value>Увійти через Google</value></data>
   <data name="SignIn.Refused.NotApproved" xml:space="preserve"><value>Вхід неможливий. Зверніться до власника сервісу.</value></data>

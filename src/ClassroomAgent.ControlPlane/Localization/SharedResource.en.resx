@@ -13,6 +13,9 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Layout.AppName" xml:space="preserve"><value>Control Plane</value></data>
+  <data name="Layout.Language.Uk" xml:space="preserve"><value>УКР</value></data>
+  <data name="Layout.Language.En" xml:space="preserve"><value>ENG</value></data>
+  <data name="Layout.Language.Switcher" xml:space="preserve"><value>Interface language</value></data>
   <data name="Setup.Title" xml:space="preserve"><value>First-run setup</value></data>
   <data name="Setup.Intro" xml:space="preserve"><value>Create the Owner account. The one-time code is shown on the server console.</value></data>
   <data name="Setup.SetupCode.Label" xml:space="preserve"><value>One-time code</value></data>

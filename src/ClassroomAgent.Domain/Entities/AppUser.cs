@@ -220,9 +220,16 @@ public sealed class AppUser
     /// The user's own choice of UI language (US-039 spec FR-004). Not a credential change: the security stamp is
     /// not rotated (spec I-3).
     /// </summary>
-    /// <remarks>US-039 OD-008: compile-only skeleton; IMPLEMENTATION writes the body.</remarks>
-    public void ChooseUiLanguage(UiLanguage language) =>
-        throw new NotImplementedException();
+    public void ChooseUiLanguage(UiLanguage language)
+    {
+        if (!Enum.IsDefined(language))
+        {
+            throw new ArgumentOutOfRangeException(nameof(language), language, null);
+        }
+
+        UiLanguage = language;
+        ConcurrencyStamp = NewStamp();
+    }
 
     /// <summary>
     /// Ends every session issued so far: the stamp travels in the session cookie and is compared with this one on

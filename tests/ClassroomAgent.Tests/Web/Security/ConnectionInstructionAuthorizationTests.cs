@@ -227,7 +227,10 @@ public sealed class ConnectionInstructionAuthorizationTests(PostgreSqlFixture da
 
         Assert.Equal(HttpStatusCode.OK, withQuery.Status);
         Assert.Contains(ConnectionInstructionTestData.ClientId, withQuery.Text, StringComparison.Ordinal);
-        Assert.DoesNotContain("attacker.example.test", withQuery.Text, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "attacker.example.test",
+            WebUtility.HtmlDecode(UiLanguageTestData.WithoutSwitcher(withQuery.Body)),
+            StringComparison.Ordinal);
         Assert.DoesNotContain("999", ConnectionInstructionHostExtensions.HandedOverText(withQuery));
         Assert.Equal(
             ConnectionInstructionHostExtensions.HandedOverText(plain),

@@ -13,6 +13,9 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Layout.AppName" xml:space="preserve"><value>Teaching monitor</value></data>
+  <data name="Layout.Language.Uk" xml:space="preserve"><value>УКР</value></data>
+  <data name="Layout.Language.En" xml:space="preserve"><value>ENG</value></data>
+  <data name="Layout.Language.Switcher" xml:space="preserve"><value>Interface language</value></data>
   <data name="SignIn.Title" xml:space="preserve"><value>Sign in</value></data>
   <data name="SignIn.Google.Button" xml:space="preserve"><value>Sign in with Google</value></data>
   <data name="SignIn.Refused.NotApproved" xml:space="preserve"><value>Signing in is not possible. Contact the service owner.</value></data>

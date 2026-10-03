@@ -24,3 +24,22 @@ button {
     font: inherit;
     padding: 0.5rem 1rem;
 }
+
+.page-header {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 0.5rem 1rem 0;
+}
+
+.language-switcher {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.language-switcher form { margin: 0; }
+
+.language-switcher button { padding: 0.25rem 0.5rem; }
+
+.language-switcher [aria-current="true"] { font-weight: bold; }

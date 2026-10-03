@@ -54,6 +54,25 @@ public static class InstallationSession
             new AuthenticationProperties { IsPersistent = false, AllowRefresh = true });
     }
 
+    /// <summary>
+    /// Re-issues the current session with only the language claim replaced (US-039 spec FR-005, api-design §2.3).
+    /// Every other claim is copied — the sign-in time above all, so the 8-hour absolute limit still counts from the
+    /// original sign-in (I-2), and the security stamp, so the per-request check and sign-out keep working (I-3).
+    /// </summary>
+    public static Task ReissueWithLanguageAsync(HttpContext context, UiLanguage language)
+    {
+        var current = context.User.Claims
+            .Where(c => c.Type != InstallationClaimTypes.UiLanguage)
+            .Select(c => new Claim(c.Type, c.Value))
+            .Append(new Claim(InstallationClaimTypes.UiLanguage, LanguageCode(language)));
+        var identity = new ClaimsIdentity(current, CookieAuthenticationDefaults.AuthenticationScheme);
+
+        return context.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(identity),
+            new AuthenticationProperties { IsPersistent = false, AllowRefresh = true });
+    }
+
     public static string RoleName(AppRole role) => role switch
     {
         AppRole.Admin => nameof(AppRole.Admin),

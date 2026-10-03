@@ -110,6 +110,7 @@ public static class InstallationServices
         services.AddScoped<SignInDeanUseCase>();
         services.AddScoped<CompleteTemporaryPasswordChangeUseCase>();
         services.AddScoped<ChangeOwnPasswordUseCase>();
+        services.AddScoped<ChooseUiLanguageUseCase>();
         services.AddScoped<RunStartupSelfCheckUseCase>();
 
         // US-013 spec FR-005, FR-006, FR-015: the run and the single sync_state row.

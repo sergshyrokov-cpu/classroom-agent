@@ -122,12 +122,13 @@ public sealed class WorkspaceConnectionReadOnlyTests(PostgreSqlFixture database)
     /// The registry grew from three entries to six in US-012, which declares the Dean's sign-in and the two
     /// password changes as <c>SignInBookkeeping</c> — the BR-026 member that already names sign-in bookkeeping
     /// and "a Dean changing their own password". The closed list itself did not grow, which the test above
-    /// asserts; this test keeps its own point, that nothing of US-009 is exempt.
+    /// asserts; this test keeps its own point, that nothing of US-009 is exempt. US-039 (spec FR-007) added the
+    /// seventh: a user choosing their UI language, under the same member.
     /// </remarks>
     [Fact]
     public void NoNewUseCase_IsRegisteredAsAPermittedServiceWrite()
     {
-        Assert.Equal(6, PermittedServiceWrites.Declarations.Count);
+        Assert.Equal(7, PermittedServiceWrites.Declarations.Count);
         Assert.DoesNotContain(
             PermittedServiceWrites.Declarations.Keys,
             t => t.Name.Contains("WorkspaceConnection", StringComparison.Ordinal));

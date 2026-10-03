@@ -12,7 +12,7 @@
         <p>@T[ReasonKey(Model.ReadOnlyReason)]</p>
         @if (Model.LastSuccessfulCheckAt is { } checkedAt)
         {
-            <p>@T["Landing.ReadOnly.LastSuccessfulCheck"]: @checkedAt.UtcDateTime.ToString("dd.MM.yyyy HH:mm", System.Globalization.CultureInfo.InvariantCulture) UTC</p>
+            <p>@T["Landing.ReadOnly.LastSuccessfulCheck"]: @checkedAt.UtcDateTime.ToString(System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern + " HH:mm", System.Globalization.CultureInfo.CurrentCulture) UTC</p>
         }
     </section>
 }

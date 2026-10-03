@@ -33,7 +33,7 @@
                 <td class="dean-email">@dean.Email</td>
                 <td class="dean-state">@T[dean.IsDisabled ? DeanAccountTextKeys.StateDisabled : DeanAccountTextKeys.StateActive]</td>
                 <td class="dean-temporary">@(dean.PasswordIsTemporary ? "+" : "—")</td>
-                <td class="dean-last-sign-in">@(dean.LastSuccessfulSignInAt?.ToString("yyyy-MM-dd") ?? "—")</td>
+                <td class="dean-last-sign-in">@(dean.LastSuccessfulSignInAt?.UtcDateTime.ToString("d", System.Globalization.CultureInfo.CurrentCulture) ?? "—")</td>
                 <td>
                     <form method="post" action="/settings/deans/@dean.Id/state">
                         @Html.AntiForgeryToken()

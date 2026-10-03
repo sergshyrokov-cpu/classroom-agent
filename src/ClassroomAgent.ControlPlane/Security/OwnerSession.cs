@@ -40,6 +40,25 @@ public static class OwnerSession
             new AuthenticationProperties { IsPersistent = false, AllowRefresh = true });
     }
 
+    /// <summary>
+    /// Re-issues the current session with only the language claim replaced (US-039 spec FR-005, api-design §2.3).
+    /// The sign-in time and the security stamp are copied, so the 8-hour limit still counts from the original
+    /// sign-in (I-2) and sign-out still ends this cookie (I-3).
+    /// </summary>
+    public static Task ReissueWithLanguageAsync(HttpContext context, string languageCode)
+    {
+        var claims = context.User.Claims
+            .Where(c => c.Type != OwnerClaimTypes.UiLanguage)
+            .Select(c => new Claim(c.Type, c.Value))
+            .Append(new Claim(OwnerClaimTypes.UiLanguage, languageCode));
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+        return context.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(identity),
+            new AuthenticationProperties { IsPersistent = false, AllowRefresh = true });
+    }
+
     /// <summary>The Owner id of a signed-in principal, or null.</summary>
     public static long? OwnerId(ClaimsPrincipal principal) =>
         long.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), NumberStyles.None, CultureInfo.InvariantCulture, out var id)

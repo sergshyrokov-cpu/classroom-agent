@@ -36,5 +36,9 @@ public static class PermittedServiceWrites
 
             // US-012 spec FR-014, FR-015: the same permission for a later, voluntary change.
             [typeof(ChangeOwnPasswordUseCase)] = PermittedServiceWrite.SignInBookkeeping,
+
+            // US-039 spec FR-007: BR-026 names "a user choosing their UI language" in the same entry as the password
+            // changes, so the choice works in read-only mode as well. The closed list itself does not grow.
+            [typeof(ChooseUiLanguageUseCase)] = PermittedServiceWrite.SignInBookkeeping,
         };
 }

@@ -167,7 +167,8 @@ public sealed class InstallationStatusUnchangedTests(PostgreSqlFixture database)
         Assert.DoesNotContain(InstallationStatusTestData.NoticeElement, detail.Body, StringComparison.Ordinal);
         Assert.DoesNotContain(host.Text("Installation.Status.AlreadySuspended", "uk"), detail.Text, StringComparison.Ordinal);
         Assert.DoesNotContain(host.Text("Installation.Status.AlreadyActive", "uk"), detail.Text, StringComparison.Ordinal);
-        Assert.DoesNotContain(notice, detail.Body, StringComparison.Ordinal);
+        Assert.DoesNotContain(notice, UiLanguageTestData.WithoutSwitcher(detail.Body), StringComparison.Ordinal);
+        Assert.DoesNotContain("<script>", detail.Body, StringComparison.Ordinal);
     }
 
     [Fact]

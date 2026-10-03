@@ -1,0 +1,36 @@
+@using System.Globalization
+@using Microsoft.AspNetCore.Authorization
+@*
+    US-039 header switcher (spec FR-002, openapi x-ui-elements LanguageSwitcher): rendered only on a page whose
+    endpoint requires sign-in, so the sign-in pages, the first-run setup and the error page — SC-4's anonymous
+    list — never show it (OD-002, I-5). One plain POST form per offered language, no JavaScript; the current
+    language is marked, not a submit. Built from the request, never from an entity (AD-8).
+*@
+@{
+    var requiresSignIn = Context.GetEndpoint()?.Metadata.GetMetadata<IAllowAnonymous>() is null;
+    if (User.Identity?.IsAuthenticated == true && requiresSignIn)
+    {
+        var current = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        var returnPath = Context.Request.Path.Value + Context.Request.QueryString.Value;
+        (string Code, string Key)[] languages = [("uk", "Layout.Language.Uk"), ("en", "Layout.Language.En")];
+
+        <nav class="language-switcher" aria-label="@T["Layout.Language.Switcher"]">
+            @foreach (var (code, key) in languages)
+            {
+                if (code == current)
+                {
+                    <span lang="@code" aria-current="true">@T[key]</span>
+                }
+                else
+                {
+                    <form method="post" action="/account/language">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="language" value="@code" />
+                        <input type="hidden" name="returnPath" value="@returnPath" />
+                        <button type="submit" lang="@code">@T[key]</button>
+                    </form>
+                }
+            }
+        </nav>
+    }
+}
