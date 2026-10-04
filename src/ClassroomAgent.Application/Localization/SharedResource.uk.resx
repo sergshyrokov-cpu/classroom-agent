@@ -154,4 +154,40 @@
   <data name="Synchronization.Request.RequestedAfterCurrentWork" xml:space="preserve"><value>Синхронізацію запитано. Вона почнеться, щойно завершиться поточна синхронізація або очищення.</value></data>
   <data name="Synchronization.Request.ConnectionNotUsableAdmin" xml:space="preserve"><value>Синхронізацію не запущено: підключення до Google Workspace не налаштоване. Спершу збережіть підключення.</value></data>
   <data name="Synchronization.Request.ConnectionNotUsableDean" xml:space="preserve"><value>Синхронізацію не запущено: підключення до Google Workspace не налаштоване. Зверніться до адміністратора.</value></data>
+  <data name="Journal.Title" xml:space="preserve"><value>Журнал</value></data>
+  <data name="Journal.NavigationEntry" xml:space="preserve"><value>Журнал</value></data>
+  <data name="Journal.WorkspaceSection" xml:space="preserve"><value>Google Workspace</value></data>
+  <data name="Journal.Form.Course" xml:space="preserve"><value>Курс</value></data>
+  <data name="Journal.Form.ChooseCourse" xml:space="preserve"><value>— оберіть курс —</value></data>
+  <data name="Journal.Form.From" xml:space="preserve"><value>З</value></data>
+  <data name="Journal.Form.To" xml:space="preserve"><value>по</value></data>
+  <data name="Journal.Form.Show" xml:space="preserve"><value>Показати</value></data>
+  <data name="Journal.View.Label" xml:space="preserve"><value>Вигляд</value></data>
+  <data name="Journal.View.Full" xml:space="preserve"><value>повний</value></data>
+  <data name="Journal.View.Short" xml:space="preserve"><value>скорочений</value></data>
+  <data name="Journal.NoCourses" xml:space="preserve"><value>Жоден курс ще не синхронізовано.</value></data>
+  <data name="Journal.Column.Student" xml:space="preserve"><value>Учень</value></data>
+  <data name="Journal.Column.MaxPoints" xml:space="preserve"><value>макс.</value></data>
+  <data name="Journal.Column.Material" xml:space="preserve"><value>матеріал</value></data>
+  <data name="Journal.Row.Unnamed" xml:space="preserve"><value>учень без імені</value></data>
+  <data name="Journal.Mark.Late" xml:space="preserve"><value>із запізненням</value></data>
+  <data name="Journal.Mark.Draft" xml:space="preserve"><value>чернетка:</value></data>
+  <data name="Journal.Mark.TurnedInOn" xml:space="preserve"><value>здано</value></data>
+  <data name="Journal.Cell.NotAssigned" xml:space="preserve"><value>не призначено</value></data>
+  <data name="Journal.Cell.Unrecognised" xml:space="preserve"><value>нерозпізнаний стан</value></data>
+  <data name="Journal.Cell.TurnedInNotGraded" xml:space="preserve"><value>здано, не оцінено</value></data>
+  <data name="Journal.Cell.ReturnedWithoutGrade" xml:space="preserve"><value>повернуто без оцінки</value></data>
+  <data name="Journal.Cell.TurnedIn" xml:space="preserve"><value>здано</value></data>
+  <data name="Journal.Cell.Returned" xml:space="preserve"><value>повернуто</value></data>
+  <data name="Journal.Cell.NotTurnedIn" xml:space="preserve"><value>не здано</value></data>
+  <data name="Journal.Cell.NotDueYet" xml:space="preserve"><value>термін ще не минув</value></data>
+  <data name="Journal.Cell.NotTurnedInNoDueDate" xml:space="preserve"><value>не здано, без терміну</value></data>
+  <data name="Journal.Validation.CourseMalformed" xml:space="preserve"><value>Оберіть курс зі списку.</value></data>
+  <data name="Journal.Validation.CourseUnknown" xml:space="preserve"><value>Цього курсу немає в програмі — оберіть курс зі списку.</value></data>
+  <data name="Journal.Validation.FromMalformed" xml:space="preserve"><value>Дата початку періоду не є коректною датою.</value></data>
+  <data name="Journal.Validation.ToMalformed" xml:space="preserve"><value>Дата кінця періоду не є коректною датою.</value></data>
+  <data name="Journal.Validation.PeriodInverted" xml:space="preserve"><value>Початок періоду пізніший за його кінець.</value></data>
+  <data name="Journal.Validation.ViewUnknown" xml:space="preserve"><value>Невідомий вигляд журналу.</value></data>
+  <data name="Journal.Empty.NoColumns" xml:space="preserve"><value>У цьому періоді немає жодного завдання чи матеріалу.</value></data>
+  <data name="Journal.Empty.NoRows" xml:space="preserve"><value>У цьому періоді в курсі немає учнів.</value></data>
 </root>

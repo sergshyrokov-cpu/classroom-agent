@@ -4,22 +4,19 @@
 version: 1
 story: US-025
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: security-reviewer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: 2026-10-04T10:25:00Z
+  stage: SECURITY_REVIEW
+  recorded_at: 2026-10-04T13:55:00Z
 last_artifacts:
-  - type: database_design
-    path: docs/designs/database/US-025-db-design.md
-    version: 1
-  - type: entity_model
-    path: docs/designs/database/US-025-entity-model.md
+  - type: security_review
+    path: docs/reviews/security/US-025-security-review.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
@@ -30,6 +27,14 @@ non_blocking_findings:
   - "AGENTS.md Domain Essentials is marked verified against v80; trebovaniya.md is at v82."
   - "DB F-1: spec FR-006 assumes at most one submission per student and item, but the schema allows more (US-015 db-design 4.3, non-unique index). Resolved as OD-008 (a) by the Owner on 2026-10-04 (open-decisions v2): latest UpdateTime, absent is oldest, then larger id."
   - "DB F-2: no convention defines a read-only transaction; journal queries rely on tolerance between statements (db-design 2.1)."
+  - "TEST F-1: this machine's .NET runtime knows only Europe/Kiev, not Europe/Kyiv (old Windows ICU). Fixtures use whichever resolves; a school configured with Europe/Kyiv on such a host would refuse to start under FR-010. Resolved as OD-010 (a) by the Owner on 2026-10-04: the Data Plane accepts both spellings."
+  - "TEST F-3: JournalLoggingTests expects the course id as a structured log property (FR-016)."
+  - "IMPL D-1: the US-039 language switcher echoed the raw query string into its hidden returnPath; a page may now set its own return path (ViewData), the journal sets its canonical URL from validated values (spec VR-005). For SECURITY_REVIEW."
+  - "IMPL D-2: journal test fixtures raced the start-up retention purge (participants without a membership deleted between inserts); fixtures now wait for the first purge run. No assertion changed."
+  - "SEC I-1: the journal page (personal data) is sent without Cache-Control no-store; no convention requires it — Owner decision."
+  - "SEC I-2: the language switcher still reflects the raw query string on pages that do not set the return-path override (US-039 INFO-1); later query-string pages should set it."
+  - "SEC I-3: a period may span 2000–2100; bounded by one course, no rate limit defined."
+  - "SEC I-4: Windows time zone id refusal relies on TimeZoneInfo.HasIanaId, verified on Windows only — confirm on the first Linux deployment."
 started_at: 2026-10-04T09:17:53Z
-updated_at: 2026-10-04T10:40:00Z
-completed_at: null
+updated_at: 2026-10-04T14:10:00Z
+completed_at: 2026-10-04T14:10:00Z

@@ -43,3 +43,15 @@ button {
 .language-switcher button { padding: 0.25rem 0.5rem; }
 
 .language-switcher [aria-current="true"] { font-weight: bold; }
+
+/* US-025 NFR-070: the journal scrolls horizontally inside the page instead of widening it. */
+.table-scroll { overflow-x: auto; }
+
+.table-scroll table { border-collapse: collapse; }
+
+.table-scroll th,
+.table-scroll td {
+    border: 1px solid currentColor;
+    padding: 0.25rem 0.5rem;
+    vertical-align: top;
+}

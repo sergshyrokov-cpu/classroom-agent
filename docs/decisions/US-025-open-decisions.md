@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-025
-version: 2
+version: 4
 status: DRAFT
 created_at: 2026-10-04T09:15:50Z
-updated_at: 2026-10-04T10:40:00Z
+updated_at: 2026-10-04T12:40:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-025-journal-view-for-period.md
@@ -134,3 +134,36 @@ FR-006 cell — state, grades, late mark, last turn-in date. Spec FR-005
 condition 2 ("a submission in the period") is met by any of them. Every
 submission of the student to the item is still read (db-design §2, Q4); the
 choice is made in memory in `Application`.
+
+## Raised at TEST_WRITING
+
+### OD-009 Compile-only skeleton created at TEST_WRITING
+
+The tests call types that do not exist yet (`IJournalSource`, its read
+records, `GetJournalQuery`, the `JournalPageModel` DTOs, the time zone setting,
+the `ViewJournal` policy); the test-writer may not change production behaviour,
+and no artifact says who creates them — the gap US-014 (OD-012) and US-019
+(OD-010) resolved the same way.
+
+Options: (a) a compile-only skeleton — only the declarations the tests
+reference, members throwing `NotImplementedException`, nothing registered in DI,
+no existing behaviour changed; (b) no skeleton — tests that do not compile until
+IMPLEMENTATION.
+
+**Resolution:** (a) — Owner, 2026-10-04.
+
+### OD-010 The two spellings of the Kyiv time zone id
+
+Raised by TEST_WRITING (test-generation report F-1). tzdata 2022b renamed
+`Europe/Kiev` to `Europe/Kyiv`; a runtime with older time zone data (the .NET 10
+runtime on the Owner's Windows 10 machine, through Windows' bundled ICU) knows
+only `Europe/Kiev`, and a newer one may know only `Europe/Kyiv` as canonical.
+Under spec FR-010 / VR-006 a school configured with the spelling its server does
+not know would refuse to start.
+
+Options: (a) the Data Plane accepts both spellings — if the configured id is not
+known to the runtime, the other spelling of the same zone is tried before the
+start is refused; (b) the deployment guide (DC-3) names the one spelling to use.
+
+**Resolution:** (a) — Owner, 2026-10-04. Only this pair is aliased; any other
+unknown id still stops the start (VR-006).

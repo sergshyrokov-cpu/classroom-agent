@@ -11,7 +11,8 @@
     if (User.Identity?.IsAuthenticated == true && requiresSignIn)
     {
         var current = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-        var returnPath = Context.Request.Path.Value + Context.Request.QueryString.Value;
+        var returnPath = ViewData[ClassroomAgent.Web.Controllers.UiLanguageController.ReturnPathViewDataKey] as string
+            ?? Context.Request.Path.Value + Context.Request.QueryString.Value;
         (string Code, string Key)[] languages = [("uk", "Layout.Language.Uk"), ("en", "Layout.Language.En")];
 
         <nav class="language-switcher" aria-label="@T["Layout.Language.Switcher"]">

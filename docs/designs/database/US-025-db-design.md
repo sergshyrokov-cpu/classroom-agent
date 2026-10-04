@@ -51,11 +51,12 @@ never calls `IUnitOfWork` (spec FR-013, S-04).
 
 A journal request issues **at most four round trips**, whatever the number of
 rows and columns (spec FR-014). The order is the evaluation order of
-api-design §3; a failure of query shape stops before Q1.
+api-design §3; a failure of query shape stops before Q2 — Q1 feeds the form,
+not the journal.
 
 | # | When | Query (logical SQL) | Index used |
 |---|---|---|---|
-| Q1 | every request with a valid query shape | `SELECT id, name, section FROM course` | none — whole table (§3.2) |
+| Q1 | every request — the form always shows the drop-down, also on `400` / `404` (api-design §2.3) | `SELECT id, name, section FROM course` | none — whole table (§3.2) |
 | Q2 | `courseId` given and present in Q1 | `SELECT … FROM course_work WHERE course_id = @c AND item_date >= @start AND item_date < @end` | `ix_course_work_course_item_date` |
 | Q3 | after Q2, only if Q2 returned at least one item | `SELECT m.participant_id, m.first_seen_at, m.last_seen_at, m.on_roster, p.full_name, p.email FROM course_membership m JOIN classroom_participant p ON p.id = m.participant_id WHERE m.course_id = @c AND m.role = 'student'` | `uq_course_membership_course_participant` (leading `course_id`); `pk_classroom_participant` |
 | Q4 | after Q3, only if Q3 returned at least one membership | `SELECT s.id, s.course_work_id, s.participant_id, s.update_time, s.state, s.raw_state, s.assigned_grade, s.draft_grade, s.turned_in_at, s.late FROM submission s JOIN course_work w ON w.id = s.course_work_id WHERE w.course_id = @c AND w.item_date >= @start AND w.item_date < @end` | `ix_course_work_course_item_date` → `ix_submission_course_work_participant` (leading `course_work_id`) |

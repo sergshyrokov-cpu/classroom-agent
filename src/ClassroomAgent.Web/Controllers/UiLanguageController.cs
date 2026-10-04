@@ -16,6 +16,12 @@ public sealed class UiLanguageController(ChooseUiLanguageUseCase chooseLanguage)
     /// <summary>VR-002: the longest return path that is used at all.</summary>
     public const int MaxReturnPathLength = 2048;
 
+    /// <summary>
+    /// US-025 spec VR-005: a page whose query must not be echoed sets its own return path under this ViewData key;
+    /// the switcher otherwise returns to the request's path and query (US-039).
+    /// </summary>
+    public const string ReturnPathViewDataKey = "LanguageReturnPath";
+
     [HttpPost(SignInRoutes.Language)]
     [Authorize(Policy = InstallationPolicies.AuthenticatedUser)]
     public async Task<IActionResult> Choose(

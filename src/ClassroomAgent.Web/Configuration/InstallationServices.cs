@@ -148,6 +148,13 @@ public static class InstallationServices
 
         services.AddScoped<RunSynchronizationUseCase>();
 
+        // US-025 spec FR-010, FR-014, entity model §6: the school's time zone as its own narrow record (as
+        // RetentionSettings), the journal's read port and its query. The query reads only — no guard, no unit of
+        // work, no Google port (spec FR-013).
+        services.AddSingleton(new SchoolTimeZone(settings.TimeZone));
+        services.AddScoped<IJournalSource, JournalSource>();
+        services.AddScoped<GetJournalQuery>();
+
         // US-017 spec FR-007: the "Last synchronization" block of the connection page. It reads and writes
         // nothing, so it needs no guard and no unit of work.
         services.AddScoped<GetLastSynchronizationQuery>();

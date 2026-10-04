@@ -34,6 +34,12 @@ public static class SignInRoutes
     /// </summary>
     public const string SynchronizationRequests = "/synchronization/requests";
 
+    /// <summary>
+    /// US-025 openapi: the journal of one course for a period, in the Google Workspace section (api-design §2.1).
+    /// GET only; the form submits to it.
+    /// </summary>
+    public const string Journal = "/workspace/journal";
+
     /// <summary>US-012 openapi: the Admin's Dean accounts screen, its list and its creation form.</summary>
     public const string Deans = "/settings/deans";
 

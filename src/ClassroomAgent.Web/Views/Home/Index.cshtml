@@ -34,6 +34,13 @@ else
     </form>
 }
 
+@* US-025 spec FR-011: the Google Workspace section (trebovaniya.md v83), for Admin and Dean, in read-only mode too.
+   A plain link, not enforcement — the ViewJournal policy is. *@
+<nav id="workspace-section">
+    <h2>@T[JournalTextKeys.WorkspaceSection]</h2>
+    <a href="@SignInRoutes.Journal">@T[JournalTextKeys.NavigationEntry]</a>
+</nav>
+
 @if (User.IsInRole("Admin"))
 {
     <nav id="admin-settings">

@@ -17,6 +17,10 @@ namespace ClassroomAgent.Web.Configuration;
 /// US-015 spec FR-012, VR-008: the retention period N in whole years. Required with no default — an
 /// installation without it refuses to start (DC-3, PC-11, <c>trebovaniya.md</c> §5).
 /// </param>
+/// <param name="TimeZone">
+/// US-025 spec FR-010: the school's time zone, resolved from its IANA id. Required — an installation without a
+/// valid one refuses to start (NFR-074, DC-3).
+/// </param>
 /// <param name="SyncInterval">
 /// US-013 spec FR-013: the optional synchronization run interval; the default is applied by the code that reads
 /// it, not here.
@@ -33,5 +37,6 @@ public sealed record InstallationSettings(
     string OAuthClientSecret,
     UiLanguage DefaultUiLanguage,
     int RetentionYears,
+    TimeZoneInfo TimeZone,
     string? ServiceAccountKeyReference = null,
     TimeSpan SyncInterval = default);

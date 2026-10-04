@@ -38,6 +38,12 @@ public static class InstallationPolicies
     public const string StartSynchronization = nameof(StartSynchronization);
 
     /// <summary>
+    /// "Просмотр и экспорт журнала успеваемости" — ✔ Admin, ✔ Dean (<c>trebovaniya.md</c> §2; US-025 spec FR-012).
+    /// Its own policy for its own matrix row; the export Stories reuse it.
+    /// </summary>
+    public const string ViewJournal = nameof(ViewJournal);
+
+    /// <summary>
     /// US-012 spec FR-016: creating, disabling, re-enabling and resetting the password of a Dean account.
     /// Admin only — the matrix row is "Создание, отключение и включение, сброс пароля учётных записей
     /// Деканов", ✔ Admin, ✘ Dean (<c>trebovaniya.md</c> §2 v64).

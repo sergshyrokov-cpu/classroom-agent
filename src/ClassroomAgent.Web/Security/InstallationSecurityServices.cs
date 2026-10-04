@@ -71,6 +71,14 @@ public static class InstallationSecurityServices
                     InstallationSession.RoleName(AppRole.Admin),
                     InstallationSession.RoleName(AppRole.Dean)));
 
+            // US-025 spec FR-012: viewing the journal is granted to both roles (§2), its own policy; no per-course
+            // restriction for a Dean in v1 and no scoping by roster (S-03).
+            options.AddPolicy(
+                InstallationPolicies.ViewJournal,
+                policy => policy.RequireAuthenticatedUser().RequireRole(
+                    InstallationSession.RoleName(AppRole.Admin),
+                    InstallationSession.RoleName(AppRole.Dean)));
+
             // US-012 spec FR-016: managing Dean accounts is the Admin's cell of the §2 matrix (v64).
             options.AddPolicy(
                 InstallationPolicies.ManageDeanAccounts,

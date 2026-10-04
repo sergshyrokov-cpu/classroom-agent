@@ -48,6 +48,10 @@ public sealed class InstallationTestHost : IAsyncDisposable
             // US-015 spec FR-012, VR-008: required with no default, so every host test must carry it or the
             // installation refuses to start. RetentionConfigurationTests removes or corrupts it on purpose.
             ["Retention:Years"] = "5",
+
+            // US-025 spec FR-010, VR-006: required, an IANA id. TC-8: a non-UTC zone with daylight saving.
+            // TimeZoneConfigurationTests removes or corrupts it on purpose.
+            [JournalTestData.TimeZoneKey] = JournalTestData.KyivZoneId,
         };
     }
 

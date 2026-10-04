@@ -1,0 +1,167 @@
+@using System.Globalization
+@using ClassroomAgent.Application.Models.Dtos
+@using ClassroomAgent.Domain.Enums
+@model JournalPageModel
+@{
+    ViewData["Title"] = T[JournalTextKeys.Title];
+
+    // Spec VR-005, api-design §2.3: the language switcher returns to the effective query — never the raw one, so a
+    // malformed value or an unknown parameter is not echoed.
+    ViewData[UiLanguageController.ReturnPathViewDataKey] = JournalUrl(Model.View == JournalView.Short ? "short" : "full");
+    var culture = CultureInfo.CurrentCulture;
+    var viewText = Model.View == JournalView.Short ? "short" : "full";
+}
+
+@* Spec FR-008: every message the query found, in parameter order; a malformed value is never echoed. *@
+@foreach (var message in Model.MessageKeys)
+{
+    <p class="form-error">@T[JournalTextKeys.Validation(message)]</p>
+}
+
+@* api-design §2.1: the form submits to this page by GET, so a journal is a bookmarkable URL. The query string carries
+   the internal course id, two dates and the view — no personal data (spec S-05). *@
+<form id="journal-form" method="get" action="@SignInRoutes.Journal">
+    @if (Model.NoCoursesStored)
+    {
+        <p>@T[JournalTextKeys.NoCourses]</p>
+    }
+    else
+    {
+        <p>
+            <label for="journal-course">@T[JournalTextKeys.CourseLabel]</label>
+            <select id="journal-course" name="@JournalController.CourseIdParameter">
+                <option value="">@T[JournalTextKeys.ChooseCourse]</option>
+                @foreach (var course in Model.Courses)
+                {
+                    <option value="@course.Id.ToString(CultureInfo.InvariantCulture)" selected="@(course.Id == Model.SelectedCourseId)">@CourseLabel(course)</option>
+                }
+            </select>
+        </p>
+    }
+    <p>
+        <label for="journal-from">@T[JournalTextKeys.FromLabel]</label>
+        <input id="journal-from" type="date" name="@JournalController.FromParameter" value="@IsoDate(Model.From)" />
+        <label for="journal-to">@T[JournalTextKeys.ToLabel]</label>
+        <input id="journal-to" type="date" name="@JournalController.ToParameter" value="@IsoDate(Model.To)" />
+    </p>
+    <input type="hidden" name="@JournalController.ViewParameter" value="@viewText" />
+    <button type="submit">@T[JournalTextKeys.Show]</button>
+</form>
+
+@if (Model.EmptyStateKey is { } empty)
+{
+    <p id="journal-empty">@T[JournalTextKeys.Empty(empty)]</p>
+}
+
+@if (Model.Journal is { } journal)
+{
+    @* api-design §2.4: the switch re-requests the page with the other view; the current one is marked. *@
+    <nav id="journal-view-switch">
+        @T[JournalTextKeys.ViewLabel]:
+        <a href="@JournalUrl("full")" aria-current="@(Model.View == JournalView.Full ? "page" : null)">@T[JournalTextKeys.FullView]</a>
+        <a href="@JournalUrl("short")" aria-current="@(Model.View == JournalView.Short ? "page" : null)">@T[JournalTextKeys.ShortView]</a>
+    </nav>
+
+    @* NFR-070: the table scrolls inside the page rather than widening it. Every Google string is HTML-encoded by
+       Razor and never translated (spec FR-015, VR-005). *@
+    <div class="table-scroll">
+        <table id="journal-table">
+            <thead>
+                <tr>
+                    <th scope="col">@T[JournalTextKeys.StudentHeader]</th>
+                    @foreach (var column in journal.Columns)
+                    {
+                        <th scope="col">
+                            <span class="journal-title">@column.Title</span><br />
+                            <span class="journal-date">@column.Date.ToString("d", culture)</span>
+                            @if (column.Kind == CourseWorkKind.GradedWork && column.MaxPoints is { } maxPoints)
+                            {
+                                <br /><span>@T[JournalTextKeys.MaxPoints] @Points(maxPoints)</span>
+                            }
+                            else if (column.Kind == CourseWorkKind.Material)
+                            {
+                                <br /><span>@T[JournalTextKeys.Material]</span>
+                            }
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in journal.Rows)
+                {
+                    <tr>
+                        <th scope="row">@(row.NameKind == JournalNameKind.Unnamed ? T[JournalTextKeys.Unnamed].Value : row.DisplayName)</th>
+                        @foreach (var cell in row.Cells)
+                        {
+                            <td>
+                                @switch (cell.State)
+                                {
+                                    case JournalCellState.Empty:
+                                        break;
+                                    case JournalCellState.Grade:
+                                        <span>@Points(cell.Points) / @Points(cell.MaxPoints)</span>
+                                        break;
+                                    case JournalCellState.Unrecognised:
+                                        <span>@T[JournalTextKeys.Cell(cell.State)]: @cell.RawState</span>
+                                        break;
+                                    default:
+                                        <span>@T[JournalTextKeys.Cell(cell.State)]</span>
+                                        break;
+                                }
+                                @if (cell.DraftPoints is { } draft)
+                                {
+                                    <br /><span>@T[JournalTextKeys.Draft] @Points(draft)</span>
+                                }
+                                @if (cell.Late)
+                                {
+                                    <br /><span>@T[JournalTextKeys.Late]</span>
+                                }
+                                @if (cell.TurnedInOn is { } turnedInOn)
+                                {
+                                    <br /><span>@T[JournalTextKeys.TurnedInOn] @turnedInOn.ToString("d", culture)</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@functions {
+    /// <summary>Spec I-7: the course name, then its section when it has one; Google data, not translated.</summary>
+    private static string CourseLabel(CourseOption course) =>
+        string.IsNullOrEmpty(course.Section) ? course.Name : course.Name + " — " + course.Section;
+
+    /// <summary>The value an HTML date input expects; empty when the date is unknown or was malformed.</summary>
+    private static string IsoDate(DateOnly? date) =>
+        date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty;
+
+    /// <summary>Spec FR-006: points as stored, insignificant trailing zeros dropped, in the UI language's number format.</summary>
+    private static string Points(decimal? points) =>
+        points?.ToString("0.############################", CultureInfo.CurrentCulture) ?? string.Empty;
+
+    /// <summary>This page with the effective, validated values only (api-design §2.4); a missing value is left out.</summary>
+    private string JournalUrl(string view)
+    {
+        var parts = new List<string>();
+        if (Model.SelectedCourseId is { } courseId)
+        {
+            parts.Add(JournalController.CourseIdParameter + "=" + courseId.ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (Model.From is not null)
+        {
+            parts.Add(JournalController.FromParameter + "=" + IsoDate(Model.From));
+        }
+
+        if (Model.To is not null)
+        {
+            parts.Add(JournalController.ToParameter + "=" + IsoDate(Model.To));
+        }
+
+        parts.Add(JournalController.ViewParameter + "=" + view);
+        return SignInRoutes.Journal + "?" + string.Join('&', parts);
+    }
+}

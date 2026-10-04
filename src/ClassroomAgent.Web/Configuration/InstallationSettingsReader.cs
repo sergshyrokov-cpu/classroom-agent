@@ -59,6 +59,18 @@ public static class InstallationSettingsReader
     /// </summary>
     public const string RetentionYearsKey = "Retention:Years";
 
+    /// <summary>
+    /// US-025 spec FR-010, VR-006: the school's time zone as an IANA id. <b>Required</b> — period boundaries and every
+    /// date the journal shows are in it (NFR-074, DC-3). Not a secret.
+    /// </summary>
+    public const string TimeZoneKey = "Installation:TimeZone";
+
+    /// <summary>
+    /// US-025 OD-010 (a): tzdata 2022b renamed the Kyiv zone; a runtime knowing only one spelling accepts the other.
+    /// Only this pair is aliased.
+    /// </summary>
+    private static readonly string[][] TimeZoneAliases = [["Europe/Kyiv", "Europe/Kiev"]];
+
     /// <summary>US-037 OD-008: the largest retention period an installation accepts.</summary>
     public const int MaxRetentionYears = 100;
 
@@ -85,8 +97,32 @@ public static class InstallationSettingsReader
             OAuthClientSecret(configuration, secretStore),
             DefaultLanguage(configuration),
             RetentionYears(configuration),
+            TimeZone(configuration),
             ServiceAccountKeyReference(configuration),
             SyncInterval(configuration));
+
+    /// <summary>
+    /// US-025 VR-006: trimmed; an IANA id the runtime knows — a Windows id is refused even where the runtime would
+    /// resolve it, so a configuration means the same on every server. Absent, blank or unknown stops the start
+    /// (spec FR-010). OD-010 (a): the other spelling of the Kyiv zone is tried before refusing.
+    /// </summary>
+    private static TimeZoneInfo TimeZone(IConfiguration configuration)
+    {
+        var configured = Required(configuration, TimeZoneKey).Trim();
+        var candidates = TimeZoneAliases.FirstOrDefault(a => a.Contains(configured, StringComparer.Ordinal)) is { } aliases
+            ? aliases.OrderBy(id => id != configured)
+            : (IEnumerable<string>)[configured];
+
+        foreach (var id in candidates)
+        {
+            if (TimeZoneInfo.TryFindSystemTimeZoneById(id, out var zone) && zone.HasIanaId)
+            {
+                return zone;
+            }
+        }
+
+        throw InstallationSettingException.Invalid(TimeZoneKey, "expected an IANA time zone id known to this server");
+    }
 
     /// <summary>
     /// VR-008: a positive whole number of years. Absent, unparsable or non-positive stops the start, because the
