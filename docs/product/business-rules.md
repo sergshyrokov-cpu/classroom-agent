@@ -285,8 +285,8 @@ account, so grades exist only for such participants. *(§4 Epic 3)*
 coursework's maximum); "turned in, not graded"; "returned without a grade"; "not
 turned in" once the due date has passed; "not due yet"; or "not turned in, no due
 date". Any of them may carry a "late" mark, taken from Google's `late` flag as
-is. `TURNED_IN` and `STUDENT_EDITED_AFTER_TURN_IN` count as turned in; `CREATED`
-and `RECLAIMED_BY_STUDENT` count as not turned in. A cell of ungraded work never
+is. `TURNED_IN` and `STUDENT_EDITED_AFTER_TURN_IN` count as turned in; `NEW` (v82),
+`CREATED` and `RECLAIMED_BY_STUDENT` count as not turned in. A cell of ungraded work never
 shows a grade: "turned in", "returned", "not turned in" once due, "not due yet",
 or "not turned in, no due date", with the same optional "late" mark — it has no
 "grade" or "not graded" state (BR-052). *(§4 Epic 3, v32)*
