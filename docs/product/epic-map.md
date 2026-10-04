@@ -150,7 +150,7 @@ Produce the journal the school actually uses, on paper and in Excel/Word.
 
 - US-025 Journal view: student × coursework × grade for a period (cell rules BR-056)
 - ~~US-026~~ merged into US-025 (its OD-002): graded work, ungraded work and materials (BR-052)
-- US-027 Configurable report templates (full and short forms)
+- US-027 Configurable report templates and the on-screen report (v84): the "Reports and templates" section, the built-in "Academic journal" template, the grading scale
 - US-028 Export a journal to Excel using a school template
 - US-029 Export a journal to Word
 - US-030 Assemble several templates into one printed journal
