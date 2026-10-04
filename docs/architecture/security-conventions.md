@@ -4,7 +4,7 @@ The security policy for classroom-agent. `security-reviewer` enforces this file;
 `dotnet-implementor` implements to it; `openapi-designer` and `db-designer`
 design within it.
 
-Derived from `trebovaniya.md` sections 1, 2, 5, 6 and 9. Where this file is
+Derived from `trebovaniya.md` sections 1, 2, 5, 6, 8 and 9. Where this file is
 silent, `trebovaniya.md` governs. Nothing here may be weakened without a
 human-approved Open Decision.
 
@@ -512,3 +512,23 @@ Any other outbound flow of school data — an AI or speech-recognition service
 receives request data, a third-party export target — is a Critical finding until
 a separate, human-approved decision adds it here. Application logs stay on the
 installation's own server (DC-10) and are not an outbound flow.
+
+## SC-14 Responses are not cached
+
+Decided in `trebovaniya.md` section 8 (v85).
+
+- Every response of both hosts — installation and Control Plane, public and
+  private port — carries `Cache-Control: no-store`: signed-in pages, anonymous
+  pages, the error page, redirects, downloaded files and `/api/v1` responses.
+  Without it a browser on a shared computer could show a journal or report with
+  students' data from its cache after sign-out (the Back button).
+- The header is set by **one host-wide rule** per host, not by attributes on
+  individual pages or actions. A page added later is covered without a decision
+  of its own.
+- The only exception is the static files of the interface (CSS, JS, images,
+  `trebovaniya.md` §8 v68): they carry no data and keep their normal caching.
+- Each host has a test that enumerates its endpoints and asserts the header on
+  every one, and asserts that a static file does not carry it. A response
+  without the header is a finding.
+- This does not replace sign-out or the session limits of SC-2: an unfinished
+  session is protected by its expiry, not by caching rules.
