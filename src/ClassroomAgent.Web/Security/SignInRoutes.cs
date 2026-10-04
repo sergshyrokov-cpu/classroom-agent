@@ -28,6 +28,12 @@ public static class SignInRoutes
     /// <summary>US-011 openapi: the check-access page and its run, one path (api-design §2.1).</summary>
     public const string AccessCheck = "/settings/access-check";
 
+    /// <summary>
+    /// US-019 openapi: the manual synchronization request, one path for Admin and Dean — outside <c>/settings</c>,
+    /// which is the Admin's section (api-design §2.1). POST only.
+    /// </summary>
+    public const string SynchronizationRequests = "/synchronization/requests";
+
     /// <summary>US-012 openapi: the Admin's Dean accounts screen, its list and its creation form.</summary>
     public const string Deans = "/settings/deans";
 

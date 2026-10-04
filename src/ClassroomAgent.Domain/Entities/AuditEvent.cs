@@ -276,6 +276,67 @@ public sealed class AuditEvent
         };
     }
 
+    /// <summary>
+    /// An accepted manual synchronization request (US-019 spec FR-005; entity model §2.2): the actor and their role
+    /// from the session, no target.
+    /// </summary>
+    public static AuditEvent SynchronizationRequested(
+        long appUserId,
+        AppRole actorRole,
+        DateTimeOffset occurredAt,
+        string? requestId) =>
+        SynchronizationRequestRow(appUserId, actorRole, AuditOutcome.Succeeded, null, occurredAt, requestId);
+
+    /// <summary>
+    /// A refused manual synchronization request (US-019 spec FR-005; entity model §2.2): only
+    /// <see cref="AuditRefusalCategory.ReadOnlyMode"/> and <see cref="AuditRefusalCategory.ConnectionNotUsable"/>.
+    /// </summary>
+    public static AuditEvent SynchronizationRequestRefused(
+        long appUserId,
+        AppRole actorRole,
+        AuditRefusalCategory category,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        if (category is not (AuditRefusalCategory.ReadOnlyMode or AuditRefusalCategory.ConnectionNotUsable))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(category),
+                category,
+                "A refused synchronization request carries a category of its own action.");
+        }
+
+        return SynchronizationRequestRow(appUserId, actorRole, AuditOutcome.Refused, category, occurredAt, requestId);
+    }
+
+    private static AuditEvent SynchronizationRequestRow(
+        long appUserId,
+        AppRole actorRole,
+        AuditOutcome outcome,
+        AuditRefusalCategory? category,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        if (!Enum.IsDefined(actorRole))
+        {
+            throw new ArgumentOutOfRangeException(nameof(actorRole), actorRole, "Not a declared role.");
+        }
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = appUserId,
+            ActorRole = actorRole,
+            Action = AuditAction.SynchronizationRequested,
+            TargetType = null,
+            TargetId = null,
+            Outcome = outcome,
+            RefusalCategory = category,
+            RequestId = requestId,
+        };
+    }
+
     /// <summary>The categories a refused connection save may carry (US-009 db-design §4.2).</summary>
     private static readonly AuditRefusalCategory[] SaveRefusals =
     [

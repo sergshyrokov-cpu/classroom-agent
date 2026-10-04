@@ -149,4 +149,9 @@
   <data name="LastSync.LastSuccess.None" xml:space="preserve"><value>Успішної синхронізації ще не було</value></data>
   <data name="LastSync.Diagnosis.GoogleUnavailable" xml:space="preserve"><value>Google не відповів після кількох спроб. Наступний запуск спробує ще раз.</value></data>
   <data name="LastSync.Diagnosis.Unexpected" xml:space="preserve"><value>Запуск зупинила непередбачена помилка. Наступний запуск спробує ще раз.</value></data>
+  <data name="Synchronization.Request.Button" xml:space="preserve"><value>Синхронізувати</value></data>
+  <data name="Synchronization.Request.Requested" xml:space="preserve"><value>Синхронізацію запитано. Вона почнеться за кілька секунд і виконуватиметься у фоні.</value></data>
+  <data name="Synchronization.Request.RequestedAfterCurrentWork" xml:space="preserve"><value>Синхронізацію запитано. Вона почнеться, щойно завершиться поточна синхронізація або очищення.</value></data>
+  <data name="Synchronization.Request.ConnectionNotUsableAdmin" xml:space="preserve"><value>Синхронізацію не запущено: підключення до Google Workspace не налаштоване. Спершу збережіть підключення.</value></data>
+  <data name="Synchronization.Request.ConnectionNotUsableDean" xml:space="preserve"><value>Синхронізацію не запущено: підключення до Google Workspace не налаштоване. Зверніться до адміністратора.</value></data>
 </root>

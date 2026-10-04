@@ -16,6 +16,9 @@ namespace ClassroomAgent.Web.Controllers;
 /// <param name="MessageKey">The confirmation of a save, or the refusal of a `409`.</param>
 /// <param name="FieldErrorKeys">Per-field validation messages of a `400`, by field name.</param>
 /// <param name="LastSynchronization">The "Last synchronization" block (US-017 spec FR-007), shown on every rendering.</param>
+/// <param name="SynchronizationMessageKey">
+/// US-019 spec FR-003, FR-004: the one-time message after a press, or the refusal of its <c>409</c>; null otherwise.
+/// </param>
 public sealed record WorkspaceConnectionPageModel(
     WorkspaceConnectionState State,
     string? InstallationDomain,
@@ -25,4 +28,9 @@ public sealed record WorkspaceConnectionPageModel(
     LegitimacyModeReason? ReadOnlyReason,
     string? MessageKey,
     IReadOnlyList<string> FieldErrorKeys,
-    LastSynchronizationView LastSynchronization);
+    LastSynchronizationView LastSynchronization,
+    string? SynchronizationMessageKey = null)
+{
+    /// <summary>US-019 OD-006: the button is always rendered for the Admin here, read-only mode included (AD-6).</summary>
+    public bool CanRequestSynchronization => true;
+}

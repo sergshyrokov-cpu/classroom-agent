@@ -28,7 +28,8 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 "ck_audit_event_action",
                 "action IN ('admin_sign_in', 'workspace_connection_saved', 'access_check_run', "
                 + "'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', "
-                + "'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run')");
+                + "'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run', "
+                + "'synchronization_requested')");
 
             // US-009 db-design §4.1: a refused action names WHAT was refused without naming a row that was never
             // created, so a target type without an id is now legal. An id without a type — an identifier belonging
@@ -74,6 +75,14 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 "ck_audit_event_purge_actor",
                 "action <> 'retention_purge_run' OR (actor_type = 'system' AND target_type IS NULL "
                 + "AND target_id IS NULL AND outcome = 'succeeded' AND request_id IS NULL)");
+
+            // US-019 db-design §2.3: a manual synchronization request is always a user's, never targets a row, and is
+            // refused only for the two reasons its use case has.
+            table.HasCheckConstraint(
+                "ck_audit_event_sync_request_shape",
+                "action <> 'synchronization_requested' OR (actor_type = 'app_user' AND target_type IS NULL "
+                + "AND target_id IS NULL AND (refusal_category IS NULL "
+                + "OR refusal_category IN ('read_only_mode', 'connection_not_usable')))");
         });
 
         builder.HasKey(e => e.Id).HasName("pk_audit_event");
@@ -175,6 +184,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         AuditAction.DeanPasswordChanged => "dean_password_changed",
         AuditAction.DeanSignIn => "dean_sign_in",
         AuditAction.RetentionPurgeRun => "retention_purge_run",
+        AuditAction.SynchronizationRequested => "synchronization_requested",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -190,6 +200,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         "dean_password_changed" => AuditAction.DeanPasswordChanged,
         "dean_sign_in" => AuditAction.DeanSignIn,
         "retention_purge_run" => AuditAction.RetentionPurgeRun,
+        "synchronization_requested" => AuditAction.SynchronizationRequested,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 

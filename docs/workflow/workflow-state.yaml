@@ -4,30 +4,33 @@
 version: 1
 story: US-019
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: API_DESIGN
-  recorded_at: 2026-10-04T06:33:34Z
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_PR_APPROVAL
+  recorded_at: 2026-10-04T08:45:54Z
+  decided_by: Serhii SHYROKOV (/so:approve)
 last_artifacts:
-  - type: openapi
-    path: docs/designs/api/US-019-openapi.yaml
-    version: 1
-  - type: api_design
-    path: docs/designs/api/US-019-api-design.md
+  - type: security_review
+    path: docs/reviews/security/US-019-security-review.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "HUMAN_PR_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-10-04T08:45:54Z (no comment): implementation report v1 and security review v1 (PASS, 0 Critical, 0 Major, 0 Minor, 5 Informational) accepted. Approved, NOT Done until the final commit lands on master (AGENTS.md DoD item 10)."
+  - "SECURITY_REVIEW: PASS, 0 Critical / 0 Major / 0 Minor / 5 Informational, runtime_checks FULL (build 0/0, 2835/2835, no vulnerable packages). INFO-1 three unused usings in HomeController; INFO-2 TempData translation key rendered without allow-list (data-protected, encoded); INFO-3 no rate limit, one audit row per press (OD-004); INFO-4 enqueue before audit commit (db-design §5); INFO-5 API-4 /api/v1/sync stays a reservation. Limitation: reviewed in the same session as IMPLEMENTATION."
+  - "IMPLEMENTATION: PASS. Build 0/0; full suite 2835/2835, 0 skipped; format clean. POST /synchronization/requests (SynchronizationRequestController.Submit, policy StartSynchronization Admin+Dean); RequestSynchronizationUseCase: guard first (refusal audited under PermittedServiceWrite.AuditEvent, rethrown -> 409), connection IsUsable (OD-009 a, 409 re-render with role message), enqueue via CoordinatorSynchronizationRequests (busy = IsRunning||IsPurging read before Request), audit SynchronizationRequested(actor, role), PRG with TempData SynchronizationMessage. Migration AddSynchronizationRequestAudit (ck_audit_event_action 11 values + ck_audit_event_sync_request_shape). New InstallationPages builds both page models (replaces WorkspaceConnectionController.PageAsync and HomeController inline model). Deviations for SECURITY_REVIEW to weigh: two pinned schema tests extended by exactly the new migration/constraint (as US-037); TempData holds the translation key; log ids 5140/5141 chosen here. One intermediate full run hit Npgsql timeouts after the machine slept — stopped and rerun clean."
+  - "TEST_WRITING: PASS. OD-010 raised and resolved by the Owner (a): compile-only skeleton (AuditAction.SynchronizationRequested, two throwing AuditEvent factories, ISynchronizationRequests + SynchronizationRequestTiming, RequestSynchronizationOutcome, throwing RequestSynchronizationUseCase, throwing CoordinatorSynchronizationRequests). Fixtures FakeSynchronizationRequests, SynchronizationRequestHostExtensions, SynchronizationRequestTestData (fixed names: Synchronization.Request.* keys, log events SynchronizationRequested/SynchronizationRequestRefused, markup ids). 9 new test classes, 53 cases, written by three Sonnet subagents from fixed briefs, reviewed and full suite run by the orchestrating session. Build 0/0; suite 2835 total, 2785 passed, 50 failed, 0 skipped — exactly the new red tests, no regression. 3 pre-passing explained (restricted Dean session, GET requests nothing, Admin home has no button). IMPLEMENTATION: map ActionCode for the new member, migration AddSynchronizationRequestAudit, register use case/adapter/policy."
+  - "DB_DESIGN: PASS. No table/column/index. AuditAction.SynchronizationRequested (code synchronization_requested); ck_audit_event_action amended to 11 values; new ck_audit_event_sync_request_shape (app_user actor, no target, refusal only read_only_mode|connection_not_usable). Factories AuditEvent.SynchronizationRequested(appUserId, actorRole, occurredAt, requestId) and SynchronizationRequestRefused(..., category, ...) — role is a parameter (first action both roles perform). Migration AddSynchronizationRequestAudit. Request not persisted (coordinator process state); sync_state untouched. Enqueue then audit: a failed audit commit after enqueue leaves the run requested and unaudited (500)."
   - "API_DESIGN: PASS. One new Razor form POST /synchronization/requests (policy StartSynchronization, Admin+Dean, antiforgery, no body fields). Success = PRG 302 to the role page (Admin /settings/workspace-connection, Dean /) with TempData SynchronizationMessage (Requested | RequestedAfterCurrentWork); return page from role, never returnUrl. 409 read-only via host handler (audit ReadOnlyMode); 409 unusable connection = role page re-rendered with ConnectionNotUsableAdmin|Dean (audit ConnectionNotUsable, existing). Restricted Dean session -> 302 /sign-in/change-password. Existing pages gain canRequestSynchronization + synchronizationMessageKey (Admin home: no button). Port adapter over SyncRunCoordinator lives in Web (in-process, not Infrastructure). No /api/v1/sync (OD-007). DB_DESIGN: confirm AuditAction SynchronizationRequested + ck_audit_event_action migration; target null."
   - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-10-04T06:31:38Z (no comment): Specification v1 accepted; automated verdict PASS with no blocking findings. OD-001 … OD-008 arrived resolved; OD-009 raised by SPECIFICATION and resolved by the Owner as (a) before the decision. Interpretations I-1 … I-6 accepted as written. The Specification is now APPROVED; open_decisions stays DRAFT."
   - "SPECIFICATION: PASS. 10 functional requirements, 3 validation rules, Story AC-001 … AC-008 traced plus derived AC-009 (pending OD-009). OD-001 … OD-008 arrived resolved and are carried unchanged. NEW OD-009 (resolved by the Owner 2026-10-04 as (a) before the gate decision): a press with no usable connection — (a) refuse like Check access, 409 + ConnectionNotUsable audit row (recommended), or (b) accept; the run is then silently skipped. Use case: read-only guard first (refusal audited, rethrown -> 409), then connection state (OD-009), then enqueue through a new Application port over SyncRunCoordinator (Request + IsRunning/IsPurging), audit, return Requested | RequestedAfterCurrentWork. One form POST for both roles, own policy StartSynchronization (Admin+Dean), return page derived from role (no returnUrl). AuditAction gains one member + ck_audit_event_action migration; target none."
   - "SPECIFICATION interpretations for the gate to confirm: I-1 message reflects the moment of the press; I-2 audit Succeeded = request accepted; I-3 no audit target; I-4 API-4's POST /api/v1/sync row is not implemented (no JSON endpoint, no SyncState id for a remembered request) — whether to reword API-4 is the Owner's call; I-5 own policy per matrix row; I-6 Admin home page gets no button."
 started_at: 2026-10-04T06:30:19Z
-updated_at: 2026-10-04T06:33:34Z
-completed_at: null
+updated_at: 2026-10-04T08:45:54Z
+completed_at: 2026-10-04T08:45:54Z

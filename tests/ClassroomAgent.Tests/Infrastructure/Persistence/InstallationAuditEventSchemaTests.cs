@@ -93,6 +93,7 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
                 "ck_audit_event_purge_counts_non_negative",
                 "ck_audit_event_refusal_category",
                 "ck_audit_event_refusal_category_value",
+                "ck_audit_event_sync_request_shape",
                 "ck_audit_event_target",
                 "ck_audit_event_target_type_value",
             },

@@ -11,6 +11,7 @@ using ClassroomAgent.Infrastructure.Persistence.Repositories;
 using ClassroomAgent.Infrastructure.ReadOnly;
 using ClassroomAgent.Infrastructure.Secrets;
 using ClassroomAgent.Web.BackgroundServices;
+using ClassroomAgent.Web.Controllers;
 using ClassroomAgent.Web.Security;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -97,6 +98,12 @@ public static class InstallationServices
             new SocketsHttpHandler { AllowAutoRedirect = false, UseCookies = false },
             provider.GetRequiredService<ILogger<GoogleAccessProbe>>()));
         services.AddScoped<RunAccessCheckUseCase>();
+
+        // US-019 spec FR-001, FR-002: the manual request goes through its port to the one coordinator; the two pages
+        // that carry the button are built in one place (api-design §2.4, §2.7).
+        services.AddSingleton<ISynchronizationRequests, CoordinatorSynchronizationRequests>();
+        services.AddScoped<RequestSynchronizationUseCase>();
+        services.AddScoped<InstallationPages>();
 
         // US-012: the Dean accounts screen, the Dean's sign-in and the two password changes (spec FR-003,
         // FR-007 … FR-014). The password hasher is Identity's, behind the Application port (OD-002, FR-018).

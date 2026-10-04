@@ -64,6 +64,13 @@ public static class InstallationSecurityServices
                 policy => policy.RequireAuthenticatedUser().RequireRole(
                     InstallationSession.RoleName(AppRole.Admin)));
 
+            // US-019 spec FR-007: "Запуск синхронизации" is granted to both roles (§2, BR-004), its own policy (I-5).
+            options.AddPolicy(
+                InstallationPolicies.StartSynchronization,
+                policy => policy.RequireAuthenticatedUser().RequireRole(
+                    InstallationSession.RoleName(AppRole.Admin),
+                    InstallationSession.RoleName(AppRole.Dean)));
+
             // US-012 spec FR-016: managing Dean accounts is the Admin's cell of the §2 matrix (v64).
             options.AddPolicy(
                 InstallationPolicies.ManageDeanAccounts,

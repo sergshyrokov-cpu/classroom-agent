@@ -15,4 +15,6 @@ public sealed record LandingPageModel(
     string RoleKey,
     bool IsReadOnly,
     LegitimacyModeReason? ReadOnlyReason,
-    DateTimeOffset? LastSuccessfulCheckAt);
+    DateTimeOffset? LastSuccessfulCheckAt,
+    bool CanRequestSynchronization = false,
+    string? SynchronizationMessageKey = null);

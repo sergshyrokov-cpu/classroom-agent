@@ -19,18 +19,12 @@ namespace ClassroomAgent.Web.Controllers;
 /// needs no query of its own (db-design §3.4).
 /// </remarks>
 [Authorize(Policy = InstallationPolicies.ViewLegitimacyStatus)]
-public sealed class HomeController(GetLegitimacyModeQuery legitimacyMode) : Controller
+public sealed class HomeController(InstallationPages pages) : Controller
 {
     [HttpGet(SignInRoutes.Landing)]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
-    {
-        var mode = await legitimacyMode.ExecuteAsync(cancellationToken);
-        var role = User.IsInRole(InstallationSession.RoleName(AppRole.Dean)) ? AppRole.Dean : AppRole.Admin;
-        return View(new LandingPageModel(
-            User.FindFirstValue(ClaimTypes.Email) ?? string.Empty,
-            role == AppRole.Dean ? "Landing.Role.Dean" : "Landing.Role.Admin",
-            mode.IsReadOnly,
-            mode.Reason,
-            mode.LastSuccessfulCheckAt));
-    }
+    public async Task<IActionResult> Index(CancellationToken cancellationToken) =>
+        View(await pages.LandingAsync(
+            User,
+            TempData[SynchronizationRequestController.MessageTempDataKey] as string,
+            cancellationToken));
 }

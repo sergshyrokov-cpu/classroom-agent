@@ -54,6 +54,16 @@
     }
 </section>
 
+@* US-019 spec FR-004: the Admin's button, next to the block it refreshes; shown in read-only mode too (OD-006). *@
+@if (Model.SynchronizationMessageKey is { } synchronizationMessage)
+{
+    <p id="synchronization-request-message" class="form-message">@T[synchronizationMessage]</p>
+}
+<form id="synchronization-request-form" method="post" action="@SignInRoutes.SynchronizationRequests">
+    @Html.AntiForgeryToken()
+    <button type="submit">@T[SynchronizationRequestTextKeys.Button]</button>
+</form>
+
 @if (Model.SavedImpersonationUserEmail is { } saved)
 {
     <p id="saved-impersonation-user">@saved</p>

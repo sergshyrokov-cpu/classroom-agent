@@ -49,4 +49,11 @@ public enum AuditAction
     /// <see cref="Rules.RetentionPurgeCounts"/> (§5 v47, SC-11).
     /// </summary>
     RetentionPurgeRun,
+
+    /// <summary>
+    /// US-019 spec FR-005: a manual start of synchronization (<c>trebovaniya.md</c> §5 "ручной запуск
+    /// синхронизации"), accepted or refused. <c>succeeded</c> means the request was accepted, never that a run
+    /// happened (spec I-2). Performed by an Admin or a Dean, so the role is recorded from the session.
+    /// </summary>
+    SynchronizationRequested,
 }

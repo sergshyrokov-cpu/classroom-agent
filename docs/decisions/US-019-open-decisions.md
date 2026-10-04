@@ -54,6 +54,32 @@ derived AC-009 are written for (a); under (b) they are removed.
 
 **Resolution:** (a) — resolved by the Owner on 2026-10-04, before HUMAN_SPEC_APPROVAL.
 
+## Raised by TEST_WRITING
+
+### OD-010 Compile-only skeleton created at TEST_WRITING
+
+**Context.** The tests must call types and members that do not exist yet; the
+test-writer may not modify production behaviour, and no artifact says who
+creates them — the same gap every earlier Story resolved for itself.
+
+**Options.**
+
+- **(a) A compile-only skeleton (recommended)** — only what the tests reference,
+  every behavioural member throwing `NotImplementedException`, nothing registered
+  in dependency injection, no existing behaviour changed:
+  `AuditAction.SynchronizationRequested`; `AuditEvent.SynchronizationRequested`
+  and `SynchronizationRequestRefused` (throwing);
+  `Application/Ports/ISynchronizationRequests.RequestAsync` returning
+  `Application/Models/SynchronizationRequestTiming { StartsNow, AfterCurrentWork }`;
+  `Application/Models/RequestSynchronizationOutcome` (a declaration);
+  `Application/UseCases/RequestSynchronizationUseCase.ExecuteAsync(actorId,
+  actorRole, requestId, ct)` (throwing);
+  `Web/BackgroundServices/CoordinatorSynchronizationRequests` (throwing).
+- **(b) No skeleton** — tests over HTTP and SQL only; the read-only refusal
+  could not be proven with the port substituted (TC-5).
+
+**Resolution:** (a) — resolved by the Owner on 2026-10-04.
+
 ---
 
 ## Resolved before activation

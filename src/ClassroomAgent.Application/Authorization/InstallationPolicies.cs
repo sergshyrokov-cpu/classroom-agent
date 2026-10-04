@@ -32,6 +32,12 @@ public static class InstallationPolicies
     public const string RunAccessCheck = "RunAccessCheck";
 
     /// <summary>
+    /// "Запуск синхронизации" — ✔ Admin, ✔ Dean (<c>trebovaniya.md</c> §2, BR-004; US-019 spec FR-007). Its own
+    /// policy for its own matrix row (spec I-5).
+    /// </summary>
+    public const string StartSynchronization = nameof(StartSynchronization);
+
+    /// <summary>
     /// US-012 spec FR-016: creating, disabling, re-enabling and resetting the password of a Dean account.
     /// Admin only — the matrix row is "Создание, отключение и включение, сброс пароля учётных записей
     /// Деканов", ✔ Admin, ✘ Dean (<c>trebovaniya.md</c> §2 v64).

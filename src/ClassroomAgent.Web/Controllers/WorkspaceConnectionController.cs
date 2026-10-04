@@ -21,10 +21,8 @@ namespace ClassroomAgent.Web.Controllers;
 /// </remarks>
 [Authorize(Policy = InstallationPolicies.ConfigureWorkspaceConnection)]
 public sealed class WorkspaceConnectionController(
-    GetWorkspaceConnectionQuery connectionQuery,
     SaveWorkspaceConnectionUseCase save,
-    GetLegitimacyModeQuery legitimacyMode,
-    GetLastSynchronizationQuery lastSynchronization,
+    InstallationPages pages,
     ILogger<WorkspaceConnectionController> logger) : Controller
 {
     private const string SavedTempDataKey = "WorkspaceConnectionSaved";
@@ -33,7 +31,8 @@ public sealed class WorkspaceConnectionController(
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
         var saved = TempData[SavedTempDataKey] as string;
-        return View(await PageAsync(string.Empty, saved, [], cancellationToken));
+        var synchronization = TempData[SynchronizationRequestController.MessageTempDataKey] as string;
+        return View(await pages.WorkspaceConnectionAsync(string.Empty, saved, [], synchronization, cancellationToken));
     }
 
     [HttpPost(SignInRoutes.WorkspaceConnection)]
@@ -47,7 +46,7 @@ public sealed class WorkspaceConnectionController(
             // The rejected value is never logged and never echoed beyond its own field (SC-10).
             WorkspaceConnectionLog.Rejected(logger, HttpContext.TraceIdentifier);
             Response.StatusCode = StatusCodes.Status400BadRequest;
-            return View(nameof(Index), await PageAsync(typed, null, FieldErrorKeys(), cancellationToken));
+            return View(nameof(Index), await pages.WorkspaceConnectionAsync(typed, null, FieldErrorKeys(), null, cancellationToken));
         }
 
         var outcome = await save.ExecuteAsync(
@@ -66,28 +65,7 @@ public sealed class WorkspaceConnectionController(
         var refusal = outcome.Refusal!.Value;
         WorkspaceConnectionLog.Refused(logger, refusal, HttpContext.TraceIdentifier);
         Response.StatusCode = StatusCodes.Status409Conflict;
-        return View(nameof(Index), await PageAsync(typed, RefusalKey(refusal), [], cancellationToken));
-    }
-
-    private async Task<WorkspaceConnectionPageModel> PageAsync(
-        string typed,
-        string? messageKey,
-        IReadOnlyList<string> fieldErrorKeys,
-        CancellationToken cancellationToken)
-    {
-        var view = await connectionQuery.ExecuteAsync(cancellationToken);
-        var mode = await legitimacyMode.ExecuteAsync(cancellationToken);
-        var last = await lastSynchronization.ExecuteAsync(cancellationToken);
-        return new WorkspaceConnectionPageModel(
-            view.State,
-            view.InstallationDomain,
-            view.SavedImpersonationUserEmail,
-            typed,
-            mode.IsReadOnly,
-            mode.Reason,
-            messageKey,
-            fieldErrorKeys,
-            last);
+        return View(nameof(Index), await pages.WorkspaceConnectionAsync(typed, RefusalKey(refusal), [], null, cancellationToken));
     }
 
     /// <summary>The message keys of the rejected fields; the values themselves never leave the form.</summary>
