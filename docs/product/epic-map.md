@@ -327,6 +327,110 @@ Google. An AI assistant is a new data flow, so it is an epic of its own
 
 ---
 
+## Direction after the first version (v83)
+
+`trebovaniya.md` §4 (v83) splits the program into **sections**: Google Workspace
+(the whole first version — everything read from Google), Curricula (EPIC-14),
+Timetable (EPIC-15), Attendance and grades (EPIC-16) and the integrated journal
+(EPIC-17). Future roles: **deputy Dean** (curricula and timetable) and Teacher
+(EPIC-7). Their permission-matrix cells are decided later.
+
+**Two data layers — binding on the first version already:**
+
+- the **Google mirror** (courses, rosters, coursework, materials, submissions,
+  grades, Meet meetings) is written only by synchronization and is never edited
+  by a user; future sections do not write to it;
+- the **school's own data** (curricula, timetable, manual marks and grades) is
+  created in the program, which is its source of truth;
+- the two are joined by **separate link records**, as a Meet code is linked to a
+  course (EPIC-4) — a Classroom course is never renamed from a curriculum or
+  merged with a discipline.
+
+---
+
+## EPIC-14 (future)
+
+Curricula
+
+### Goal
+
+The curriculum is the source of truth for discipline names and their hours
+(`trebovaniya.md` §4, Epic 14, v83). Filled in by the deputy Dean.
+
+### Blocked until decided
+
+- Structure: one plan for the school per year, or one per group.
+- Discipline ↔ Classroom course links: many-to-many, confirmed by a person; the
+  program may suggest matches, as for Meet codes.
+- Academic groups and their members — not in Classroom; where they come from and
+  how a group member is matched to a Classroom participant (by email).
+- Whether the school's own data may be maintained in read-only mode.
+- Audit of plan changes; the deputy Dean's permission-matrix cells.
+
+---
+
+## EPIC-15 (future)
+
+Timetable
+
+### Goal
+
+Spreads the curriculum's hours over the calendar as lessons — date, time,
+group, discipline, teacher (`trebovaniya.md` §4, Epic 15, v83). Built by the
+deputy Dean. Unlocks the deferred EPIC-11 items: lesson length, share of Meet
+lessons against the plan, school norms.
+
+### Blocked until decided
+
+- What else a lesson carries: room, form (in class, in Meet, hybrid).
+- How a lesson links to Meet meetings and Classroom coursework.
+- Whether the timetable defines a Teacher's "own" courses (EPIC-7).
+- Read-only mode and audit, as EPIC-14.
+
+---
+
+## EPIC-16 (future)
+
+Attendance and grades
+
+### Goal
+
+One lesson runs differently for different students — in the room, in Meet, or
+offline on a Classroom assignment (`trebovaniya.md` §4, Epic 16, v83). The
+Teacher marks presence or absence per timetable lesson, labelled "in the room" or
+"in Meet", and enters grades for answers in Meet and in the room; Classroom
+grades keep arriving automatically. This is an attendance register; first-version
+Meet statistics remain facts, not attendance (BR-060).
+
+### Blocked until decided
+
+- How a student doing a Classroom assignment offline is counted, and how the
+  assignment is tied to the lesson.
+- Whether Meet data hints the Teacher's mark, and at what participation threshold.
+- The Teacher role (EPIC-7) and its permission-matrix cells.
+- Whether a Teacher of a suspended school may mark a lesson (read-only mode).
+- Audit of manual marks and grades.
+- Attendance of minors is personal data; retention N applies.
+
+---
+
+## EPIC-17 (future)
+
+Integrated attendance and grades journal
+
+### Goal
+
+A journal from two sources — Classroom (EPIC-3) and manual entries (EPIC-16) —
+printed and exported through templates as in EPIC-3 (`trebovaniya.md` §4,
+Epic 17, v83).
+
+### Blocked until decided
+
+- The rules for building it, including a lesson with both a Classroom grade and a
+  manual one, and the rights to build it.
+
+---
+
 ## EPIC-7 (future)
 
 Teacher role and student access
