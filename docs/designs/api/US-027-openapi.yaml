@@ -1,0 +1,1175 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Report templates and the on-screen report (US-027)
+  version: "1"
+  description: >
+    HTTP contract of US-027 on the installation's public port: the new section
+    "Reports and templates" (`trebovaniya.md` v84 §4, Epic 3). Admin and Dean list
+    report templates, create, copy, change and delete the school's own templates,
+    and view the report a template produces for a course and a period (§2 "Использование
+    шаблонов отчётов" ✔ ✔, "Создание и редактирование шаблонов отчётов" ✔ ✔).
+    Server-rendered pages only; no JSON API (spec I-12). Every operation reads
+    only PostgreSQL: none calls Google or reads a secret, in any mode (spec FR-013,
+    S-04). The home page gains a navigation entry. The installation's host-wide
+    rules of docs/designs/api/US-008-openapi.yaml apply unchanged. The Control
+    Plane and the private port are untouched. Companion document:
+    docs/designs/api/US-027-api-design.md.
+x-story: US-027
+x-source-specification: docs/specifications/US-027-spec.md
+x-source-specification-version: 2
+x-source-open-decisions: docs/decisions/US-027-open-decisions.md
+x-source-open-decisions-version: 2
+x-requirements-version: 84
+x-produced-by: openapi-designer
+x-extends: docs/designs/api/US-008-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type is
+  added or changed; the pages below are the installation's own screens (DC-12).
+
+servers:
+  - url: https://school.example
+    description: >
+      Installation public port. Illustrative; the real value is the configured public
+      base address (US-008 spec FR-001).
+
+tags:
+  - name: report-templates
+    description: "The template list and the template forms (spec FR-002, FR-006 … FR-010)"
+  - name: report
+    description: "The on-screen report (spec FR-004, FR-005, FR-011)"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 configured host-wide applies and is not restated: HTTPS and
+    HSTS, the deny-by-default fallback policy (SC-4, API-9), the global antiforgery
+    filter, the single error page, the anonymous catch-all `404`, the session cookie
+    and its limits, the restricted session of a Dean with a temporary password
+    (US-012 api-design §2.6), the exception handler (API-10) and its mapping of
+    `ReadOnlyModeException` to `409` with the translated error page naming the
+    BR-025 reason (US-008, US-011, US-019).
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list of anonymous endpoints gains **nothing**; the US-008
+    endpoint enumeration test passes with every path below classified as protected
+    (spec FR-012, S-01).
+
+  antiforgery: >
+    Every `POST` below requires the antiforgery token (spec S-07); the exemption
+    list gains nothing. A missing or invalid token answers `400` with the
+    translated error page (`Error.PageExpired`) before any use case runs.
+
+  outbound: >
+    No operation calls anything outside the process: no Google call, no secret-store
+    read, no Control Plane call (spec FR-013, S-04, S-13).
+
+  template-reference: >
+    `{templateRef}` and the `template` query parameter are one value type
+    (spec VR-006): the fixed key `academic-journal` for the built-in template, or
+    the decimal internal id of a created template. Bound as a string and validated
+    in `Application`: decimal digits only, one occurrence, parsing to a positive
+    64-bit integer — or exactly `academic-journal` (case-sensitive). Anything else
+    is malformed (`TemplateMalformed`). A well-formed id of no created template is
+    `TemplateNotFound`.
+
+  restricted-session: >
+    A Dean held on the forced password change is redirected to
+    `/sign-in/change-password` by every operation below, as everywhere (US-012).
+    Not restated per operation.
+
+paths:
+
+  /reports/templates:
+
+    get:
+      tags: [report-templates]
+      operationId: listReportTemplates
+      summary: "The template list — the section's entry page"
+      description: >
+        The built-in "Academic journal" first, then every created template ordered by
+        name in the UI-language collation, ties by id (spec FR-002). Shows a
+        one-time confirmation (TempData `ReportTemplateMessage`) after a successful
+        create, change or delete. Works in read-only mode with nothing hidden (AD-6).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: UseReportTemplates
+      x-permission-matrix-row: "\"Использование шаблонов отчётов\" — Admin ✔, Dean ✔"
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: nothing
+      x-read-only-mode: "allowed — identical in all three BR-025 causes"
+      x-spec: [FR-001, FR-002, FR-006, FR-012, FR-013, FR-014]
+      x-acceptance-criteria: [AC-001, AC-002, AC-006, AC-008, AC-010, AC-014]
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: "The list."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateListPageModel"
+        "302":
+          description: "Not signed in — `Location: /sign-in`; restricted session — `/sign-in/change-password`."
+        "500":
+          $ref: "#/components/responses/ErrorPage"
+
+    post:
+      tags: [report-templates]
+      operationId: createReportTemplate
+      summary: "Save a new template — from the new form or from the copy form"
+      description: >
+        One use case for create and copy (spec FR-007, FR-008): a copy is an ordinary
+        created template with no link to its source and audits as a create (spec
+        FR-016). Evaluation order: authentication → restricted session →
+        `EditReportTemplates` → antiforgery (`400` error page) → read-only guard
+        (`409` error page; audit `ReportTemplateCreated` / `Refused` /
+        `ReadOnlyMode`, target id null) → structural shape (`400` error page,
+        nothing echoed) → field validation (`400`, the form re-rendered) → insert of
+        the template and its audit row in one transaction → `302`.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: EditReportTemplates
+      x-permission-matrix-row: "\"Создание и редактирование шаблонов отчётов\" — Admin ✔, Dean ✔"
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: "one ReportTemplate (with its scale rows and marks) and one AuditEvent `ReportTemplateCreated`/`Succeeded`; on a read-only refusal one AuditEvent `Refused`/`ReadOnlyMode` and nothing else"
+      x-read-only-mode: "refused in Application, guard first — 409"
+      x-author: "the session's AppUser (spec FR-014, VR-008); never read from the request"
+      x-spec: [FR-007, FR-008, FR-012, FR-013, FR-014, FR-015, FR-016, FR-019]
+      x-acceptance-criteria: [AC-002, AC-003, AC-005, AC-006, AC-007, AC-008, AC-009]
+      security:
+        - installationSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ReportTemplateForm"
+      responses:
+        "302":
+          description: >
+            (1) Saved — `Location: /reports/templates`, TempData
+            `ReportTemplateMessage` = `Created`. (2) Not signed in — `/sign-in`.
+            (3) Restricted session — `/sign-in/change-password`.
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: [/reports/templates, /sign-in, /sign-in/change-password]
+        "400":
+          description: >
+            (1) Missing or invalid antiforgery token, or a structurally malformed form
+            (spec VR-002, VR-003, VR-004 "malformed" cases — see
+            `ReportTemplateForm`): the translated error page `Error.PageExpired`;
+            nothing echoed. (2) A field fails validation: the template form
+            re-rendered with every value entered and a `fieldErrors` entry per
+            problem (spec AC-009). Nothing is saved, nothing audited; the log line
+            names the field and rule, never the value (spec FR-019, S-08).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateFormPageModel"
+        "409":
+          $ref: "#/components/responses/ReadOnlyRefused"
+        "500":
+          $ref: "#/components/responses/ErrorPage"
+
+  /reports/templates/new:
+
+    get:
+      tags: [report-templates]
+      operationId: getNewReportTemplateForm
+      summary: "The new-template form with the defaults of spec FR-007"
+      description: >
+        Name empty; view `full`; materials shown; scale `none`; hours 2; every state
+        mark and the late mark `program` (spec FR-007, I-2). Submits to
+        `POST /reports/templates`. Opens in read-only mode too (spec FR-013); saving
+        is what is refused.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: EditReportTemplates
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: nothing
+      x-read-only-mode: "allowed"
+      x-spec: [FR-007, FR-012, FR-013]
+      x-acceptance-criteria: [AC-002, AC-008]
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: "The form."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateFormPageModel"
+        "302":
+          description: "Not signed in — `/sign-in`; restricted session — `/sign-in/change-password`."
+        "500":
+          $ref: "#/components/responses/ErrorPage"
+
+  /reports/templates/{templateRef}/copy:
+
+    get:
+      tags: [report-templates]
+      operationId: getCopyReportTemplateForm
+      summary: "The template form pre-filled from any template (built-in or created)"
+      description: >
+        Every setting of the source; name = the source name (translated for the
+        built-in, as written otherwise) + the translated " (copy)" in the actor's UI
+        language (spec FR-008, I-3). The name is not checked here: a result longer
+        than 100 characters or equal to an existing name is reported on save
+        (VR-001). Submits to `POST /reports/templates`. Opens in read-only mode too.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: EditReportTemplates
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: nothing
+      x-read-only-mode: "allowed"
+      x-spec: [FR-006, FR-008, FR-012, FR-013]
+      x-acceptance-criteria: [AC-002, AC-005, AC-008]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/TemplateRef"
+      responses:
+        "200":
+          description: "The pre-filled form."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateFormPageModel"
+        "302":
+          description: "Not signed in — `/sign-in`; restricted session — `/sign-in/change-password`."
+        "400":
+          description: "`TemplateMalformed`: the template list re-rendered with the message."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateListPageModel"
+        "404":
+          description: "`TemplateNotFound`: the template list re-rendered with the message."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateListPageModel"
+        "500":
+          $ref: "#/components/responses/ErrorPage"
+
+  /reports/templates/{templateRef}/edit:
+
+    get:
+      tags: [report-templates]
+      operationId: getEditReportTemplateForm
+      summary: "The template form with a created template's settings"
+      description: >
+        Submits to `POST /reports/templates/{templateRef}`. The built-in key is
+        refused by `Application` (spec FR-006, AC-001). Opens in read-only mode too.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: EditReportTemplates
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: nothing
+      x-read-only-mode: "allowed"
+      x-spec: [FR-006, FR-009, FR-012, FR-013]
+      x-acceptance-criteria: [AC-001, AC-002, AC-008]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/TemplateRef"
+      responses:
+        "200":
+          description: "The form."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateFormPageModel"
+        "302":
+          description: "Not signed in — `/sign-in`; restricted session — `/sign-in/change-password`."
+        "400":
+          description: "`TemplateMalformed` or `BuiltInNotChangeable`: the template list re-rendered with the message; not audited (spec I-15)."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateListPageModel"
+        "404":
+          description: "`TemplateNotFound`: the template list re-rendered with the message."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateListPageModel"
+        "500":
+          $ref: "#/components/responses/ErrorPage"
+
+  /reports/templates/{templateRef}:
+
+    post:
+      tags: [report-templates]
+      operationId: changeReportTemplate
+      summary: "Save a created template's settings (whole replace)"
+      description: >
+        Spec FR-009. Evaluation order: authentication → restricted session →
+        `EditReportTemplates` → antiforgery (`400` error page) → read-only guard
+        (`409` error page; audit `ReportTemplateChanged` / `Refused` /
+        `ReadOnlyMode`, target id = the reference when it parses as a created-template
+        id, else null) → reference shape (`400`, list, `TemplateMalformed`) →
+        built-in key (`400`, list, `BuiltInNotChangeable`, not audited) →
+        existence (`404`, list, `TemplateNotFound`) → structural shape (`400` error
+        page) → field validation (`400`, form re-rendered; uniqueness excludes the
+        template itself) → replace of all settings + last-change time + audit row in
+        one transaction → `302`. The author never changes. Last save wins (spec I-11).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: EditReportTemplates
+      x-permission-matrix-row: "\"Создание и редактирование шаблонов отчётов\" — Admin ✔, Dean ✔"
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: "the template's settings and one AuditEvent `ReportTemplateChanged`/`Succeeded`; on a read-only refusal one AuditEvent `Refused`/`ReadOnlyMode` and nothing else"
+      x-read-only-mode: "refused in Application, guard first — 409"
+      x-ownership-check: "none — any Admin or Dean changes any created template (spec FR-012, §2 v84)"
+      x-spec: [FR-006, FR-009, FR-012, FR-013, FR-015, FR-016, FR-019]
+      x-acceptance-criteria: [AC-001, AC-002, AC-003, AC-005, AC-006, AC-007, AC-008, AC-009]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/TemplateRef"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ReportTemplateForm"
+      responses:
+        "302":
+          description: >
+            (1) Saved — `Location: /reports/templates`, TempData
+            `ReportTemplateMessage` = `Changed`. (2) Not signed in — `/sign-in`.
+            (3) Restricted session — `/sign-in/change-password`.
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: [/reports/templates, /sign-in, /sign-in/change-password]
+        "400":
+          description: >
+            (1) Antiforgery or structural shape — the error page `Error.PageExpired`.
+            (2) `TemplateMalformed` or `BuiltInNotChangeable` — the template list
+            with the message. (3) Field validation — the form re-rendered with the
+            values entered and `fieldErrors`. Nothing is saved or audited.
+          content:
+            text/html:
+              x-view-model:
+                oneOf:
+                  - $ref: "#/components/schemas/ReportTemplateListPageModel"
+                  - $ref: "#/components/schemas/ReportTemplateFormPageModel"
+        "404":
+          description: "`TemplateNotFound` (never existed, or deleted meanwhile): the template list with the message; nothing saved or audited."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateListPageModel"
+        "409":
+          $ref: "#/components/responses/ReadOnlyRefused"
+        "500":
+          $ref: "#/components/responses/ErrorPage"
+
+  /reports/templates/{templateRef}/deletion:
+
+    get:
+      tags: [report-templates]
+      operationId: getDeleteReportTemplateConfirmation
+      summary: "The delete confirmation page"
+      description: >
+        Names the template (as written) and offers a confirm button posting to the
+        same path and a link back to the list (spec §3.2 "asks for confirmation on
+        the page"). No script dialog. Opens in read-only mode too.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: EditReportTemplates
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: nothing
+      x-read-only-mode: "allowed"
+      x-spec: [FR-006, FR-010, FR-012, FR-013]
+      x-acceptance-criteria: [AC-001, AC-002, AC-008]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/TemplateRef"
+      responses:
+        "200":
+          description: "The confirmation page."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateDeletePageModel"
+        "302":
+          description: "Not signed in — `/sign-in`; restricted session — `/sign-in/change-password`."
+        "400":
+          description: "`TemplateMalformed` or `BuiltInNotChangeable`: the template list with the message."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateListPageModel"
+        "404":
+          description: "`TemplateNotFound`: the template list with the message."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateListPageModel"
+        "500":
+          $ref: "#/components/responses/ErrorPage"
+
+    post:
+      tags: [report-templates]
+      operationId: deleteReportTemplate
+      summary: "Delete a created template permanently"
+      description: >
+        Spec FR-010. The body carries only the antiforgery token. Evaluation order:
+        authentication → restricted session → `EditReportTemplates` → antiforgery
+        (`400` error page) → read-only guard (`409` error page; audit
+        `ReportTemplateDeleted` / `Refused` / `ReadOnlyMode`, target id as for
+        change) → reference shape (`400`, list) → built-in key (`400`, list, not
+        audited) → existence (`404`, list) → delete + audit row in one transaction →
+        `302`.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: EditReportTemplates
+      x-permission-matrix-row: "\"Создание и редактирование шаблонов отчётов\" — Admin ✔, Dean ✔"
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: "removes the template (and its scale rows and marks) and writes one AuditEvent `ReportTemplateDeleted`/`Succeeded`; on a read-only refusal one AuditEvent `Refused`/`ReadOnlyMode` and nothing else"
+      x-read-only-mode: "refused in Application, guard first — 409"
+      x-ownership-check: "none (spec FR-012)"
+      x-spec: [FR-006, FR-010, FR-012, FR-013, FR-016, FR-019]
+      x-acceptance-criteria: [AC-001, AC-002, AC-006, AC-007, AC-008]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/TemplateRef"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              description: "The antiforgery token field only; any other field is ignored."
+              properties:
+                __RequestVerificationToken:
+                  type: string
+      responses:
+        "302":
+          description: >
+            (1) Deleted — `Location: /reports/templates`, TempData
+            `ReportTemplateMessage` = `Deleted`. (2) Not signed in — `/sign-in`.
+            (3) Restricted session — `/sign-in/change-password`.
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: [/reports/templates, /sign-in, /sign-in/change-password]
+        "400":
+          description: >
+            (1) Antiforgery — the error page. (2) `TemplateMalformed` or
+            `BuiltInNotChangeable` — the template list with the message.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateListPageModel"
+        "404":
+          description: "`TemplateNotFound` — including a second delete of the same template: the list with the message."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateListPageModel"
+        "409":
+          $ref: "#/components/responses/ReadOnlyRefused"
+        "500":
+          $ref: "#/components/responses/ErrorPage"
+
+  /reports:
+
+    get:
+      tags: [report]
+      operationId: getReport
+      summary: "The report of one template for one course and period"
+      description: >
+        Always renders the selection form (template, course, period) with the
+        effective values; with a valid `courseId` it also renders the report of spec
+        FR-005. The form submits by `GET` to this same path; the query carries the
+        template reference, course id and dates only (spec S-05). Validation (spec
+        VR-007) runs before any report data is read; a failure re-renders **this
+        page** — not the host's error page — with the message keys. Evaluation
+        order: authentication → restricted session → `UseReportTemplates` → query
+        shape (`400`) → template and course existence (`404`) → build (`200`).
+        Viewing writes nothing and is not audited (spec FR-016).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: UseReportTemplates
+      x-permission-matrix-row: "\"Использование шаблонов отчётов\" — Admin ✔, Dean ✔"
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: "nothing — no entity, no audit row"
+      x-read-only-mode: "allowed — identical in all three BR-025 causes; IReadOnlyModeGuard not called"
+      x-database-round-trips: "fixed per request, independent of rows and columns (spec FR-004)"
+      x-switcher-return-path: "`/reports` plus the validated `template`, `courseId`, `from`, `to` only; malformed values omitted (spec FR-011, S-05)"
+      x-spec: [FR-001, FR-003, FR-004, FR-005, FR-006, FR-011, FR-012, FR-013, FR-015, FR-017, FR-019]
+      x-acceptance-criteria: [AC-004, AC-005, AC-006, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014]
+      security:
+        - installationSession: []
+      parameters:
+        - name: template
+          in: query
+          required: false
+          description: >
+            The template reference (`x-host-wide-rules.template-reference`). Absent or
+            empty → `academic-journal` (spec I-4). Malformed → `400`,
+            `TemplateMalformed`; a well-formed id of no created template → `404`,
+            `TemplateNotFound`.
+          schema:
+            type: string
+            pattern: "^(academic-journal|[0-9]{1,19})$"
+          example: academic-journal
+        - name: courseId
+          in: query
+          required: false
+          description: >
+            As US-025 VR-001, same message keys: absent or empty → form only;
+            malformed → `400`, `CourseMalformed`; unknown → `404`, `CourseUnknown`.
+          schema:
+            type: string
+            pattern: "^[0-9]{1,19}$"
+          example: "42"
+        - name: from
+          in: query
+          required: false
+          description: >
+            First day, school time zone, inclusive; `yyyy-MM-dd`; as US-025 VR-002.
+            Absent or empty → first day of the current month. Malformed → `400`,
+            `FromMalformed`.
+          schema:
+            type: string
+            format: date
+          example: "2026-09-01"
+        - name: to
+          in: query
+          required: false
+          description: >
+            Last day, inclusive; as `from`; absent → last day of the current month;
+            malformed → `400`, `ToMalformed`. After defaults `from` > `to` → `400`,
+            `PeriodInverted`.
+          schema:
+            type: string
+            format: date
+          example: "2026-09-30"
+      responses:
+        "200":
+          description: >
+            The page. One of: (1) form only — no `courseId`; (2) the report;
+            (3) an empty report — `report.emptyStateKey` `NothingPublished`, or the
+            Grading part replaced by `NoStudents` (spec FR-005.7); (4) no course
+            stored — `noCoursesStored` true. Read-only mode answers exactly as
+            outside it.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportPageModel"
+        "302":
+          description: "Not signed in — `/sign-in`; restricted session — `/sign-in/change-password`. Nothing is read."
+        "400":
+          description: >
+            A parameter is malformed or the period inverted. **This page** with the
+            form and every message key found in parameter order (`template`,
+            `courseId`, `from`, `to`, then the pair), `report` null; no existence
+            lookup, no report data read. A malformed value is not echoed: its field
+            is redisplayed empty (template falls back to the built-in).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportPageModel"
+        "404":
+          description: >
+            Shape valid, but the template or the course (or both — both keys) does not
+            exist. **This page** with the message keys, `report` null.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportPageModel"
+        "500":
+          $ref: "#/components/responses/ErrorPage"
+
+  /:
+    get:
+      operationId: getLanding
+      summary: "Existing US-008 home page — changed additively"
+      description: >
+        Unchanged in behaviour, policy and status codes. Gains a "Reports and
+        templates" section heading with a link to `/reports/templates`, for Admin
+        and Dean, in read-only mode too (spec FR-001). The "Google Workspace" /
+        "Journal" entry of US-025 stays. A plain link, not enforcement.
+      x-policy: ViewLegitimacyStatus
+      x-change: additive-markup
+      x-acceptance-criteria: [AC-001, AC-010]
+      responses:
+        "200":
+          description: "The page; see US-008, US-019 and US-025 contracts for everything else."
+          content:
+            text/html: {}
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: ClassroomAgent.Session
+      description: "The installation's session cookie (US-008); name illustrative."
+
+  parameters:
+    TemplateRef:
+      name: templateRef
+      in: path
+      required: true
+      description: "See `x-host-wide-rules.template-reference`. Bound as a string; validated in `Application`."
+      schema:
+        type: string
+        pattern: "^(academic-journal|[0-9]{1,19})$"
+      example: "7"
+
+  responses:
+    ErrorPage:
+      description: "Unexpected failure: the single error page, no detail (API-10, SC-10)."
+      content:
+        text/html: {}
+    ReadOnlyRefused:
+      description: >
+        Read-only mode (any BR-025 cause): `ReadOnlyModeException` from the guard,
+        called first in the use case (spec FR-013, AD-6). The host-wide handler
+        renders the translated error page naming the reason. Nothing is changed;
+        one AuditEvent `Refused` / `ReadOnlyMode` is written (spec FR-016).
+      content:
+        text/html: {}
+
+  schemas:
+
+    # ---------- Form input ----------
+
+    ReportTemplateForm:
+      type: object
+      description: >
+        Request model under `Application/Models/Requests`; every field bound as a
+        string and validated in `Application` (spec §6; US-039 api-design §2.5 —
+        no MVC enum binding). Text is trimmed first; "text" excludes control
+        characters (spec I-13).
+
+        **Structural (malformed → `400` error page, nothing echoed):** `view` not
+        exactly `full`/`short`; `hideMaterials` not `true`/`false`; `scaleMode` not
+        `none`/`ranges`; a mark `kind` outside its enum; a `marks` key outside
+        `ReportCellState`, or any `ReportCellState` member missing; `lateMark.kind`
+        missing; a repeated field; a scale row index that is negative, repeated or
+        not a decimal number. A legitimate form never produces these (spec VR-002,
+        VR-003 "malformed").
+
+        **Field validation (`400`, form re-rendered with `fieldErrors`):** see
+        `ReportTemplateFieldErrorKey`.
+      required: [name, view, hideMaterials, scaleMode, hoursPerLesson, marks, lateMark]
+      properties:
+        name:
+          type: string
+          description: "VR-001: required, 1–100 characters after trimming, no control characters, unique among created templates trimmed and case-insensitively (excluding the template being changed). May equal the built-in name."
+        view:
+          type: string
+          enum: [full, short]
+        hideMaterials:
+          type: string
+          enum: ["true", "false"]
+        scaleMode:
+          type: string
+          enum: [none, ranges]
+          description: "`none` = \"no conversion\"; any `scale` rows sent are ignored and not stored (VR-004)."
+        scale:
+          type: array
+          description: >
+            Form fields `scale[i].from`, `scale[i].to`, `scale[i].label`. With
+            `ranges`: 1–101 rows; `from`/`to` whole numbers 0–100, `from` ≤ `to`;
+            label 1–10 characters, no control characters, may repeat; sorted by
+            `from` the rows cover 0–100 with no gap and no overlap (VR-004). Stored
+            sorted by `from`; re-rendered on `400` in submitted order.
+          maxItems: 101
+          items:
+            type: object
+            properties:
+              from: { type: string }
+              to: { type: string }
+              label: { type: string }
+        hoursPerLesson:
+          type: string
+          description: "VR-005: required, whole number 1–10."
+        marks:
+          type: object
+          description: >
+            Form fields `marks[<State>].kind` and `marks[<State>].text` for **every**
+            member of `ReportCellState`, keys exact and case-sensitive. `text` is
+            required, 1–30 characters, no control characters when `kind` is `own`;
+            ignored and not stored otherwise (VR-003).
+          propertyNames:
+            $ref: "#/components/schemas/ReportCellState"
+          additionalProperties:
+            $ref: "#/components/schemas/MarkInput"
+        lateMark:
+          type: object
+          description: "Form fields `lateMark.kind`, `lateMark.text`; `text` rules as for `marks`."
+          required: [kind]
+          properties:
+            kind:
+              type: string
+              enum: [program, own, hidden]
+            text:
+              type: string
+
+    MarkInput:
+      type: object
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum: [program, own, empty]
+        text:
+          type: string
+
+    ReportCellState:
+      type: string
+      description: >
+        The closed set of cell states a template maps (spec FR-003). Program text of
+        each = the existing US-025 key `Journal.Cell.<member>`; wording for graded
+        and ungraded work is already separate. `Unrecognised` with `program` shows
+        Google's raw value (US-015 OD-005).
+      enum:
+        - TurnedInNotGraded       # graded work
+        - ReturnedWithoutGrade    # graded work
+        - TurnedIn                # ungraded work
+        - Returned                # ungraded work
+        - NotTurnedIn             # due has passed
+        - NotDueYet
+        - NotTurnedInNoDueDate
+        - NotAssigned
+        - Unrecognised
+
+    ReportTemplateFieldErrorKey:
+      type: string
+      description: >
+        Closed list; each maps to `ReportTemplate.Validation.<member>` in both
+        resource files (spec FR-017). For scale rows the message names the row
+        number (1-based, as submitted) and its bounds.
+      enum:
+        - NameRequired
+        - NameTooLong
+        - NameNotUnique
+        - TextInvalidCharacters     # name, mark text or scale label contains a control character
+        - MarkTextRequired
+        - MarkTextTooLong
+        - ScaleNoRows
+        - ScaleTooManyRows
+        - ScaleBoundInvalid         # from/to empty, not a whole number, or outside 0–100
+        - ScaleRowInverted          # from > to
+        - ScaleLabelRequired
+        - ScaleLabelTooLong
+        - ScaleOverlap              # first offending row, sorted by from
+        - ScaleGap                  # first offending row, or table not starting at 0 / ending at 100
+        - HoursRequired
+        - HoursOutOfRange
+
+    # ---------- View models ----------
+
+    ReportTemplateListPageModel:
+      type: object
+      description: "View DTO mapped in `Application` (AD-8)."
+      required: [templates]
+      properties:
+        templates:
+          type: array
+          description: "Built-in first, then created templates by name (UI-language collation), then id (spec FR-002)."
+          items:
+            $ref: "#/components/schemas/ReportTemplateListItem"
+        confirmationKey:
+          oneOf:
+            - type: string
+              enum: [Created, Changed, Deleted]
+              description: "From TempData `ReportTemplateMessage`, shown once; maps to `ReportTemplate.Confirmation.<member>`."
+            - type: "null"
+        messageKey:
+          oneOf:
+            - $ref: "#/components/schemas/ReportTemplateReferenceMessageKey"
+            - type: "null"
+
+    ReportTemplateListItem:
+      type: object
+      required: [reference, isBuiltIn, canChange]
+      properties:
+        reference:
+          type: string
+          description: "`academic-journal` or the created template's id as a string."
+        isBuiltIn:
+          type: boolean
+          description: "True → the name is `ReportTemplate.BuiltIn.AcademicJournal` and the item is marked built-in; no author, no date."
+        name:
+          type: [string, "null"]
+          description: "Created templates only; school text, never translated."
+        authorState:
+          type: [string, "null"]
+          enum: [Known, AccountDeleted, null]
+          description: "Created templates only; `AccountDeleted` renders the translated \"account deleted\" (spec FR-014, AC-014)."
+        authorEmail:
+          type: [string, "null"]
+          description: "Set only when `authorState` is `Known` (spec I-10)."
+        changedAt:
+          type: [string, "null"]
+          format: date-time
+          description: "Last change as a local date-time in the school's time zone; created templates only."
+        canChange:
+          type: boolean
+          description: "False for the built-in: no change or delete action is rendered. Not enforcement."
+
+    ReportTemplateReferenceMessageKey:
+      type: string
+      description: "Closed list; each maps to `ReportTemplate.Reference.<member>` in both resource files."
+      enum: [TemplateMalformed, TemplateNotFound, BuiltInNotChangeable]
+
+    ReportTemplateFormPageModel:
+      type: object
+      description: >
+        View DTO of the template form. `mode` decides the target: `create` and
+        `copy` post to `/reports/templates`, `change` to
+        `/reports/templates/{reference}`. On a `400` re-render every value is the one
+        entered (strings as submitted, trimmed), so the user can correct it. The
+        page script (same-origin file under `wwwroot/js`) adds and removes scale rows
+        and fills the 12-point preset (spec FR-015); the preset values are rendered
+        into the page from `Application`, not duplicated in the script.
+      required: [mode, values, fieldErrors, twelvePointPreset]
+      properties:
+        mode:
+          type: string
+          enum: [create, copy, change]
+        reference:
+          type: [string, "null"]
+          description: "The created template's id in `change` mode; null otherwise."
+        values:
+          $ref: "#/components/schemas/ReportTemplateForm"
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            required: [field, key]
+            properties:
+              field:
+                type: string
+                description: "`name`, `hoursPerLesson`, `marks[<State>].text`, `lateMark.text`, `scale`, or `scale[i].from|to|label`."
+              key:
+                $ref: "#/components/schemas/ReportTemplateFieldErrorKey"
+              rowNumber:
+                type: [integer, "null"]
+        twelvePointPreset:
+          type: array
+          description: "The 12 rows of OD-002 (spec FR-015)."
+          items:
+            $ref: "#/components/schemas/ScaleRange"
+
+    ReportTemplateDeletePageModel:
+      type: object
+      required: [reference, name]
+      properties:
+        reference:
+          type: string
+        name:
+          type: string
+          description: "School text, never translated."
+
+    ScaleRange:
+      type: object
+      required: [from, to, label]
+      properties:
+        from: { type: integer, minimum: 0, maximum: 100 }
+        to: { type: integer, minimum: 0, maximum: 100 }
+        label: { type: string }
+
+    ReportPageModel:
+      type: object
+      description: >
+        View DTO of the report page, mapped in `Application` (AD-8). Strings from
+        Google and template texts are rendered HTML-encoded and never translated
+        (VR-009, FR-017).
+      required: [templates, selectedTemplate, courses, noCoursesStored, from, to, messageKeys, returnPath]
+      properties:
+        templates:
+          type: array
+          description: "Drop-down: built-in first, then created templates in list order (spec FR-011)."
+          items:
+            $ref: "#/components/schemas/ReportTemplateOption"
+        selectedTemplate:
+          type: string
+          description: "Effective reference; `academic-journal` when absent or malformed."
+        courses:
+          type: array
+          items:
+            $ref: "#/components/schemas/CourseOption"
+        noCoursesStored:
+          type: boolean
+        selectedCourseId:
+          type: [integer, "null"]
+          format: int64
+        from:
+          type: [string, "null"]
+          format: date
+        to:
+          type: [string, "null"]
+          format: date
+        messageKeys:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportMessageKey"
+        returnPath:
+          type: string
+          description: "Language-switcher return path built from validated values only."
+        report:
+          oneOf:
+            - $ref: "#/components/schemas/Report"
+            - type: "null"
+
+    ReportTemplateOption:
+      type: object
+      required: [reference, isBuiltIn]
+      properties:
+        reference: { type: string }
+        isBuiltIn: { type: boolean }
+        name:
+          type: [string, "null"]
+          description: "Created templates only, as written."
+
+    CourseOption:
+      type: object
+      description: "As US-025 (`docs/designs/api/US-025-openapi.yaml`)."
+      required: [id, name]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        section: { type: [string, "null"] }
+
+    ReportMessageKey:
+      type: string
+      description: >
+        Closed list. `CourseMalformed`, `CourseUnknown`, `FromMalformed`,
+        `ToMalformed`, `PeriodInverted` reuse the US-025 keys
+        `Journal.Validation.<member>` (spec VR-007 "same messages");
+        `TemplateMalformed` and `TemplateNotFound` use
+        `ReportTemplate.Reference.<member>`.
+      enum: [TemplateMalformed, TemplateNotFound, CourseMalformed, CourseUnknown, FromMalformed, ToMalformed, PeriodInverted]
+
+    Report:
+      type: object
+      description: >
+        The report DTO of spec FR-005 — HTML-independent; US-028 … US-030 build
+        files from it. Program texts are carried as keys and translated when
+        rendered (in the viewer's UI language), so the same DTO serves any output.
+        Dates are calendar dates already in the school's time zone.
+      required: [header, view]
+      properties:
+        header:
+          $ref: "#/components/schemas/ReportHeader"
+        view:
+          type: string
+          enum: [full, short]
+          description: "The template's setting (spec FR-011: no view parameter)."
+        emptyStateKey:
+          type: [string, "null"]
+          enum: [NothingPublished, null]
+          description: "No item in the period: both parts null (spec FR-005.7); maps to `Report.Empty.NothingPublished`."
+        grading:
+          oneOf:
+            - $ref: "#/components/schemas/GradingPart"
+            - type: "null"
+        lessonTopics:
+          oneOf:
+            - $ref: "#/components/schemas/LessonTopicsPart"
+            - type: "null"
+
+    ReportHeader:
+      type: object
+      required: [templateIsBuiltIn, courseName, from, to, teachers]
+      properties:
+        templateIsBuiltIn:
+          type: boolean
+        templateName:
+          type: [string, "null"]
+          description: "Created template's name as written; null for the built-in (translated key)."
+        courseName: { type: string }
+        courseSection: { type: [string, "null"] }
+        from: { type: string, format: date }
+        to: { type: string, format: date }
+        teachers:
+          type: array
+          description: "Spec FR-005.5, ordered as student rows; joined with \", \" when rendered."
+          items:
+            $ref: "#/components/schemas/PersonName"
+
+    PersonName:
+      type: object
+      required: [nameKind]
+      properties:
+        displayName:
+          type: [string, "null"]
+          description: "Full name, else email; null when `nameKind` is `Unnamed`. Google data."
+        nameKind:
+          type: string
+          enum: [FullName, Email, Unnamed]
+          description: "`Unnamed` renders `Journal.Row.Unnamed` for students, `Report.Teacher.Unnamed` for teachers."
+
+    GradingPart:
+      type: object
+      required: [columns, rows]
+      properties:
+        columns:
+          type: array
+          description: "Spec FR-005.3 order: lesson date, title (UI-language collation), id. No item id is carried."
+          items:
+            $ref: "#/components/schemas/GradingColumn"
+        rows:
+          type: array
+          description: "Students of the period (BR-051, US-025 FR-005). Empty → the table is not drawn and `Report.Empty.NoStudents` is shown."
+          items:
+            $ref: "#/components/schemas/GradingRow"
+
+    GradingColumn:
+      type: object
+      required: [lessonDate, title, isMaterial]
+      properties:
+        lessonDate: { type: string, format: date }
+        title: { type: string, description: "Google data." }
+        isMaterial:
+          type: boolean
+          description: "True → the translated \"material\" marker."
+
+    GradingRow:
+      type: object
+      required: [student, cells]
+      properties:
+        student:
+          $ref: "#/components/schemas/PersonName"
+        cells:
+          type: array
+          description: "One per column, in column order."
+          items:
+            $ref: "#/components/schemas/ReportCell"
+
+    ReportCell:
+      type: object
+      description: >
+        Spec FR-005.4, already resolved by the template in `Application`. In the
+        short view `draftGrade` and `turnedInOn` are always null.
+      required: [content]
+      properties:
+        content:
+          type: string
+          enum: [Empty, Grade, Mark, RawState]
+          description: "`Empty` — material, or a state whose mark is empty; `Grade` — assigned grade; `Mark` — the state's mark; `RawState` — unrecognised state with the program's choice."
+        grade:
+          oneOf:
+            - $ref: "#/components/schemas/ReportGrade"
+            - type: "null"
+        mark:
+          oneOf:
+            - $ref: "#/components/schemas/ReportMark"
+            - type: "null"
+        rawState:
+          type: [string, "null"]
+          description: "Google's value; never translated."
+        late:
+          oneOf:
+            - $ref: "#/components/schemas/ReportMark"
+            - type: "null"
+          description: "Set when the cell has a submission, the late flag is set and the template shows the late mark; program text key `Late`."
+        draftGrade:
+          oneOf:
+            - $ref: "#/components/schemas/ReportGrade"
+            - type: "null"
+          description: "Full view, graded work, state shown, draft set; labelled with the translated \"draft\"."
+        turnedInOn:
+          type: [string, "null"]
+          format: date
+
+    ReportGrade:
+      type: object
+      description: "Spec FR-015."
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum: [ScaleLabel, RawPoints]
+          description: "`RawPoints` for \"no conversion\" and for a non-positive maximum."
+        label:
+          type: [string, "null"]
+          description: "School text, never translated."
+        points:
+          type: [number, "null"]
+        maxPoints:
+          type: [number, "null"]
+
+    ReportMark:
+      type: object
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum: [Program, Own]
+        programKey:
+          type: [string, "null"]
+          description: "A `ReportCellState` member (rendered `Journal.Cell.<member>`) or `Late` (rendered `Journal.Mark.Late`, the US-025 key)."
+        text:
+          type: [string, "null"]
+          description: "`Own` only; school text, never translated."
+
+    LessonTopicsPart:
+      type: object
+      description: >
+        Spec FR-005.6: one row per non-material item, Grading order. Teacher column
+        = `header.teachers`; "independent work" and "teacher's signature" are empty
+        columns with translated headings, carried by no field.
+      required: [rows]
+      properties:
+        rows:
+          type: array
+          items:
+            type: object
+            required: [lessonDate, title, hours]
+            properties:
+              lessonDate: { type: string, format: date }
+              title: { type: string, description: "Google data." }
+              hours: { type: integer, minimum: 1, maximum: 10 }
+
+x-operations-deliberately-absent:
+
+  api-v1: >
+    No `/api/v1` template or report endpoint and no paginated collection (spec I-12,
+    F-3). The report is rendered whole, as API-8 allows for exports; the template
+    list is bounded by the school's own templates.
+
+  http-delete-put: >
+    HTML forms send `GET` and `POST` only; change is `POST /reports/templates/{templateRef}`
+    and delete `POST …/deletion`, both with the antiforgery token.
+
+  separate-copy-save: >
+    The copy form posts to the create operation: a saved copy is an ordinary created
+    template with no link to its source (spec FR-008), so a second save endpoint
+    would be the same use case under another path.

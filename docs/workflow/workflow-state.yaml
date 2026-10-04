@@ -4,30 +4,31 @@
 version: 1
 story: US-027
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-writer
+last_invoked_skill: openapi-designer
 last_result:
   verdict: PASS
-  stage: SPECIFICATION
-  recorded_at: 2026-10-04T19:05:00Z
+  stage: API_DESIGN
+  recorded_at: 2026-10-04T19:22:00Z
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-027-spec.md
-    version: 2
-  - type: open_decisions
-    path: docs/decisions/US-027-open-decisions.md
-    version: 2
+  - type: openapi
+    path: docs/designs/api/US-027-openapi.yaml
+    version: 1
+  - type: api_design
+    path: docs/designs/api/US-027-api-design.md
+    version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
   - "F-1: AGENTS.md Domain Essentials is marked verified against v80; trebovaniya.md is at v84."
   - "F-2: the report page shows personal data; no convention requires Cache-Control no-store (US-025 SEC I-1). Owner / SECURITY_REVIEW, preferably before the export Stories."
   - "F-3: API-8 does not name the report view; treated like an export (whole period, not paginated)."
+  - "API_DESIGN choices for the human: 400 for change/delete of the built-in template; read-only guard before the reference check (audit target id rule); new field error keys TextInvalidCharacters, ScaleNoRows, ScaleTooManyRows; a same-origin script for scale rows and the 12-point preset (api-design §2.5-§2.8)."
   - "Interpretations I-1 … I-16 in spec §11 (text limits, rounding of extra credit, teachers of the period, last save wins, etc.) — confirm or correct at the gate."
 started_at: 2026-10-04T18:57:01Z
-updated_at: 2026-10-04T19:07:00Z
+updated_at: 2026-10-04T19:22:00Z
 completed_at: null
