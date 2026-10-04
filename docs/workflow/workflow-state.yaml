@@ -4,22 +4,22 @@
 version: 1
 story: US-025
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: PASS
-  stage: API_DESIGN
-  recorded_at: 2026-10-04T09:43:04Z
+  stage: DB_DESIGN
+  recorded_at: 2026-10-04T10:25:00Z
 last_artifacts:
-  - type: openapi
-    path: docs/designs/api/US-025-openapi.yaml
+  - type: database_design
+    path: docs/designs/database/US-025-db-design.md
     version: 1
-  - type: api_design
-    path: docs/designs/api/US-025-api-design.md
+  - type: entity_model
+    path: docs/designs/database/US-025-entity-model.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
@@ -28,6 +28,8 @@ non_blocking_findings:
   - "I-10: existing screens show instants without converting to the school time zone (NFR-074); a separate change once the setting exists (FR-010)."
   - "API design 8: no convention sets Cache-Control (no-store) on pages with personal data; Owner / SECURITY_REVIEW to decide."
   - "AGENTS.md Domain Essentials is marked verified against v80; trebovaniya.md is at v82."
+  - "DB F-1: spec FR-006 assumes at most one submission per student and item, but the schema allows more (US-015 db-design 4.3, non-unique index). Resolved as OD-008 (a) by the Owner on 2026-10-04 (open-decisions v2): latest UpdateTime, absent is oldest, then larger id."
+  - "DB F-2: no convention defines a read-only transaction; journal queries rely on tolerance between statements (db-design 2.1)."
 started_at: 2026-10-04T09:17:53Z
-updated_at: 2026-10-04T09:43:04Z
+updated_at: 2026-10-04T10:40:00Z
 completed_at: null

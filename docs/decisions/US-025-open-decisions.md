@@ -1,16 +1,18 @@
 ---
 artifact_type: open_decisions
 story: US-025
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-10-04T09:15:50Z
-updated_at: 2026-10-04T09:15:50Z
+updated_at: 2026-10-04T10:40:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-025-journal-view-for-period.md
     version: null
   - path: trebovaniya.md
     version: 82
+  - path: docs/designs/database/US-025-db-design.md
+    version: 1
 supersedes: null
 ---
 
@@ -109,3 +111,26 @@ Options: (a) rows by full name in the alphabetical order of the UI language,
 unnamed last; columns by date, then by title; (b) the order Classroom shows.
 
 **Resolution:** (a) — Owner, 2026-10-04.
+
+---
+
+## Raised at DB_DESIGN
+
+### OD-008 Two submissions of one item by one student
+
+Raised by DB_DESIGN (`docs/designs/database/US-025-db-design.md` §2.2, finding
+F-1). Spec FR-006 computes a cell from "the student's submission for it (or
+none)", but the schema permits more than one: `ix_submission_course_work_participant`
+is deliberately not unique (US-015 db-design §4.3). The journal has one cell
+per student and item, so it must say which submission that cell shows.
+
+Options: (a) the submission most recently updated in Google (`Submission.UpdateTime`);
+a submission without `UpdateTime` counts as older than any with one; on equal
+values (both absent included) the larger internal id wins; (b) the cell shows
+the "unrecognised state"; (c) the cell shows both submissions.
+
+**Resolution:** (a) — Owner, 2026-10-04. The chosen submission alone feeds the
+FR-006 cell — state, grades, late mark, last turn-in date. Spec FR-005
+condition 2 ("a submission in the period") is met by any of them. Every
+submission of the student to the item is still read (db-design §2, Q4); the
+choice is made in memory in `Application`.
