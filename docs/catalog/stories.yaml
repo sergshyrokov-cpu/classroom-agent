@@ -218,9 +218,12 @@ stories:
   - id: US-019
     epic: EPIC-1
     title: Trigger a synchronization from the UI
-    state: BACKLOG
+    state: READY
     blocked_by: >
       Depends on US-013.
+    # US-013 COMPLETED. Story file authored:
+    # docs/stories/US-019-trigger-sync-from-ui.md (aligned with v81).
+    # OD-001 … OD-008 resolved by the Owner on 2026-10-04, before activation.
 
   # --- EPIC-2: Courses and participants -----------------------------------
   - id: US-020
