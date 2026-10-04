@@ -1,10 +1,10 @@
 ---
 artifact_type: specification
 story: US-027
-version: 1
-status: DRAFT
+version: 2
+status: APPROVED
 created_at: 2026-10-04T18:57:01Z
-updated_at: 2026-10-04T18:57:01Z
+updated_at: 2026-10-04T19:07:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-027-report-templates.md
@@ -12,7 +12,7 @@ inputs:
   - path: trebovaniya.md
     version: 84
   - path: docs/decisions/US-027-open-decisions.md
-    version: 1
+    version: 2
   - path: docs/specifications/US-025-spec.md
     version: 1
 supersedes: null
@@ -48,8 +48,8 @@ Six properties shape everything below.
   shared by the whole school, each with its author, referencing nothing in the
   mirror and referenced by nothing there.
 - **The lesson date is the publication date** (OD-001 a) — and it decides period
-  membership too. Today the program does not store `scheduledTime`; how that is
-  closed is **OD-004, open**.
+  membership too. The program did not store `scheduledTime`; by OD-004 (a) this
+  Story adds it to `CourseWork` and the synchronization writes it (FR-020).
 
 ## 2. Business Goal
 
@@ -179,8 +179,8 @@ template, report builder or view reads a mirror table or entity directly.
 | Cell | the cell state of US-025 FR-006 computed at instant B, assigned grade points, draft grade points, late flag, last turn-in instant, raw state | `Submission` + the US-025 cell computation |
 
 - **Lesson date** — the publication date: `scheduledTime` if set, otherwise
-  `creationTime` (OD-001 a). **OD-004 (open)** decides where `scheduledTime`
-  comes from; the Specification states the rule, not the storage. When neither
+  `creationTime` (OD-001 a), from `CourseWork.ScheduledTime` (FR-020) and
+  `CourseWork.CreationTime`. When neither
   value is known for an item (`creationTime` is nullable in storage), its
   `ItemDate` is used (I-9).
 - **Cell** is computed by the same function as the journal of US-025 (one
@@ -444,9 +444,11 @@ follow the UI language. The existing missing-key test covers the new keys.
   conventions). The built-in template has no row.
 - New audit action values, if `AuditAction` / `AuditTargetType` need them.
 - Every change ships with its EF Core migration (PC-2).
-- **The mirror is not changed by this Story**, except as OD-004 resolves.
+- **The mirror changes by one column only**: `CourseWork.ScheduledTime`
+  (FR-020, OD-004 a).
 - Indexes (NFR-003, PC-7) support: the report's items of a course by lesson date
-  (depends on OD-004), memberships of a course, submissions of an item; DB_DESIGN
+  (DB_DESIGN chooses how, e.g. an index on the course and the stored dates),
+  memberships of a course, submissions of an item; DB_DESIGN
   confirms which exist (US-025) and adds what is missing.
 
 ### FR-019 Logging
@@ -460,6 +462,21 @@ follow the UI language. The existing missing-key test covers the new keys.
   the value. A read-only refusal: as US-007 FR-009.
 - No log line carries a template name, mark or label, a student or teacher name,
   an email, a grade, a title or other Google data (SC-10, NFR-023, DC-10).
+
+### FR-020 Storing `scheduledTime` (OD-004 a)
+
+- `CourseWork` gains a nullable `ScheduledTime` (UTC instant, PC-6), for both
+  resources — coursework and materials.
+- The synchronization of US-015 writes it on every insert and update from the
+  `scheduledTime` it already reads to compute `ItemDate`; absent in Google →
+  null. Nothing new is requested from Google; no scope changes (SC-6).
+- Rows imported before this Story have null `ScheduledTime` until the next run
+  updates them (US-015 updates existing items on every run — DB_DESIGN and
+  TEST_WRITING confirm); until then their lesson date is `creationTime`.
+- `ItemDate`, its BR-052 cascade and the journal of US-025 are unchanged.
+- The value is validated on import like the other instants of US-015 (§8).
+- Shipped with its EF Core migration (PC-2); no data migration — the next run
+  fills it.
 
 ## 5. Acceptance Criteria
 
@@ -483,7 +500,7 @@ Derived from the Specification:
 
 | Id | Criterion | Specified by |
 |---|---|---|
-| AC-012 | Period by lesson date in the school's time zone (`Europe/Kyiv`): an item published 28 September and due 2 October is in the September report with date 28 September and absent from the October report; an item published at 00:30 local time on the period's first day is in it (TC-8) | FR-004, FR-005.1 |
+| AC-012 | Period by lesson date in the school's time zone (`Europe/Kyiv`): an item published 28 September and due 2 October is in the September report with date 28 September and absent from the October report; an item published at 00:30 local time on the period's first day is in it; an item created in September and scheduled for 1 October is in the October report (TC-8) | FR-004, FR-005.1, FR-020 |
 | AC-013 | Rounding at a range boundary: with the 12-point preset, 0.85 of 10 (8.5 %) shows 2 and 0.84 of 10 (8.4 %) shows 1; 10.5 of 10 shows 12 | FR-015 |
 | AC-014 | A template whose author account was deleted stays listed and usable, with "account deleted" as author | FR-014 |
 
@@ -601,8 +618,8 @@ interpreted as markup (SC-10).
   (US-030), and the export audit row.
 - Filling "independent work", "teacher's signature" or real hours from school
   data (Epics 14–16); integration of two streams (Epic 17).
-- Any change to the US-025 journal page or to synchronization and the mirror —
-  **unless OD-004 (a) is chosen**, which adds storing `scheduledTime`.
+- Any change to the US-025 journal page; any change to synchronization and the
+  mirror other than storing `scheduledTime` (FR-020, OD-004 a).
 - Uploading a template file; per-Dean private templates; binding a template to
   courses.
 - Presets other than the 12-point scale (OD-002).
@@ -617,7 +634,7 @@ Full text, options and resolutions in `docs/decisions/US-027-open-decisions.md`.
 | OD-001 Lesson date and period membership | **RESOLVED** 2026-10-04 (a), v84 | none — FR-004, FR-005.1; implementation depends on OD-004 |
 | OD-002 Preset scale ranges | **RESOLVED** 2026-10-04, v84 | none — FR-015 |
 | OD-003 The built-in template's marks and scale | **RESOLVED** 2026-10-04 (a) | none — FR-006 |
-| OD-004 `scheduledTime` is not stored | **OPEN — blocking** | The lesson date of FR-004 cannot be computed as v84 defines it; FR-005.1, FR-018 indexes, AC-004, AC-012 and DB_DESIGN wait for it. Recommended: (a) store `scheduledTime` on `CourseWork` in this Story. |
+| OD-004 `scheduledTime` is not stored | **RESOLVED** 2026-10-04 (a) | none — FR-020 |
 
 ### Interpretations
 
@@ -686,7 +703,7 @@ can be corrected at `HUMAN_SPEC_APPROVAL`.
 | AC-001 | FR-001, FR-002, FR-006 | VR-006 | S-01 |
 | AC-002 | FR-007, FR-008, FR-009, FR-010, FR-012, FR-014 | VR-001 … VR-005, VR-008 | S-01, S-07, S-14 |
 | AC-003 | FR-015 | VR-004 | — |
-| AC-004 | FR-004, FR-005, FR-006 | VR-007 | S-05, S-12 |
+| AC-004 | FR-004, FR-005, FR-006, FR-020 | VR-007 | S-05, S-12 |
 | AC-005 | FR-003, FR-005.4, FR-008 | — | — |
 | AC-006 | FR-013 | — | S-04, S-06 |
 | AC-007 | FR-016 | VR-008 | S-09 |
@@ -694,6 +711,6 @@ can be corrected at `HUMAN_SPEC_APPROVAL`.
 | AC-009 | FR-011, FR-019, §6 | VR-001 … VR-007 | S-08, S-10 |
 | AC-010 | FR-017 | VR-009 | S-11 |
 | AC-011 | FR-004, FR-013 | — | S-04, S-13 |
-| AC-012 (derived) | FR-004, FR-005.1 | VR-007 | — |
+| AC-012 (derived) | FR-004, FR-005.1, FR-020 | VR-007 | — |
 | AC-013 (derived) | FR-015 | VR-004 | — |
 | AC-014 (derived) | FR-014 | — | S-14 |

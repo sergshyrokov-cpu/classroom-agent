@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-027
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-10-04T18:57:01Z
-updated_at: 2026-10-04T18:57:01Z
+updated_at: 2026-10-04T19:06:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-027-report-templates.md
@@ -20,10 +20,10 @@ Three decisions (OD-001 … OD-003) were written into the Story by its author an
 **resolved by the Owner on 2026-10-04, before activation**. They are carried here
 with their ids and resolutions unchanged.
 
-Writing the Specification raised **one new Open Decision, OD-004**, which is
-**unresolved** and must be resolved at `HUMAN_SPEC_APPROVAL`: the publication
-date that `trebovaniya.md` v84 makes the lesson date cannot be computed from
-what the program stores today.
+Writing the Specification raised **one new Open Decision, OD-004**: the
+publication date that `trebovaniya.md` v84 makes the lesson date could not be
+computed from what the program stored. The Owner resolved it as (a) on
+2026-10-04.
 
 The other choices the Story and `trebovaniya.md` leave open are stated as
 interpretations I-1 … I-16 in `docs/specifications/US-027-spec.md` §11; each
@@ -90,7 +90,7 @@ marks the Owner names.
 
 ### OD-004 `scheduledTime` is not stored, so the publication date cannot be computed
 
-**Status: OPEN — blocking.** Affects FR-005 (lesson date and period membership),
+**Status: RESOLVED (a), 2026-10-04.** Affects FR-005 (lesson date and period membership),
 AC-004, AC-012 and DB_DESIGN.
 
 **The gap.** `trebovaniya.md` v84 §4 Epic 3 and OD-001 (a) define the lesson
@@ -121,4 +121,7 @@ scope, so the Specification cannot add the field on its own authority.
 - **(c)** A separate Story extends US-015 to store `scheduledTime`; US-027 waits
   for it. Same result as (a), one more Story to run.
 
-**Resolution:** _open — to be decided by the Owner at `HUMAN_SPEC_APPROVAL`._
+**Resolution:** (a), by the Owner on 2026-10-04, before `HUMAN_SPEC_APPROVAL`.
+`CourseWork` gains a nullable `ScheduledTime`, written by the synchronization
+from the value it already reads (Specification FR-020); the Story's out-of-scope
+line is narrowed accordingly.

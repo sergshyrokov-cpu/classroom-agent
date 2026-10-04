@@ -4,10 +4,10 @@
 version: 1
 story: US-027
 workflow: story-delivery
-current_stage: HUMAN_SPEC_APPROVAL
-previous_stage: SPECIFICATION
-last_completed_stage: SPECIFICATION
-status: WAITING_FOR_HUMAN
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
 last_invoked_skill: spec-writer
 last_result:
@@ -17,27 +17,17 @@ last_result:
 last_artifacts:
   - type: specification
     path: docs/specifications/US-027-spec.md
-    version: 1
+    version: 2
   - type: open_decisions
     path: docs/decisions/US-027-open-decisions.md
-    version: 1
-pending_human_gate:
-  stage: HUMAN_SPEC_APPROVAL
-  status: PENDING
-  requested_at: 2026-10-04T19:05:00Z
-  required_artifacts:
-    - type: specification
-      path: docs/specifications/US-027-spec.md
-      version: 1
-  automated_verdict: PASS
-  blocking_findings: []
-blocking_issues:
-  - "OD-004 OPEN: scheduledTime is not stored on CourseWork, so the publication date (lesson date, v84 / OD-001 a) cannot be computed; the Story puts mirror changes out of scope. Owner to resolve at HUMAN_SPEC_APPROVAL (recommended (a): store ScheduledTime in this Story)."
+    version: 2
+pending_human_gate: null
+blocking_issues: []
 non_blocking_findings:
   - "F-1: AGENTS.md Domain Essentials is marked verified against v80; trebovaniya.md is at v84."
   - "F-2: the report page shows personal data; no convention requires Cache-Control no-store (US-025 SEC I-1). Owner / SECURITY_REVIEW, preferably before the export Stories."
   - "F-3: API-8 does not name the report view; treated like an export (whole period, not paginated)."
   - "Interpretations I-1 … I-16 in spec §11 (text limits, rounding of extra credit, teachers of the period, last save wins, etc.) — confirm or correct at the gate."
 started_at: 2026-10-04T18:57:01Z
-updated_at: 2026-10-04T19:05:00Z
+updated_at: 2026-10-04T19:07:00Z
 completed_at: null

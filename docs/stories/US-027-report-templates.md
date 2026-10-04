@@ -111,8 +111,9 @@ files from the report this Story produces.
   templates into one printed journal — US-030.
 - Filling "independent work", "teacher's signature" and real teaching hours from
   school-own data — Epics 14–16; integration of two streams — Epic 17.
-- Any change to the journal page of US-025, to synchronization or to the Google
-  mirror.
+- Any change to the journal page of US-025; any change to synchronization or to
+  the Google mirror other than storing `scheduledTime` (OD-004 a, resolved by the
+  Owner on 2026-10-04 at specification).
 - Uploading a template file of any kind.
 - Per-Dean private templates, binding a template to courses.
 
