@@ -277,7 +277,7 @@ stories:
   - id: US-027
     epic: EPIC-3
     title: Report templates and the on-screen report
-    state: BACKLOG
+    state: IN_PROGRESS
     blocked_by: >
       Depends on US-025.
     # US-025 COMPLETED. Story file authored:
