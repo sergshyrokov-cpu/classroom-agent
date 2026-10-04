@@ -1,0 +1,399 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Journal view for a period (US-025)
+  version: "1"
+  description: >
+    HTTP contract of US-025 on the installation's public port: the journal of one
+    course for a period, granted to Admin and Dean (`trebovaniya.md` §2 "Просмотр и
+    экспорт журнала успеваемости" ✔ ✔; §4 Epic 3). One server-rendered `GET` page
+    whose form submits by `GET` to itself; no JSON API (spec I-9). The page reads
+    only: it writes nothing, calls no Google API and reads no secret, in every mode
+    (spec FR-013). The home page gains a navigation entry. The installation's
+    host-wide rules of docs/designs/api/US-008-openapi.yaml apply unchanged. The
+    Control Plane and the private port are untouched. Companion document:
+    docs/designs/api/US-025-api-design.md.
+x-story: US-025
+x-source-specification: docs/specifications/US-025-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-025-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 83
+x-produced-by: openapi-designer
+x-extends: docs/designs/api/US-008-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type is
+  added or changed; the page below is the installation's own screen (DC-12).
+
+servers:
+  - url: https://school.example
+    description: >
+      Installation public port. Illustrative; the real value is the configured public
+      base address (US-008 spec FR-001).
+
+tags:
+  - name: journal
+    description: "The journal of one course for a period (spec FR-001 … FR-009)"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 configured host-wide applies and is not restated: HTTPS and
+    HSTS, the deny-by-default fallback policy (SC-4, API-9), the global antiforgery
+    filter (not engaged: the page is a `GET`), the single error page, the anonymous
+    catch-all `404`, the session cookie and its limits, the restricted session of a
+    Dean with a temporary password (US-012 api-design §2.6), and the exception
+    handler (API-10).
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list of anonymous endpoints gains **nothing**; the US-008
+    endpoint enumeration test passes with `GET /workspace/journal` classified as protected
+    (spec FR-012, S-01).
+
+  antiforgery-list-unchanged: >
+    `GET /workspace/journal` changes nothing (API-4) and so needs no token and gains no
+    exemption.
+
+  outbound: >
+    The operation calls nothing outside the process: no Google call, no secret-store
+    read, no Control Plane call (spec FR-013, S-04, S-10).
+
+paths:
+
+  /workspace/journal:
+
+    get:
+      tags: [journal]
+      operationId: getJournal
+      summary: "The journal of one course for a period"
+      description: >
+        Always renders the selection form (course drop-down, period, view) with the
+        effective values. With a valid `courseId` it also renders the journal of
+        spec FR-004 … FR-006 for that course and period. Without `courseId` it
+        renders the form only, with the default period (spec FR-001, FR-007). The
+        form submits by `GET` to this same path. Validation (spec §6) runs before any
+        journal data is read; a failure re-renders **this page** — not the host's
+        error page — with the form and the message keys (spec FR-008). Evaluation
+        order: authentication → restricted session → authorization → query shape
+        (`400`) → course existence (`404`) → build (`200`).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewJournal
+      x-permission-matrix-row: "\"Просмотр и экспорт журнала успеваемости\" — Admin ✔, Dean ✔"
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: "nothing — no entity, no audit row, no permitted service write (spec FR-013, S-11)"
+      x-read-only-mode: "allowed — identical behaviour in all three BR-025 causes (spec FR-013)"
+      x-database-round-trips: "fixed per request, independent of rows and columns (spec FR-014)"
+      x-spec: [FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-012, FR-013, FR-015, FR-016]
+      x-acceptance-criteria: [AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-014]
+      security:
+        - installationSession: []
+      parameters:
+        - name: courseId
+          in: query
+          required: false
+          description: >
+            Internal id of a stored `Course` (spec VR-001). Absent or empty → form
+            only. Exactly one occurrence; decimal digits only; a positive 64-bit
+            integer. A repeated parameter, a sign, whitespace, letters, zero or an
+            overflow is malformed (`400`, `CourseMalformed`). A well-formed id of no
+            stored course is `404`, `CourseUnknown`.
+          schema:
+            type: string
+            pattern: "^[0-9]{1,19}$"
+          example: "42"
+        - name: from
+          in: query
+          required: false
+          description: >
+            First day of the period in the school's time zone, inclusive (spec FR-003,
+            VR-002). Absent or empty → the first day of the current month (spec
+            FR-007). Exactly one occurrence, `yyyy-MM-dd`, a real calendar date, year
+            2000–2100. Otherwise `400`, `FromMalformed`.
+          schema:
+            type: string
+            format: date
+            pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          example: "2026-09-01"
+        - name: to
+          in: query
+          required: false
+          description: >
+            Last day of the period in the school's time zone, inclusive. Absent or
+            empty → the last day of the current month. Same rules as `from`;
+            otherwise `400`, `ToMalformed`. After defaults, `from` > `to` is `400`,
+            `PeriodInverted` (spec VR-003).
+          schema:
+            type: string
+            format: date
+            pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          example: "2026-09-30"
+        - name: view
+          in: query
+          required: false
+          description: >
+            `full` or `short`, case-insensitive (spec VR-004). Absent or empty →
+            `full` (spec I-6). Exactly one occurrence; anything else is `400`,
+            `ViewUnknown`.
+          schema:
+            type: string
+            enum: [full, short]
+            default: full
+      responses:
+        "200":
+          description: >
+            The page. One of: (1) form only — no `courseId`; (2) the journal of the
+            chosen course and period; (3) an empty journal — `emptyStateKey` set, no
+            table (spec FR-009); (4) no course stored at all — `noCoursesStored`
+            true, no drop-down (spec FR-002). Read-only mode answers exactly as
+            outside it.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/JournalPageModel"
+        "302":
+          description: >
+            (1) Not signed in — `Location: /sign-in` (no return URL, US-008).
+            (2) A Dean with a temporary password — `Location:
+            /sign-in/change-password` under the restricted session of US-012.
+            Nothing is read.
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: [/sign-in, /sign-in/change-password]
+        "400":
+          description: >
+            A query parameter is malformed, or the period is inverted (spec VR-001 …
+            VR-004). **This page** is rendered — form plus every message key found,
+            `journal` null — not the host's error page. No course lookup and no
+            journal data read. The log line names the parameter and the rule, never
+            the value (spec FR-016, SC-10).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/JournalPageModel"
+        "404":
+          description: >
+            A well-formed `courseId` that names no stored course (spec VR-001).
+            **This page** is rendered with `CourseUnknown` and `journal` null — not
+            the host's error page. Nothing else is read.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/JournalPageModel"
+        "500":
+          description: "Unexpected failure: the single error page, no detail (API-10, SC-10)."
+          content:
+            text/html: {}
+
+  /:
+    get:
+      operationId: getLanding
+      summary: "Existing US-008 home page — changed additively"
+      description: >
+        Unchanged in behaviour, policy and status codes. The page gains a "Google
+        Workspace" section heading (`trebovaniya.md` v83) with a "Journal" navigation
+        entry linking to `/workspace/journal`, rendered for both Admin and Dean and
+        in read-only mode too (spec FR-011). It is a plain link, not enforcement —
+        `ViewJournal` is.
+      x-policy: ViewLegitimacyStatus
+      x-change: additive-markup
+      x-acceptance-criteria: [AC-009, AC-012]
+      responses:
+        "200":
+          description: "The page; see US-008-openapi.yaml and US-019-openapi.yaml for everything else."
+          content:
+            text/html: {}
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: ClassroomAgent.Session
+      description: "The installation's session cookie (US-008); name illustrative."
+
+  schemas:
+
+    JournalPageModel:
+      type: object
+      description: >
+        View DTO of the journal page, mapped in `Application` (AD-8). No entity
+        crosses into it. Every string from Google is rendered HTML-encoded and never
+        translated (spec FR-015, VR-005).
+      required: [courses, noCoursesStored, from, to, view, messageKeys]
+      properties:
+        courses:
+          type: array
+          description: "Every stored course, ordered by name in the UI-language collation, then by id (spec FR-002)."
+          items:
+            $ref: "#/components/schemas/CourseOption"
+        noCoursesStored:
+          type: boolean
+          description: "True when no course is stored; the page shows `Journal.NoCourses` instead of the drop-down."
+        selectedCourseId:
+          type: [integer, "null"]
+          format: int64
+          description: "The chosen course when valid and found; null on `CourseMalformed`, `CourseUnknown` or no `courseId`."
+        from:
+          type: [string, "null"]
+          format: date
+          description: "The effective first day; null when the submitted value was malformed (it is never echoed)."
+        to:
+          type: [string, "null"]
+          format: date
+          description: "The effective last day; null when the submitted value was malformed."
+        view:
+          type: string
+          enum: [full, short]
+          description: "The effective view; `full` when the submitted value was malformed."
+        messageKeys:
+          type: array
+          description: "Validation messages, in parameter order; empty on success."
+          items:
+            $ref: "#/components/schemas/JournalMessageKey"
+        emptyStateKey:
+          oneOf:
+            - $ref: "#/components/schemas/JournalEmptyStateKey"
+            - type: "null"
+        journal:
+          oneOf:
+            - $ref: "#/components/schemas/Journal"
+            - type: "null"
+          description: "Null with no course chosen, on any validation failure, and for an empty journal."
+
+    CourseOption:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          description: "Google data, not translated."
+        section:
+          type: [string, "null"]
+          description: "Google data, shown after the name when present (spec I-7)."
+
+    Journal:
+      type: object
+      required: [columns, rows]
+      properties:
+        columns:
+          type: array
+          description: "Items dated in the period, ordered by date, then title, then id (spec FR-004, I-8)."
+          items:
+            $ref: "#/components/schemas/JournalColumn"
+        rows:
+          type: array
+          description: "Students of the period, ordered per spec FR-005."
+          items:
+            $ref: "#/components/schemas/JournalRow"
+
+    JournalColumn:
+      type: object
+      required: [title, date, kind]
+      properties:
+        title:
+          type: string
+          description: "Google data, not translated."
+        date:
+          type: string
+          format: date
+          description: "`ItemDate` as a calendar date in the school's time zone; formatted for the UI language when rendered."
+        kind:
+          type: string
+          enum: [GradedWork, UngradedWork, Material]
+        maxPoints:
+          type: [number, "null"]
+          description: "Set for `GradedWork` only."
+
+    JournalRow:
+      type: object
+      required: [nameKind, cells]
+      properties:
+        displayName:
+          type: [string, "null"]
+          description: "Full name, else email (spec I-5); null when `nameKind` is `Unnamed`. Google data."
+        nameKind:
+          type: string
+          enum: [FullName, Email, Unnamed]
+          description: "`Unnamed` renders `Journal.Row.Unnamed` (OD-005 a)."
+        cells:
+          type: array
+          description: "One per column, in column order."
+          items:
+            $ref: "#/components/schemas/JournalCell"
+
+    JournalCell:
+      type: object
+      description: >
+        Spec FR-006. In the short view `draftPoints` and `turnedInOn` are always null
+        (spec FR-006, BR-057).
+      required: [state, late]
+      properties:
+        state:
+          $ref: "#/components/schemas/JournalCellState"
+        points:
+          type: [number, "null"]
+          description: "Assigned points; set only when `state` is `Grade`."
+        maxPoints:
+          type: [number, "null"]
+          description: "Set only when `state` is `Grade`."
+        rawState:
+          type: [string, "null"]
+          description: "The value Google sent; set only when `state` is `Unrecognised`. Not translated."
+        late:
+          type: boolean
+          description: "Google's `late` flag; always false for `Empty` and `NotAssigned`."
+        draftPoints:
+          type: [number, "null"]
+          description: "Full view, graded work, no assigned grade, recognised state, draft set (spec FR-006, I-2)."
+        turnedInOn:
+          type: [string, "null"]
+          format: date
+          description: "Full view only: `TurnedInAt` as a date in the school's time zone (BR-058)."
+
+    JournalCellState:
+      type: string
+      description: >
+        Closed list; each member except `Empty` and `Grade` maps to one translation
+        key `Journal.Cell.<member>` in both resource files (spec FR-015).
+      enum:
+        - Empty                   # material
+        - NotAssigned
+        - Unrecognised
+        - Grade                   # graded work, assigned grade
+        - TurnedInNotGraded       # graded work
+        - ReturnedWithoutGrade    # graded work
+        - TurnedIn                # ungraded work
+        - Returned                # ungraded work
+        - NotTurnedIn             # due has passed
+        - NotDueYet
+        - NotTurnedInNoDueDate
+
+    JournalMessageKey:
+      type: string
+      description: "Closed list; each maps to `Journal.Validation.<member>` in both resource files."
+      enum: [CourseMalformed, CourseUnknown, FromMalformed, ToMalformed, PeriodInverted, ViewUnknown]
+
+    JournalEmptyStateKey:
+      type: string
+      description: "Closed list; each maps to `Journal.Empty.<member>` (spec FR-009)."
+      enum: [NoColumns, NoRows]
+
+x-operations-deliberately-absent:
+
+  api-v1-journal: >
+    No `/api/v1` journal endpoint and no paginated collection (spec I-9). The journal
+    of one course for one period is rendered whole, as API-8 already allows for
+    exports.
+
+  post: >
+    Nothing about the journal is a `POST`: viewing changes nothing and is not
+    audited (SC-11). Export, which is audited, is US-028 / US-029.
