@@ -4,6 +4,8 @@ using ClassroomAgent.Application.Models.Dtos;
 using ClassroomAgent.Application.Models.Requests;
 using ClassroomAgent.Application.Ports;
 using ClassroomAgent.Domain.Enums;
+using static ClassroomAgent.Application.UseCases.JournalCellRule;
+using static ClassroomAgent.Application.UseCases.JournalQueryRules;
 
 namespace ClassroomAgent.Application.UseCases;
 
@@ -19,17 +21,6 @@ namespace ClassroomAgent.Application.UseCases;
 /// </remarks>
 public sealed class GetJournalQuery(IJournalSource source, SchoolTimeZone schoolTimeZone, TimeProvider timeProvider)
 {
-    /// <summary>VR-002: the form an HTML date input sends.</summary>
-    private const string DateFormat = "yyyy-MM-dd";
-
-    /// <summary>VR-002, spec I-4: the years a period may lie in.</summary>
-    private const int FirstYear = 2000;
-
-    private const int LastYear = 2100;
-
-    /// <summary>VR-001: <see cref="long.MaxValue"/> has 19 digits.</summary>
-    private const int MaxCourseIdDigits = 19;
-
     public async Task<JournalPageResult> ExecuteAsync(JournalRequest request, CultureInfo uiCulture, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -130,8 +121,8 @@ public sealed class GetJournalQuery(IJournalSource source, SchoolTimeZone school
         var submitters = chosenSubmissions.Keys.Select(k => k.ParticipantId).ToHashSet();
 
         var rows = members
-            .Where(m => IsStudentOfPeriod(m, start, end) || submitters.Contains(m.ParticipantId))
-            .Select(m => (Member: m, Label: Label(m)))
+            .Where(m => IsOfPeriod(m.FirstSeenAt, m.LastSeenAt, m.OnRoster, start, end) || submitters.Contains(m.ParticipantId))
+            .Select(m => (Member: m, Label: Label(m.FullName, m.Email)))
             .OrderBy(r => r.Label.Kind == JournalNameKind.Unnamed)
             .ThenBy(r => r.Label.Name, comparer)
             .ThenBy(r => r.Member.ParticipantId)
@@ -162,145 +153,20 @@ public sealed class GetJournalQuery(IJournalSource source, SchoolTimeZone school
         return Page(JournalPageOutcome.Shown, journal: new Journal(journalColumns, rows));
     }
 
-    /// <summary>
-    /// Spec FR-005 condition 1 (I-1): on the roster during part of the period — seen before its end, and either still
-    /// on the roster or last seen no earlier than its start.
-    /// </summary>
-    private static bool IsStudentOfPeriod(JournalMemberRecord member, DateTimeOffset start, DateTimeOffset end) =>
-        member.FirstSeenAt < end && (member.OnRoster || member.LastSeenAt >= start);
-
-    /// <summary>Spec FR-005, OD-005 (a), I-5: the full name, else the email, else unnamed.</summary>
-    private static (string? Name, JournalNameKind Kind) Label(JournalMemberRecord member)
-    {
-        if (!string.IsNullOrWhiteSpace(member.FullName))
-        {
-            return (member.FullName, JournalNameKind.FullName);
-        }
-
-        return string.IsNullOrWhiteSpace(member.Email)
-            ? (null, JournalNameKind.Unnamed)
-            : (member.Email, JournalNameKind.Email);
-    }
-
-    /// <summary>Spec FR-006: the one pure function of item, submission, view and B.</summary>
-    private static JournalCell Cell(
-        JournalItemRecord item,
-        JournalSubmissionRecord? submission,
-        JournalView view,
-        DateTimeOffset b,
-        TimeZoneInfo zone)
-    {
-        if (item.Kind == CourseWorkKind.Material)
-        {
-            return new JournalCell(JournalCellState.Empty, null, null, null, false, null, null);
-        }
-
-        if (submission is null)
-        {
-            return new JournalCell(JournalCellState.NotAssigned, null, null, null, false, null, null);
-        }
-
-        var full = view == JournalView.Full;
-        var turnedInOn = full && submission.TurnedInAt is { } turnedInAt ? DateIn(turnedInAt, zone) : (DateOnly?)null;
-
-        if (submission.State == SubmissionState.Unrecognised)
-        {
-            return new JournalCell(
-                JournalCellState.Unrecognised, null, null, submission.RawState, submission.Late, null, turnedInOn);
-        }
-
-        var graded = item.Kind == CourseWorkKind.GradedWork;
-        if (graded && submission.AssignedGrade is { } grade)
-        {
-            return new JournalCell(JournalCellState.Grade, grade, item.MaxPoints, null, submission.Late, null, turnedInOn);
-        }
-
-        var state = submission.State switch
-        {
-            SubmissionState.TurnedIn or SubmissionState.StudentEditedAfterTurnIn =>
-                graded ? JournalCellState.TurnedInNotGraded : JournalCellState.TurnedIn,
-            SubmissionState.Returned => graded ? JournalCellState.ReturnedWithoutGrade : JournalCellState.Returned,
-            _ when item.DueAt is null => JournalCellState.NotTurnedInNoDueDate,
-            _ when item.DueAt < b => JournalCellState.NotTurnedIn,
-            _ => JournalCellState.NotDueYet,
-        };
-        var draft = full && graded ? submission.DraftGrade : null;
-        return new JournalCell(state, null, null, null, submission.Late, draft, turnedInOn);
-    }
-
-    /// <summary>An instant as a calendar date of the school's zone (NFR-074).</summary>
-    private static DateOnly DateIn(DateTimeOffset instant, TimeZoneInfo zone) =>
-        DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(instant, zone).DateTime);
-
-    /// <summary>
-    /// Spec FR-003: local midnight of <paramref name="date"/> as a UTC instant (offset zero, db-design §2). When
-    /// midnight does not exist (a daylight-saving jump), the first valid local minute is used; when it occurs twice,
-    /// the earlier instant.
-    /// </summary>
-    private static DateTimeOffset StartOfDay(DateOnly date, TimeZoneInfo zone)
-    {
-        var local = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
-        while (zone.IsInvalidTime(local))
-        {
-            local = local.AddMinutes(1);
-        }
-
-        var offset = zone.IsAmbiguousTime(local) ? zone.GetAmbiguousTimeOffsets(local).Max() : zone.GetUtcOffset(local);
-        return new DateTimeOffset(local, offset).ToUniversalTime();
-    }
-
-    private enum Presence
-    {
-        Absent,
-        One,
-        Repeated,
-    }
-
-    /// <summary>VR-001 … VR-004: absent or empty is absent; one value is one; more is malformed.</summary>
-    private static Presence Single(IReadOnlyList<string?> values, out string value)
-    {
-        value = string.Empty;
-        switch (values.Count)
-        {
-            case 0:
-                return Presence.Absent;
-            case 1:
-                value = values[0] ?? string.Empty;
-                return value.Length == 0 ? Presence.Absent : Presence.One;
-            default:
-                return Presence.Repeated;
-        }
-    }
-
-    /// <summary>VR-001: ASCII decimal digits only, a positive 64-bit integer.</summary>
-    private static long? ParseCourseId(string text) =>
-        text.Length <= MaxCourseIdDigits
-        && text.All(char.IsAsciiDigit)
-        && long.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var id)
-        && id > 0
-            ? id
-            : null;
-
-    /// <summary>VR-002: absent gives the default; otherwise one real <c>yyyy-MM-dd</c> date of 2000 … 2100.</summary>
+    /// <summary>VR-002 through <see cref="JournalQueryRules.ReadDate"/>: a malformed value adds its message.</summary>
     private static DateOnly? ReadDate(
         IReadOnlyList<string?> values,
         DateOnly fallback,
         List<JournalMessageKey> messages,
         JournalMessageKey malformed)
     {
-        switch (Single(values, out var text))
+        var date = JournalQueryRules.ReadDate(values, fallback, out var isMalformed);
+        if (isMalformed)
         {
-            case Presence.Absent:
-                return fallback;
-            case Presence.One
-                when text.All(c => char.IsAsciiDigit(c) || c == '-')
-                     && DateOnly.TryParseExact(text, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
-                     && date.Year is >= FirstYear and <= LastYear:
-                return date;
-            default:
-                messages.Add(malformed);
-                return null;
+            messages.Add(malformed);
         }
+
+        return date;
     }
 
     private static T? Refuse<T>(List<JournalMessageKey> messages, JournalMessageKey key)

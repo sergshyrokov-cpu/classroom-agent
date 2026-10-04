@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-027
-version: 2
+version: 3
 status: DRAFT
 created_at: 2026-10-04T18:57:01Z
-updated_at: 2026-10-04T19:06:00Z
+updated_at: 2026-10-04T19:50:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-027-report-templates.md
@@ -125,3 +125,19 @@ scope, so the Specification cannot add the field on its own authority.
 `CourseWork` gains a nullable `ScheduledTime`, written by the synchronization
 from the value it already reads (Specification FR-020); the Story's out-of-scope
 line is narrowed accordingly.
+
+### OD-005 Compile-only skeleton created at TEST_WRITING
+
+Raised by TEST_WRITING. The tests call types that do not exist yet — the
+`ReportTemplate` aggregate and its enums and values, `CourseWork.ScheduledTime`,
+`IJournalFieldSource`, `IReportTemplateRepository`, the use cases, the report and
+form DTOs, the two policies, the new audit members. The test-writer may not
+change production code, and no artifact says who creates them — the gap US-025
+(OD-009), US-037 (OD-007) and US-039 (OD-008) resolved the same way.
+
+Options: (a) a compile-only skeleton — only the declarations the tests
+reference, members throwing `NotImplementedException`, nothing registered in DI,
+no migration, no existing behaviour changed; IMPLEMENTATION owns and completes
+it; (b) no skeleton — tests that do not compile until IMPLEMENTATION.
+
+**Resolution:** (a) — Owner, 2026-10-04.

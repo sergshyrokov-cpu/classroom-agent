@@ -40,6 +40,9 @@ public sealed class ClassroomAgentDbContext(DbContextOptions<ClassroomAgentDbCon
     /// <summary>US-015 entity model §4: one student's submission of one item (db-design §4).</summary>
     public DbSet<Submission> Submissions => Set<Submission>();
 
+    /// <summary>US-027 entity model §2.1: the school's created report templates (db-design §2).</summary>
+    public DbSet<ReportTemplate> ReportTemplates => Set<ReportTemplate>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new LegitimacyStateConfiguration());
@@ -52,5 +55,8 @@ public sealed class ClassroomAgentDbContext(DbContextOptions<ClassroomAgentDbCon
         modelBuilder.ApplyConfiguration(new CourseMembershipConfiguration());
         modelBuilder.ApplyConfiguration(new CourseWorkConfiguration());
         modelBuilder.ApplyConfiguration(new SubmissionConfiguration());
+        modelBuilder.ApplyConfiguration(new ReportTemplateConfiguration());
+        modelBuilder.ApplyConfiguration(new ReportTemplateMarkConfiguration());
+        modelBuilder.ApplyConfiguration(new ReportTemplateScaleRowConfiguration());
     }
 }

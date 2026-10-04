@@ -4,31 +4,42 @@
 version: 1
 story: US-027
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: API_DESIGN
-  recorded_at: 2026-10-04T19:22:00Z
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_PR_APPROVAL
+  recorded_at: 2026-10-05T06:00:00Z
 last_artifacts:
-  - type: openapi
-    path: docs/designs/api/US-027-openapi.yaml
+  - type: implementation_report
+    path: docs/evidence/US-027-implementation-report.md
     version: 1
-  - type: api_design
-    path: docs/designs/api/US-027-api-design.md
+  - type: security_review
+    path: docs/reviews/security/US-027-security-review.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "F-1: AGENTS.md Domain Essentials is marked verified against v80; trebovaniya.md is at v84."
-  - "F-2: the report page shows personal data; no convention requires Cache-Control no-store (US-025 SEC I-1). Owner / SECURITY_REVIEW, preferably before the export Stories."
+  - "F-1: AGENTS.md Domain Essentials is marked verified against v80; trebovaniya.md is at v85."
+  - "F-2: Cache-Control no-store is now required by trebovaniya.md v85 and delivered by US-040; US-027 adds no per-page rule."
   - "F-3: API-8 does not name the report view; treated like an export (whole period, not paginated)."
-  - "API_DESIGN choices for the human: 400 for change/delete of the built-in template; read-only guard before the reference check (audit target id rule); new field error keys TextInvalidCharacters, ScaleNoRows, ScaleTooManyRows; a same-origin script for scale rows and the 12-point preset (api-design §2.5-§2.8)."
-  - "Interpretations I-1 … I-16 in spec §11 (text limits, rounding of extra credit, teachers of the period, last save wins, etc.) — confirm or correct at the gate."
+  - "DB N-1: spec FR-018 'one new table' read as one aggregate — report_template + report_template_mark + report_template_scale_row."
+  - "DB N-2: author_id is a bare id without FK (PC-11 rule), not a nullable reference cleared by the purge; purge unchanged."
+  - "DB N-3: no new index for the lesson date; reads bounded per course by existing course_id-prefixed indexes."
+  - "DB N-4: a delete between load and save of a change ends in 500 (I-11, no concurrency token)."
+  - "TEST OD-005 (a): compile-only skeleton created at TEST_WRITING; IMPLEMENTATION completes it (signatures: test-generation report §2)."
+  - "TEST F-1: the copy form's Ukrainian suffix is fixed by a test as ' (копія)'."
+  - "TEST F-2: ScaleOverlap/ScaleGap name the later offending row in from-order; not-from-0 the lowest, not-to-100 the highest."
+  - "IMPL D-1/D-2: two TEST_WRITING defects corrected on the Owner's ruling (create = two saves per db-design §2.4; fixture author emails)."
+  - "IMPL D-3: five pre-existing schema tests' hard-coded table/check/migration lists extended for US-027."
+  - "IMPL D-7: report edge cases chosen in implementation (members read with no lessons; hidden-materials-only period shows empty Grading)."
+  - "SEC INFO-1: /reports shows personal data without Cache-Control no-store; delivered host-wide by US-040 — verify coverage there."
+  - "SEC INFO-2: form-key regexes end in $ (matches before a final newline); no security effect."
+  - "SEC INFO-3: NameNotUnique discloses an existing template name to the same roles; no personal data."
 started_at: 2026-10-04T18:57:01Z
-updated_at: 2026-10-04T19:22:00Z
-completed_at: null
+updated_at: 2026-10-05T06:00:00Z
+completed_at: 2026-10-05T06:00:00Z

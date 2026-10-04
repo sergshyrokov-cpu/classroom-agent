@@ -1,0 +1,144 @@
+@using System.Text.Json
+@using ClassroomAgent.Application.Models.Dtos
+@using ClassroomAgent.Domain.Enums
+@model ReportTemplateFormPageModel
+@{
+    ViewData["Title"] = T[Model.Mode switch
+    {
+        ReportTemplateFormMode.Change => ReportTemplateTextKeys.FormTitleChange,
+        ReportTemplateFormMode.Copy => ReportTemplateTextKeys.FormTitleCopy,
+        _ => ReportTemplateTextKeys.FormTitleNew,
+    }];
+
+    // Api-design §2.11: unsaved values are not kept across a language switch, so the switcher returns to the form's
+    // own GET path — the change form for a change, the new form otherwise.
+    ViewData[UiLanguageController.ReturnPathViewDataKey] = Model.Mode == ReportTemplateFormMode.Change && Model.Reference is not null
+        ? "/reports/templates/" + Uri.EscapeDataString(Model.Reference) + "/edit"
+        : SignInRoutes.ReportTemplateNew;
+
+    // Api-design §2.3: create and copy post to the collection, change to the template.
+    var action = Model.Mode == ReportTemplateFormMode.Change && Model.Reference is not null
+        ? "/reports/templates/" + Uri.EscapeDataString(Model.Reference)
+        : SignInRoutes.ReportTemplates;
+
+    var values = Model.Values;
+
+    // Api-design §2.8: the preset values come from Application and are handed to the script as data, never repeated in it.
+    var preset = JsonSerializer.Serialize(Model.TwelvePointPreset.Select(r => new { from = r.From, to = r.To, label = r.Label }));
+}
+
+@* Api-design §2.5: every problem the use case found, in order; a scale message names its row as submitted. *@
+@if (Model.FieldErrors.Count > 0)
+{
+    <ul id="report-template-errors" class="form-error">
+        @foreach (var error in Model.FieldErrors)
+        {
+            <li>@(error.RowNumber is { } row ? T[ReportTemplateTextKeys.FormErrorRow, row].Value + " " : string.Empty)@T[ReportTemplateTextKeys.Validation(error.Key)]</li>
+        }
+    </ul>
+}
+
+<form id="report-template-form" method="post" action="@action">
+    @Html.AntiForgeryToken()
+
+    <p>
+        <label for="template-name">@T[ReportTemplateTextKeys.FormName]</label>
+        <input id="template-name" type="text" name="name" value="@values.Name" />
+    </p>
+
+    <p>
+        <label for="template-view">@T[ReportTemplateTextKeys.FormView]</label>
+        <select id="template-view" name="view">
+            <option value="full" selected="@(values.View == "full")">@T[JournalTextKeys.FullView]</option>
+            <option value="short" selected="@(values.View == "short")">@T[JournalTextKeys.ShortView]</option>
+        </select>
+    </p>
+
+    <p>
+        <label for="template-hide-materials">@T[ReportTemplateTextKeys.FormHideMaterials]</label>
+        <select id="template-hide-materials" name="hideMaterials">
+            <option value="true" selected="@(values.HideMaterials == "true")">@T[ReportTemplateTextKeys.FormYes]</option>
+            <option value="false" selected="@(values.HideMaterials != "true")">@T[ReportTemplateTextKeys.FormNo]</option>
+        </select>
+    </p>
+
+    <p>
+        <label for="template-hours">@T[ReportTemplateTextKeys.FormHours]</label>
+        <input id="template-hours" type="text" inputmode="numeric" name="hoursPerLesson" value="@values.HoursPerLesson" />
+    </p>
+
+    @* Spec FR-015: with "no conversion" the rows below are ignored by the server; the script only hides them. *@
+    <fieldset id="scale-section" data-preset="@preset">
+        <legend>@T[ReportTemplateTextKeys.FormScale]</legend>
+        <p>
+            <select id="scale-mode" name="scaleMode" aria-label="@T[ReportTemplateTextKeys.FormScale]">
+                <option value="none" selected="@(values.ScaleMode != "ranges")">@T[ReportTemplateTextKeys.FormScaleNone]</option>
+                <option value="ranges" selected="@(values.ScaleMode == "ranges")">@T[ReportTemplateTextKeys.FormScaleRanges]</option>
+            </select>
+        </p>
+        <div id="scale-rows-section" class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">@T[ReportTemplateTextKeys.FormScaleFrom]</th>
+                        <th scope="col">@T[ReportTemplateTextKeys.FormScaleTo]</th>
+                        <th scope="col">@T[ReportTemplateTextKeys.FormScaleLabel]</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody id="scale-rows" data-remove-label="@T[ReportTemplateTextKeys.FormScaleRemoveRow]">
+                    @for (var i = 0; i < values.Scale.Count; i++)
+                    {
+                        var scaleRow = values.Scale[i];
+                        <tr>
+                            <td><input type="text" inputmode="numeric" name="scale[@(i)].from" value="@scaleRow.From" aria-label="@T[ReportTemplateTextKeys.FormScaleFrom]" /></td>
+                            <td><input type="text" inputmode="numeric" name="scale[@(i)].to" value="@scaleRow.To" aria-label="@T[ReportTemplateTextKeys.FormScaleTo]" /></td>
+                            <td><input type="text" name="scale[@(i)].label" value="@scaleRow.Label" aria-label="@T[ReportTemplateTextKeys.FormScaleLabel]" /></td>
+                            <td></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p>
+            <button type="button" id="scale-add-row" hidden>@T[ReportTemplateTextKeys.FormScaleAddRow]</button>
+            <button type="button" id="scale-preset" hidden>@T[ReportTemplateTextKeys.FormScalePreset]</button>
+        </p>
+    </fieldset>
+
+    @* Spec FR-003: one mark per cell state — the program's text, the school's own, or empty. *@
+    <fieldset id="marks-section">
+        <legend>@T[ReportTemplateTextKeys.FormMarks]</legend>
+        @foreach (var state in Enum.GetValues<ReportCellState>())
+        {
+            var mark = values.Marks[state];
+            <p>
+                <label for="mark-@(state)-kind">@T[ReportTemplateTextKeys.ProgramMark(state.ToString())]</label>
+                <select id="mark-@(state)-kind" name="marks[@(state)].kind">
+                    <option value="program" selected="@(mark.Kind == "program")">@T[ReportTemplateTextKeys.FormMarkProgram]</option>
+                    <option value="own" selected="@(mark.Kind == "own")">@T[ReportTemplateTextKeys.FormMarkOwn]</option>
+                    <option value="empty" selected="@(mark.Kind == "empty")">@T[ReportTemplateTextKeys.FormMarkEmpty]</option>
+                </select>
+                <input type="text" name="marks[@(state)].text" value="@mark.Text" aria-label="@T[ReportTemplateTextKeys.FormMarkText]" />
+            </p>
+        }
+        <p>
+            <label for="late-mark-kind">@T[ReportTemplateTextKeys.FormLateMark]</label>
+            <select id="late-mark-kind" name="lateMark.kind">
+                <option value="program" selected="@(values.LateMark.Kind == "program")">@T[ReportTemplateTextKeys.FormMarkProgram]</option>
+                <option value="own" selected="@(values.LateMark.Kind == "own")">@T[ReportTemplateTextKeys.FormMarkOwn]</option>
+                <option value="hidden" selected="@(values.LateMark.Kind == "hidden")">@T[ReportTemplateTextKeys.FormLateHidden]</option>
+            </select>
+            <input type="text" name="lateMark.text" value="@values.LateMark.Text" aria-label="@T[ReportTemplateTextKeys.FormMarkText]" />
+        </p>
+    </fieldset>
+
+    <p>
+        <button type="submit">@T[ReportTemplateTextKeys.FormSave]</button>
+        <a href="@SignInRoutes.ReportTemplates">@T[ReportTemplateTextKeys.FormCancel]</a>
+    </p>
+</form>
+
+@* Api-design §2.8: a static same-origin file, never inline script. The form is complete without it: the existing
+   scale rows can still be edited and saved. *@
+<script src="/js/report-template-scale.js" defer></script>

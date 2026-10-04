@@ -483,6 +483,90 @@ public sealed class AuditEvent
     }
 
     /// <summary>
+    /// A report template was created, changed or deleted by an Admin or a Dean (US-027 spec FR-016). The row names the
+    /// template by id only: no name, no setting, no mark text (SC-10, SC-11).
+    /// </summary>
+    public static AuditEvent ReportTemplateWritten(
+        long actorId,
+        AppRole actorRole,
+        AuditAction action,
+        long templateId,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        CheckReportTemplateAction(action);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(templateId);
+        return ReportTemplateRow(actorId, actorRole, action, templateId, AuditOutcome.Succeeded, null, occurredAt, requestId);
+    }
+
+    /// <summary>
+    /// A report-template write refused in read-only mode (US-027 spec FR-013, FR-016). The target is the template id
+    /// when the reference named one, otherwise null.
+    /// </summary>
+    public static AuditEvent ReportTemplateWriteRefused(
+        long actorId,
+        AppRole actorRole,
+        AuditAction action,
+        long? templateId,
+        AuditRefusalCategory category,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        CheckReportTemplateAction(action);
+        if (category is not AuditRefusalCategory.ReadOnlyMode)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(category),
+                category,
+                "A refused report-template write carries the read-only category (US-027 spec FR-013).");
+        }
+
+        return ReportTemplateRow(actorId, actorRole, action, templateId, AuditOutcome.Refused, category, occurredAt, requestId);
+    }
+
+    private static void CheckReportTemplateAction(AuditAction action)
+    {
+        if (action is not (AuditAction.ReportTemplateCreated or AuditAction.ReportTemplateChanged
+            or AuditAction.ReportTemplateDeleted))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(action),
+                action,
+                "A report-template row carries one of the three actions of US-027 spec FR-016.");
+        }
+    }
+
+    private static AuditEvent ReportTemplateRow(
+        long actorId,
+        AppRole actorRole,
+        AuditAction action,
+        long? templateId,
+        AuditOutcome outcome,
+        AuditRefusalCategory? category,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        if (!Enum.IsDefined(actorRole))
+        {
+            throw new ArgumentOutOfRangeException(nameof(actorRole), actorRole, "Not a declared role.");
+        }
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = actorId,
+            ActorRole = actorRole,
+            Action = action,
+            TargetType = AuditTargetType.ReportTemplate, // db-design §4: always, also with no id
+            TargetId = templateId,
+            Outcome = outcome,
+            RefusalCategory = category,
+            RequestId = requestId,
+        };
+    }
+
+    /// <summary>
     /// Step 1 of the sequence: no account matched, so the row names no actor and no target at all — the typed
     /// login is never recorded (US-012 spec FR-017, SC-11; db-design §4.4).
     /// </summary>

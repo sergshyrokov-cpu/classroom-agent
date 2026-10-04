@@ -190,4 +190,88 @@
   <data name="Journal.Validation.ViewUnknown" xml:space="preserve"><value>Невідомий вигляд журналу.</value></data>
   <data name="Journal.Empty.NoColumns" xml:space="preserve"><value>У цьому періоді немає жодного завдання чи матеріалу.</value></data>
   <data name="Journal.Empty.NoRows" xml:space="preserve"><value>У цьому періоді в курсі немає учнів.</value></data>
+  <data name="ReportTemplate.Section" xml:space="preserve"><value>Звіти та шаблони</value></data>
+  <data name="ReportTemplate.NavigationEntry" xml:space="preserve"><value>Шаблони звітів</value></data>
+  <data name="ReportTemplate.List.Title" xml:space="preserve"><value>Шаблони звітів</value></data>
+  <data name="ReportTemplate.List.Name" xml:space="preserve"><value>Назва</value></data>
+  <data name="ReportTemplate.List.Author" xml:space="preserve"><value>Автор</value></data>
+  <data name="ReportTemplate.List.ChangedAt" xml:space="preserve"><value>Остання зміна</value></data>
+  <data name="ReportTemplate.List.Actions" xml:space="preserve"><value>Дії</value></data>
+  <data name="ReportTemplate.BuiltIn.AcademicJournal" xml:space="preserve"><value>Академічний журнал</value></data>
+  <data name="ReportTemplate.BuiltIn.Marker" xml:space="preserve"><value>вбудований</value></data>
+  <data name="ReportTemplate.AccountDeleted" xml:space="preserve"><value>обліковий запис видалено</value></data>
+  <data name="ReportTemplate.Copy.Suffix" xml:space="preserve"><value> (копія)</value></data>
+  <data name="ReportTemplate.Action.Report" xml:space="preserve"><value>Звіт</value></data>
+  <data name="ReportTemplate.Action.Copy" xml:space="preserve"><value>Копіювати</value></data>
+  <data name="ReportTemplate.Action.Change" xml:space="preserve"><value>Змінити</value></data>
+  <data name="ReportTemplate.Action.Delete" xml:space="preserve"><value>Видалити</value></data>
+  <data name="ReportTemplate.Action.New" xml:space="preserve"><value>Новий шаблон</value></data>
+  <data name="ReportTemplate.Form.TitleNew" xml:space="preserve"><value>Новий шаблон звіту</value></data>
+  <data name="ReportTemplate.Form.TitleCopy" xml:space="preserve"><value>Копія шаблону звіту</value></data>
+  <data name="ReportTemplate.Form.TitleChange" xml:space="preserve"><value>Зміна шаблону звіту</value></data>
+  <data name="ReportTemplate.Form.Name" xml:space="preserve"><value>Назва</value></data>
+  <data name="ReportTemplate.Form.View" xml:space="preserve"><value>Вигляд</value></data>
+  <data name="ReportTemplate.Form.HideMaterials" xml:space="preserve"><value>Приховати матеріали</value></data>
+  <data name="ReportTemplate.Form.Yes" xml:space="preserve"><value>так</value></data>
+  <data name="ReportTemplate.Form.No" xml:space="preserve"><value>ні</value></data>
+  <data name="ReportTemplate.Form.Hours" xml:space="preserve"><value>Годин на урок</value></data>
+  <data name="ReportTemplate.Form.Scale" xml:space="preserve"><value>Шкала оцінювання</value></data>
+  <data name="ReportTemplate.Form.ScaleNone" xml:space="preserve"><value>без перерахунку</value></data>
+  <data name="ReportTemplate.Form.ScaleRanges" xml:space="preserve"><value>за діапазонами відсотків</value></data>
+  <data name="ReportTemplate.Form.ScaleFrom" xml:space="preserve"><value>Від, %</value></data>
+  <data name="ReportTemplate.Form.ScaleTo" xml:space="preserve"><value>До, %</value></data>
+  <data name="ReportTemplate.Form.ScaleLabel" xml:space="preserve"><value>Позначка</value></data>
+  <data name="ReportTemplate.Form.ScaleAddRow" xml:space="preserve"><value>Додати рядок</value></data>
+  <data name="ReportTemplate.Form.ScaleRemoveRow" xml:space="preserve"><value>Видалити рядок</value></data>
+  <data name="ReportTemplate.Form.ScalePreset" xml:space="preserve"><value>12-бальна шкала</value></data>
+  <data name="ReportTemplate.Form.Marks" xml:space="preserve"><value>Позначки станів клітинки</value></data>
+  <data name="ReportTemplate.Form.MarkProgram" xml:space="preserve"><value>текст програми</value></data>
+  <data name="ReportTemplate.Form.MarkOwn" xml:space="preserve"><value>власний текст</value></data>
+  <data name="ReportTemplate.Form.MarkEmpty" xml:space="preserve"><value>порожньо</value></data>
+  <data name="ReportTemplate.Form.MarkText" xml:space="preserve"><value>Власний текст позначки</value></data>
+  <data name="ReportTemplate.Form.LateMark" xml:space="preserve"><value>Позначка запізнення</value></data>
+  <data name="ReportTemplate.Form.LateHidden" xml:space="preserve"><value>не показувати</value></data>
+  <data name="ReportTemplate.Form.Save" xml:space="preserve"><value>Зберегти</value></data>
+  <data name="ReportTemplate.Form.Cancel" xml:space="preserve"><value>Скасувати</value></data>
+  <data name="ReportTemplate.Delete.Title" xml:space="preserve"><value>Видалення шаблону звіту</value></data>
+  <data name="ReportTemplate.Delete.Prompt" xml:space="preserve"><value>Видалити шаблон назавжди?</value></data>
+  <data name="ReportTemplate.Delete.Confirm" xml:space="preserve"><value>Видалити</value></data>
+  <data name="ReportTemplate.Confirmation.Created" xml:space="preserve"><value>Шаблон створено.</value></data>
+  <data name="ReportTemplate.Confirmation.Changed" xml:space="preserve"><value>Шаблон змінено.</value></data>
+  <data name="ReportTemplate.Confirmation.Deleted" xml:space="preserve"><value>Шаблон видалено.</value></data>
+  <data name="ReportTemplate.Reference.TemplateMalformed" xml:space="preserve"><value>Недійсне посилання на шаблон.</value></data>
+  <data name="ReportTemplate.Reference.TemplateNotFound" xml:space="preserve"><value>Такого шаблону немає: його могли видалити.</value></data>
+  <data name="ReportTemplate.Reference.BuiltInNotChangeable" xml:space="preserve"><value>Вбудований шаблон не можна змінити чи видалити. Скопіюйте його й змініть копію.</value></data>
+  <data name="ReportTemplate.Validation.Row" xml:space="preserve"><value>Рядок {0}:</value></data>
+  <data name="ReportTemplate.Validation.NameRequired" xml:space="preserve"><value>Вкажіть назву шаблону.</value></data>
+  <data name="ReportTemplate.Validation.NameTooLong" xml:space="preserve"><value>Назва має бути не довшою за 100 символів.</value></data>
+  <data name="ReportTemplate.Validation.NameNotUnique" xml:space="preserve"><value>Шаблон із такою назвою вже існує.</value></data>
+  <data name="ReportTemplate.Validation.TextInvalidCharacters" xml:space="preserve"><value>Текст містить недопустимі керівні символи.</value></data>
+  <data name="ReportTemplate.Validation.MarkTextRequired" xml:space="preserve"><value>Вкажіть власний текст позначки.</value></data>
+  <data name="ReportTemplate.Validation.MarkTextTooLong" xml:space="preserve"><value>Текст позначки має бути не довшим за 30 символів.</value></data>
+  <data name="ReportTemplate.Validation.ScaleNoRows" xml:space="preserve"><value>Шкала має містити хоча б один рядок.</value></data>
+  <data name="ReportTemplate.Validation.ScaleTooManyRows" xml:space="preserve"><value>Шкала може містити не більше 101 рядка.</value></data>
+  <data name="ReportTemplate.Validation.ScaleBoundInvalid" xml:space="preserve"><value>Межа має бути цілим числом від 0 до 100.</value></data>
+  <data name="ReportTemplate.Validation.ScaleRowInverted" xml:space="preserve"><value>Початок діапазону не може бути більшим за його кінець.</value></data>
+  <data name="ReportTemplate.Validation.ScaleLabelRequired" xml:space="preserve"><value>Вкажіть позначку діапазону.</value></data>
+  <data name="ReportTemplate.Validation.ScaleLabelTooLong" xml:space="preserve"><value>Позначка діапазону має бути не довшою за 10 символів.</value></data>
+  <data name="ReportTemplate.Validation.ScaleOverlap" xml:space="preserve"><value>Діапазон перетинається з попереднім.</value></data>
+  <data name="ReportTemplate.Validation.ScaleGap" xml:space="preserve"><value>Діапазони мають без пропусків покривати відсотки від 0 до 100.</value></data>
+  <data name="ReportTemplate.Validation.HoursRequired" xml:space="preserve"><value>Вкажіть кількість годин на урок.</value></data>
+  <data name="ReportTemplate.Validation.HoursOutOfRange" xml:space="preserve"><value>Годин на урок має бути ціле число від 1 до 10.</value></data>
+  <data name="Report.Title" xml:space="preserve"><value>Звіт</value></data>
+  <data name="Report.Form.Template" xml:space="preserve"><value>Шаблон</value></data>
+  <data name="Report.Part.Grading" xml:space="preserve"><value>Оцінювання</value></data>
+  <data name="Report.Part.LessonTopics" xml:space="preserve"><value>Теми занять</value></data>
+  <data name="Report.Header.Teachers" xml:space="preserve"><value>Викладачі</value></data>
+  <data name="Report.Header.Period" xml:space="preserve"><value>Період</value></data>
+  <data name="Report.Lesson.Date" xml:space="preserve"><value>Дата</value></data>
+  <data name="Report.Lesson.Topic" xml:space="preserve"><value>Тема</value></data>
+  <data name="Report.Lesson.Hours" xml:space="preserve"><value>Годин</value></data>
+  <data name="Report.Lesson.Teacher" xml:space="preserve"><value>Викладач</value></data>
+  <data name="Report.Lesson.IndependentWork" xml:space="preserve"><value>Самостійна робота</value></data>
+  <data name="Report.Lesson.Signature" xml:space="preserve"><value>Підпис викладача</value></data>
+  <data name="Report.Empty.NothingPublished" xml:space="preserve"><value>У цьому періоді нічого не опубліковано.</value></data>
+  <data name="Report.Empty.NoStudents" xml:space="preserve"><value>У цьому періоді в курсі немає учнів.</value></data>
+  <data name="Report.Teacher.Unnamed" xml:space="preserve"><value>викладач без імені</value></data>
 </root>

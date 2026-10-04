@@ -56,4 +56,13 @@ public enum AuditAction
     /// happened (spec I-2). Performed by an Admin or a Dean, so the role is recorded from the session.
     /// </summary>
     SynchronizationRequested,
+
+    /// <summary>US-027 spec FR-016: a report template was created — from scratch or as a copy.</summary>
+    ReportTemplateCreated,
+
+    /// <summary>US-027 spec FR-016: a report template's settings were saved.</summary>
+    ReportTemplateChanged,
+
+    /// <summary>US-027 spec FR-016: a report template was deleted.</summary>
+    ReportTemplateDeleted,
 }

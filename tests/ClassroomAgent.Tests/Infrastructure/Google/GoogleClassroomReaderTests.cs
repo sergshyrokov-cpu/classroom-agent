@@ -287,6 +287,26 @@ public sealed class GoogleClassroomReaderTests
     }
 
     /// <summary>
+    /// US-027 spec FR-012, AC-012: the item's <c>scheduledTime</c> is handed on as its own value (the report's lesson
+    /// date uses it first); an item without one has none.
+    /// </summary>
+    [Fact]
+    public async Task TheScheduledTime_IsPassedThroughTheAdapter()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var transport = ScriptedHttpHandler.Sequence(
+            _ => TokenIssued(),
+            _ => ItemPage("courseWork", null, Item(1, scheduled: "2026-03-01T08:00:00Z"), Item(2)),
+            _ => ItemPage("courseWorkMaterial", null));
+        var reader = ReaderWith(transport);
+
+        var items = (await reader.ReadCourseWorkAsync(TechnicalAccount, CourseTestData.CourseId(1), ct)).Items;
+
+        Assert.Equal(new DateTimeOffset(2026, 3, 1, 8, 0, 0, TimeSpan.Zero), items[0].Details.ScheduledTime);
+        Assert.Null(items[1].Details.ScheduledTime);
+    }
+
+    /// <summary>
     /// US-015 FR-004, OD-002, VR-005: the course's submissions are read once with courseWorkId "-" and paged to the
     /// end; each snapshot keeps its own courseWorkId.
     /// </summary>

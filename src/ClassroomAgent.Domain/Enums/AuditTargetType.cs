@@ -11,4 +11,7 @@ public enum AuditTargetType
 
     /// <summary>An account of the installation — the target of every US-012 action (db-design §4.2).</summary>
     AppUser,
+
+    /// <summary>A report template created in the school (US-027 db-design §4).</summary>
+    ReportTemplate,
 }

@@ -190,4 +190,88 @@
   <data name="Journal.Validation.ViewUnknown" xml:space="preserve"><value>Unknown journal view.</value></data>
   <data name="Journal.Empty.NoColumns" xml:space="preserve"><value>Nothing is dated in this period.</value></data>
   <data name="Journal.Empty.NoRows" xml:space="preserve"><value>No students in this period.</value></data>
+  <data name="ReportTemplate.Section" xml:space="preserve"><value>Reports and templates</value></data>
+  <data name="ReportTemplate.NavigationEntry" xml:space="preserve"><value>Report templates</value></data>
+  <data name="ReportTemplate.List.Title" xml:space="preserve"><value>Report templates</value></data>
+  <data name="ReportTemplate.List.Name" xml:space="preserve"><value>Name</value></data>
+  <data name="ReportTemplate.List.Author" xml:space="preserve"><value>Author</value></data>
+  <data name="ReportTemplate.List.ChangedAt" xml:space="preserve"><value>Last change</value></data>
+  <data name="ReportTemplate.List.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="ReportTemplate.BuiltIn.AcademicJournal" xml:space="preserve"><value>Academic journal</value></data>
+  <data name="ReportTemplate.BuiltIn.Marker" xml:space="preserve"><value>built-in</value></data>
+  <data name="ReportTemplate.AccountDeleted" xml:space="preserve"><value>account deleted</value></data>
+  <data name="ReportTemplate.Copy.Suffix" xml:space="preserve"><value> (copy)</value></data>
+  <data name="ReportTemplate.Action.Report" xml:space="preserve"><value>Report</value></data>
+  <data name="ReportTemplate.Action.Copy" xml:space="preserve"><value>Copy</value></data>
+  <data name="ReportTemplate.Action.Change" xml:space="preserve"><value>Change</value></data>
+  <data name="ReportTemplate.Action.Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="ReportTemplate.Action.New" xml:space="preserve"><value>New template</value></data>
+  <data name="ReportTemplate.Form.TitleNew" xml:space="preserve"><value>New report template</value></data>
+  <data name="ReportTemplate.Form.TitleCopy" xml:space="preserve"><value>Copy of a report template</value></data>
+  <data name="ReportTemplate.Form.TitleChange" xml:space="preserve"><value>Change a report template</value></data>
+  <data name="ReportTemplate.Form.Name" xml:space="preserve"><value>Name</value></data>
+  <data name="ReportTemplate.Form.View" xml:space="preserve"><value>View</value></data>
+  <data name="ReportTemplate.Form.HideMaterials" xml:space="preserve"><value>Hide materials</value></data>
+  <data name="ReportTemplate.Form.Yes" xml:space="preserve"><value>yes</value></data>
+  <data name="ReportTemplate.Form.No" xml:space="preserve"><value>no</value></data>
+  <data name="ReportTemplate.Form.Hours" xml:space="preserve"><value>Hours per lesson</value></data>
+  <data name="ReportTemplate.Form.Scale" xml:space="preserve"><value>Grading scale</value></data>
+  <data name="ReportTemplate.Form.ScaleNone" xml:space="preserve"><value>no conversion</value></data>
+  <data name="ReportTemplate.Form.ScaleRanges" xml:space="preserve"><value>by percentage ranges</value></data>
+  <data name="ReportTemplate.Form.ScaleFrom" xml:space="preserve"><value>From, %</value></data>
+  <data name="ReportTemplate.Form.ScaleTo" xml:space="preserve"><value>To, %</value></data>
+  <data name="ReportTemplate.Form.ScaleLabel" xml:space="preserve"><value>Label</value></data>
+  <data name="ReportTemplate.Form.ScaleAddRow" xml:space="preserve"><value>Add a row</value></data>
+  <data name="ReportTemplate.Form.ScaleRemoveRow" xml:space="preserve"><value>Remove the row</value></data>
+  <data name="ReportTemplate.Form.ScalePreset" xml:space="preserve"><value>12-point scale</value></data>
+  <data name="ReportTemplate.Form.Marks" xml:space="preserve"><value>Marks of the cell states</value></data>
+  <data name="ReportTemplate.Form.MarkProgram" xml:space="preserve"><value>the program's text</value></data>
+  <data name="ReportTemplate.Form.MarkOwn" xml:space="preserve"><value>own text</value></data>
+  <data name="ReportTemplate.Form.MarkEmpty" xml:space="preserve"><value>empty</value></data>
+  <data name="ReportTemplate.Form.MarkText" xml:space="preserve"><value>Own text of the mark</value></data>
+  <data name="ReportTemplate.Form.LateMark" xml:space="preserve"><value>Late mark</value></data>
+  <data name="ReportTemplate.Form.LateHidden" xml:space="preserve"><value>not shown</value></data>
+  <data name="ReportTemplate.Form.Save" xml:space="preserve"><value>Save</value></data>
+  <data name="ReportTemplate.Form.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="ReportTemplate.Delete.Title" xml:space="preserve"><value>Delete a report template</value></data>
+  <data name="ReportTemplate.Delete.Prompt" xml:space="preserve"><value>Delete this template permanently?</value></data>
+  <data name="ReportTemplate.Delete.Confirm" xml:space="preserve"><value>Delete</value></data>
+  <data name="ReportTemplate.Confirmation.Created" xml:space="preserve"><value>The template was created.</value></data>
+  <data name="ReportTemplate.Confirmation.Changed" xml:space="preserve"><value>The template was changed.</value></data>
+  <data name="ReportTemplate.Confirmation.Deleted" xml:space="preserve"><value>The template was deleted.</value></data>
+  <data name="ReportTemplate.Reference.TemplateMalformed" xml:space="preserve"><value>The template reference is not valid.</value></data>
+  <data name="ReportTemplate.Reference.TemplateNotFound" xml:space="preserve"><value>There is no such template: it may have been deleted.</value></data>
+  <data name="ReportTemplate.Reference.BuiltInNotChangeable" xml:space="preserve"><value>The built-in template cannot be changed or deleted. Copy it and change the copy.</value></data>
+  <data name="ReportTemplate.Validation.Row" xml:space="preserve"><value>Row {0}:</value></data>
+  <data name="ReportTemplate.Validation.NameRequired" xml:space="preserve"><value>Enter the template name.</value></data>
+  <data name="ReportTemplate.Validation.NameTooLong" xml:space="preserve"><value>The name must be at most 100 characters.</value></data>
+  <data name="ReportTemplate.Validation.NameNotUnique" xml:space="preserve"><value>A template with this name already exists.</value></data>
+  <data name="ReportTemplate.Validation.TextInvalidCharacters" xml:space="preserve"><value>The text contains control characters, which are not allowed.</value></data>
+  <data name="ReportTemplate.Validation.MarkTextRequired" xml:space="preserve"><value>Enter the own text of the mark.</value></data>
+  <data name="ReportTemplate.Validation.MarkTextTooLong" xml:space="preserve"><value>The text of a mark must be at most 30 characters.</value></data>
+  <data name="ReportTemplate.Validation.ScaleNoRows" xml:space="preserve"><value>The scale must have at least one row.</value></data>
+  <data name="ReportTemplate.Validation.ScaleTooManyRows" xml:space="preserve"><value>The scale can have at most 101 rows.</value></data>
+  <data name="ReportTemplate.Validation.ScaleBoundInvalid" xml:space="preserve"><value>A bound must be a whole number from 0 to 100.</value></data>
+  <data name="ReportTemplate.Validation.ScaleRowInverted" xml:space="preserve"><value>The start of a range cannot be greater than its end.</value></data>
+  <data name="ReportTemplate.Validation.ScaleLabelRequired" xml:space="preserve"><value>Enter the label of the range.</value></data>
+  <data name="ReportTemplate.Validation.ScaleLabelTooLong" xml:space="preserve"><value>The label of a range must be at most 10 characters.</value></data>
+  <data name="ReportTemplate.Validation.ScaleOverlap" xml:space="preserve"><value>The range overlaps the previous one.</value></data>
+  <data name="ReportTemplate.Validation.ScaleGap" xml:space="preserve"><value>The ranges must cover the percentages from 0 to 100 without a gap.</value></data>
+  <data name="ReportTemplate.Validation.HoursRequired" xml:space="preserve"><value>Enter the hours per lesson.</value></data>
+  <data name="ReportTemplate.Validation.HoursOutOfRange" xml:space="preserve"><value>Hours per lesson must be a whole number from 1 to 10.</value></data>
+  <data name="Report.Title" xml:space="preserve"><value>Report</value></data>
+  <data name="Report.Form.Template" xml:space="preserve"><value>Template</value></data>
+  <data name="Report.Part.Grading" xml:space="preserve"><value>Grading</value></data>
+  <data name="Report.Part.LessonTopics" xml:space="preserve"><value>Lesson topics</value></data>
+  <data name="Report.Header.Teachers" xml:space="preserve"><value>Teachers</value></data>
+  <data name="Report.Header.Period" xml:space="preserve"><value>Period</value></data>
+  <data name="Report.Lesson.Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Report.Lesson.Topic" xml:space="preserve"><value>Topic</value></data>
+  <data name="Report.Lesson.Hours" xml:space="preserve"><value>Hours</value></data>
+  <data name="Report.Lesson.Teacher" xml:space="preserve"><value>Teacher</value></data>
+  <data name="Report.Lesson.IndependentWork" xml:space="preserve"><value>Independent work</value></data>
+  <data name="Report.Lesson.Signature" xml:space="preserve"><value>Teacher's signature</value></data>
+  <data name="Report.Empty.NothingPublished" xml:space="preserve"><value>Nothing was published in this period.</value></data>
+  <data name="Report.Empty.NoStudents" xml:space="preserve"><value>No students in this period.</value></data>
+  <data name="Report.Teacher.Unnamed" xml:space="preserve"><value>teacher without a name</value></data>
 </root>

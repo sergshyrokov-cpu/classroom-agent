@@ -79,6 +79,19 @@ public static class InstallationSecurityServices
                     InstallationSession.RoleName(AppRole.Admin),
                     InstallationSession.RoleName(AppRole.Dean)));
 
+            // US-027 spec FR-012: the two report-template matrix rows, one policy each, both roles; no ownership
+            // check and no scoping by roster (S-03).
+            options.AddPolicy(
+                InstallationPolicies.UseReportTemplates,
+                policy => policy.RequireAuthenticatedUser().RequireRole(
+                    InstallationSession.RoleName(AppRole.Admin),
+                    InstallationSession.RoleName(AppRole.Dean)));
+            options.AddPolicy(
+                InstallationPolicies.EditReportTemplates,
+                policy => policy.RequireAuthenticatedUser().RequireRole(
+                    InstallationSession.RoleName(AppRole.Admin),
+                    InstallationSession.RoleName(AppRole.Dean)));
+
             // US-012 spec FR-016: managing Dean accounts is the Admin's cell of the §2 matrix (v64).
             options.AddPolicy(
                 InstallationPolicies.ManageDeanAccounts,

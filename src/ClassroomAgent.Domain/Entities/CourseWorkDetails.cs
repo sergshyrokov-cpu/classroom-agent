@@ -11,10 +11,14 @@ namespace ClassroomAgent.Domain.Entities;
 /// <param name="MaxPoints">Absent means ungraded work.</param>
 /// <param name="CreationTime">Google's creation time, stored as given.</param>
 /// <param name="UpdateTime">Google's update time; PC-11 reads it.</param>
+/// <param name="ScheduledTime">
+/// Google's <c>scheduledTime</c> (US-027 FR-020); absent when Google sends none.
+/// </param>
 public sealed record CourseWorkDetails(
     string Title,
     DateTimeOffset ItemDate,
     DateTimeOffset? DueAt,
     decimal? MaxPoints,
     DateTimeOffset? CreationTime,
-    DateTimeOffset? UpdateTime);
+    DateTimeOffset? UpdateTime,
+    DateTimeOffset? ScheduledTime = null);

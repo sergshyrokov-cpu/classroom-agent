@@ -41,6 +41,13 @@ else
     <a href="@SignInRoutes.Journal">@T[JournalTextKeys.NavigationEntry]</a>
 </nav>
 
+@* US-027 spec FR-001: the Reports and templates section, for Admin and Dean, in read-only mode too. A plain link, not
+   enforcement — the UseReportTemplates and EditReportTemplates policies are. *@
+<nav id="report-templates-section">
+    <h2>@T[ReportTemplateTextKeys.Section]</h2>
+    <a href="@SignInRoutes.ReportTemplates">@T[ReportTemplateTextKeys.NavigationEntry]</a>
+</nav>
+
 @if (User.IsInRole("Admin"))
 {
     <nav id="admin-settings">

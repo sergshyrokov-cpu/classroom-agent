@@ -29,7 +29,8 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 "action IN ('admin_sign_in', 'workspace_connection_saved', 'access_check_run', "
                 + "'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', "
                 + "'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run', "
-                + "'synchronization_requested')");
+                + "'synchronization_requested', 'report_template_created', 'report_template_changed', "
+                + "'report_template_deleted')");
 
             // US-009 db-design §4.1: a refused action names WHAT was refused without naming a row that was never
             // created, so a target type without an id is now legal. An id without a type — an identifier belonging
@@ -37,7 +38,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
             table.HasCheckConstraint("ck_audit_event_target", "target_id IS NULL OR target_type IS NOT NULL");
             table.HasCheckConstraint(
                 "ck_audit_event_target_type_value",
-                "target_type IS NULL OR target_type IN ('workspace_connection', 'app_user')");
+                "target_type IS NULL OR target_type IN ('workspace_connection', 'app_user', 'report_template')");
             table.HasCheckConstraint("ck_audit_event_outcome", "outcome IN ('succeeded', 'refused')");
             table.HasCheckConstraint(
                 "ck_audit_event_refusal_category",
@@ -83,6 +84,16 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 "action <> 'synchronization_requested' OR (actor_type = 'app_user' AND target_type IS NULL "
                 + "AND target_id IS NULL AND (refusal_category IS NULL "
                 + "OR refusal_category IN ('read_only_mode', 'connection_not_usable')))");
+
+            // US-027 db-design §4: a template action is a user's, targets a template, is refused only by read-only
+            // mode, and a succeeded row names the template.
+            table.HasCheckConstraint(
+                "ck_audit_event_report_template_shape",
+                "action NOT IN ('report_template_created', 'report_template_changed', 'report_template_deleted') "
+                + "OR (actor_type = 'app_user' AND target_type = 'report_template' "
+                + "AND (refusal_category IS NULL OR refusal_category = 'read_only_mode') "
+                + "AND (outcome <> 'succeeded' OR target_id IS NOT NULL) "
+                + "AND (action <> 'report_template_created' OR outcome = 'succeeded' OR target_id IS NULL))");
         });
 
         builder.HasKey(e => e.Id).HasName("pk_audit_event");
@@ -185,6 +196,9 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         AuditAction.DeanSignIn => "dean_sign_in",
         AuditAction.RetentionPurgeRun => "retention_purge_run",
         AuditAction.SynchronizationRequested => "synchronization_requested",
+        AuditAction.ReportTemplateCreated => "report_template_created",
+        AuditAction.ReportTemplateChanged => "report_template_changed",
+        AuditAction.ReportTemplateDeleted => "report_template_deleted",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -201,6 +215,9 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         "dean_sign_in" => AuditAction.DeanSignIn,
         "retention_purge_run" => AuditAction.RetentionPurgeRun,
         "synchronization_requested" => AuditAction.SynchronizationRequested,
+        "report_template_created" => AuditAction.ReportTemplateCreated,
+        "report_template_changed" => AuditAction.ReportTemplateChanged,
+        "report_template_deleted" => AuditAction.ReportTemplateDeleted,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 
@@ -209,6 +226,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
     {
         AuditTargetType.WorkspaceConnection => "workspace_connection",
         AuditTargetType.AppUser => "app_user",
+        AuditTargetType.ReportTemplate => "report_template",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -216,6 +234,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
     {
         "workspace_connection" => AuditTargetType.WorkspaceConnection,
         "app_user" => AuditTargetType.AppUser,
+        "report_template" => AuditTargetType.ReportTemplate,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 

@@ -1,0 +1,15 @@
+@using ClassroomAgent.Application.Models.Dtos
+@model ReportTemplateDeletePageModel
+@{
+    ViewData["Title"] = T[ReportTemplateTextKeys.DeleteTitle];
+}
+
+@* Api-design §2.4: the confirmation is a page, not a script dialog, so it works without JavaScript. The name is
+   school text: HTML-encoded and never translated. *@
+<p id="report-template-delete-prompt">@T[ReportTemplateTextKeys.DeletePrompt]: <strong>@Model.Name</strong></p>
+
+<form method="post" action="@("/reports/templates/" + Uri.EscapeDataString(Model.Reference) + "/deletion")">
+    @Html.AntiForgeryToken()
+    <button type="submit">@T[ReportTemplateTextKeys.DeleteConfirm]</button>
+    <a href="@SignInRoutes.ReportTemplates">@T[ReportTemplateTextKeys.FormCancel]</a>
+</form>

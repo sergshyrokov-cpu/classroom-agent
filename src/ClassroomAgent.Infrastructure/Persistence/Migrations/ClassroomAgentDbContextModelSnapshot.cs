@@ -235,7 +235,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                     b.ToTable("audit_event", null, t =>
                         {
-                            t.HasCheckConstraint("ck_audit_event_action", "action IN ('admin_sign_in', 'workspace_connection_saved', 'access_check_run', 'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', 'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run', 'synchronization_requested')");
+                            t.HasCheckConstraint("ck_audit_event_action", "action IN ('admin_sign_in', 'workspace_connection_saved', 'access_check_run', 'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', 'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run', 'synchronization_requested', 'report_template_created', 'report_template_changed', 'report_template_deleted')");
 
                             t.HasCheckConstraint("ck_audit_event_actor_id", "(actor_type = 'app_user') = (actor_id IS NOT NULL)");
 
@@ -261,11 +261,13 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_audit_event_refusal_category_value", "refusal_category IS NULL OR refusal_category IN ('not_in_allowed_admin', 'control_plane_unavailable', 'unknown_installation', 'callback_failed', 'account_disabled', 'domain_mismatch', 'impersonation_domain_mismatch', 'domain_not_confirmed', 'read_only_mode', 'connection_not_usable', 'unknown_login', 'wrong_password', 'locked_out')");
 
+                            t.HasCheckConstraint("ck_audit_event_report_template_shape", "action NOT IN ('report_template_created', 'report_template_changed', 'report_template_deleted') OR (actor_type = 'app_user' AND target_type = 'report_template' AND (refusal_category IS NULL OR refusal_category = 'read_only_mode') AND (outcome <> 'succeeded' OR target_id IS NOT NULL) AND (action <> 'report_template_created' OR outcome = 'succeeded' OR target_id IS NULL))");
+
                             t.HasCheckConstraint("ck_audit_event_sync_request_shape", "action <> 'synchronization_requested' OR (actor_type = 'app_user' AND target_type IS NULL AND target_id IS NULL AND (refusal_category IS NULL OR refusal_category IN ('read_only_mode', 'connection_not_usable')))");
 
                             t.HasCheckConstraint("ck_audit_event_target", "target_id IS NULL OR target_type IS NOT NULL");
 
-                            t.HasCheckConstraint("ck_audit_event_target_type_value", "target_type IS NULL OR target_type IN ('workspace_connection', 'app_user')");
+                            t.HasCheckConstraint("ck_audit_event_target_type_value", "target_type IS NULL OR target_type IN ('workspace_connection', 'app_user', 'report_template')");
                         });
                 });
 
@@ -529,6 +531,10 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(24)")
                         .HasColumnName("resource");
 
+                    b.Property<DateTimeOffset?>("ScheduledTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("scheduled_time");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(3000)
@@ -632,6 +638,194 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_legitimacy_state_singleton", "singleton");
 
                             t.HasCheckConstraint("ck_legitimacy_state_status", "status IN ('active', 'suspended')");
+                        });
+                });
+
+            modelBuilder.Entity("ClassroomAgent.Domain.Entities.ReportTemplate", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("AuthorId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("author_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("HideMaterials")
+                        .HasColumnType("boolean")
+                        .HasColumnName("hide_materials");
+
+                    b.Property<int>("HoursPerLesson")
+                        .HasColumnType("integer")
+                        .HasColumnName("hours_per_lesson");
+
+                    b.Property<string>("LateMarkKind")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("late_mark_kind");
+
+                    b.Property<string>("LateMarkText")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("late_mark_text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("normalized_name");
+
+                    b.Property<string>("ScaleMode")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("scale_mode");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("View")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("view");
+
+                    b.HasKey("Id")
+                        .HasName("pk_report_template");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("uq_report_template_normalized_name");
+
+                    b.ToTable("report_template", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_report_template_hours_per_lesson", "hours_per_lesson BETWEEN 1 AND 10");
+
+                            t.HasCheckConstraint("ck_report_template_late_mark_kind", "late_mark_kind IN ('program', 'own', 'hidden')");
+
+                            t.HasCheckConstraint("ck_report_template_late_mark_text", "(late_mark_kind = 'own') = (late_mark_text IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_report_template_scale_mode", "scale_mode IN ('none', 'ranges')");
+
+                            t.HasCheckConstraint("ck_report_template_view", "view IN ('full', 'short')");
+                        });
+                });
+
+            modelBuilder.Entity("ClassroomAgent.Domain.Entities.ReportTemplateMark", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("kind");
+
+                    b.Property<long>("ReportTemplateId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("report_template_id");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("state");
+
+                    b.Property<string>("Text")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("text");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_report_template_mark");
+
+                    b.HasIndex("ReportTemplateId", "State")
+                        .IsUnique()
+                        .HasDatabaseName("uq_report_template_mark_template_state");
+
+                    b.ToTable("report_template_mark", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_report_template_mark_kind", "kind IN ('program', 'own', 'empty')");
+
+                            t.HasCheckConstraint("ck_report_template_mark_state", "state IN ('turned_in_not_graded', 'returned_without_grade', 'turned_in', 'returned', 'not_turned_in', 'not_due_yet', 'not_turned_in_no_due_date', 'not_assigned', 'unrecognised')");
+
+                            t.HasCheckConstraint("ck_report_template_mark_text", "(kind = 'own') = (text IS NOT NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("ClassroomAgent.Domain.Entities.ReportTemplateScaleRow", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<short>("FromPercent")
+                        .HasColumnType("smallint")
+                        .HasColumnName("from_percent");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("label");
+
+                    b.Property<long>("ReportTemplateId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("report_template_id");
+
+                    b.Property<short>("ToPercent")
+                        .HasColumnType("smallint")
+                        .HasColumnName("to_percent");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_report_template_scale_row");
+
+                    b.HasIndex("ReportTemplateId", "FromPercent")
+                        .IsUnique()
+                        .HasDatabaseName("uq_report_template_scale_row_template_from");
+
+                    b.ToTable("report_template_scale_row", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_report_template_scale_row_bounds", "from_percent BETWEEN 0 AND 100 AND to_percent BETWEEN 0 AND 100 AND from_percent <= to_percent");
                         });
                 });
 
@@ -890,6 +1084,26 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_course_work_course");
                 });
 
+            modelBuilder.Entity("ClassroomAgent.Domain.Entities.ReportTemplateMark", b =>
+                {
+                    b.HasOne("ClassroomAgent.Domain.Entities.ReportTemplate", null)
+                        .WithMany("Marks")
+                        .HasForeignKey("ReportTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_report_template_mark_report_template");
+                });
+
+            modelBuilder.Entity("ClassroomAgent.Domain.Entities.ReportTemplateScaleRow", b =>
+                {
+                    b.HasOne("ClassroomAgent.Domain.Entities.ReportTemplate", null)
+                        .WithMany("ScaleRows")
+                        .HasForeignKey("ReportTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_report_template_scale_row_report_template");
+                });
+
             modelBuilder.Entity("ClassroomAgent.Domain.Entities.Submission", b =>
                 {
                     b.HasOne("ClassroomAgent.Domain.Entities.CourseWork", null)
@@ -905,6 +1119,13 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_submission_classroom_participant");
+                });
+
+            modelBuilder.Entity("ClassroomAgent.Domain.Entities.ReportTemplate", b =>
+                {
+                    b.Navigation("Marks");
+
+                    b.Navigation("ScaleRows");
                 });
 #pragma warning restore 612, 618
         }

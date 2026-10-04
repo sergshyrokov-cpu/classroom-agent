@@ -153,7 +153,14 @@ public static class InstallationServices
         // work, no Google port (spec FR-013).
         services.AddSingleton(new SchoolTimeZone(settings.TimeZone));
         services.AddScoped<IJournalSource, JournalSource>();
+        services.AddScoped<IJournalFieldSource, JournalFieldSource>();
+        services.AddScoped<IReportTemplateRepository, ReportTemplateRepository>();
         services.AddScoped<GetJournalQuery>();
+        services.AddScoped<ListReportTemplatesQuery>();
+        services.AddScoped<GetReportTemplateFormQuery>();
+        services.AddScoped<SaveReportTemplateUseCase>();
+        services.AddScoped<DeleteReportTemplateUseCase>();
+        services.AddScoped<GetReportQuery>();
 
         // US-017 spec FR-007: the "Last synchronization" block of the connection page. It reads and writes
         // nothing, so it needs no guard and no unit of work.

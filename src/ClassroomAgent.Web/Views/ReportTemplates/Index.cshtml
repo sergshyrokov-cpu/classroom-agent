@@ -1,0 +1,75 @@
+@using System.Globalization
+@using ClassroomAgent.Application.Models.Dtos
+@model ReportTemplateListPageModel
+@{
+    ViewData["Title"] = T[ReportTemplateTextKeys.ListTitle];
+    var culture = CultureInfo.CurrentCulture;
+}
+
+@* Api-design §2.5: the one-time confirmation of a create, change or delete (Post-Redirect-Get), and the message of a
+   refused reference — the list is the page every refusal of the template pages re-renders. *@
+@if (Model.ConfirmationKey is { } confirmation)
+{
+    <p id="report-template-confirmation" class="form-message">@T[ReportTemplateTextKeys.Confirmation(confirmation)]</p>
+}
+
+@if (Model.MessageKey is { } message)
+{
+    <p id="report-template-message" class="form-error">@T[ReportTemplateTextKeys.Reference(message)]</p>
+}
+
+<p><a id="report-template-new" href="@SignInRoutes.ReportTemplateNew">@T[ReportTemplateTextKeys.ActionNew]</a></p>
+
+@* Spec FR-002: the built-in first, marked built-in, no author and no date; every name of a created template is school
+   text, HTML-encoded by Razor and never translated (VR-009). Hiding the change and delete actions of the built-in is
+   not enforcement — Application refuses them (FR-006). *@
+<div class="table-scroll">
+    <table id="report-template-list">
+        <thead>
+            <tr>
+                <th scope="col">@T[ReportTemplateTextKeys.NameHeader]</th>
+                <th scope="col">@T[ReportTemplateTextKeys.AuthorHeader]</th>
+                <th scope="col">@T[ReportTemplateTextKeys.ChangedHeader]</th>
+                <th scope="col">@T[ReportTemplateTextKeys.ActionsHeader]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Templates)
+            {
+                <tr>
+                    <th scope="row">
+                        @if (item.IsBuiltIn)
+                        {
+                            <span>@T[ReportTemplateTextKeys.BuiltInName]</span>
+                            <span class="built-in-marker">(@T[ReportTemplateTextKeys.BuiltInMarker])</span>
+                        }
+                        else
+                        {
+                            <span>@item.Name</span>
+                        }
+                    </th>
+                    <td>
+                        @if (item.AuthorState == ReportAuthorState.AccountDeleted)
+                        {
+                            <span>@T[ReportTemplateTextKeys.AccountDeleted]</span>
+                        }
+                        else if (item.AuthorState == ReportAuthorState.Known)
+                        {
+                            <span>@item.AuthorEmail</span>
+                        }
+                    </td>
+                    <td>@(item.ChangedAt is { } changedAt ? changedAt.ToString("g", culture) : string.Empty)</td>
+                    <td>
+                        <a href="@(SignInRoutes.Report + "?template=" + Uri.EscapeDataString(item.Reference))">@T[ReportTemplateTextKeys.ActionReport]</a>
+                        <a href="@("/reports/templates/" + Uri.EscapeDataString(item.Reference) + "/copy")">@T[ReportTemplateTextKeys.ActionCopy]</a>
+                        @if (item.CanChange)
+                        {
+                            <a href="@("/reports/templates/" + Uri.EscapeDataString(item.Reference) + "/edit")">@T[ReportTemplateTextKeys.ActionChange]</a>
+                            <a href="@("/reports/templates/" + Uri.EscapeDataString(item.Reference) + "/deletion")">@T[ReportTemplateTextKeys.ActionDelete]</a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

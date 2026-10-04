@@ -1,0 +1,215 @@
+@using System.Globalization
+@using ClassroomAgent.Application.Models.Dtos
+@model ReportPageModel
+@{
+    ViewData["Title"] = T[ReportTemplateTextKeys.ReportTitle];
+
+    // Spec FR-011, S-05: the language switcher returns to the effective query — never the raw one, so a malformed
+    // value or an unknown parameter is not echoed.
+    ViewData[UiLanguageController.ReturnPathViewDataKey] = Model.ReturnPath;
+    var culture = CultureInfo.CurrentCulture;
+}
+
+@* Spec FR-011: every message the query found, in parameter order; a malformed value is never echoed. *@
+@foreach (var message in Model.MessageKeys)
+{
+    <p class="form-error">@T[ReportTemplateTextKeys.Message(message)]</p>
+}
+
+@* Api-design §3: the form submits to this page by GET, so a report is a bookmarkable URL. The query string carries the
+   template reference, the internal course id and two dates — no personal data (spec S-05). *@
+<form id="report-form" method="get" action="@SignInRoutes.Report">
+    <p>
+        <label for="report-template">@T[ReportTemplateTextKeys.ReportTemplateLabel]</label>
+        <select id="report-template" name="@ReportController.TemplateParameter">
+            @foreach (var option in Model.Templates)
+            {
+                <option value="@option.Reference" selected="@(option.Reference == Model.SelectedTemplate)">@(option.IsBuiltIn ? T[ReportTemplateTextKeys.BuiltInName].Value : option.Name)</option>
+            }
+        </select>
+    </p>
+    @if (Model.NoCoursesStored)
+    {
+        <p>@T[JournalTextKeys.NoCourses]</p>
+    }
+    else
+    {
+        <p>
+            <label for="report-course">@T[JournalTextKeys.CourseLabel]</label>
+            <select id="report-course" name="@ReportController.CourseIdParameter">
+                <option value="">@T[JournalTextKeys.ChooseCourse]</option>
+                @foreach (var course in Model.Courses)
+                {
+                    <option value="@course.Id.ToString(CultureInfo.InvariantCulture)" selected="@(course.Id == Model.SelectedCourseId)">@CourseLabel(course)</option>
+                }
+            </select>
+        </p>
+    }
+    <p>
+        <label for="report-from">@T[JournalTextKeys.FromLabel]</label>
+        <input id="report-from" type="date" name="@ReportController.FromParameter" value="@IsoDate(Model.From)" />
+        <label for="report-to">@T[JournalTextKeys.ToLabel]</label>
+        <input id="report-to" type="date" name="@ReportController.ToParameter" value="@IsoDate(Model.To)" />
+    </p>
+    <button type="submit">@T[JournalTextKeys.Show]</button>
+</form>
+
+@if (Model.Report is { } report)
+{
+    @* Spec FR-005.2: the header. The template name of a created template, the course, the section and the teachers are
+       school or Google text — HTML-encoded and never translated (VR-009). *@
+    <section id="report-header">
+        <h2>@(report.Header.TemplateIsBuiltIn ? T[ReportTemplateTextKeys.BuiltInName].Value : report.Header.TemplateName)</h2>
+        <p id="report-course-name">@CourseTitle(report.Header)</p>
+        <p>@T[ReportTemplateTextKeys.ReportPeriod]: @report.Header.From.ToString("d", culture) – @report.Header.To.ToString("d", culture)</p>
+        <p id="report-teachers">@T[ReportTemplateTextKeys.ReportTeachers]: @TeacherNames(report.Header.Teachers)</p>
+    </section>
+
+    @if (report.EmptyStateKey is { } empty)
+    {
+        <p id="report-empty">@T[ReportTemplateTextKeys.Empty(empty)]</p>
+    }
+
+    @if (report.Grading is { } grading)
+    {
+        <section id="report-grading">
+            <h2>@T[ReportTemplateTextKeys.ReportGrading]</h2>
+            @if (grading.Rows.Count == 0)
+            {
+                <p id="report-no-students">@T[ReportTemplateTextKeys.NoStudents]</p>
+            }
+            else
+            {
+                @* NFR-070: the table scrolls inside the page rather than widening it. *@
+                <div class="table-scroll">
+                    <table id="report-grading-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">@T[JournalTextKeys.StudentHeader]</th>
+                                @foreach (var column in grading.Columns)
+                                {
+                                    <th scope="col">
+                                        <span class="journal-title">@column.Title</span><br />
+                                        <span class="journal-date">@column.LessonDate.ToString("d", culture)</span>
+                                        @if (column.IsMaterial)
+                                        {
+                                            <br /><span>@T[JournalTextKeys.Material]</span>
+                                        }
+                                    </th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in grading.Rows)
+                            {
+                                <tr>
+                                    <th scope="row">@(row.Student.NameKind == JournalNameKind.Unnamed ? T[JournalTextKeys.Unnamed].Value : row.Student.DisplayName)</th>
+                                    @foreach (var cell in row.Cells)
+                                    {
+                                        <td>
+                                            @switch (cell.Content)
+                                            {
+                                                case ReportCellContent.Grade:
+                                                    <span>@GradeText(cell.Grade)</span>
+                                                    break;
+                                                case ReportCellContent.Mark when cell.Mark is { } mark:
+                                                    <span>@MarkText(mark)</span>
+                                                    break;
+                                                case ReportCellContent.RawState:
+                                                    <span>@cell.RawState</span>
+                                                    break;
+                                            }
+                                            @if (cell.DraftGrade is { } draft)
+                                            {
+                                                <br /><span>@T[JournalTextKeys.Draft] @GradeText(draft)</span>
+                                            }
+                                            @if (cell.Late is { } late)
+                                            {
+                                                <br /><span>@MarkText(late)</span>
+                                            }
+                                            @if (cell.TurnedInOn is { } turnedInOn)
+                                            {
+                                                <br /><span>@T[JournalTextKeys.TurnedInOn] @turnedInOn.ToString("d", culture)</span>
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+
+    @if (report.LessonTopics is { } topics)
+    {
+        @* Spec FR-005.6: "independent work" and "teacher's signature" are empty columns with translated headings. *@
+        <section id="report-lesson-topics">
+            <h2>@T[ReportTemplateTextKeys.ReportLessonTopics]</h2>
+            <div class="table-scroll">
+                <table id="report-topics-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">@T[ReportTemplateTextKeys.ReportDate]</th>
+                            <th scope="col">@T[ReportTemplateTextKeys.ReportTopic]</th>
+                            <th scope="col">@T[ReportTemplateTextKeys.ReportHours]</th>
+                            <th scope="col">@T[ReportTemplateTextKeys.ReportTeacher]</th>
+                            <th scope="col">@T[ReportTemplateTextKeys.ReportIndependentWork]</th>
+                            <th scope="col">@T[ReportTemplateTextKeys.ReportSignature]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var topic in topics.Rows)
+                        {
+                            <tr>
+                                <td>@topic.LessonDate.ToString("d", culture)</td>
+                                <td>@topic.Title</td>
+                                <td>@topic.Hours.ToString(culture)</td>
+                                <td>@TeacherNames(report.Header.Teachers)</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+}
+
+@functions {
+    /// <summary>Spec I-7 of US-025: the course name, then its section when it has one; Google data, not translated.</summary>
+    private static string CourseLabel(CourseOption course) =>
+        string.IsNullOrEmpty(course.Section) ? course.Name : course.Name + " — " + course.Section;
+
+    private static string CourseTitle(ReportHeader header) =>
+        string.IsNullOrEmpty(header.CourseSection) ? header.CourseName : header.CourseName + " — " + header.CourseSection;
+
+    /// <summary>The value an HTML date input expects; empty when the date is unknown or was malformed.</summary>
+    private static string IsoDate(DateOnly? date) =>
+        date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty;
+
+    /// <summary>Spec FR-005.5: full name, else email, else the translated "teacher without a name"; joined with ", ".</summary>
+    private string TeacherNames(IReadOnlyList<PersonName> teachers) =>
+        string.Join(
+            ", ",
+            teachers.Select(t => t.NameKind == JournalNameKind.Unnamed ? T[ReportTemplateTextKeys.TeacherUnnamed].Value : t.DisplayName));
+
+    /// <summary>Spec FR-015: a scale label as the school wrote it, or the raw points; points as stored, trailing zeros dropped.</summary>
+    private static string GradeText(ReportGrade? grade) =>
+        grade is null
+            ? string.Empty
+            : grade.Kind == ReportGradeKind.ScaleLabel
+                ? grade.Label ?? string.Empty
+                : Points(grade.Points) + " / " + Points(grade.MaxPoints);
+
+    private static string Points(decimal? points) =>
+        points?.ToString("0.############################", CultureInfo.CurrentCulture) ?? string.Empty;
+
+    /// <summary>Api-design §2.9: the school's own text as written, or the program's text translated now.</summary>
+    private string MarkText(ReportCellMark mark) =>
+        mark.Kind == ReportCellMarkKind.Own
+            ? mark.Text ?? string.Empty
+            : T[ReportTemplateTextKeys.ProgramMark(mark.ProgramKey)].Value;
+}

@@ -44,6 +44,18 @@ public static class InstallationPolicies
     public const string ViewJournal = nameof(ViewJournal);
 
     /// <summary>
+    /// "Использование шаблонов отчётов" — ✔ Admin, ✔ Dean (<c>trebovaniya.md</c> §2 v84; US-027 spec FR-012): the
+    /// template list and the report page.
+    /// </summary>
+    public const string UseReportTemplates = nameof(UseReportTemplates);
+
+    /// <summary>
+    /// "Создание и редактирование шаблонов отчётов" — ✔ Admin, ✔ Dean (<c>trebovaniya.md</c> §2 v84; US-027 spec
+    /// FR-012): the new, copy, change and delete forms and saves.
+    /// </summary>
+    public const string EditReportTemplates = nameof(EditReportTemplates);
+
+    /// <summary>
     /// US-012 spec FR-016: creating, disabling, re-enabling and resetting the password of a Dean account.
     /// Admin only — the matrix row is "Создание, отключение и включение, сброс пароля учётных записей
     /// Деканов", ✔ Admin, ✘ Dean (<c>trebovaniya.md</c> §2 v64).

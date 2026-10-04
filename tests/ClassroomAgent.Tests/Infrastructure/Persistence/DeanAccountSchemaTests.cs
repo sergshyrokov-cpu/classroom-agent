@@ -117,7 +117,7 @@ public sealed class DeanAccountSchemaTests(PostgreSqlFixture database)
     /// <summary>
     /// db-design §3.3, §5: this Story adds no table and no index (PC-7). The expected table set gained
     /// <c>sync_state</c> with US-013 and the three course tables with US-014, which are the Stories that
-    /// add them, and <c>course_work</c> and <c>submission</c> with US-015 — US-012 still adds none.
+    /// add them, and <c>course_work</c> and <c>submission</c> with US-015, the three template tables with US-027 — US-012 still adds none.
     /// </summary>
     [Fact]
     public async Task TheStory_AddsNoTableAndNoIndex()
@@ -139,6 +139,9 @@ public sealed class DeanAccountSchemaTests(PostgreSqlFixture database)
                 "course_membership",
                 "course_work",
                 "legitimacy_state",
+                "report_template",
+                "report_template_mark",
+                "report_template_scale_row",
                 "submission",
                 "sync_state",
                 "workspace_connection",

@@ -40,6 +40,7 @@ public sealed class TimestampInterceptor(TimeProvider timeProvider) : SaveChange
             // never Modified, so ck_audit_event_immutable holds (§4.2). US-014 db-design §3.1, §4.1, §5.1 add the
             // three tables of courses and rosters, whose created_at / updated_at are stamped the same way (PC-6).
             // US-015 db-design §3.1, §4.1 add course_work and submission, stamped the same way.
+            // US-027 db-design §2 adds the template aggregate, stamped the same way.
             if (entry.Entity is not (LegitimacyState
                 or AppUser
                 or AuditEvent
@@ -47,7 +48,10 @@ public sealed class TimestampInterceptor(TimeProvider timeProvider) : SaveChange
                 or ClassroomParticipant
                 or CourseMembership
                 or CourseWork
-                or Submission))
+                or Submission
+                or ReportTemplate
+                or ReportTemplateMark
+                or ReportTemplateScaleRow))
             {
                 continue;
             }

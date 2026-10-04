@@ -56,6 +56,11 @@ public sealed class CourseWork
     /// <summary>Google's. PC-11 reads it.</summary>
     public DateTimeOffset? UpdateTime { get; private set; }
 
+    /// <summary>
+    /// Google's <c>scheduledTime</c>, stored as given (US-027 spec FR-020, OD-004 a): the lesson date's first source.
+    /// </summary>
+    public DateTimeOffset? ScheduledTime { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -119,5 +124,6 @@ public sealed class CourseWork
         MaxPoints = details.MaxPoints;
         CreationTime = details.CreationTime;
         UpdateTime = details.UpdateTime;
+        ScheduledTime = details.ScheduledTime;
     }
 }

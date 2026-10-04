@@ -40,6 +40,27 @@ public static class SignInRoutes
     /// </summary>
     public const string Journal = "/workspace/journal";
 
+    /// <summary>US-027 api-design §2.1: the report templates list (the section's entry page) and the create save.</summary>
+    public const string ReportTemplates = "/reports/templates";
+
+    public const string ReportTemplateNew = "/reports/templates/new";
+
+    public const string ReportTemplateCopy = "/reports/templates/{templateRef}/copy";
+
+    public const string ReportTemplateEdit = "/reports/templates/{templateRef}/edit";
+
+    /// <summary>US-027: the change save; the same path takes no GET.</summary>
+    public const string ReportTemplateChange = "/reports/templates/{templateRef}";
+
+    /// <summary>US-027 api-design §2.4: the delete confirmation page (GET) and the delete (POST).</summary>
+    public const string ReportTemplateDeletion = "/reports/templates/{templateRef}/deletion";
+
+    /// <summary>US-027 api-design §2.1: the on-screen report; GET only, the form submits to it.</summary>
+    public const string Report = "/reports";
+
+    /// <summary>US-027: the key the template confirmation travels under in TempData (api-design §2.5).</summary>
+    public const string ReportTemplateMessageTempDataKey = "ReportTemplateMessage";
+
     /// <summary>US-012 openapi: the Admin's Dean accounts screen, its list and its creation form.</summary>
     public const string Deans = "/settings/deans";
 

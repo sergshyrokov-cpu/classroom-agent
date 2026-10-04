@@ -351,7 +351,8 @@ public sealed partial class GoogleClassroomReader : IClassroomReader
                 dueAt,
                 work.MaxPoints is { } maxPoints ? (decimal)maxPoints : null,
                 work.CreationTimeDateTimeOffset,
-                work.UpdateTimeDateTimeOffset));
+                work.UpdateTimeDateTimeOffset,
+                work.ScheduledTimeDateTimeOffset));
     }
 
     /// <summary>A material: the same cascade with no due date, and no points (§3, BR-052).</summary>
@@ -365,7 +366,8 @@ public sealed partial class GoogleClassroomReader : IClassroomReader
                 null,
                 null,
                 material.CreationTimeDateTimeOffset,
-                material.UpdateTimeDateTimeOffset));
+                material.UpdateTimeDateTimeOffset,
+                material.ScheduledTimeDateTimeOffset));
 
     /// <summary>
     /// A submission as the Application speaks of it (entity model §6). The history is reduced here to its latest

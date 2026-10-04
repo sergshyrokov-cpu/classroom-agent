@@ -31,7 +31,8 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
         // sync_state in its own migration and touches no other table (US-013 db-design §5). US-014 adds three
         // tables in ONE migration and alters none of the existing ones (US-014 db-design §1, §6). US-015 adds
         // course_work and submission in one further migration and alters none of the existing tables (US-015
-        // db-design §1, §6).
+        // db-design §1, §6). US-027 adds report_template and its two child tables in one migration (US-027
+        // db-design §2).
         Assert.Equal(
             new[]
             {
@@ -44,13 +45,17 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
                 "app_user",
                 "audit_event",
                 "legitimacy_state",
+                "report_template",
+                "report_template_mark",
+                "report_template_scale_row",
                 "sync_state",
                 "workspace_connection",
             }.Order(StringComparer.Ordinal),
             tables.Order(StringComparer.Ordinal));
         // US-037 adds no table: its migration amends audit_event and indexes course_membership (db-design §7).
         // US-019 adds none either: its migration amends audit_event's checks only (db-design §3).
-        Assert.Equal(10, migrations.Count);
+        // US-027 adds one migration (US-027 db-design §7).
+        Assert.Equal(11, migrations.Count);
         Assert.EndsWith("_InitialLegitimacyState", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_InitialAppUserAndAuditEvent", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_AddWorkspaceConnection", migrations[2], StringComparison.Ordinal);
