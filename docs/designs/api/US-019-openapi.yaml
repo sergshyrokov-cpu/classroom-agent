@@ -1,0 +1,280 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Trigger a synchronization from the UI (US-019)
+  version: "1"
+  description: >
+    HTTP contract of US-019 on the installation's public port: the "Синхронизировать"
+    action granted to Admin and Dean (`trebovaniya.md` §2 "Запуск синхронизации",
+    BR-004; §8 "Кнопка "Синхронизировать" — только триггерит серверный эндпоинт").
+    One server-rendered form `POST`, no JSON API (OD-007, spec I-4). The action only
+    enqueues a request through the US-013 coordinator and answers at once (BR-040,
+    AD-5). Two existing pages carry the button: the Admin's connection page (US-009,
+    US-017) and the home page for a Dean (US-008). The installation's host-wide rules
+    of docs/designs/api/US-008-openapi.yaml apply unchanged. The Control Plane and the
+    private port are untouched. Companion document:
+    docs/designs/api/US-019-api-design.md.
+x-story: US-019
+x-source-specification: docs/specifications/US-019-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-019-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 81
+x-produced-by: openapi-designer
+x-extends: docs/designs/api/US-008-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type is
+  added or changed; the operation below is the installation's own screen (DC-12).
+
+servers:
+  - url: https://school.example
+    description: >
+      Installation public port. Illustrative; the real value is the configured public
+      base address (US-008 spec FR-001).
+
+tags:
+  - name: synchronization
+    description: "The manual start of a synchronization run (spec FR-004)"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 configured host-wide applies and is not restated: HTTPS and
+    HSTS, the deny-by-default fallback policy (SC-4, API-9), the global antiforgery
+    filter, the single error page, the anonymous catch-all `404`, the session cookie
+    and its limits, the restricted session of a Dean with a temporary password
+    (US-012 api-design §2.6), and the exception handler that turns a
+    `ReadOnlyModeException` into `409` — the translated error page outside `/api/v1`
+    (US-008 spec FR-014).
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list of anonymous endpoints gains **nothing**; the US-008
+    endpoint enumeration test passes with the new operation classified as protected
+    (spec FR-007, S-01).
+
+  antiforgery-list-unchanged: >
+    The `POST` is covered by the global antiforgery rule and gains no exemption
+    (spec S-05, API-7).
+
+  outbound: >
+    The operation calls nothing outside the process: no Google call, no secret-store
+    read, no Control Plane call (spec FR-001, S-04, S-09). The run it requests is
+    performed later by the background service under US-013 … US-017.
+
+paths:
+
+  /synchronization/requests:
+
+    post:
+      tags: [synchronization]
+      operationId: requestSynchronization
+      summary: "Request a synchronization run now"
+      description: >
+        Runs the use case of spec FR-001: read-only guard → connection state
+        (OD-009 a) → enqueue through the synchronization-request port → audit row.
+        The request carries nothing but the antiforgery token (spec VR-001). The page
+        the user returns to is chosen from the session's role — Admin → the
+        connection page, Dean → the home page — and never from the request
+        (spec VR-002). On success the answer is Post-Redirect-Get with a one-time
+        message, so a reload never re-submits the request (api-design §2.2).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: StartSynchronization
+      x-permission-matrix-row: "\"Запуск синхронизации\" — Admin ✔, Dean ✔"
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: "one AuditEvent row per press, accepted or refused (spec FR-005); nothing else"
+      x-enqueues: "one out-of-schedule request on the US-013 SyncRunCoordinator, only when accepted"
+      x-return-page-by-role:
+        Admin: /settings/workspace-connection
+        Dean: /
+      x-spec: [FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-010]
+      x-acceptance-criteria: [AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-009]
+      security:
+        - installationSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/RequestSynchronizationForm"
+      responses:
+        "302":
+          description: >
+            One of three cases, told apart by `Location`:
+            (1) **Accepted** — the request was enqueued and one audit row with outcome
+            `Succeeded` was written. `Location` is the role's page
+            (`x-return-page-by-role`); the one-time message key
+            (`SynchronizationMessageKey`) is carried in TempData under
+            `SynchronizationMessage` and rendered once by that page — `Requested` or
+            `RequestedAfterCurrentWork` (spec FR-003).
+            (2) **Not signed in** — `Location: /sign-in`; nothing is enqueued or
+            written.
+            (3) **A Dean with a temporary password** — `Location:
+            /sign-in/change-password` under the restricted session of US-012; nothing
+            is enqueued or written.
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: [/settings/workspace-connection, /, /sign-in, /sign-in/change-password]
+        "400":
+          description: >
+            Missing or invalid antiforgery token: the translated error page under the
+            global rule (API-7). Nothing is enqueued or written.
+          content:
+            text/html: {}
+        "409":
+          description: >
+            The installation's state refuses the request (API-5). **Nothing is
+            enqueued** and one audit row with outcome `Refused` is written.
+            (1) Read-only mode, any of the three BR-025 causes: category
+            `ReadOnlyMode`; the host-wide US-008 handler renders the translated error
+            page naming the reason (spec FR-006).
+            (2) No usable connection — the US-009 state is `NotConfigured` or
+            `DomainMismatch` (`DomainUnknown` is always read-only and so answers as
+            case 1): category `ConnectionNotUsable`; the role's page is re-rendered
+            with `synchronizationMessageKey` naming what to do first —
+            `ConnectionNotUsableAdmin` on the connection page,
+            `ConnectionNotUsableDean` on the home page (spec FR-001 step 2, OD-009 a).
+          content:
+            text/html:
+              x-view-model:
+                oneOf:
+                  - $ref: "#/components/schemas/WorkspaceConnectionPageModelAddition"
+                  - $ref: "#/components/schemas/LandingPageModelAddition"
+
+  /settings/workspace-connection:
+    get:
+      operationId: getWorkspaceConnectionSettings
+      summary: "Existing US-009 page — changed additively"
+      description: >
+        Unchanged in behaviour, policy and status codes. Its view model gains the
+        fields of `WorkspaceConnectionPageModelAddition`: the "Synchronize" button is
+        rendered next to the "Last synchronization" block (US-017), in read-only mode
+        too, and a one-time message from TempData is shown once (spec FR-004). The
+        block does not refresh itself (OD-008).
+      x-policy: ConfigureWorkspaceConnection
+      x-change: additive-view-model
+      x-acceptance-criteria: [AC-001, AC-007]
+      responses:
+        "200":
+          description: "The page; see US-009-openapi.yaml and US-017-openapi.yaml for everything else."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/WorkspaceConnectionPageModelAddition"
+
+  /:
+    get:
+      operationId: getLanding
+      summary: "Existing US-008 home page — changed additively"
+      description: >
+        Unchanged in behaviour, policy and status codes. Its view model gains the
+        fields of `LandingPageModelAddition`: for a Dean, the "Synchronize" button
+        (in read-only mode too) and a one-time message from TempData. An Admin's home
+        page shows no button (spec I-6). Nothing about any run is shown to the Dean
+        (spec S-08, OD-002).
+      x-policy: ViewLegitimacyStatus
+      x-change: additive-view-model
+      x-acceptance-criteria: [AC-002, AC-007]
+      responses:
+        "200":
+          description: "The page; see US-008-openapi.yaml for everything else."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/LandingPageModelAddition"
+
+x-operations-deliberately-absent:
+
+  api-v1-sync: >
+    `api-conventions.md` API-4 lists `POST /api/v1/sync` → `202 Accepted` with the
+    `SyncState` id. This Story does **not** add it (OD-007, spec I-4): no script
+    calls it, and a remembered request has no `SyncState` id to return. API-4's row
+    stays a reservation for a later JSON client.
+
+  get-that-requests: >
+    No `GET` requests a run. A link, a prefetch or a crawler must never start a
+    synchronization (API-4, spec S-05).
+
+  run-status: >
+    No operation returns the state of a run to a Dean (OD-002; US-024).
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: __Host-ca-session
+      description: "The installation's own session cookie (US-008 spec FR-015)."
+
+  schemas:
+
+    RequestSynchronizationForm:
+      type: object
+      additionalProperties: true
+      description: >
+        The body carries **no field this Story reads**: only the antiforgery token the
+        global filter validates. The request model has no property, so a `returnUrl`,
+        an actor or anything else submitted under any name has nothing to bind to and
+        is ignored (spec VR-001, VR-002, VR-003).
+      properties:
+        __RequestVerificationToken:
+          type: string
+          description: "The antiforgery token (API-7). Validated by the host-wide filter."
+
+    SynchronizationMessageKey:
+      type: string
+      description: >
+        The message shown after a press, as a code the page turns into a translation
+        key (spec FR-008). Never a sentence; never carries data.
+      enum:
+        - Requested
+        - RequestedAfterCurrentWork
+        - ConnectionNotUsableAdmin
+        - ConnectionNotUsableDean
+
+    WorkspaceConnectionPageModelAddition:
+      type: object
+      description: >
+        Fields **added** to the US-009/US-017 `WorkspaceConnectionPageModel`; every
+        existing field is unchanged. A DTO, never an entity (AD-8).
+      required: [canRequestSynchronization, synchronizationMessageKey]
+      properties:
+        canRequestSynchronization:
+          type: boolean
+          const: true
+          description: >
+            The button is always rendered for an Admin on this page, read-only mode
+            included; enforcement is in `Application` (AD-6, OD-006).
+        synchronizationMessageKey:
+          description: >
+            `Requested` / `RequestedAfterCurrentWork` once after an accepted press
+            (from TempData), `ConnectionNotUsableAdmin` on the `409` re-render, else
+            null.
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/SynchronizationMessageKey"
+
+    LandingPageModelAddition:
+      type: object
+      description: >
+        Fields **added** to the US-008 `LandingPageModel`; every existing field is
+        unchanged. A DTO, never an entity (AD-8). Carries nothing about any run —
+        no status, time or diagnosis (spec S-08).
+      required: [canRequestSynchronization, synchronizationMessageKey]
+      properties:
+        canRequestSynchronization:
+          type: boolean
+          description: "True for a Dean, false for an Admin (spec I-6). Independent of read-only mode (OD-006)."
+        synchronizationMessageKey:
+          description: >
+            `Requested` / `RequestedAfterCurrentWork` once after an accepted press
+            (from TempData), `ConnectionNotUsableDean` on the `409` re-render, else
+            null.
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/SynchronizationMessageKey"

@@ -2,28 +2,32 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-037
+story: US-019
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
-attempt: 2
-last_invoked_skill: null
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
+status: IN_PROGRESS
+attempt: 1
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_PR_APPROVAL
-  recorded_at: 2026-10-03T20:47:04Z
-  decided_by: Serhii SHYROKOV (/so:approve)
+  verdict: PASS
+  stage: API_DESIGN
+  recorded_at: 2026-10-04T06:33:34Z
 last_artifacts:
-  - type: security_review
-    path: docs/reviews/security/US-037-security-review.md
-    version: 2
+  - type: openapi
+    path: docs/designs/api/US-019-openapi.yaml
+    version: 1
+  - type: api_design
+    path: docs/designs/api/US-019-api-design.md
+    version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "Minor test hardenings open: M-1 (purged account cookie), M-2/N-4 (confinement test misses ExecuteSqlRaw, Remove, RemoveRange), N-5 (no test for the N-2 interleaving)."
-  - "N-1 is trebovaniya.md section 7 item 27 (v81), owned by the Owner."
-started_at: 2026-10-03T16:51:10Z
-updated_at: 2026-10-03T20:47:04Z
-completed_at: 2026-10-03T20:47:04Z
+  - "API_DESIGN: PASS. One new Razor form POST /synchronization/requests (policy StartSynchronization, Admin+Dean, antiforgery, no body fields). Success = PRG 302 to the role page (Admin /settings/workspace-connection, Dean /) with TempData SynchronizationMessage (Requested | RequestedAfterCurrentWork); return page from role, never returnUrl. 409 read-only via host handler (audit ReadOnlyMode); 409 unusable connection = role page re-rendered with ConnectionNotUsableAdmin|Dean (audit ConnectionNotUsable, existing). Restricted Dean session -> 302 /sign-in/change-password. Existing pages gain canRequestSynchronization + synchronizationMessageKey (Admin home: no button). Port adapter over SyncRunCoordinator lives in Web (in-process, not Infrastructure). No /api/v1/sync (OD-007). DB_DESIGN: confirm AuditAction SynchronizationRequested + ck_audit_event_action migration; target null."
+  - "HUMAN_SPEC_APPROVAL approved by Serhii SHYROKOV (/so:approve) at 2026-10-04T06:31:38Z (no comment): Specification v1 accepted; automated verdict PASS with no blocking findings. OD-001 … OD-008 arrived resolved; OD-009 raised by SPECIFICATION and resolved by the Owner as (a) before the decision. Interpretations I-1 … I-6 accepted as written. The Specification is now APPROVED; open_decisions stays DRAFT."
+  - "SPECIFICATION: PASS. 10 functional requirements, 3 validation rules, Story AC-001 … AC-008 traced plus derived AC-009 (pending OD-009). OD-001 … OD-008 arrived resolved and are carried unchanged. NEW OD-009 (resolved by the Owner 2026-10-04 as (a) before the gate decision): a press with no usable connection — (a) refuse like Check access, 409 + ConnectionNotUsable audit row (recommended), or (b) accept; the run is then silently skipped. Use case: read-only guard first (refusal audited, rethrown -> 409), then connection state (OD-009), then enqueue through a new Application port over SyncRunCoordinator (Request + IsRunning/IsPurging), audit, return Requested | RequestedAfterCurrentWork. One form POST for both roles, own policy StartSynchronization (Admin+Dean), return page derived from role (no returnUrl). AuditAction gains one member + ck_audit_event_action migration; target none."
+  - "SPECIFICATION interpretations for the gate to confirm: I-1 message reflects the moment of the press; I-2 audit Succeeded = request accepted; I-3 no audit target; I-4 API-4's POST /api/v1/sync row is not implemented (no JSON endpoint, no SyncState id for a remembered request) — whether to reword API-4 is the Owner's call; I-5 own policy per matrix row; I-6 Admin home page gets no button."
+started_at: 2026-10-04T06:30:19Z
+updated_at: 2026-10-04T06:33:34Z
+completed_at: null

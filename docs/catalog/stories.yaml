@@ -218,7 +218,7 @@ stories:
   - id: US-019
     epic: EPIC-1
     title: Trigger a synchronization from the UI
-    state: READY
+    state: IN_PROGRESS
     blocked_by: >
       Depends on US-013.
     # US-013 COMPLETED. Story file authored:
