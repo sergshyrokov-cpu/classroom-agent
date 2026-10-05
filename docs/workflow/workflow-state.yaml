@@ -2,40 +2,41 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-042
+story: US-028
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: HUMAN_SPEC_APPROVAL
+previous_stage: SPECIFICATION
+last_completed_stage: SPECIFICATION
+status: WAITING_FOR_HUMAN
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: spec-writer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_PR_APPROVAL
-  recorded_at: 2026-10-05T13:29:23Z
+  verdict: PASS
+  stage: SPECIFICATION
+  recorded_at: 2026-10-05T13:37:50Z
 last_artifacts:
-  - type: implementation_report
-    path: docs/evidence/US-042-implementation-report.md
+  - type: specification
+    path: docs/specifications/US-028-spec.md
     version: 1
-  - type: security_review
-    path: docs/reviews/security/US-042-security-review.md
+  - type: open_decisions
+    path: docs/decisions/US-028-open-decisions.md
     version: 1
-pending_human_gate: null
+pending_human_gate:
+  stage: HUMAN_SPEC_APPROVAL
+  status: PENDING
+  requested_at: 2026-10-05T13:37:50Z
+  required_artifacts:
+    - type: specification
+      path: docs/specifications/US-028-spec.md
+      version: 1
+  automated_verdict: PASS
+  blocking_findings: []
 blocking_issues: []
 non_blocking_findings:
-  - "SPEC I-1..I-10: interpretations stated in spec §11; any may become an OD."
-  - "API §2.3: invalid `names` in the template form is a field error (form re-rendered), per spec VR-001/§8 — departs from the US-027 structural-400 precedent."
-  - "API §2.4: the language-switcher return path keeps `names` only when the address carried a valid one."
-  - "API §2.6: report PersonName gets its own ReportNameKind (Profile/EmailLocalPart/Unnamed); JournalNameKind unchanged."
-  - "DB D-5: existing templates get `profile` via the migration default, then the default is dropped (no lasting DB default)."
-  - "DB §3.2: report member record drops FullName for Surname/GivenName; US-025 JournalMemberRecord unchanged."
-  - "TEST: OD-001 compile-only skeleton (Owner, a); 115 red as expected, 14 green by design; binding notes for IMPLEMENTATION in the test-generation report §2."
-  - "IMPL D-1..D-3: three test defects fixed on the Owner's ruling 2026-10-05 (migration count 12; persistence test context options; uk-UA collation puts Cyrillic before Latin)."
-  - "IMPL: suite 3597/3597 green; NFR-070 switch layout at phone width not automated — check at HUMAN_PR_APPROVAL."
-  - "SEC INFO-1: email local part shown as a name only where the email already is; re-check exports at US-028."
-  - "SEC INFO-2: ToSettings throws on a null NameSource — unreachable after Validate; no change."
-  - "SEC INFO-3: NFR-070 phone-width layout of the switch is a manual check at HUMAN_PR_APPROVAL."
-started_at: 2026-10-05T11:11:02Z
-updated_at: 2026-10-05T13:29:23Z
-completed_at: 2026-10-05T13:29:23Z
+  - "SPEC OD-003 open: which Grading cells are numbers (raw points, grade with additions); blocks AC-003 tests for those cases; resolve at HUMAN_SPEC_APPROVAL."
+  - "SPEC F-1: Story Notes say GET; trebovaniya.md §8 v64 requires POST with antiforgery — spec follows §8."
+  - "SPEC I-1..I-9: interpretations in spec §11; any may become an OD."
+  - "SPEC FR-011: ClosedXML 0.105.1 in Infrastructure only; transitive packages/licences to be checked at SECURITY_REVIEW."
+started_at: 2026-10-05T13:37:50Z
+updated_at: 2026-10-05T13:37:50Z
+completed_at: null
