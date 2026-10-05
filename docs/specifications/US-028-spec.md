@@ -2,9 +2,9 @@
 artifact_type: specification
 story: US-028
 version: 1
-status: DRAFT
+status: APPROVED
 created_at: 2026-10-05T13:36:00Z
-updated_at: 2026-10-05T13:36:00Z
+updated_at: 2026-10-05T13:55:58Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-028-excel-export.md
@@ -78,7 +78,9 @@ before an installation is decommissioned (§5, DC-8: "выгрузку журн�
 - **Inputs** — exactly those of the report page (US-027 FR-011, US-042 FR-005):
   the template reference (built-in key or created template id), the course's
   internal id, the period `from`, `to`, and the name source (optional; absent →
-  the template's setting, US-042 FR-004).
+  the template's setting, US-042 FR-004) — plus one input of its own, the
+  **page orientation** of the printout (`portrait` / `landscape`; optional,
+  absent → `portrait`; OD-004 a).
 - **Method: `POST`** with the antiforgery token (`trebovaniya.md` §8 v64:
   "Выгрузка журнала или отчёта — POST с токеном: она пишет аудит"; API-3, API-4,
   API-7; SC-4: a state-changing action reachable by `GET` is a finding).
@@ -99,6 +101,10 @@ before an installation is decommissioned (§5, DC-8: "выгрузку журн�
   course, period and the **effective** name source of the switch (US-042 FR-004,
   FR-005; §4 v86: "Экспорт со страницы отчёта берёт выбранный на ней вариант —
   файл не расходится с экраном").
+- Next to it, a choice of page orientation — "Книжкова" / "Portrait"
+  (pre-selected) and "Альбомна" / "Landscape" (OD-004 a). The choice is sent
+  with the export and **stored nowhere** — not in the template, not on the
+  account; the next export starts from portrait again.
 - It is shown in read-only mode (BR-026). Showing it is not enforcement: the
   policy and validation of FR-008 and FR-005 decide (AD-6, SC-4).
 - Usable at phone width (NFR-070).
@@ -163,12 +169,12 @@ for it (US-027 FR-005.4), as one cell:
 | Report cell | Excel cell |
 |---|---|
 | empty (a material, an empty mark) | empty |
-| a grade alone, whose value is a number | **number** (OD-003) |
-| anything else — a mark, a raw state, a grade with a late mark, draft grade or turn-in date, raw points `8 / 10` | **text**, composed exactly as the screen composes it (OD-003) |
+| a grade alone — no late mark, draft grade or turn-in date — whose text is a whole number (a scale label such as `12`) | **number** (OD-003 a) |
+| anything else — a mark, a raw state, a non-numeric scale label, raw points `8 / 10`, a grade with a late mark, draft grade or turn-in date | **text**, composed exactly as the screen composes it (OD-003 a) |
 
-What "a grade whose value is a number" means — and how raw points and a grade
-with additions are written — is **OD-003**; until it is resolved, AC-003 cannot
-be tested for those cases.
+So the file never differs from the screen; the built-in "Academic journal" and
+every scale with numeric labels are calculable; "no conversion" and the full
+view stay text, as they are on screen.
 
 **FR-004.6 Empty reports** (US-027 FR-005.7). No item in the period: both
 sheets carry the header block and, in place of the table, the translated
@@ -186,11 +192,14 @@ does not turn it into a formula; the value itself is written unchanged, equal
 to the screen (Story Notes; SC-10; I-5).
 
 **FR-004.8 Readable printout** (Story: "print settings beyond what the
-Specification decides is needed"). Both sheets: landscape, fit to one page wide,
+Specification decides is needed"). Both sheets: the orientation chosen at
+export (FR-002; portrait by default — the form of a paper academic journal,
+OD-004 a), fit to one page wide,
 the table's header row repeated on every printed page; "Grading" also repeats
 the student-name column and freezes it with the header row on screen. Column
 widths follow the content within a fixed maximum, text wraps in header cells.
-No per-school print configuration (I-6).
+No other print setting is offered and none is stored per school or per
+template (Story Out of scope; I-6).
 
 **FR-004.9 Excel limits.** A text longer than Excel's cell limit (32 767
 characters) is cut to the limit (I-7). Sheet names are the fixed translated
@@ -320,7 +329,8 @@ Per §5, SC-11 and BR-073, every **successful** export writes one `AuditEvent`:
 ### FR-013 Localization
 
 New keys in `SharedResource.uk.resx` and `SharedResource.en.resx` (NFR-073):
-the "Export to Excel" action, the two sheet names, the header-block labels, the
+the "Export to Excel" action, the orientation choice and its two values, the
+orientation validation message, the two sheet names, the header-block labels, the
 student column heading of "Grading", the file-name fallback "course", and any
 message of §8 that has no key yet. Keys of US-025 / US-027 / US-042 — column
 headings of "Lesson topics", markers, program marks, "without a name", empty
@@ -355,6 +365,8 @@ The rules of the report page, unchanged, with the same messages:
   there is no "form only" state; absent → `400`).
 - name source: US-042 VR-002 (absent → the template's setting; any other value
   → `400`).
+- orientation: absent → `portrait`; `portrait` or `landscape` exactly; any other
+  value → `400` with a translated message naming the field (OD-004 a).
 - A repeated parameter is malformed, as on the report page. Any other input is
   ignored and never echoed.
 
@@ -430,15 +442,17 @@ See `docs/decisions/US-028-open-decisions.md`.
 |---|---|---|---|
 | OD-001 | Excel library | Resolved: ClosedXML | FR-011 |
 | OD-002 | Who supplies the layout | Resolved: the program | FR-004, §10 |
-| OD-003 | Which "Grading" cells are numbers | **Open** | FR-004.5, AC-003 — tests of raw points and of grades with additions cannot be written until resolved |
+| OD-003 | Which "Grading" cells are numbers | Resolved: (a) a whole-number grade alone is a number, everything else text as on screen | FR-004.5, AC-003 |
+| OD-004 | Page orientation of the printout | Resolved: (a) chosen at export, portrait by default, stored nowhere | FR-001, FR-002, FR-004.8, VR-001 |
 
 ### Interpretations
 
 Stated choices the wording leaves open; any may be turned into an Open
 Decision at `HUMAN_SPEC_APPROVAL`.
 
-- **I-1** The export accepts the same inputs as the report page and nothing
-  more; one course, one period, one template per file (Story).
+- **I-1** The export accepts the same inputs as the report page plus the
+  orientation of OD-004 and nothing more; one course, one period, one template
+  per file (Story).
 - **I-2** The header block is repeated on both sheets, so each prints on its
   own.
 - **I-3** A "Grading" column header is one text cell (date and title together,
@@ -447,7 +461,8 @@ Decision at `HUMAN_SPEC_APPROVAL`.
   UI language's short date format; the screen shows the same date.
 - **I-5** Quote prefix for text starting with `=`, `+`, `-`, `@`, tab, CR —
   defence in depth; the value is not altered.
-- **I-6** Print settings of FR-004.8 are fixed by the program.
+- **I-6** Print settings of FR-004.8 other than the orientation are fixed by
+  the program.
 - **I-7** Cutting text at 32 767 characters; Google titles never reach it in
   practice.
 - **I-8** File name form and character rules of FR-006.1; the template name is

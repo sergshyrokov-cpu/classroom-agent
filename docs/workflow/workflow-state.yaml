@@ -4,16 +4,16 @@
 version: 1
 story: US-028
 workflow: story-delivery
-current_stage: HUMAN_SPEC_APPROVAL
-previous_stage: SPECIFICATION
-last_completed_stage: SPECIFICATION
-status: WAITING_FOR_HUMAN
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-writer
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: SPECIFICATION
-  recorded_at: 2026-10-05T13:37:50Z
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: 2026-10-05T13:55:58Z
 last_artifacts:
   - type: specification
     path: docs/specifications/US-028-spec.md
@@ -21,22 +21,14 @@ last_artifacts:
   - type: open_decisions
     path: docs/decisions/US-028-open-decisions.md
     version: 1
-pending_human_gate:
-  stage: HUMAN_SPEC_APPROVAL
-  status: PENDING
-  requested_at: 2026-10-05T13:37:50Z
-  required_artifacts:
-    - type: specification
-      path: docs/specifications/US-028-spec.md
-      version: 1
-  automated_verdict: PASS
-  blocking_findings: []
+pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "SPEC OD-003 open: which Grading cells are numbers (raw points, grade with additions); blocks AC-003 tests for those cases; resolve at HUMAN_SPEC_APPROVAL."
+  - "SPEC OD-003 resolved (a) at the gate: a whole-number grade alone is a number, all else text as on screen."
+  - "SPEC OD-004 resolved (a) at the gate: portrait/landscape chosen at export, portrait default, stored nowhere."
   - "SPEC F-1: Story Notes say GET; trebovaniya.md §8 v64 requires POST with antiforgery — spec follows §8."
   - "SPEC I-1..I-9: interpretations in spec §11; any may become an OD."
   - "SPEC FR-011: ClosedXML 0.105.1 in Infrastructure only; transitive packages/licences to be checked at SECURITY_REVIEW."
 started_at: 2026-10-05T13:37:50Z
-updated_at: 2026-10-05T13:37:50Z
+updated_at: 2026-10-05T13:55:58Z
 completed_at: null

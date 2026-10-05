@@ -4,7 +4,7 @@ story: US-028
 version: 1
 status: DRAFT
 created_at: 2026-10-05T13:36:00Z
-updated_at: 2026-10-05T13:36:00Z
+updated_at: 2026-10-05T13:52:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-028-excel-export.md
@@ -16,8 +16,9 @@ supersedes: null
 
 # US-028 Open Decisions — Export a journal to Excel using a school template
 
-Two carried from the Story, both resolved before activation; one raised by the
-Specification, **open**. No item of `trebovaniya.md` §7 concerns this Story.
+Two carried from the Story, both resolved before activation; two raised at
+`HUMAN_SPEC_APPROVAL` (OD-003 by the Specification, OD-004 by the Owner), both
+resolved there. No item of `trebovaniya.md` §7 concerns this Story.
 
 ## OD-001 The Excel library
 
@@ -44,8 +45,7 @@ US-043.
 
 ## OD-003 Which "Grading" cells are numbers
 
-Raised by the Specification. **Open — blocks the tests of AC-003 for raw points
-and for grades with additions.**
+Raised by the Specification. Resolved (a).
 
 AC-003 asks for two things at once: every cell holds the same value as the
 screen, and "a grade is a number Excel can calculate with, not text". They
@@ -80,5 +80,30 @@ Options:
   additions (notes do not print by default) and the layout departs further from
   the screen.
 
-Impact: spec FR-004.5 and the AC-003 tests. Resolved by the Owner at
-`HUMAN_SPEC_APPROVAL`.
+Impact: spec FR-004.5 and the AC-003 tests.
+
+**Resolution:** (a), by the Owner on 2026-10-05 at `HUMAN_SPEC_APPROVAL`.
+
+## OD-004 Page orientation of the printout
+
+Raised by the Owner at `HUMAN_SPEC_APPROVAL`: a paper academic journal is
+normally portrait, while spec v1 FR-004.8 fixed landscape. The orientation can
+always be changed in Excel's print dialog; the question is the file's own
+setting and whether the user chooses it.
+
+Options:
+
+- **(a)** Portrait by default; a portrait / landscape choice next to "Export to
+  Excel", sent with the export, stored nowhere — no template or database change,
+  within the Story's scope.
+- **(b)** Orientation as a stored template setting — a new column and form
+  field; the Story excludes changes to templates and per-school print
+  configuration, so it would need a Story change (a later Story).
+- **(c)** Always portrait, no choice; landscape is set in Excel when printing.
+
+Note: in portrait, "Grading" with many columns fits one page wide only by
+scaling down.
+
+Impact: spec FR-001, FR-002, FR-004.8, VR-001, FR-013.
+
+**Resolution:** (a), by the Owner on 2026-10-05 at `HUMAN_SPEC_APPROVAL`.
