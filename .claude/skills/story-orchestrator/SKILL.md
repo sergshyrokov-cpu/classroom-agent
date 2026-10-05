@@ -383,6 +383,13 @@ Commit Offer:        workflow state + docs/specifications/US-001-spec.md —
 Paths shown must be resolved from `artifact-paths.yaml`. Do not claim a
 transition unless `workflow-state.yaml` was updated.
 
+**Fresh context before SECURITY_REVIEW.** When the recorded transition ends at
+`SECURITY_REVIEW`, the Recommended Command is `/clear`, then `/so:next`, with a
+one-line reason: the review must not run in the context that wrote the code.
+Workflow state lives in files, so clearing loses nothing. Do not invoke
+`security-reviewer` in the same invocation or conversation turn that recorded
+`IMPLEMENTATION → SECURITY_REVIEW`.
+
 ---
 
 # Prohibited Actions
