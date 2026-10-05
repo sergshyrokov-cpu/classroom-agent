@@ -149,11 +149,8 @@ stories:
   - id: US-041
     epic: EPIC-6
     title: An unknown file-like address answers 404 to anyone
-    state: BACKLOG
-    blocked_by: >
-      No dependency. Draft from US-040 finding TEST F-2; to be reviewed by the
-      Owner before activation. Low priority — conformance with SC-4 v66, no
-      data exposure.
+    state: IN_PROGRESS
+    blocked_by: null
 
   # --- EPIC-1: Synchronization ---------------------------------------------
   - id: US-013

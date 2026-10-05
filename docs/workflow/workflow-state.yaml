@@ -2,36 +2,29 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-040
+story: US-041
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
 last_invoked_skill: null
 last_result:
   verdict: HUMAN_APPROVED
-  stage: HUMAN_PR_APPROVAL
-  recorded_at: 2026-10-05T07:07:06Z
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: 2026-10-05T07:19:36Z
 last_artifacts:
-  - type: implementation_report
-    path: docs/evidence/US-040-implementation-report.md
+  - type: specification
+    path: docs/specifications/US-041-spec.md
     version: 1
-  - type: security_review
-    path: docs/reviews/security/US-040-security-review.md
+  - type: open_decisions
+    path: docs/decisions/US-041-open-decisions.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "OD-001 resolved (a) by the Owner: Kestrel-level responses (malformed request 400, 431) are outside the rule."
-  - "SPEC F-1: FR-006 accepts a Cache-Control value containing no-store among other directives (antiforgery writes 'no-cache, no-store')."
-  - "API D-1: rule writes exactly no-store; keeps a value already containing no-store; no Pragma/Expires added."
-  - "TEST F-1: 17 new tests pass pre-implementation (framework already writes no-store on form pages, 409, 500; static-file and attribute guards)."
-  - "TEST F-2: pre-existing — anonymous request to a missing file-like path on the installation answers 302 /sign-in, not 404 (SC-4 v66); out of scope."
-  - "IMPL F-1: one full-suite run hit an Npgsql connect timeout creating a test database (JournalPageTests); passed on re-run; unrelated to US-040."
-  - "SEC INFO-1: US-041 draft story and its catalog entry are outside US-040 scope; leave them out of the US-040 commit."
-  - "SEC INFO-2: NoStoreMiddleware duplicated per host by design (no shared pipeline project); keep in step."
-started_at: 2026-10-04T21:09:54Z
-updated_at: 2026-10-05T07:07:06Z
-completed_at: 2026-10-05T07:07:06Z
+  - "SPEC F-1: the fix also gives 404 (not a sign-in redirect) to an unmatched path under a private-port prefix, e.g. /health/x.txt (FR-005)."
+started_at: 2026-10-05T07:16:54Z
+updated_at: 2026-10-05T07:19:36Z
+completed_at: null

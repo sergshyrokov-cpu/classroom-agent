@@ -3,10 +3,10 @@
 # Writer: story-orchestrator (on activation). Stories are authored by a human
 # in docs/stories/ — there is no backlog-sync stage in this workflow variant.
 version: 1
-active_story: US-040
-story_path: docs/stories/US-040-no-store-responses.md
+active_story: US-041
+story_path: docs/stories/US-041-unknown-file-path-404.md
 source:
   type: authored
-activated_at: 2026-10-04T21:07:50Z
+activated_at: 2026-10-05T07:14:16Z
 activated_by: Serhii SHYROKOV (/so:start)
-status: COMPLETED
+status: IN_PROGRESS
