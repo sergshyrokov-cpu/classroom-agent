@@ -4,27 +4,26 @@
 version: 1
 story: US-041
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: db-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: 2026-10-05T07:19:36Z
+  verdict: NOT_APPLICABLE
+  stage: DB_DESIGN
+  recorded_at: 2026-10-05T07:28:45Z
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-041-spec.md
-    version: 1
-  - type: open_decisions
-    path: docs/decisions/US-041-open-decisions.md
+  - type: database_design
+    path: docs/designs/database/US-041-db-design.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "API D-1: one catch-all per host, pattern without the nonfile constraint, fallback precedence; response produced by the existing re-execution (no new text)."
+  - "API F-1: spec v1 required the API-6 body for unmatched /api/v1 paths, which no host implements; OD-002 resolved (1) by the Owner — spec v2 moves it out of scope (§10)."
   - "SPEC F-1: the fix also gives 404 (not a sign-in redirect) to an unmatched path under a private-port prefix, e.g. /health/x.txt (FR-005)."
 started_at: 2026-10-05T07:16:54Z
-updated_at: 2026-10-05T07:19:36Z
+updated_at: 2026-10-05T07:28:45Z
 completed_at: null

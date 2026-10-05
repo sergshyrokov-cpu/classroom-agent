@@ -1,10 +1,10 @@
 ---
 artifact_type: specification
 story: US-041
-version: 1
+version: 2
 status: APPROVED
 created_at: 2026-10-05T07:16:54Z
-updated_at: 2026-10-05T07:19:36Z
+updated_at: 2026-10-05T07:26:24Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-041-unknown-file-path-404.md
@@ -14,7 +14,7 @@ inputs:
   - path: docs/architecture/security-conventions.md
     version: null
   - path: docs/decisions/US-041-open-decisions.md
-    version: 1
+    version: 2
 supersedes: null
 ---
 
@@ -25,7 +25,7 @@ supersedes: null
 `trebovaniya.md` v66 (changelog; §8 "Страница ошибки") and SC-4 fix that an
 unknown address answers `404` to anyone, an anonymous visitor included: each
 host maps an anonymous catch-all that returns `404` (the error page, or the
-API-6 body under `/api/v1`).
+API-6 body under `/api/v1`, which stays out of scope here — §10).
 
 US-040 (test-generation report, finding F-2) found that this holds only for
 paths that do not look like a file. The catch-all is registered with
@@ -55,19 +55,17 @@ code and SC-4 in agreement.
 3. Otherwise, if the path matches an endpoint, that endpoint runs (unchanged).
 4. Otherwise — whatever the last segment looks like — the anonymous catch-all
    answers `404`, which the host's status-code re-execution turns into the
-   error page (or the API-6 body under `/api/v1`).
+   error page.
 
 ## 4. Functional Requirements
 
 **FR-001 Installation catch-all covers file-like paths.** On the installation's
 public port, a request that matches no endpoint and no existing static file
-answers `404` with the error page — or the API-6 body when the path is under
-`/api/v1` — for an anonymous caller, an Admin and a Dean alike, including when
+answers `404` with the error page for an anonymous caller, an Admin and a Dean alike, including when
 the last path segment contains a dot. It is never a redirect to sign-in.
 
 **FR-002 Control Plane catch-all covers file-like paths.** On the Control
-Plane, the same request answers `404` with the error page (or the API-6 body
-under `/api/v1`) for an anonymous caller and for the Owner — both after the
+Plane, the same request answers `404` with the error page for an anonymous caller and for the Owner — both after the
 Owner account exists and before it exists. Before setup it is `404`, not the
 setup gate's `302 /setup` (OD-001): the catch-all stays exempt from the setup
 gate, as it is today.
@@ -125,7 +123,7 @@ no existing static file is answered `404`.
   for the tests, which must cover file-like paths.
 - Test cases must include at least: a root-level file name (`/robots.txt`), a
   file name under an existing static directory that does not exist there
-  (`/css/no-such-file.css`), and a file-like path under `/api/v1` (API-6 body).
+  (`/css/no-such-file.css`).
 - The path is never echoed into the response or a log message beyond what the
   framework's request logging already records (SC-10).
 
@@ -136,7 +134,7 @@ no existing static file is answered `404`.
   pattern does not add an anonymous endpoint; no change to the anonymous list is
   needed.
 - It returns only the status `404`; the body is the error page with translated
-  text only (SC-4 "One error page per host") or the API-6 body. It discloses
+  text only (SC-4 "One error page per host"). It discloses
   nothing about whether a protected page, file or record exists.
 - Deny by default is kept: every real endpoint keeps its authorization policy,
   and the fallback authorization policy still protects any matched endpoint
@@ -151,8 +149,7 @@ no existing static file is answered `404`.
 
 | Situation | Host | Response |
 |---|---|---|
-| Unmatched path (file-like or not), not under `/api/v1` | installation public port, Control Plane | `404`, error page with the "not found" text, in the caller's language (signed in) or the default language (anonymous) |
-| Unmatched path under `/api/v1` | installation public port, Control Plane | `404`, API-6 body |
+| Unmatched path (file-like or not) | installation public port, Control Plane | `404`, error page with the "not found" text, in the caller's language (signed in) or the default language (anonymous) |
 | Unmatched path, Control Plane before setup | Control Plane | `404` as above, not `302 /setup` |
 | Path outside private paths | installation private port | `404`, no body (unchanged) |
 | Unmatched path under a private path prefix | installation private port | `404`, no error page |
@@ -176,12 +173,22 @@ An exception while producing the `404` follows the existing `500` handling.
 - The OAuth callback `/signin-google` (US-008) beyond confirming it still works.
 - Responses Kestrel writes before the application pipeline (see US-040 OD-001).
 - Any change to which static files exist or how they are served.
+- **The API-6 body for an unmatched path under `/api/v1`** (OD-002). SC-4 v66
+  says the catch-all answers with the API-6 body under `/api/v1`; neither host
+  does that today for any unmatched path — the status-code re-execution renders
+  the error page — and neither host has an `/api/v1` resource yet. Under
+  `/api/v1` an unmatched path, file-like or not, keeps answering `404` with the
+  error page. The first Story that adds an `/api/v1` resource to a host makes
+  that host's unmatched `/api/v1` paths answer with the API-6 body.
 
 ## 11. Open Decisions
 
 - **OD-001 The Control Plane before setup** — resolved by the Owner
   (2026-10-05): `404`, no first-run exception. Impact: FR-002, AC-002. See
   `docs/decisions/US-041-open-decisions.md`.
+- **OD-002 The API-6 body under `/api/v1`** — raised at API_DESIGN (finding
+  API F-1), resolved by the Owner (2026-10-05): out of scope for US-041; see
+  §10. Impact: FR-001, FR-002, §6, §8.
 
 No unresolved Open Decision. `trebovaniya.md` §7 holds no open question this
 Story depends on.

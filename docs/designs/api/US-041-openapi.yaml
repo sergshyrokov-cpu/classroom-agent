@@ -1,0 +1,133 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — An unknown file-like address answers 404 (US-041)
+  version: "1"
+  description: >
+    HTTP contract of US-041 across both hosts. No operation is added or removed.
+    The anonymous 404 catch-all already defined by
+    docs/designs/api/US-001-openapi.yaml (Control Plane, `/{unmatchedPath}`) and
+    docs/designs/api/US-008-openapi.yaml (installation) is restated here with
+    one clarification: it matches **every** unmatched path, including a path
+    whose last segment contains a dot (`/robots.txt`, `/css/no-such-file.css`,
+    `/favicon.ico`). Until now such a path matched no endpoint and was
+    challenged (`302` to sign-in) — a conformance gap with SC-4 v66, not a
+    contract change. Every other host-wide rule of US-001, US-008 and US-040
+    applies unchanged. Companion document:
+    docs/designs/api/US-041-api-design.md.
+x-story: US-041
+x-source-specification: docs/specifications/US-041-spec.md
+x-source-specification-version: 2
+x-source-open-decisions: docs/decisions/US-041-open-decisions.md
+x-source-open-decisions-version: 2
+x-requirements-version: 85
+x-produced-by: openapi-designer
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No request or
+  response body changes shape (DC-12); the service channel is not affected.
+
+servers:
+  - url: https://control-plane.internal
+    description: "Control Plane. Illustrative (SC-9, DC-6)."
+  - url: https://school.example
+    description: "Installation public port. Illustrative."
+  - url: http://installation.private:{privatePort}
+    description: "Installation private port, plain HTTP (DC-6)."
+    variables:
+      privatePort:
+        default: "8081"
+
+x-host-wide-rules:
+
+  catch-all-matches-every-path: >
+    spec FR-001, FR-002, FR-003; SC-4 v66. Each host has exactly one anonymous
+    catch-all; its route pattern matches any path, with no `nonfile`
+    constraint, at the lowest routing precedence, so it never wins over a real
+    endpoint. It reads and writes nothing, writes no audit event and returns
+    only the status `404`; the host's status-code re-execution renders the
+    error page `Error.NotFound`.
+
+  request-order: >
+    spec §3, FR-004. An existing file in the host's `wwwroot` is served by the
+    static-file middleware before routing (unchanged, `200`); a real endpoint
+    wins over the catch-all; only what is left reaches the catch-all.
+
+  setup-gate: >
+    spec FR-002, OD-001. On the Control Plane the catch-all stays exempt from
+    the setup gate: before the Owner account exists an unmatched path answers
+    `404`, not `302 /setup`. Requests to non-exempt real endpoints are still
+    redirected to `/setup` before setup.
+
+  private-port: >
+    spec FR-005; DC-6, SC-9. On the installation's private port a path outside
+    the private paths answers `404` with no body from the port filter
+    (unchanged). An unmatched path under a private prefix (e.g. `/health/x.txt`)
+    reaches the catch-all and answers `404` with no body — the private port has
+    no status-code re-execution and no error page.
+
+  api-v1-out-of-scope: >
+    spec §10, OD-002. An unmatched path under `/api/v1`, file-like or not,
+    answers `404` with the error page as it does today; the API-6 body for it
+    is left to the first Story that adds an `/api/v1` resource to the host.
+
+  unchanged: >
+    spec FR-006. Real protected endpoints still challenge an anonymous caller
+    (`302 /sign-in`); the Google OAuth callback `/signin-google` is still
+    handled by the authentication handler (US-008); the error page, its texts
+    and the `Cache-Control: no-store` rule (US-040) are unchanged.
+
+paths:
+
+  /{unmatchedPath}:
+    x-catch-all: true
+    x-restates:
+      - docs/designs/api/US-001-openapi.yaml#/paths/~1{unmatchedPath}
+      - docs/designs/api/US-008-openapi.yaml
+    get:
+      tags: [infrastructure]
+      operationId: fallbackNotFound
+      summary: "Anonymous catch-all for any unmatched request (any method), file-like paths included"
+      description: >
+        Both hosts. Any request that matches no existing static file and no
+        other endpoint — any method, any path whether or not its last segment
+        contains a dot, signed in or not, and on the Control Plane before or
+        after setup — answers `404` with the error page `Error.NotFound`
+        (public port of the installation, Control Plane) or `404` with no body
+        (installation private port). Never a redirect to sign-in or setup.
+      x-host: [ClassroomAgent.Web, ClassroomAgent.ControlPlane]
+      x-anonymous: true
+      security: []
+      x-sc4-entry: "Error page, and the fallback catch-all that answers 404 for any unmatched request"
+      x-spec: [FR-001, FR-002, FR-003, FR-005]
+      x-acceptance-criteria: [AC-001, AC-002]
+      parameters:
+        - name: unmatchedPath
+          in: path
+          required: true
+          description: >
+            Any path, possibly with several segments and a dot in the last one.
+            Not interpreted, not echoed into the response.
+          schema:
+            type: string
+          examples:
+            robots:
+              value: robots.txt
+            missingStatic:
+              value: css/no-such-file.css
+            favicon:
+              value: favicon.ico
+      responses:
+        "404":
+          description: >
+            Error page `Error.NotFound` with translated text only — in the
+            signed-in user's language, or the default language for an anonymous
+            caller (school language on the installation, Ukrainian on the
+            Control Plane). On the installation's private port: no body.
+          headers:
+            Cache-Control:
+              description: "`no-store` (US-040 host-wide rule)."
+              schema:
+                type: string
+          content:
+            text/html: {}
+
+components: {}
