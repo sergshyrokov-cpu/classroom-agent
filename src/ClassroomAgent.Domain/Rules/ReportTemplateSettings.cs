@@ -5,7 +5,7 @@ namespace ClassroomAgent.Domain.Rules;
 /// <summary>
 /// Everything a report template is (US-027 spec FR-003, entity model §1.2): what both a created template and the
 /// built-in one hand the report builder. <see cref="ScaleRows"/> is empty exactly when the mode is
-/// <see cref="ReportScaleMode.None"/>; <see cref="Marks"/> holds exactly the nine states.
+/// <see cref="ReportScaleMode.None"/>; <see cref="Marks"/> holds exactly the nine states. <see cref="NameSource"/> is the setting "names" (US-042 FR-002).
 /// </summary>
 public sealed record ReportTemplateSettings(
     ReportView View,
@@ -15,4 +15,4 @@ public sealed record ReportTemplateSettings(
     IReadOnlyList<ReportScaleRow> ScaleRows,
     IReadOnlyDictionary<ReportCellState, ReportMark> Marks,
     ReportLateMark LateMark,
-    ReportNameSource NameSource = ReportNameSource.Profile);
+    ReportNameSource NameSource);

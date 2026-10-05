@@ -54,7 +54,8 @@ public sealed class JournalFieldSource(ClassroomAgentDbContext db) : IJournalFie
                 m.FirstSeenAt,
                 m.LastSeenAt,
                 m.OnRoster,
-                m.Participant.FullName,
+                m.Participant.Surname,
+                m.Participant.GivenName,
                 m.Participant.Email))
             .ToListAsync(cancellationToken);
 

@@ -33,7 +33,7 @@ public static partial class ReportTemplateLog
         EventId = 5263,
         EventName = "ReportBuilt",
         Level = LogLevel.Information,
-        Message = "Report of template {Template} for course {CourseId} for {From}..{To} built for account {AppUserId}: {RowCount} rows, {ColumnCount} columns, {TopicCount} topics")]
+        Message = "Report of template {Template} for course {CourseId} for {From}..{To} built for account {AppUserId}: {RowCount} rows, {ColumnCount} columns, {TopicCount} topics, names from {NameSource} chosen by {NameSourceOrigin}")]
     public static partial void Built(
         ILogger logger,
         string template,
@@ -43,7 +43,9 @@ public static partial class ReportTemplateLog
         long appUserId,
         int rowCount,
         int columnCount,
-        int topicCount);
+        int topicCount,
+        string nameSource,
+        string nameSourceOrigin);
 
     [LoggerMessage(
         EventId = 5264,

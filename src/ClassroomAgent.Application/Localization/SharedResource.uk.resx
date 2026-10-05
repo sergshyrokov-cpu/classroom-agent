@@ -274,4 +274,10 @@
   <data name="Report.Empty.NothingPublished" xml:space="preserve"><value>У цьому періоді нічого не опубліковано.</value></data>
   <data name="Report.Empty.NoStudents" xml:space="preserve"><value>У цьому періоді в курсі немає учнів.</value></data>
   <data name="Report.Teacher.Unnamed" xml:space="preserve"><value>викладач без імені</value></data>
+  <data name="ReportTemplate.Form.Names" xml:space="preserve"><value>Імена</value></data>
+  <data name="ReportTemplate.NameSource.Profile" xml:space="preserve"><value>З профілю Google (прізвище та ім’я)</value></data>
+  <data name="ReportTemplate.NameSource.Email" xml:space="preserve"><value>З електронної пошти (до знака @)</value></data>
+  <data name="ReportTemplate.Validation.NameSourceInvalid" xml:space="preserve"><value>Виберіть, звідки брати імена: з профілю Google або з електронної пошти.</value></data>
+  <data name="Report.NameSwitch.Caption" xml:space="preserve"><value>Імена у звіті</value></data>
+  <data name="Report.Validation.NameSourceMalformed" xml:space="preserve"><value>Невідоме джерело імен в адресі сторінки.</value></data>
 </root>

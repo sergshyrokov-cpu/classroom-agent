@@ -1,5 +1,6 @@
 @using System.Text.Json
 @using ClassroomAgent.Application.Models.Dtos
+@using ClassroomAgent.Application.Validation
 @using ClassroomAgent.Domain.Enums
 @model ReportTemplateFormPageModel
 @{
@@ -66,6 +67,18 @@
         <label for="template-hours">@T[ReportTemplateTextKeys.FormHours]</label>
         <input id="template-hours" type="text" inputmode="numeric" name="hoursPerLesson" value="@values.HoursPerLesson" />
     </p>
+
+    @* US-042 FR-002, openapi ReportTemplateForm.names: a radio group, the stored or default value checked; after a
+       rejected value neither is checked (api-design §2.3). *@
+    <fieldset id="template-names">
+        <legend>@T[ReportTemplateTextKeys.FormNames]</legend>
+        <p>
+            <label><input type="radio" name="@NameSourceCode.FieldName" value="@NameSourceCode.Profile" checked="@(values.Names == NameSourceCode.Profile)" /> @T[ReportTemplateTextKeys.NameSourceProfile]</label>
+        </p>
+        <p>
+            <label><input type="radio" name="@NameSourceCode.FieldName" value="@NameSourceCode.Email" checked="@(values.Names == NameSourceCode.Email)" /> @T[ReportTemplateTextKeys.NameSourceEmail]</label>
+        </p>
+    </fieldset>
 
     @* Spec FR-015: with "no conversion" the rows below are ignored by the server; the script only hides them. *@
     <fieldset id="scale-section" data-preset="@preset">

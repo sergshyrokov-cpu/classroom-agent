@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace ClassroomAgent.Infrastructure.Persistence.Configurations;
 
 /// <summary>
-/// Table <c>report_template</c> exactly as US-027 db-design §2.1 defines it: school-own data with a bare
+/// Table <c>report_template</c> exactly as US-027 db-design §2.1 defines it, plus <c>name_source</c> (US-042 db-design §3): school-own data with a bare
 /// <c>author_id</c> (no foreign key, no index, PC-11) and a unique normalized name. Enums are stored as lower-case
 /// codes through explicit value converters.
 /// </summary>
@@ -27,6 +27,7 @@ public sealed class ReportTemplateConfiguration : IEntityTypeConfiguration<Repor
             table.HasCheckConstraint(
                 "ck_report_template_late_mark_text",
                 "(late_mark_kind = 'own') = (late_mark_text IS NOT NULL)");
+            table.HasCheckConstraint("ck_report_template_name_source", "name_source IN ('profile', 'email')");
         });
 
         builder.HasKey(t => t.Id).HasName("pk_report_template");
@@ -48,6 +49,10 @@ public sealed class ReportTemplateConfiguration : IEntityTypeConfiguration<Repor
             .IsRequired()
             .HasConversion(v => LateKindCode(v), code => LateKindFromCode(code));
         builder.Property(t => t.LateMarkText).HasMaxLength(ReportTemplate.MaxMarkTextLength);
+        builder.Property(t => t.NameSource)
+            .HasMaxLength(8)
+            .IsRequired()
+            .HasConversion(v => NameSourceCode(v), code => NameSourceFromCode(code));
 
         // A bare identifier: no navigation, no foreign key, no index (db-design §2.1).
         builder.Property(t => t.AuthorId).IsRequired();
@@ -109,6 +114,20 @@ public sealed class ReportTemplateConfiguration : IEntityTypeConfiguration<Repor
         ReportLateMarkKind.Own => "own",
         ReportLateMarkKind.Hidden => "hidden",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
+    };
+
+    private static string NameSourceCode(ReportNameSource value) => value switch
+    {
+        ReportNameSource.Profile => "profile",
+        ReportNameSource.Email => "email",
+        _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
+    };
+
+    private static ReportNameSource NameSourceFromCode(string code) => code switch
+    {
+        "profile" => ReportNameSource.Profile,
+        "email" => ReportNameSource.Email,
+        _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 
     private static ReportLateMarkKind LateKindFromCode(string code) => code switch

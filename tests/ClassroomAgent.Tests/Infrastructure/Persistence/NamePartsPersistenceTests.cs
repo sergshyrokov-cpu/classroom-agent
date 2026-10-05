@@ -20,11 +20,14 @@ public sealed class NamePartsPersistenceTests(PostgreSqlFixture database)
     /// <summary>The last US-027 migration — the schema every existing installation has before this Story.</summary>
     private const string BeforeThisStory = "20261004202609_ReportTemplates";
 
-    private static ClassroomAgentDbContext Context(string connectionString) =>
-        new(new DbContextOptionsBuilder<ClassroomAgentDbContext>()
-            .UseNpgsql(connectionString)
-            .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)) // as InstallationTestHost migrates
-            .Options);
+    /// <summary>The production options (snake_case naming, PC-5), as the other persistence tests build them.</summary>
+    private static ClassroomAgentDbContext Context(string connectionString)
+    {
+        var builder = new DbContextOptionsBuilder<ClassroomAgentDbContext>();
+        ClassroomAgentDbContextOptions.Configure(builder, connectionString);
+        builder.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)); // as InstallationTestHost migrates
+        return new ClassroomAgentDbContext(builder.Options);
+    }
 
     /// <summary>Db-design §4: the Story ships exactly one migration under the designed name, after US-027's.</summary>
     [Fact]

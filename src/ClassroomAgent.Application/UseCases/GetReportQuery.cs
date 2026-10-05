@@ -3,6 +3,7 @@ using ClassroomAgent.Application.Models;
 using ClassroomAgent.Application.Models.Dtos;
 using ClassroomAgent.Application.Models.Requests;
 using ClassroomAgent.Application.Ports;
+using ClassroomAgent.Application.Validation;
 using ClassroomAgent.Domain.Enums;
 using ClassroomAgent.Domain.Rules;
 using static ClassroomAgent.Application.UseCases.JournalCellRule;
@@ -38,7 +39,8 @@ public sealed class GetReportQuery(
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(b, zone).DateTime);
         var monthStart = new DateOnly(today.Year, today.Month, 1);
 
-        // Spec FR-011, API design §3: shape errors in parameter order template, courseId, from, to, pair.
+        // Spec FR-011, API design §3: shape errors in parameter order template, courseId, from, to, pair, then the
+        // name source (US-042 api-design §2.5).
         var messages = new List<ReportMessageKey>();
         var selected = ReportTemplateReference.AcademicJournal;
         long? createdId = null;
@@ -99,6 +101,20 @@ public sealed class GetReportQuery(
             messages.Add(ReportMessageKey.PeriodInverted);
         }
 
+        // US-042 VR-002: absent means the template's setting; empty, repeated or unknown is malformed.
+        ReportNameSource? pageSource = null;
+        if (request.Names is { Count: > 0 } names)
+        {
+            if (NameSourceCode.TryParseSingle(names, out var parsedSource))
+            {
+                pageSource = parsedSource;
+            }
+            else
+            {
+                messages.Add(ReportMessageKey.NameSourceMalformed);
+            }
+        }
+
         // The drop-downs: every stored course and every created template, ordered here with the UI culture's comparer.
         var records = await fields.GetCoursesAsync(cancellationToken);
         var comparer = StringComparer.Create(uiCulture, ignoreCase: false);
@@ -115,7 +131,7 @@ public sealed class GetReportQuery(
             .Select(r => new ReportTemplateOption(ReportTemplateReference.Of(r.Id), false, r.Name)));
         var known = course is { } chosen && records.Any(c => c.Id == chosen) ? course : null;
 
-        ReportPageResult Page(ReportPageOutcome outcome, Report? report = null) =>
+        ReportPageResult Page(ReportPageOutcome outcome, Report? report = null, NameSourceSwitch? nameSwitch = null) =>
             new(
                 outcome,
                 new ReportPageModel(
@@ -127,8 +143,9 @@ public sealed class GetReportQuery(
                     from,
                     to,
                     messages,
-                    ReturnPath(templateValid ? selected : null, course, from, to),
-                    report));
+                    ReturnPath(templateValid ? selected : null, course, from, to, pageSource),
+                    report,
+                    nameSwitch));
 
         if (messages.Count > 0)
         {
@@ -172,6 +189,14 @@ public sealed class GetReportQuery(
             return Page(ReportPageOutcome.NotFound);
         }
 
+        // US-042 FR-004: the page's valid parameter, else the template's setting; once for every person of the report.
+        var nameSource = pageSource ?? settings.NameSource;
+        var origin = pageSource is null ? NameSourceOrigin.Template : NameSourceOrigin.Page;
+        var nameSwitch = new NameSourceSwitch(
+            new[] { ReportNameSource.Profile, ReportNameSource.Email }
+                .Select(s => new NameSourceSwitchOption(s, s == nameSource, ReturnPath(selected, courseId, from, to, s)))
+                .ToList());
+
         var courseRecord = records.Single(c => c.Id == courseId);
         var start = StartOfDay(from!.Value, zone);
         var end = StartOfDay(to!.Value.AddDays(1), zone);
@@ -182,11 +207,11 @@ public sealed class GetReportQuery(
         var view = settings.View;
         var teachers = members
             .Where(m => m.Role == ClassroomRole.Teacher && IsOfPeriod(m.FirstSeenAt, m.LastSeenAt, m.OnRoster, start, end))
-            .Select(m => (Member: m, Label: Label(m.FullName, m.Email)))
-            .OrderBy(r => r.Label.Kind == JournalNameKind.Unnamed)
+            .Select(m => (Member: m, Label: ReportPersonNameRule.Label(m.Surname, m.GivenName, m.Email, nameSource)))
+            .OrderBy(r => r.Label.Kind == ReportNameKind.Unnamed)
             .ThenBy(r => r.Label.Name, comparer)
             .ThenBy(r => r.Member.ParticipantId)
-            .Select(r => new PersonName(r.Label.Name, SkeletonKind(r.Label.Kind)))
+            .Select(r => new PersonName(r.Label.Name, r.Label.Kind))
             .ToList();
         var header = new ReportHeader(
             templateName is null,
@@ -201,7 +226,8 @@ public sealed class GetReportQuery(
         {
             return Page(
                 ReportPageOutcome.Shown,
-                new Report(header, view, ReportEmptyStateKey.NothingPublished, null, null));
+                new Report(header, view, ReportEmptyStateKey.NothingPublished, null, null, nameSource, origin),
+                nameSwitch);
         }
 
         // Spec FR-005.1, FR-005.3: date, then title in the UI collation, then id.
@@ -241,12 +267,12 @@ public sealed class GetReportQuery(
         var rows = members
             .Where(m => m.Role == ClassroomRole.Student
                 && (IsOfPeriod(m.FirstSeenAt, m.LastSeenAt, m.OnRoster, start, end) || submitters.Contains(m.ParticipantId)))
-            .Select(m => (Member: m, Label: Label(m.FullName, m.Email)))
-            .OrderBy(r => r.Label.Kind == JournalNameKind.Unnamed)
+            .Select(m => (Member: m, Label: ReportPersonNameRule.Label(m.Surname, m.GivenName, m.Email, nameSource)))
+            .OrderBy(r => r.Label.Kind == ReportNameKind.Unnamed)
             .ThenBy(r => r.Label.Name, comparer)
             .ThenBy(r => r.Member.ParticipantId)
             .Select(r => new GradingRow(
-                new PersonName(r.Label.Name, SkeletonKind(r.Label.Kind)),
+                new PersonName(r.Label.Name, r.Label.Kind),
                 columns
                     .Select(l => ToReportCell(
                         Cell(
@@ -262,7 +288,8 @@ public sealed class GetReportQuery(
 
         return Page(
             ReportPageOutcome.Shown,
-            new Report(header, view, null, new GradingPart(gradingColumns, rows), topics));
+            new Report(header, view, null, new GradingPart(gradingColumns, rows), topics, nameSource, origin),
+            nameSwitch);
     }
 
     /// <summary>BR-052: a material resource is a material; else no maximum is ungraded; else graded.</summary>
@@ -357,18 +384,10 @@ public sealed class GetReportQuery(
     }
 
     /// <summary>
-    /// US-042 skeleton (OD-001): carries the US-027 label kind into the report's own <see cref="ReportNameKind"/> so the
-    /// changed DTO compiles with today's behaviour. IMPLEMENTATION replaces it with the spec FR-003 rule.
+    /// Spec FR-011: the return path of the language switcher, from validated values only; it carries the name source
+    /// only when the address carried a valid one (US-042 api-design §2.4). The switch's links use it too (§2.2).
     /// </summary>
-    private static ReportNameKind SkeletonKind(JournalNameKind kind) => kind switch
-    {
-        JournalNameKind.FullName => ReportNameKind.Profile,
-        JournalNameKind.Email => ReportNameKind.EmailLocalPart,
-        _ => ReportNameKind.Unnamed,
-    };
-
-    /// <summary>Spec FR-011: the return path of the language switcher, from validated values only.</summary>
-    private static string ReturnPath(string? template, long? course, DateOnly? from, DateOnly? to)
+    private static string ReturnPath(string? template, long? course, DateOnly? from, DateOnly? to, ReportNameSource? names)
     {
         var parts = new List<string>();
         if (template is not null)
@@ -389,6 +408,11 @@ public sealed class GetReportQuery(
         if (to is { } t)
         {
             parts.Add("to=" + FormatDate(t));
+        }
+
+        if (names is { } source)
+        {
+            parts.Add(NameSourceCode.FieldName + "=" + NameSourceCode.Of(source));
         }
 
         return parts.Count == 0 ? "/reports" : "/reports?" + string.Join('&', parts);

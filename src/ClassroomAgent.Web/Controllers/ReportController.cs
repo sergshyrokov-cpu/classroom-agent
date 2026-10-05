@@ -4,6 +4,7 @@ using ClassroomAgent.Application.Authorization;
 using ClassroomAgent.Application.Models;
 using ClassroomAgent.Application.Models.Requests;
 using ClassroomAgent.Application.UseCases;
+using ClassroomAgent.Application.Validation;
 using ClassroomAgent.Web.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,8 +16,8 @@ namespace ClassroomAgent.Web.Controllers;
 /// FR-011, FR-012): its own policy for the §2 row "Использование шаблонов отчётов", Admin and Dean.
 /// </summary>
 /// <remarks>
-/// HTTP mapping only (AD-3), the pattern of <see cref="JournalController"/>: every occurrence of the four query
-/// parameters is handed to the query, which decides "exactly one value". A refused query answers <c>400</c> or
+/// HTTP mapping only (AD-3), the pattern of <see cref="JournalController"/>: every occurrence of the five query
+/// parameters (US-042 adds <c>names</c>) is handed to the query, which decides "exactly one value". A refused query answers <c>400</c> or
 /// <c>404</c> with this same page — the form and the messages — never the host's error page (api-design §2.5).
 /// Unknown parameters are not bound and so never echoed. Nothing is written and nothing is guarded: viewing is
 /// permitted in read-only mode (spec FR-013).
@@ -39,7 +40,8 @@ public sealed class ReportController(GetReportQuery report, ILogger<ReportContro
             Request.Query[TemplateParameter].ToArray(),
             Request.Query[CourseIdParameter].ToArray(),
             Request.Query[FromParameter].ToArray(),
-            Request.Query[ToParameter].ToArray());
+            Request.Query[ToParameter].ToArray(),
+            Request.Query[NameSourceCode.FieldName].ToArray());
 
         var result = await report.ExecuteAsync(request, CultureInfo.CurrentUICulture, cancellationToken);
         var page = result.Page;
@@ -64,7 +66,9 @@ public sealed class ReportController(GetReportQuery report, ILogger<ReportContro
                     ActorId(),
                     built.Grading?.Rows.Count ?? 0,
                     built.Grading?.Columns.Count ?? 0,
-                    built.LessonTopics?.Rows.Count ?? 0);
+                    built.LessonTopics?.Rows.Count ?? 0,
+                    NameSourceCode.Of(built.NameSource),
+                    built.NameSourceOrigin.ToString());
                 break;
         }
 

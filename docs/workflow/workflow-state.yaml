@@ -4,29 +4,23 @@
 version: 1
 story: US-042
 workflow: story-delivery
-current_stage: IMPLEMENTATION
-previous_stage: TEST_WRITING
-last_completed_stage: TEST_WRITING
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: test-writer
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: TEST_WRITING
-  recorded_at: 2026-10-05T12:49:19Z
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_PR_APPROVAL
+  recorded_at: 2026-10-05T13:29:23Z
 last_artifacts:
-  - type: test_strategy
-    path: docs/tests/US-042-test-strategy.md
+  - type: implementation_report
+    path: docs/evidence/US-042-implementation-report.md
     version: 1
-  - type: ac_test_matrix
-    path: docs/tests/US-042-ac-test-matrix.md
+  - type: security_review
+    path: docs/reviews/security/US-042-security-review.md
     version: 1
-  - type: test_generation_report
-    path: docs/evidence/US-042-test-generation-report.md
-    version: 1
-  - type: open_decisions
-    path: docs/decisions/US-042-open-decisions.md
-    version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
@@ -37,6 +31,11 @@ non_blocking_findings:
   - "DB D-5: existing templates get `profile` via the migration default, then the default is dropped (no lasting DB default)."
   - "DB §3.2: report member record drops FullName for Surname/GivenName; US-025 JournalMemberRecord unchanged."
   - "TEST: OD-001 compile-only skeleton (Owner, a); 115 red as expected, 14 green by design; binding notes for IMPLEMENTATION in the test-generation report §2."
+  - "IMPL D-1..D-3: three test defects fixed on the Owner's ruling 2026-10-05 (migration count 12; persistence test context options; uk-UA collation puts Cyrillic before Latin)."
+  - "IMPL: suite 3597/3597 green; NFR-070 switch layout at phone width not automated — check at HUMAN_PR_APPROVAL."
+  - "SEC INFO-1: email local part shown as a name only where the email already is; re-check exports at US-028."
+  - "SEC INFO-2: ToSettings throws on a null NameSource — unreachable after Validate; no change."
+  - "SEC INFO-3: NFR-070 phone-width layout of the switch is a manual check at HUMAN_PR_APPROVAL."
 started_at: 2026-10-05T11:11:02Z
-updated_at: 2026-10-05T12:49:19Z
-completed_at: null
+updated_at: 2026-10-05T13:29:23Z
+completed_at: 2026-10-05T13:29:23Z

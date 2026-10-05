@@ -25,6 +25,8 @@ public sealed class ClassroomParticipantConfiguration : IEntityTypeConfiguration
         builder.Property(p => p.GoogleUserId).HasMaxLength(ClassroomParticipant.MaxGoogleUserIdLength).IsRequired();
         builder.Property(p => p.Email).HasMaxLength(ClassroomParticipant.MaxEmailLength);
         builder.Property(p => p.FullName).HasMaxLength(ClassroomParticipant.MaxFullNameLength);
+        builder.Property(p => p.Surname).HasMaxLength(ClassroomParticipant.MaxSurnameLength);
+        builder.Property(p => p.GivenName).HasMaxLength(ClassroomParticipant.MaxGivenNameLength);
         builder.Property(p => p.CreatedAt).IsRequired();
         builder.Property(p => p.UpdatedAt).IsRequired();
 

@@ -424,7 +424,12 @@ public sealed partial class GoogleClassroomReader : IClassroomReader
     /// the address absent, never discarded and never given a placeholder — the prototype substituted one.
     /// </summary>
     private static RosterEntry Entry(string? userId, GoogleUserProfile? profile) =>
-        new(userId ?? profile?.Id ?? string.Empty, profile?.EmailAddress, profile?.Name?.FullName);
+        new(
+            userId ?? profile?.Id ?? string.Empty,
+            profile?.EmailAddress,
+            profile?.Name?.FullName,
+            profile?.Name?.FamilyName,
+            profile?.Name?.GivenName);
 
     private ClassroomService CreateService(string impersonationUser, string[] scopes)
     {

@@ -193,9 +193,10 @@ public sealed class ReportPersonNameTests
         Assert.Equal(
             new[]
             {
-                new PersonName("aa.teacher", ReportNameKind.EmailLocalPart),
+                // The Ukrainian collation (spec FR-006) puts Cyrillic before Latin.
                 new PersonName("Бондар", ReportNameKind.Profile),
                 new PersonName("Шевчук Марія", ReportNameKind.Profile),
+                new PersonName("aa.teacher", ReportNameKind.EmailLocalPart),
                 new PersonName(null, ReportNameKind.Unnamed),
             },
             report.Header.Teachers);

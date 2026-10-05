@@ -1,5 +1,6 @@
 using System.Globalization;
 using ClassroomAgent.Application.Models.Dtos;
+using ClassroomAgent.Application.Validation;
 using ClassroomAgent.Domain.Enums;
 using ClassroomAgent.Domain.Rules;
 
@@ -8,7 +9,7 @@ namespace ClassroomAgent.Application.UseCases;
 /// <summary>Template settings to the values a form shows, and the pages built from them (US-027 spec FR-007, FR-008).</summary>
 internal static class ReportTemplateFormMapper
 {
-    /// <summary>FR-007: full view, materials shown, no conversion, 2 hours, every mark the program's.</summary>
+    /// <summary>FR-007: full view, materials shown, no conversion, 2 hours, every mark the program's; names from the profile (US-042 I-2).</summary>
     public static ReportTemplateFormValues Defaults() => new(
         string.Empty,
         "full",
@@ -17,7 +18,8 @@ internal static class ReportTemplateFormMapper
         "2",
         [],
         Enum.GetValues<ReportCellState>().ToDictionary(s => s, _ => new ReportTemplateMarkValues("program", null)),
-        new ReportTemplateMarkValues("program", null));
+        new ReportTemplateMarkValues("program", null),
+        NameSourceCode.Profile);
 
     public static ReportTemplateFormValues FromSettings(string name, ReportTemplateSettings settings) => new(
         name,
@@ -53,7 +55,8 @@ internal static class ReportTemplateFormMapper
                 ReportLateMarkKind.Hidden => "hidden",
                 _ => "program",
             },
-            settings.LateMark.Kind == ReportLateMarkKind.Own ? settings.LateMark.Text : null));
+            settings.LateMark.Kind == ReportLateMarkKind.Own ? settings.LateMark.Text : null),
+        NameSourceCode.Of(settings.NameSource));
 
     public static ReportTemplateFormPageModel Page(
         ReportTemplateFormMode mode,

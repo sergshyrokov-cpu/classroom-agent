@@ -23,5 +23,6 @@ public static class BuiltInReportTemplates
             state => state == ReportCellState.NotAssigned
                 ? new ReportMark(ReportMarkKind.Own, NotAssignedText)
                 : new ReportMark(ReportMarkKind.Empty, null)),
-        new ReportLateMark(ReportLateMarkKind.Hidden, null));
+        new ReportLateMark(ReportLateMarkKind.Hidden, null),
+        ReportNameSource.Profile);
 }

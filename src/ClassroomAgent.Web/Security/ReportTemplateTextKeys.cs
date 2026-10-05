@@ -1,4 +1,5 @@
 using ClassroomAgent.Application.Models.Dtos;
+using ClassroomAgent.Domain.Enums;
 
 namespace ClassroomAgent.Web.Security;
 
@@ -92,6 +93,13 @@ public static class ReportTemplateTextKeys
 
     public const string FormLateHidden = "ReportTemplate.Form.LateHidden";
 
+    /// <summary>US-042 FR-010: the setting "names" and its two values, on the form and on the report's switch.</summary>
+    public const string FormNames = "ReportTemplate.Form.Names";
+
+    public const string NameSourceProfile = "ReportTemplate.NameSource.Profile";
+
+    public const string NameSourceEmail = "ReportTemplate.NameSource.Email";
+
     public const string FormSave = "ReportTemplate.Form.Save";
 
     public const string FormCancel = "ReportTemplate.Form.Cancel";
@@ -133,6 +141,12 @@ public static class ReportTemplateTextKeys
 
     public const string TeacherUnnamed = "Report.Teacher.Unnamed";
 
+    /// <summary>US-042 FR-010: the caption of the report page's name-source switch.</summary>
+    public const string ReportNameSwitch = "Report.NameSwitch.Caption";
+
+    public static string NameSource(ReportNameSource source) =>
+        source == ReportNameSource.Email ? NameSourceEmail : NameSourceProfile;
+
     public static string Validation(ReportTemplateFieldErrorKey key) => "ReportTemplate.Validation." + key;
 
     public static string Reference(ReportTemplateReferenceMessageKey key) => "ReportTemplate.Reference." + key;
@@ -141,11 +155,15 @@ public static class ReportTemplateTextKeys
 
     public static string Empty(ReportEmptyStateKey key) => "Report.Empty." + key;
 
-    /// <summary>Api-design §2.9: the template messages are this Story's, the course and period messages are US-025's.</summary>
+    /// <summary>
+    /// Api-design §2.9: the template messages are this Story's, the course and period messages are US-025's; the
+    /// name-source message is US-042's.
+    /// </summary>
     public static string Message(ReportMessageKey key) => key switch
     {
         ReportMessageKey.TemplateMalformed => Reference(ReportTemplateReferenceMessageKey.TemplateMalformed),
         ReportMessageKey.TemplateNotFound => Reference(ReportTemplateReferenceMessageKey.TemplateNotFound),
+        ReportMessageKey.NameSourceMalformed => "Report.Validation." + key,
         _ => "Journal.Validation." + key,
     };
 

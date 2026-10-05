@@ -43,18 +43,19 @@ public sealed class ClassroomParticipant
     /// <summary>One string (I-2); personal data.</summary>
     public string? FullName { get; private set; }
 
-    /// <summary>US-042 skeleton (OD-001): Google <c>name.familyName</c>; personal data. Completed at IMPLEMENTATION.</summary>
-    public string? Surname => throw new NotImplementedException();
+    /// <summary>Google <c>name.familyName</c> (US-042 FR-001); optional; personal data.</summary>
+    public string? Surname { get; private set; }
 
-    /// <summary>US-042 skeleton (OD-001): Google <c>name.givenName</c>; personal data. Completed at IMPLEMENTATION.</summary>
-    public string? GivenName => throw new NotImplementedException();
+    /// <summary>Google <c>name.givenName</c> (US-042 FR-001); optional; personal data.</summary>
+    public string? GivenName { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
 
-    /// <summary>Creates the row for a person not seen before.</summary>
-    public static ClassroomParticipant Import(string googleUserId, string? email, string? fullName)
+    /// <summary>Creates the row for a person not seen before; the name parts are absent for a submitter-only import.</summary>
+    public static ClassroomParticipant Import(
+        string googleUserId, string? email, string? fullName, string? surname = null, string? givenName = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(googleUserId);
 
@@ -62,21 +63,16 @@ public sealed class ClassroomParticipant
         {
             GoogleUserId = Cut(googleUserId.Trim(), MaxGoogleUserIdLength),
         };
-        participant.Apply(email, fullName);
+        participant.Apply(email, fullName, surname, givenName);
         return participant;
     }
 
-    /// <summary>US-042 skeleton (OD-001): creates the row with the two name parts (entity model §1.2).</summary>
-    public static ClassroomParticipant Import(
-        string googleUserId, string? email, string? fullName, string? surname, string? givenName) =>
-        throw new NotImplementedException();
-
-    /// <summary>US-042 skeleton (OD-001): the upsert's update half, replacing all four values (entity model §1.2).</summary>
+    /// <summary>
+    /// The upsert's update half: all four values are replaced, never merged (US-042 AC-001). Identity is
+    /// <see cref="GoogleUserId"/>, which is untouched.
+    /// </summary>
     public void UpdateFrom(string? email, string? fullName, string? surname, string? givenName) =>
-        throw new NotImplementedException();
-
-    /// <summary>The upsert's update half. Identity is <see cref="GoogleUserId"/>, which is untouched.</summary>
-    public void UpdateFrom(string? email, string? fullName) => Apply(email, fullName);
+        Apply(email, fullName, surname, givenName);
 
     private static string Cut(string value, int maxLength) =>
         value.Length <= maxLength ? value : value[..maxLength];
@@ -84,12 +80,18 @@ public sealed class ClassroomParticipant
     /// <summary>
     /// Trimmed and lower-cased through the one normalisation the system has, so Epic 4's matching by address is
     /// not defeated by case (VR-003). A blank address becomes null, so "no address" has one representation.
+    /// The name parts are normalised exactly as the full name (US-042 VR-003): no case change, no splitting.
     /// </summary>
-    private void Apply(string? email, string? fullName)
+    private void Apply(string? email, string? fullName, string? surname, string? givenName)
     {
         Email = string.IsNullOrWhiteSpace(email)
             ? null
             : Cut(WorkspaceConnection.NormalizeEmail(email), MaxEmailLength);
-        FullName = string.IsNullOrWhiteSpace(fullName) ? null : Cut(fullName.Trim(), MaxFullNameLength);
+        FullName = Name(fullName, MaxFullNameLength);
+        Surname = Name(surname, MaxSurnameLength);
+        GivenName = Name(givenName, MaxGivenNameLength);
     }
+
+    private static string? Name(string? value, int maxLength) =>
+        string.IsNullOrWhiteSpace(value) ? null : Cut(value.Trim(), maxLength);
 }

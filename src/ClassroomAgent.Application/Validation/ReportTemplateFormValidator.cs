@@ -59,6 +59,13 @@ internal static class ReportTemplateFormValidator
             CheckScale(form.ScaleRows, errors);
         }
 
+        // US-042 VR-001: missing, empty, repeated or unknown "names" — the form again with a message.
+        if (form.NameSource is null)
+        {
+            errors.Add(new ReportTemplateFieldError(
+                NameSourceCode.FieldName, ReportTemplateFieldErrorKey.NameSourceInvalid, null));
+        }
+
         return errors;
     }
 
@@ -81,7 +88,8 @@ internal static class ReportTemplateFormValidator
             m => new ReportMark(m.Value.Kind, m.Value.Kind == ReportMarkKind.Own ? m.Value.Text : null)),
         new ReportLateMark(
             form.LateMark.Kind,
-            form.LateMark.Kind == ReportLateMarkKind.Own ? form.LateMark.Text : null));
+            form.LateMark.Kind == ReportLateMarkKind.Own ? form.LateMark.Text : null),
+        form.NameSource ?? throw new InvalidOperationException("The form has a field error."));
 
     private static void CheckText(
         string field,

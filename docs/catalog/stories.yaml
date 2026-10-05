@@ -298,7 +298,7 @@ stories:
   - id: US-042
     epic: EPIC-3
     title: Names of students and teachers in a template report
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: >
       Depends on US-027. trebovaniya.md v86. To be delivered before the export
       Stories (US-028 … US-030).

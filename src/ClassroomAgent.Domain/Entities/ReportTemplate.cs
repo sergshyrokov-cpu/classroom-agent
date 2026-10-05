@@ -59,8 +59,8 @@ public sealed class ReportTemplate
 
     public string? LateMarkText { get; private set; }
 
-    /// <summary>US-042 skeleton (OD-001): the template setting "names" (entity model §1.4). Completed at IMPLEMENTATION.</summary>
-    public ReportNameSource NameSource => throw new NotImplementedException();
+    /// <summary>The template setting "names" (US-042 FR-002, entity model §1.4).</summary>
+    public ReportNameSource NameSource { get; private set; }
 
     public IReadOnlyList<ReportTemplateMark> Marks => marks;
 
@@ -97,7 +97,8 @@ public sealed class ReportTemplate
         ScaleMode,
         scaleRows.OrderBy(r => r.FromPercent).Select(r => new ReportScaleRow(r.FromPercent, r.ToPercent, r.Label)).ToList(),
         marks.ToDictionary(m => m.State, m => new ReportMark(m.Kind, m.Text)),
-        new ReportLateMark(LateMarkKind, LateMarkText));
+        new ReportLateMark(LateMarkKind, LateMarkText),
+        NameSource);
 
     private void Apply(string name, ReportTemplateSettings settings)
     {
@@ -115,6 +116,11 @@ public sealed class ReportTemplate
             throw new ArgumentException("Hours per lesson lie between 1 and 10.", nameof(settings));
         }
 
+        if (!Enum.IsDefined(settings.NameSource))
+        {
+            throw new ArgumentException("The name source is profile or email.", nameof(settings));
+        }
+
         CheckMarks(settings);
         CheckLateMark(settings.LateMark);
         var rows = CheckScale(settings);
@@ -127,6 +133,7 @@ public sealed class ReportTemplate
         ScaleMode = settings.ScaleMode;
         LateMarkKind = settings.LateMark.Kind;
         LateMarkText = settings.LateMark.Text;
+        NameSource = settings.NameSource;
 
         // db-design §2.4: marks are updated in place by state; scale rows are replaced wholesale.
         foreach (var (state, mark) in settings.Marks)

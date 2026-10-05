@@ -32,6 +32,7 @@ internal static partial class ReportTemplateFormReader
         var markFields = new Dictionary<(ReportCellState State, string Member), string>();
         var scaleFields = new Dictionary<(int Index, string Member), string>();
         var stateNames = Enum.GetNames<ReportCellState>();
+        var names = new List<string?>();
 
         // The scale rows are read only with "ranges": with "no conversion" they are ignored (VR-004).
         var ranges = input.Fields.Any(f => f.Key == "scaleMode" && f.Value == "ranges");
@@ -39,7 +40,11 @@ internal static partial class ReportTemplateFormReader
         foreach (var (key, rawValue) in input.Fields)
         {
             var value = rawValue ?? string.Empty;
-            if (SingleFields.Contains(key))
+            if (key == NameSourceCode.FieldName)
+            {
+                names.Add(value);
+            }
+            else if (SingleFields.Contains(key))
             {
                 if (!singles.TryAdd(key, value))
                 {
@@ -91,7 +96,8 @@ internal static partial class ReportTemplateFormReader
             marks,
             new ParsedReportTemplateForm.LateMarkEntry(
                 lateKind,
-                singles.GetValueOrDefault("lateMark.text", string.Empty).Trim()));
+                singles.GetValueOrDefault("lateMark.text", string.Empty).Trim()),
+            NameSourceCode.TryParseSingle(names, out var nameSource) ? nameSource : null);
         return true;
     }
 

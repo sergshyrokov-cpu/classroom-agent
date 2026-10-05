@@ -65,6 +65,26 @@
         <p id="report-teachers">@T[ReportTemplateTextKeys.ReportTeachers]: @TeacherNames(report.Header.Teachers)</p>
     </section>
 
+    @* US-042 FR-005, api-design §2.2: two GET links built in Application from validated values; the effective source is
+       marked and is not a link. Nothing is saved. *@
+    @if (Model.NameSwitch is { } nameSwitch)
+    {
+        <nav id="report-name-switch" aria-label="@T[ReportTemplateTextKeys.ReportNameSwitch]">
+            <span>@T[ReportTemplateTextKeys.ReportNameSwitch]:</span>
+            @foreach (var option in nameSwitch.Options)
+            {
+                if (option.IsCurrent)
+                {
+                    <strong aria-current="true">@T[ReportTemplateTextKeys.NameSource(option.Source)]</strong>
+                }
+                else
+                {
+                    <a href="@option.Path">@T[ReportTemplateTextKeys.NameSource(option.Source)]</a>
+                }
+            }
+        </nav>
+    }
+
     @if (report.EmptyStateKey is { } empty)
     {
         <p id="report-empty">@T[ReportTemplateTextKeys.Empty(empty)]</p>

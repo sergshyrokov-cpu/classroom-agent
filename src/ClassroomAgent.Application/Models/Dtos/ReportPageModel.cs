@@ -1,6 +1,6 @@
 namespace ClassroomAgent.Application.Models.Dtos;
 
-/// <summary>Openapi <c>ReportPageModel</c>.</summary>
+/// <summary>Openapi <c>ReportPageModel</c>; <see cref="NameSwitch"/> is set only with a report (US-042 spec FR-005).</summary>
 public sealed record ReportPageModel(
     IReadOnlyList<ReportTemplateOption> Templates,
     string SelectedTemplate,
@@ -11,8 +11,5 @@ public sealed record ReportPageModel(
     DateOnly? To,
     IReadOnlyList<ReportMessageKey> MessageKeys,
     string ReturnPath,
-    Report? Report)
-{
-    /// <summary>US-042 skeleton (OD-001): the name-source switch; null unless a report is shown (spec FR-005).</summary>
-    public NameSourceSwitch? NameSwitch => throw new NotImplementedException();
-}
+    Report? Report,
+    NameSourceSwitch? NameSwitch);

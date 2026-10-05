@@ -561,11 +561,12 @@ public sealed class RunSynchronizationUseCase(
             if (byGoogleUserId.TryGetValue(entry.GoogleUserId, out var participant))
             {
                 // A person who changed their address or name in Google keeps their row (entity model §3.2).
-                participant.UpdateFrom(entry.Email, entry.FullName);
+                participant.UpdateFrom(entry.Email, entry.FullName, entry.Surname, entry.GivenName);
             }
             else
             {
-                participant = ClassroomParticipant.Import(entry.GoogleUserId, entry.Email, entry.FullName);
+                participant = ClassroomParticipant.Import(
+                    entry.GoogleUserId, entry.Email, entry.FullName, entry.Surname, entry.GivenName);
                 participants.Add(participant);
                 byGoogleUserId[participant.GoogleUserId] = participant;
             }

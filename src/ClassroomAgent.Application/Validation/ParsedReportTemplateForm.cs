@@ -6,7 +6,8 @@ namespace ClassroomAgent.Application.Validation;
 /// <summary>
 /// A posted template form that has the shape of api-design §2.7 (US-027 spec VR-002, VR-003, VR-004): every enumerated
 /// value is a known one, every state is present, no field is repeated. Texts are trimmed but not yet validated; the
-/// numbers are still text, so a refused form can hand back exactly what was entered.
+/// numbers are still text, so a refused form can hand back exactly what was entered. <see cref="NameSource"/> is null
+/// when <c>names</c> failed US-042 VR-001 — a field error, not a shape error (api-design §2.3).
 /// </summary>
 internal sealed record ParsedReportTemplateForm(
     string Name,
@@ -16,7 +17,8 @@ internal sealed record ParsedReportTemplateForm(
     ReportScaleMode ScaleMode,
     IReadOnlyList<ParsedReportTemplateForm.ScaleRowEntry> ScaleRows,
     IReadOnlyDictionary<ReportCellState, ParsedReportTemplateForm.MarkEntry> Marks,
-    ParsedReportTemplateForm.LateMarkEntry LateMark)
+    ParsedReportTemplateForm.LateMarkEntry LateMark,
+    ReportNameSource? NameSource)
 {
     /// <summary>The entered values, for the form of a refusal.</summary>
     public ReportTemplateFormValues ToValues() => new(
@@ -45,7 +47,8 @@ internal sealed record ParsedReportTemplateForm(
                 ReportLateMarkKind.Hidden => "hidden",
                 _ => "program",
             },
-            LateMark.Kind == ReportLateMarkKind.Own ? LateMark.Text : null));
+            LateMark.Kind == ReportLateMarkKind.Own ? LateMark.Text : null),
+        NameSource is { } source ? NameSourceCode.Of(source) : string.Empty);
 
     /// <summary>One submitted scale row; <paramref name="Number"/> is its submitted index plus one.</summary>
     internal sealed record ScaleRowEntry(int Number, string From, string To, string Label);

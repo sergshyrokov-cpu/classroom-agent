@@ -274,4 +274,10 @@
   <data name="Report.Empty.NothingPublished" xml:space="preserve"><value>Nothing was published in this period.</value></data>
   <data name="Report.Empty.NoStudents" xml:space="preserve"><value>No students in this period.</value></data>
   <data name="Report.Teacher.Unnamed" xml:space="preserve"><value>teacher without a name</value></data>
+  <data name="ReportTemplate.Form.Names" xml:space="preserve"><value>Names</value></data>
+  <data name="ReportTemplate.NameSource.Profile" xml:space="preserve"><value>From the Google profile (surname and name)</value></data>
+  <data name="ReportTemplate.NameSource.Email" xml:space="preserve"><value>From the email (before the @ sign)</value></data>
+  <data name="ReportTemplate.Validation.NameSourceInvalid" xml:space="preserve"><value>Choose where the names come from: the Google profile or the email.</value></data>
+  <data name="Report.NameSwitch.Caption" xml:space="preserve"><value>Names in the report</value></data>
+  <data name="Report.Validation.NameSourceMalformed" xml:space="preserve"><value>Unknown name source in the page address.</value></data>
 </root>

@@ -64,7 +64,7 @@ public sealed class FakeJournalFieldSource : IJournalFieldSource
         var id = _nextId++;
         var first = firstSeenAt ?? JournalTestData.Period.StartUtc.AddDays(-30);
         Members.Add((courseId, new JournalCourseMemberRecord(
-            id, role, first, lastSeenAt ?? first, onRoster, FullName: null, Email: email, Surname: surname, GivenName: givenName)));
+            id, role, first, lastSeenAt ?? first, onRoster, Email: email, Surname: surname, GivenName: givenName)));
         return id;
     }
 
