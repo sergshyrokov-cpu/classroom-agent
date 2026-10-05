@@ -6,4 +6,7 @@ namespace ClassroomAgent.Application.Models;
 /// <param name="GoogleUserId">Google's <c>userId</c>; the person's only identity (OD-011).</param>
 /// <param name="Email">The person's address, or null when Classroom did not return one (OD-006).</param>
 /// <param name="FullName">The person's name, as one string (I-2).</param>
-public sealed record RosterEntry(string GoogleUserId, string? Email, string? FullName);
+/// <param name="Surname">Google <c>name.familyName</c> (US-042 FR-001).</param>
+/// <param name="GivenName">Google <c>name.givenName</c> (US-042 FR-001).</param>
+public sealed record RosterEntry(
+    string GoogleUserId, string? Email, string? FullName, string? Surname = null, string? GivenName = null);

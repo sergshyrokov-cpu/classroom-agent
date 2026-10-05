@@ -11,4 +11,8 @@ public sealed record ReportTemplateFormValues(
     string HoursPerLesson,
     IReadOnlyList<ReportTemplateScaleRowValues> Scale,
     IReadOnlyDictionary<ReportCellState, ReportTemplateMarkValues> Marks,
-    ReportTemplateMarkValues LateMark);
+    ReportTemplateMarkValues LateMark)
+{
+    /// <summary>US-042 skeleton (OD-001): the "names" field as entered; empty after a rejected value.</summary>
+    public string Names => throw new NotImplementedException();
+}

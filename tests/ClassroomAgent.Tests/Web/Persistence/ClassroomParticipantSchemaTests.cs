@@ -10,7 +10,7 @@ namespace ClassroomAgent.Tests.Web.Persistence;
 /// </summary>
 public sealed class ClassroomParticipantSchemaTests(PostgreSqlFixture database)
 {
-    /// <summary>db-design §4.1: six columns, with the nullability and bounds the design states.</summary>
+    /// <summary>db-design §4.1 and US-042 db-design §2: eight columns, with the nullability and bounds the designs state.</summary>
     [Fact]
     public async Task TheMigration_CreatesTheTable()
     {
@@ -27,11 +27,13 @@ public sealed class ClassroomParticipantSchemaTests(PostgreSqlFixture database)
             r => (Name: r.GetString(0), Nullable: r.GetString(1), Length: r.IsDBNull(2) ? (int?)null : r.GetInt32(2)),
             ct);
 
-        Assert.Equal(6, columns.Count);
+        Assert.Equal(8, columns.Count); // US-042 db-design §2 adds surname and given_name
         Assert.Contains(columns, c => c.Name == "id" && c.Nullable == "NO");
         Assert.Contains(columns, c => c.Name == "google_user_id" && c.Nullable == "NO" && c.Length == 64);
         Assert.Contains(columns, c => c.Name == "email" && c.Nullable == "YES" && c.Length == 320);
         Assert.Contains(columns, c => c.Name == "full_name" && c.Nullable == "YES" && c.Length == 750);
+        Assert.Contains(columns, c => c.Name == "surname" && c.Nullable == "YES" && c.Length == 750);
+        Assert.Contains(columns, c => c.Name == "given_name" && c.Nullable == "YES" && c.Length == 750);
         Assert.Contains(columns, c => c.Name == "created_at" && c.Nullable == "NO");
         Assert.Contains(columns, c => c.Name == "updated_at" && c.Nullable == "NO");
     }

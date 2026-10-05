@@ -76,30 +76,30 @@ public sealed class ReportContentTests
         Assert.Equal(7m, report.Grading.Rows.Single().Cells[1].Grade!.Points);
     }
 
-    /// <summary>AC-004: rows are the students of the period (BR-051), a leaver who submitted included, teachers never.</summary>
+    /// <summary>AC-004: rows are the students of the period (BR-051), a leaver who submitted included, teachers never. Names per US-042 FR-003.</summary>
     [Fact]
     public async Task Rows_AreTheStudentsOfThePeriod()
     {
         var world = new ReportTemplateWorld();
         var course = world.Fields.AddCourse();
         var lesson = world.Fields.AddLesson(course, Noon(10));
-        world.Fields.AddMember(course, fullName: "Олена Тестова");
-        world.Fields.AddMember(course, fullName: "Андрій Тестовий");
-        world.Fields.AddMember(course, fullName: null, email: null);
-        world.Fields.AddMember(course, ClassroomRole.Teacher, fullName: "Test Teacher One");
+        world.Fields.AddMember(course, surname: "Тестова", givenName: "Олена");
+        world.Fields.AddMember(course, surname: "Тестовий", givenName: "Андрій");
+        world.Fields.AddMember(course, surname: null, givenName: null, email: null);
+        world.Fields.AddMember(course, ClassroomRole.Teacher, surname: "Teacher", givenName: "Test One");
         world.Fields.AddMember(
             course,
-            fullName: "Leaver Without Work",
+            surname: "Leaver", givenName: "Without Work",
             firstSeenAt: JournalTestData.Period.StartUtc.AddDays(-60),
             lastSeenAt: JournalTestData.Period.StartUtc.AddDays(-10),
             onRoster: false);
         var submitter = world.Fields.AddMember(
             course,
-            fullName: "Leaver With Work",
+            surname: "Leaver", givenName: "With Work",
             firstSeenAt: JournalTestData.Period.StartUtc.AddDays(-60),
             lastSeenAt: JournalTestData.Period.StartUtc.AddDays(-10),
             onRoster: false);
-        world.Fields.AddMember(course, fullName: "Joined Later", firstSeenAt: JournalTestData.Period.EndUtc.AddDays(2));
+        world.Fields.AddMember(course, surname: "Joined", givenName: "Later", firstSeenAt: JournalTestData.Period.EndUtc.AddDays(2));
         world.Fields.AddSubmission(lesson, submitter);
 
         var report = await ReportAsync(world, course);
@@ -107,13 +107,13 @@ public sealed class ReportContentTests
         Assert.Equal(
             new[]
             {
-                new PersonName("Андрій Тестовий", JournalNameKind.FullName),
-                new PersonName("Leaver With Work", JournalNameKind.FullName),
-                new PersonName("Олена Тестова", JournalNameKind.FullName),
-                new PersonName(null, JournalNameKind.Unnamed),
+                new PersonName("Тестовий Андрій", ReportNameKind.Profile),
+                new PersonName("Leaver With Work", ReportNameKind.Profile),
+                new PersonName("Тестова Олена", ReportNameKind.Profile),
+                new PersonName(null, ReportNameKind.Unnamed),
             }.Select(p => p.DisplayName).OrderBy(n => n is null).ThenBy(n => n, StringComparer.Create(Uk, false)),
             report.Grading!.Rows.Select(r => r.Student.DisplayName));
-        Assert.Equal(JournalNameKind.Unnamed, report.Grading.Rows[^1].Student.NameKind);
+        Assert.Equal(ReportNameKind.Unnamed, report.Grading.Rows[^1].Student.NameKind);
         Assert.Null(report.Grading.Rows[^1].Student.DisplayName);
         Assert.All(report.Grading.Rows, r => Assert.Single(r.Cells));
     }
@@ -125,13 +125,13 @@ public sealed class ReportContentTests
         var world = new ReportTemplateWorld();
         var course = world.Fields.AddCourse("Test Course One", "Test Section A");
         world.Fields.AddLesson(course, Noon(10));
-        world.Fields.AddMember(course, ClassroomRole.Teacher, fullName: "Test Teacher Zed");
-        world.Fields.AddMember(course, ClassroomRole.Teacher, fullName: "Test Teacher Alpha");
-        world.Fields.AddMember(course, ClassroomRole.Teacher, fullName: null, email: null);
+        world.Fields.AddMember(course, ClassroomRole.Teacher, surname: "Zed", givenName: "Test Teacher");
+        world.Fields.AddMember(course, ClassroomRole.Teacher, surname: "Alpha", givenName: "Test Teacher");
+        world.Fields.AddMember(course, ClassroomRole.Teacher, surname: null, givenName: null, email: null);
         world.Fields.AddMember(
             course,
             ClassroomRole.Teacher,
-            fullName: "Test Teacher Gone",
+            surname: "Gone", givenName: "Test Teacher",
             firstSeenAt: JournalTestData.Period.StartUtc.AddDays(-60),
             lastSeenAt: JournalTestData.Period.StartUtc.AddDays(-10),
             onRoster: false);
@@ -147,9 +147,9 @@ public sealed class ReportContentTests
         Assert.Equal(
             new[]
             {
-                new PersonName("Test Teacher Alpha", JournalNameKind.FullName),
-                new PersonName("Test Teacher Zed", JournalNameKind.FullName),
-                new PersonName(null, JournalNameKind.Unnamed),
+                new PersonName("Alpha Test Teacher", ReportNameKind.Profile),
+                new PersonName("Zed Test Teacher", ReportNameKind.Profile),
+                new PersonName(null, ReportNameKind.Unnamed),
             },
             report.Header.Teachers);
     }

@@ -19,6 +19,15 @@ public sealed class ReportTemplateSchemaTests(PostgreSqlFixture database)
         RETURNING id
         """;
 
+    /// <summary>The same root once US-042 adds the non-null <c>name_source</c> (db-design §3), which has no default.</summary>
+    private const string InsertRootWithNameSource =
+        """
+        INSERT INTO report_template (name, normalized_name, view, hide_materials, hours_per_lesson, scale_mode,
+                                     late_mark_kind, late_mark_text, author_id, created_at, updated_at, name_source)
+        VALUES (@name, @normalized, @view, @hide, @hours, @mode, @lateKind, @lateText, 1, @stamp, @stamp, 'profile')
+        RETURNING id
+        """;
+
     private const string InsertMark =
         """
         INSERT INTO report_template_mark (report_template_id, state, kind, text, created_at, updated_at)
@@ -53,6 +62,7 @@ public sealed class ReportTemplateSchemaTests(PostgreSqlFixture database)
         "report_template|author_id|bigint||NO",
         "report_template|created_at|timestamp with time zone||NO",
         "report_template|updated_at|timestamp with time zone||NO",
+        "report_template|name_source|character varying|8|NO", // US-042 db-design §3
         "report_template_mark|id|bigint||NO",
         "report_template_mark|report_template_id|bigint||NO",
         "report_template_mark|state|character varying|32|NO",
@@ -271,9 +281,9 @@ public sealed class ReportTemplateSchemaTests(PostgreSqlFixture database)
     private static object? Value(IReadOnlyDictionary<string, object?> values, string column, object? fallback) =>
         values.TryGetValue(column, out var value) ? value : fallback;
 
-    private static Task<long> InsertRootAsync(InstallationTestHost host, CancellationToken ct, IReadOnlyDictionary<string, object?> values) =>
-        host.ScalarAsync<long>(
-            InsertRoot,
+    private static async Task<long> InsertRootAsync(InstallationTestHost host, CancellationToken ct, IReadOnlyDictionary<string, object?> values) =>
+        await host.ScalarAsync<long>(
+            await host.ColumnExistsAsync("report_template", "name_source", ct) ? InsertRootWithNameSource : InsertRoot,
             ct,
             ("name", "Test Name"),
             ("normalized", "TEST NAME"),

@@ -53,19 +53,33 @@ public static class CourseRows
         CancellationToken cancellationToken,
         string? googleUserId = null,
         string? email = null,
-        string? fullName = null)
+        string? fullName = null,
+        string? surname = null,
+        string? givenName = null)
     {
         var stamp = host.Time.GetUtcNow();
+
+        // US-042 db-design §2: surname and given_name are written only when a test gives them, so every older test keeps
+        // inserting the US-014 row shape.
+        var withParts = surname is not null || givenName is not null;
         var id = await host.ScalarAsync<long>(
-            """
-            INSERT INTO classroom_participant (google_user_id, email, full_name, created_at, updated_at)
-            VALUES (@googleUserId, @email, @fullName, @stamp, @stamp)
-            RETURNING id
-            """,
+            withParts
+                ? """
+                  INSERT INTO classroom_participant (google_user_id, email, full_name, surname, given_name, created_at, updated_at)
+                  VALUES (@googleUserId, @email, @fullName, @surname, @givenName, @stamp, @stamp)
+                  RETURNING id
+                  """
+                : """
+                  INSERT INTO classroom_participant (google_user_id, email, full_name, created_at, updated_at)
+                  VALUES (@googleUserId, @email, @fullName, @stamp, @stamp)
+                  RETURNING id
+                  """,
             cancellationToken,
             ("googleUserId", googleUserId ?? CourseTestData.UserId(1)),
             ("email", email),
             ("fullName", fullName),
+            ("surname", surname),
+            ("givenName", givenName),
             ("stamp", stamp));
         return id;
     }

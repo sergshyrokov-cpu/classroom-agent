@@ -10,4 +10,6 @@ public sealed record JournalCourseMemberRecord(
     DateTimeOffset LastSeenAt,
     bool OnRoster,
     string? FullName,
-    string? Email);
+    string? Email,
+    string? Surname = null,
+    string? GivenName = null);

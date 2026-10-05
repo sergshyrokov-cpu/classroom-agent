@@ -16,7 +16,10 @@ public sealed class ReportTemplateFormBuilder
     {
     }
 
-    /// <summary>A valid form: the given name, full view, materials shown, no conversion, 2 hours, every mark program.</summary>
+    /// <summary>
+    /// A valid form: the given name, full view, materials shown, no conversion, 2 hours, every mark program, names from
+    /// the profile (US-042 VR-001 — the form always sends one of the two).
+    /// </summary>
     public static ReportTemplateFormBuilder Valid(string name = "Test Template One")
     {
         var form = new ReportTemplateFormBuilder()
@@ -30,7 +33,8 @@ public sealed class ReportTemplateFormBuilder
             form.Set($"marks[{state}].kind", "program").Set($"marks[{state}].text", string.Empty);
         }
 
-        return form.Set("lateMark.kind", "program").Set("lateMark.text", string.Empty);
+        return form.Set("lateMark.kind", "program").Set("lateMark.text", string.Empty)
+            .Set(ReportTemplateTestData.NamesField, "profile");
     }
 
     /// <summary>Replaces the value of a field (every occurrence), or appends it when absent.</summary>

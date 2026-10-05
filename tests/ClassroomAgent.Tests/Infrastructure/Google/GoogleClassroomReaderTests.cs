@@ -182,6 +182,57 @@ public sealed class GoogleClassroomReaderTests
         Assert.Null(student.Email);
     }
 
+    /// <summary>
+    /// US-042 FR-001, AC-001: the profile's <c>familyName</c> and <c>givenName</c> are carried through as the surname and
+    /// given name next to the full name; a profile with only a full name leaves both absent.
+    /// </summary>
+    [Fact]
+    public async Task AProfileName_IsCarriedThroughAsSurnameAndGivenName()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var transport = ScriptedHttpHandler.Sequence(
+            _ => TokenIssued(),
+            _ => ScriptedHttpHandler.JsonResponse(HttpStatusCode.OK, """{"teachers":[]}"""),
+            _ => ScriptedHttpHandler.JsonResponse(
+                HttpStatusCode.OK,
+                JsonSerializer.Serialize(new
+                {
+                    students = new object[]
+                    {
+                        new
+                        {
+                            userId = CourseTestData.UserId(1),
+                            profile = new
+                            {
+                                id = CourseTestData.UserId(1),
+                                name = new { fullName = "Olena Testova", familyName = "Тестова", givenName = "Олена" },
+                            },
+                        },
+                        new
+                        {
+                            userId = CourseTestData.UserId(2),
+                            profile = new
+                            {
+                                id = CourseTestData.UserId(2),
+                                name = new { fullName = "X" },
+                            },
+                        },
+                    },
+                })));
+        var reader = ReaderWith(transport);
+
+        var roster = await reader.ReadRosterAsync(TechnicalAccount, CourseTestData.CourseId(1), ct);
+
+        var named = roster.Students.Single(s => s.GoogleUserId == CourseTestData.UserId(1));
+        Assert.Equal("Тестова", named.Surname);
+        Assert.Equal("Олена", named.GivenName);
+        Assert.Equal("Olena Testova", named.FullName);
+        var fullNameOnly = roster.Students.Single(s => s.GoogleUserId == CourseTestData.UserId(2));
+        Assert.Null(fullNameOnly.Surname);
+        Assert.Null(fullNameOnly.GivenName);
+        Assert.Equal("X", fullNameOnly.FullName);
+    }
+
     /// <summary>SC-13: every request this adapter makes goes to Google and nowhere else.</summary>
     [Fact]
     public async Task EveryRequest_GoesToGoogle()

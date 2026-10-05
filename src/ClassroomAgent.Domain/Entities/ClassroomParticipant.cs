@@ -21,6 +21,12 @@ public sealed class ClassroomParticipant
     /// <summary>db-design §4.1: Classroom's bound on a person's name.</summary>
     public const int MaxFullNameLength = 750;
 
+    /// <summary>US-042 db-design D-2.</summary>
+    public const int MaxSurnameLength = 750;
+
+    /// <summary>US-042 db-design D-2.</summary>
+    public const int MaxGivenNameLength = 750;
+
     private ClassroomParticipant()
     {
         GoogleUserId = string.Empty;
@@ -36,6 +42,12 @@ public sealed class ClassroomParticipant
 
     /// <summary>One string (I-2); personal data.</summary>
     public string? FullName { get; private set; }
+
+    /// <summary>US-042 skeleton (OD-001): Google <c>name.familyName</c>; personal data. Completed at IMPLEMENTATION.</summary>
+    public string? Surname => throw new NotImplementedException();
+
+    /// <summary>US-042 skeleton (OD-001): Google <c>name.givenName</c>; personal data. Completed at IMPLEMENTATION.</summary>
+    public string? GivenName => throw new NotImplementedException();
 
     public DateTimeOffset CreatedAt { get; private set; }
 
@@ -53,6 +65,15 @@ public sealed class ClassroomParticipant
         participant.Apply(email, fullName);
         return participant;
     }
+
+    /// <summary>US-042 skeleton (OD-001): creates the row with the two name parts (entity model §1.2).</summary>
+    public static ClassroomParticipant Import(
+        string googleUserId, string? email, string? fullName, string? surname, string? givenName) =>
+        throw new NotImplementedException();
+
+    /// <summary>US-042 skeleton (OD-001): the upsert's update half, replacing all four values (entity model §1.2).</summary>
+    public void UpdateFrom(string? email, string? fullName, string? surname, string? givenName) =>
+        throw new NotImplementedException();
 
     /// <summary>The upsert's update half. Identity is <see cref="GoogleUserId"/>, which is untouched.</summary>
     public void UpdateFrom(string? email, string? fullName) => Apply(email, fullName);

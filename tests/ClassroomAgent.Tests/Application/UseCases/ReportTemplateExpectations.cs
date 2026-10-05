@@ -29,7 +29,8 @@ internal static class ReportTemplateExpectations
             ReportScaleMode.Ranges,
             ReportTemplateTestData.TwelvePoint.Select(r => new ReportScaleRow(r.From, r.To, r.Label)).ToList(),
             marks,
-            new ReportLateMark(ReportLateMarkKind.Hidden, null));
+            new ReportLateMark(ReportLateMarkKind.Hidden, null),
+            ReportNameSource.Profile);
     }
 
     /// <summary>The form a browser posts for an unchanged copy of the built-in template.</summary>
@@ -70,6 +71,7 @@ internal static class ReportTemplateExpectations
         }
 
         Assert.Equal(expected.LateMark, actual.LateMark);
+        Assert.Equal(expected.NameSource, actual.NameSource);
     }
 
     public static void AssertSame(ReportTemplateSettings expected, ReportTemplate actual) =>

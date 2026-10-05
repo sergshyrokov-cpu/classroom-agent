@@ -303,6 +303,16 @@ public sealed class SyncWorld
             return this;
         }
 
+        /// <summary>Replaces an already-seeded course's roster — what Classroom answers on the next run (US-042 AC-001).</summary>
+        public ClassroomReader WithRoster(
+            string googleId,
+            IEnumerable<RosterEntry>? teachers = null,
+            IEnumerable<RosterEntry>? students = null)
+        {
+            _rosters[googleId] = new CourseRoster((teachers ?? []).ToList(), (students ?? []).ToList());
+            return this;
+        }
+
         /// <summary>
         /// Makes one course's roster read fail. Spec I-6: a failed read leaves the roster <b>unknown</b>, so no
         /// membership of that course may be marked off the roster.

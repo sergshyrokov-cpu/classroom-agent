@@ -59,6 +59,9 @@ public sealed class ReportTemplate
 
     public string? LateMarkText { get; private set; }
 
+    /// <summary>US-042 skeleton (OD-001): the template setting "names" (entity model §1.4). Completed at IMPLEMENTATION.</summary>
+    public ReportNameSource NameSource => throw new NotImplementedException();
+
     public IReadOnlyList<ReportTemplateMark> Marks => marks;
 
     public IReadOnlyList<ReportTemplateScaleRow> ScaleRows => scaleRows;

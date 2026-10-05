@@ -14,4 +14,5 @@ public sealed record ReportTemplateSettings(
     ReportScaleMode ScaleMode,
     IReadOnlyList<ReportScaleRow> ScaleRows,
     IReadOnlyDictionary<ReportCellState, ReportMark> Marks,
-    ReportLateMark LateMark);
+    ReportLateMark LateMark,
+    ReportNameSource NameSource = ReportNameSource.Profile);

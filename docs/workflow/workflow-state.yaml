@@ -4,23 +4,29 @@
 version: 1
 story: US-042
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
+current_stage: IMPLEMENTATION
+previous_stage: TEST_WRITING
+last_completed_stage: TEST_WRITING
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: test-writer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: 2026-10-05T11:29:58Z
+  stage: TEST_WRITING
+  recorded_at: 2026-10-05T12:49:19Z
 last_artifacts:
-  - type: database_design
-    path: docs/designs/database/US-042-db-design.md
+  - type: test_strategy
+    path: docs/tests/US-042-test-strategy.md
     version: 1
-  - type: entity_model
-    path: docs/designs/database/US-042-entity-model.md
+  - type: ac_test_matrix
+    path: docs/tests/US-042-ac-test-matrix.md
     version: 1
+  - type: test_generation_report
+    path: docs/evidence/US-042-test-generation-report.md
+    version: 1
+  - type: open_decisions
+    path: docs/decisions/US-042-open-decisions.md
+    version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
@@ -30,6 +36,7 @@ non_blocking_findings:
   - "API §2.6: report PersonName gets its own ReportNameKind (Profile/EmailLocalPart/Unnamed); JournalNameKind unchanged."
   - "DB D-5: existing templates get `profile` via the migration default, then the default is dropped (no lasting DB default)."
   - "DB §3.2: report member record drops FullName for Surname/GivenName; US-025 JournalMemberRecord unchanged."
+  - "TEST: OD-001 compile-only skeleton (Owner, a); 115 red as expected, 14 green by design; binding notes for IMPLEMENTATION in the test-generation report §2."
 started_at: 2026-10-05T11:11:02Z
-updated_at: 2026-10-05T11:29:58Z
+updated_at: 2026-10-05T12:49:19Z
 completed_at: null

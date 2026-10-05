@@ -34,4 +34,6 @@ public enum ReportTemplateFieldErrorKey
     HoursRequired,
 
     HoursOutOfRange,
+
+    NameSourceInvalid,
 }

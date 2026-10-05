@@ -186,7 +186,7 @@ public sealed class GetReportQuery(
             .OrderBy(r => r.Label.Kind == JournalNameKind.Unnamed)
             .ThenBy(r => r.Label.Name, comparer)
             .ThenBy(r => r.Member.ParticipantId)
-            .Select(r => new PersonName(r.Label.Name, r.Label.Kind))
+            .Select(r => new PersonName(r.Label.Name, SkeletonKind(r.Label.Kind)))
             .ToList();
         var header = new ReportHeader(
             templateName is null,
@@ -246,7 +246,7 @@ public sealed class GetReportQuery(
             .ThenBy(r => r.Label.Name, comparer)
             .ThenBy(r => r.Member.ParticipantId)
             .Select(r => new GradingRow(
-                new PersonName(r.Label.Name, r.Label.Kind),
+                new PersonName(r.Label.Name, SkeletonKind(r.Label.Kind)),
                 columns
                     .Select(l => ToReportCell(
                         Cell(
@@ -355,6 +355,17 @@ public sealed class GetReportQuery(
 
         return new ReportGrade(ReportGradeKind.RawPoints, null, points, max);
     }
+
+    /// <summary>
+    /// US-042 skeleton (OD-001): carries the US-027 label kind into the report's own <see cref="ReportNameKind"/> so the
+    /// changed DTO compiles with today's behaviour. IMPLEMENTATION replaces it with the spec FR-003 rule.
+    /// </summary>
+    private static ReportNameKind SkeletonKind(JournalNameKind kind) => kind switch
+    {
+        JournalNameKind.FullName => ReportNameKind.Profile,
+        JournalNameKind.Email => ReportNameKind.EmailLocalPart,
+        _ => ReportNameKind.Unnamed,
+    };
 
     /// <summary>Spec FR-011: the return path of the language switcher, from validated values only.</summary>
     private static string ReturnPath(string? template, long? course, DateOnly? from, DateOnly? to)

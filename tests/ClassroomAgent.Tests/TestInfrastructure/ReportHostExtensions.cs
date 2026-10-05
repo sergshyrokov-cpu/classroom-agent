@@ -65,16 +65,28 @@ public static class ReportHostExtensions
         IReadOnlyList<(int From, int To, string Label)>? scale = null,
         IReadOnlyDictionary<ReportCellState, (string Kind, string? Text)>? marks = null,
         string lateKind = "program",
-        string? lateText = null)
+        string? lateText = null,
+        string nameSource = "profile")
     {
         var stamp = host.Time.GetUtcNow();
+
+        // US-042 db-design §3: name_source is NOT NULL with no default once the migration exists. Before it (the
+        // TEST_WRITING red phase) the column is absent and the US-027 row shape is inserted unchanged.
+        var hasNameSource = await host.ColumnExistsAsync("report_template", "name_source", cancellationToken);
         var id = await host.ScalarAsync<long>(
-            """
-            INSERT INTO report_template (name, normalized_name, view, hide_materials, hours_per_lesson, scale_mode,
-                                         late_mark_kind, late_mark_text, author_id, created_at, updated_at)
-            VALUES (@name, @normalized, @view, @hide, @hours, @mode, @lateKind, @lateText, @author, @stamp, @stamp)
-            RETURNING id
-            """,
+            hasNameSource
+                ? """
+                  INSERT INTO report_template (name, normalized_name, view, hide_materials, hours_per_lesson, scale_mode,
+                                               late_mark_kind, late_mark_text, author_id, created_at, updated_at, name_source)
+                  VALUES (@name, @normalized, @view, @hide, @hours, @mode, @lateKind, @lateText, @author, @stamp, @stamp, @nameSource)
+                  RETURNING id
+                  """
+                : """
+                  INSERT INTO report_template (name, normalized_name, view, hide_materials, hours_per_lesson, scale_mode,
+                                               late_mark_kind, late_mark_text, author_id, created_at, updated_at)
+                  VALUES (@name, @normalized, @view, @hide, @hours, @mode, @lateKind, @lateText, @author, @stamp, @stamp)
+                  RETURNING id
+                  """,
             cancellationToken,
             ("name", name),
             ("normalized", name.Trim().ToUpperInvariant()),
@@ -85,7 +97,8 @@ public static class ReportHostExtensions
             ("lateKind", lateKind),
             ("lateText", lateText),
             ("author", authorId),
-            ("stamp", stamp));
+            ("stamp", stamp),
+            ("nameSource", nameSource));
 
         foreach (var state in ReportTemplateTestData.States)
         {
@@ -120,6 +133,19 @@ public static class ReportHostExtensions
 
         return id;
     }
+
+    /// <summary>Whether a column exists in the host's database (information_schema).</summary>
+    public static async Task<bool> ColumnExistsAsync(
+        this InstallationTestHost host, string table, string column, CancellationToken cancellationToken) =>
+        await host.ScalarAsync<long>(
+            "SELECT count(*) FROM information_schema.columns WHERE table_name = @t AND column_name = @c",
+            cancellationToken,
+            ("t", table),
+            ("c", column)) == 1;
+
+    /// <summary>US-042 db-design §3: the stored name source of one template.</summary>
+    public static Task<string?> NameSourceOfAsync(this InstallationTestHost host, long templateId, CancellationToken cancellationToken) =>
+        host.ScalarAsync<string>("SELECT name_source FROM report_template WHERE id = @id", cancellationToken, ("id", templateId));
 
     /// <summary>db-design §2.2: the stored code of a cell state.</summary>
     public static string StateCode(ReportCellState state) => state switch

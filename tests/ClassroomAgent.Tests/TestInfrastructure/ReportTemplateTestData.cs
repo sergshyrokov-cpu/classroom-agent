@@ -30,7 +30,8 @@ public static class ReportTemplateTestData
     public static string DeletionPath(string reference) => $"/reports/templates/{reference}/deletion";
 
     /// <summary>The query string of a report request; null values are left out.</summary>
-    public static string ReportUrl(string? template = null, long? courseId = null, string? from = null, string? to = null)
+    public static string ReportUrl(
+        string? template = null, long? courseId = null, string? from = null, string? to = null, string? names = null)
     {
         var parts = new List<string>();
         if (template is not null)
@@ -53,12 +54,20 @@ public static class ReportTemplateTestData
             parts.Add("to=" + Uri.EscapeDataString(to));
         }
 
+        if (names is not null)
+        {
+            parts.Add(NamesField + "=" + Uri.EscapeDataString(names));
+        }
+
         return parts.Count == 0 ? ReportPath : ReportPath + "?" + string.Join('&', parts);
     }
 
     /// <summary>The September report of one course (the <see cref="JournalTestData.Period"/> period).</summary>
-    public static string SeptemberReportUrl(long courseId, string template = BuiltInKey) =>
-        ReportUrl(template, courseId, JournalTestData.Period.FromText, JournalTestData.Period.ToText);
+    public static string SeptemberReportUrl(long courseId, string template = BuiltInKey, string? names = null) =>
+        ReportUrl(template, courseId, JournalTestData.Period.FromText, JournalTestData.Period.ToText, names);
+
+    /// <summary>US-042 api-design §2.1: the form field and the query parameter of the name source.</summary>
+    public const string NamesField = "names";
 
     /// <summary>Every member of <see cref="ReportCellState"/>, in declaration order (spec FR-003).</summary>
     public static IReadOnlyList<ReportCellState> States { get; } = Enum.GetValues<ReportCellState>();
@@ -80,7 +89,8 @@ public static class ReportTemplateTestData
         int hours = 2,
         IReadOnlyList<(int From, int To, string Label)>? scale = null,
         IReadOnlyDictionary<ReportCellState, ReportMark>? marks = null,
-        ReportLateMark? late = null)
+        ReportLateMark? late = null,
+        ReportNameSource nameSource = ReportNameSource.Profile)
     {
         var rows = (scale ?? []).Select(r => new ReportScaleRow(r.From, r.To, r.Label)).ToList();
         var allMarks = States.ToDictionary(s => s, s => marks is not null && marks.TryGetValue(s, out var m) ? m : new ReportMark(ReportMarkKind.Program, null));
@@ -91,7 +101,8 @@ public static class ReportTemplateTestData
             rows.Count == 0 ? ReportScaleMode.None : ReportScaleMode.Ranges,
             rows,
             allMarks,
-            late ?? new ReportLateMark(ReportLateMarkKind.Program, null));
+            late ?? new ReportLateMark(ReportLateMarkKind.Program, null),
+            nameSource);
     }
 
     /// <summary>The translation keys this Story adds or reuses (spec FR-017; api-design §2.9).</summary>
@@ -111,9 +122,12 @@ public static class ReportTemplateTestData
 
         public const string TeacherUnnamed = "Report.Teacher.Unnamed";
 
+        /// <summary>US-042 openapi <c>ReportMessageKey.NameSourceMalformed</c>.</summary>
+        public const string NameSourceMalformed = "Report.Validation.NameSourceMalformed";
+
         /// <summary>The keys the openapi enums name explicitly; the missing-key test checks them in both files.</summary>
         public static IEnumerable<string> All =>
-            new[] { BuiltInName, NoStudents, TeacherUnnamed }
+            new[] { BuiltInName, NoStudents, TeacherUnnamed, NameSourceMalformed }
                 .Concat(Enum.GetValues<ReportTemplateFieldErrorKey>().Select(Validation))
                 .Concat(Enum.GetValues<ReportTemplateReferenceMessageKey>().Select(Reference))
                 .Concat(Enum.GetValues<ReportTemplateConfirmationKey>().Select(Confirmation))

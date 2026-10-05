@@ -47,10 +47,15 @@ public sealed class FakeJournalFieldSource : IJournalFieldSource
         return id;
     }
 
+    /// <summary>
+    /// A member with the US-042 name parts (entity model §3.2). The report reads no full name any more (spec I-6), so
+    /// none is supplied; <c>FullName: null</c> goes when IMPLEMENTATION removes the field from the record.
+    /// </summary>
     public long AddMember(
         long courseId,
         ClassroomRole role = ClassroomRole.Student,
-        string? fullName = "Test Student One",
+        string? surname = "Student",
+        string? givenName = "Test",
         string? email = null,
         DateTimeOffset? firstSeenAt = null,
         DateTimeOffset? lastSeenAt = null,
@@ -58,7 +63,8 @@ public sealed class FakeJournalFieldSource : IJournalFieldSource
     {
         var id = _nextId++;
         var first = firstSeenAt ?? JournalTestData.Period.StartUtc.AddDays(-30);
-        Members.Add((courseId, new JournalCourseMemberRecord(id, role, first, lastSeenAt ?? first, onRoster, fullName, email)));
+        Members.Add((courseId, new JournalCourseMemberRecord(
+            id, role, first, lastSeenAt ?? first, onRoster, FullName: null, Email: email, Surname: surname, GivenName: givenName)));
         return id;
     }
 

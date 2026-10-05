@@ -155,7 +155,8 @@ public sealed class JournalFieldSourceTests(PostgreSqlFixture database)
         var course = await CourseRows.InsertCourseAsync(host, ct);
         var other = await CourseRows.InsertCourseAsync(host, ct, googleId: CourseTestData.CourseId(2));
         var student = await CourseRows.InsertParticipantAsync(
-            host, ct, googleUserId: CourseTestData.UserId(1), email: CourseTestData.Email("student.one"), fullName: "Test Student One");
+            host, ct, googleUserId: CourseTestData.UserId(1), email: CourseTestData.Email("student.one"), fullName: "Test Student One",
+            surname: "Тестова", givenName: "Олена");
         var teacher = await CourseRows.InsertParticipantAsync(
             host, ct, googleUserId: CourseTestData.UserId(2), email: CourseTestData.Email("teacher.one"), fullName: null);
         var elsewhere = await CourseRows.InsertParticipantAsync(
@@ -175,14 +176,15 @@ public sealed class JournalFieldSourceTests(PostgreSqlFixture database)
             var s = Assert.Single(members, m => m.ParticipantId == student);
             Assert.Equal(ClassroomRole.Student, s.Role);
             Assert.True(s.OnRoster);
-            Assert.Equal("Test Student One", s.FullName);
+            Assert.Equal(("Тестова", "Олена"), (s.Surname, s.GivenName)); // US-042 entity model §3.2
             Assert.Equal(CourseTestData.Email("student.one"), s.Email);
             Assert.Equal(first, s.FirstSeenAt);
             Assert.Equal(last, s.LastSeenAt);
             var t = Assert.Single(members, m => m.ParticipantId == teacher);
             Assert.Equal(ClassroomRole.Teacher, t.Role);
             Assert.False(t.OnRoster);
-            Assert.Null(t.FullName);
+            Assert.Null(t.Surname);
+            Assert.Null(t.GivenName);
             Assert.Equal(CourseTestData.Email("teacher.one"), t.Email);
         });
     }

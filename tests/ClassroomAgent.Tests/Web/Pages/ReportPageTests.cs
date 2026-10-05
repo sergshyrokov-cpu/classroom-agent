@@ -12,9 +12,13 @@ namespace ClassroomAgent.Tests.Web.Pages;
 /// </summary>
 public sealed class ReportPageTests(PostgreSqlFixture database)
 {
+    /// <summary>
+    /// The seeded people have a full name and an address but no profile name parts, so US-042 FR-003 shows the part of
+    /// the address before <c>@</c> — the full name is no longer a report source (spec I-6).
+    /// </summary>
     private static readonly string[] ContentMarkers =
     [
-        SeededJournal.GradedTitle, SeededJournal.UngradedTitle, SeededJournal.StudentName, SeededJournal.TeacherName,
+        SeededJournal.GradedTitle, SeededJournal.UngradedTitle, "student.one", "teacher.one",
     ];
 
     [Fact]

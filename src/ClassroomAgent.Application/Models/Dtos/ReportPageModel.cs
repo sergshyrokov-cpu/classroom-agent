@@ -11,4 +11,8 @@ public sealed record ReportPageModel(
     DateOnly? To,
     IReadOnlyList<ReportMessageKey> MessageKeys,
     string ReturnPath,
-    Report? Report);
+    Report? Report)
+{
+    /// <summary>US-042 skeleton (OD-001): the name-source switch; null unless a report is shown (spec FR-005).</summary>
+    public NameSourceSwitch? NameSwitch => throw new NotImplementedException();
+}

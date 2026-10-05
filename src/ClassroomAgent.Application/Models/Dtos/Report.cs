@@ -8,4 +8,11 @@ public sealed record Report(
     ReportView View,
     ReportEmptyStateKey? EmptyStateKey,
     GradingPart? Grading,
-    LessonTopicsPart? LessonTopics);
+    LessonTopicsPart? LessonTopics)
+{
+    /// <summary>US-042 skeleton (OD-001): the effective name source (spec FR-004, FR-006).</summary>
+    public ReportNameSource NameSource => throw new NotImplementedException();
+
+    /// <summary>US-042 skeleton (OD-001): where the effective source came from.</summary>
+    public NameSourceOrigin NameSourceOrigin => throw new NotImplementedException();
+}

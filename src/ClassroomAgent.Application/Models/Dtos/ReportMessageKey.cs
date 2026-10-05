@@ -16,4 +16,6 @@ public enum ReportMessageKey
     ToMalformed,
 
     PeriodInverted,
+
+    NameSourceMalformed,
 }

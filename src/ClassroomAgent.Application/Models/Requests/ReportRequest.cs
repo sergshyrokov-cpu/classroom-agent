@@ -5,4 +5,5 @@ public sealed record ReportRequest(
     IReadOnlyList<string?> Template,
     IReadOnlyList<string?> CourseId,
     IReadOnlyList<string?> From,
-    IReadOnlyList<string?> To);
+    IReadOnlyList<string?> To,
+    IReadOnlyList<string?>? Names = null);

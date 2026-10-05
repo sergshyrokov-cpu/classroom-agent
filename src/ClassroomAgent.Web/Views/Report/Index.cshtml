@@ -103,7 +103,7 @@
                             @foreach (var row in grading.Rows)
                             {
                                 <tr>
-                                    <th scope="row">@(row.Student.NameKind == JournalNameKind.Unnamed ? T[JournalTextKeys.Unnamed].Value : row.Student.DisplayName)</th>
+                                    <th scope="row">@(row.Student.NameKind == ReportNameKind.Unnamed ? T[JournalTextKeys.Unnamed].Value : row.Student.DisplayName)</th>
                                     @foreach (var cell in row.Cells)
                                     {
                                         <td>
@@ -194,7 +194,7 @@
     private string TeacherNames(IReadOnlyList<PersonName> teachers) =>
         string.Join(
             ", ",
-            teachers.Select(t => t.NameKind == JournalNameKind.Unnamed ? T[ReportTemplateTextKeys.TeacherUnnamed].Value : t.DisplayName));
+            teachers.Select(t => t.NameKind == ReportNameKind.Unnamed ? T[ReportTemplateTextKeys.TeacherUnnamed].Value : t.DisplayName));
 
     /// <summary>Spec FR-015: a scale label as the school wrote it, or the raw points; points as stored, trailing zeros dropped.</summary>
     private static string GradeText(ReportGrade? grade) =>
