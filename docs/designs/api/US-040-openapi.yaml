@@ -1,0 +1,90 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Responses are not cached (US-040)
+  version: "1"
+  description: >
+    HTTP contract of US-040 across both hosts. No operation is added, removed or
+    changed in path, method, status code, body or authorization. The Story adds
+    one host-wide response rule per host — the installation (public and private
+    port) and the Control Plane: every response carries `Cache-Control` with the
+    `no-store` directive, except a static file of the interface served from the
+    host's `wwwroot` (trebovaniya.md v85 §8, SC-14). The rule is stated in
+    `x-host-wide-rules` and applies to every operation of every earlier and later
+    contract of the host. The host-wide rules of
+    docs/designs/api/US-001-openapi.yaml (Control Plane) and
+    docs/designs/api/US-008-openapi.yaml (installation) otherwise apply
+    unchanged. Companion document: docs/designs/api/US-040-api-design.md.
+x-story: US-040
+x-source-specification: docs/specifications/US-040-spec.md
+x-source-specification-version: 2
+x-source-open-decisions: docs/decisions/US-040-open-decisions.md
+x-source-open-decisions-version: 2
+x-requirements-version: 85
+x-produced-by: openapi-designer
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. A response
+  header is added; no request or response body changes shape (DC-12). The
+  installation ↔ Control Plane service channel ignores `Cache-Control`.
+
+servers:
+  - url: https://control-plane.internal
+    description: "Control Plane. Illustrative (SC-9, DC-6)."
+  - url: https://school.example
+    description: "Installation public port. Illustrative."
+  - url: http://installation.private:{privatePort}
+    description: "Installation private port, plain HTTP (DC-6)."
+    variables:
+      privatePort:
+        default: "8081"
+
+x-host-wide-rules:
+
+  no-store: >
+    spec FR-001, FR-002, FR-003, FR-006; SC-14. Applies to both hosts, to every
+    port of the installation, to every status code and to every response kind:
+    pages (signed-in and anonymous), redirects (including `302 /sign-in`,
+    `302 /setup`, the HTTPS redirection of the public port), downloaded files,
+    `/api/v1` and `/service/v1` responses, health checks, the status-push
+    receiver, the error page of `/error/{code}`, the exception handler's `500`,
+    and refusals by authentication, authorization, antiforgery, the setup gate,
+    the private-port filter and read-only mode (`409`). On each such response
+    the final `Cache-Control` header (component `CacheControlNoStore`) is
+    `no-store` when the pipeline set none; a value that already contains the
+    `no-store` directive is kept as it is (e.g. antiforgery's
+    `no-cache, no-store`); any other value is replaced by `no-store`. The rule
+    is one registration in the host's pipeline; no controller, Razor page,
+    action or filter attribute takes part. It writes no log and no audit event.
+
+  static-files: >
+    spec FR-004; trebovaniya.md v68 §8, SC-4. A `200` (or `304`) response that
+    serves an existing file from the host's `wwwroot` is the single exception:
+    the rule leaves its headers as the static-file middleware writes them today.
+    A request under a static path that finds no file is an ordinary response and
+    falls under `no-store`.
+
+  pre-pipeline-responses: >
+    spec §8, OD-001 (a). Responses Kestrel writes before a request reaches the
+    application pipeline (e.g. `400` for a malformed request line, `431` for
+    oversized headers) are outside the rule.
+
+  unchanged: >
+    spec FR-005. Status codes, bodies, redirect targets, cookies, session
+    limits (SC-2) and every other header stay as the earlier contracts define
+    them. No `Pragma` or `Expires` header is added by this rule.
+
+paths: {}
+
+components:
+  headers:
+    CacheControlNoStore:
+      description: >
+        Present on every response of both hosts except a served static file
+        (`x-host-wide-rules.no-store`). Its comma-separated directives include
+        `no-store` (case-insensitive). Written as exactly `no-store` unless the
+        pipeline already set a value containing that directive.
+      required: true
+      schema:
+        type: string
+        examples:
+          - no-store
+          - no-cache, no-store

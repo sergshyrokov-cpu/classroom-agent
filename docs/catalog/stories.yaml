@@ -142,7 +142,7 @@ stories:
   - id: US-040
     epic: EPIC-6
     title: Responses are not cached (Cache-Control no-store)
-    state: READY
+    state: COMPLETED
     blocked_by: >
       trebovaniya.md v85 (section 8) and SC-14 must be committed first. To be
       delivered after US-027 and before the export Stories (US-028 … US-030).

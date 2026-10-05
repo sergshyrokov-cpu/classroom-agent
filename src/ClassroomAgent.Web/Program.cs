@@ -88,6 +88,8 @@ public sealed class Program
         var app = builder.Build();
 
         // The pipeline order of spec FR-002; several of its guarantees depend on it.
+        // US-040: first of all, so the no-store rule sees every response of both ports (SC-14).
+        app.UseMiddleware<NoStoreMiddleware>();
         app.UseMiddleware<PublicPortMiddleware>(settings.PrivatePort);
 
         // Everything in this branch is the public port's alone. The private port keeps exactly what US-005 and
@@ -109,7 +111,7 @@ public sealed class Program
                 publicPort.UseStatusCodePagesWithReExecute("/error/{0}");
             });
 
-        app.UseStaticFiles();
+        app.UseStaticFiles(new StaticFileOptions { OnPrepareResponse = NoStoreMiddleware.MarkStaticFile });
         app.UseRouting();
         app.UseAuthentication();
 

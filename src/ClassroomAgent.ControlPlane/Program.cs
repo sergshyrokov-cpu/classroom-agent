@@ -87,9 +87,11 @@ builder.Services.AddControllersWithViews(options => options.Filters.Add<GlobalAn
 
 var app = builder.Build();
 
+// US-040: first of all, so the no-store rule sees every response of the host (SC-14).
+app.UseMiddleware<NoStoreMiddleware>();
 app.UseExceptionHandler(new ExceptionHandlerOptions { ExceptionHandlingPath = "/error/500" });
 app.UseStatusCodePagesWithReExecute("/error/{0}");
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions { OnPrepareResponse = NoStoreMiddleware.MarkStaticFile });
 app.UseRouting();
 app.UseMiddleware<SetupGateMiddleware>();
 app.UseAuthentication();
