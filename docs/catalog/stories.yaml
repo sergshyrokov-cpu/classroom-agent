@@ -295,12 +295,30 @@ stories:
     # US-025 COMPLETED. Story file authored:
     # docs/stories/US-027-report-templates.md (aligned with v84).
     # OD-001 … OD-003 resolved by the Owner on 2026-10-04, before activation.
+  - id: US-042
+    epic: EPIC-3
+    title: Names of students and teachers in a template report
+    state: BACKLOG
+    blocked_by: >
+      Depends on US-027. trebovaniya.md v86. To be delivered before the export
+      Stories (US-028 … US-030).
+    # Story file authored: docs/stories/US-042-names-in-report.md (aligned with v86).
   - id: US-028
     epic: EPIC-3
     title: Export a journal to Excel using a school template
     state: BACKLOG
     blocked_by: >
-      Depends on US-027.
+      Depends on US-027 and US-042.
+    # Story file authored: docs/stories/US-028-excel-export.md (aligned with v86).
+    # OD-001 (ClosedXML) and OD-002 (layout by the program) resolved by the
+    # Owner on 2026-10-05, before activation.
+  - id: US-043
+    epic: EPIC-3
+    title: Fill a school's own Excel layout file with a template report
+    state: BACKLOG
+    blocked_by: >
+      Depends on US-028. Split out of US-028 by its OD-002 (trebovaniya.md §3,
+      §8: the Excel layout file attached to a template at export).
   - id: US-029
     epic: EPIC-3
     title: Export a journal to Word
