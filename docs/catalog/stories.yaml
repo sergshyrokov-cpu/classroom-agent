@@ -149,7 +149,7 @@ stories:
   - id: US-041
     epic: EPIC-6
     title: An unknown file-like address answers 404 to anyone
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: null
 
   # --- EPIC-1: Synchronization ---------------------------------------------

@@ -106,7 +106,10 @@ app.UseRequestLocalization(options =>
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapFallback(context =>
+
+// SC-4 v66, US-041: an unmatched request, file-like or not, answers 404 to anyone; the explicit pattern drops the
+// default "nonfile" constraint of MapFallback.
+app.MapFallback("{*path}", context =>
     {
         context.Response.StatusCode = StatusCodes.Status404NotFound;
         return Task.CompletedTask;

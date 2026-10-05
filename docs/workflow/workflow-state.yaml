@@ -4,26 +4,32 @@
 version: 1
 story: US-041
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: null
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: DB_DESIGN
-  recorded_at: 2026-10-05T07:28:45Z
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_PR_APPROVAL
+  recorded_at: 2026-10-05T07:51:56Z
 last_artifacts:
-  - type: database_design
-    path: docs/designs/database/US-041-db-design.md
+  - type: implementation_report
+    path: docs/evidence/US-041-implementation-report.md
+    version: 1
+  - type: security_review
+    path: docs/reviews/security/US-041-security-review.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "SEC INFO-1: the catch-all delegate is outside the MVC antiforgery filter; POST to an unknown path gets 404 unvalidated - writes nothing, unchanged behaviour."
+  - "SEC INFO-2: API-6 body for unmatched /api/v1 paths still missing on both hosts - OD-002, for the first Story adding an /api/v1 resource."
+  - "TEST F-1: 18 cases pass pre-implementation — signed-in callers already get 404 (fallback policy challenges only anonymous), plus regression guards; 20 RED all fail 302 vs 404."
   - "API D-1: one catch-all per host, pattern without the nonfile constraint, fallback precedence; response produced by the existing re-execution (no new text)."
   - "API F-1: spec v1 required the API-6 body for unmatched /api/v1 paths, which no host implements; OD-002 resolved (1) by the Owner — spec v2 moves it out of scope (§10)."
   - "SPEC F-1: the fix also gives 404 (not a sign-in redirect) to an unmatched path under a private-port prefix, e.g. /health/x.txt (FR-005)."
 started_at: 2026-10-05T07:16:54Z
-updated_at: 2026-10-05T07:28:45Z
-completed_at: null
+updated_at: 2026-10-05T07:51:56Z
+completed_at: 2026-10-05T07:51:56Z

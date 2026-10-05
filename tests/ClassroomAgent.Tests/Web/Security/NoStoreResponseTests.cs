@@ -226,8 +226,7 @@ public sealed class NoStoreResponseTests(PostgreSqlFixture database)
 
     /// <summary>
     /// AC-003, VR-003, api-design D-4: the exception is a served file, not a path — a missing file gets an ordinary
-    /// response. Its status is not this Story's: anonymously it is today the sign-in redirect, because the catch-all
-    /// does not match a file-like path (TEST F-2).
+    /// response: the catch-all's 404, which matches file-like paths too (US-041 AC-001).
     /// </summary>
     [Fact]
     public async Task AMissingFileUnderAStaticPath_CarriesNoStore()
@@ -237,7 +236,7 @@ public sealed class NoStoreResponseTests(PostgreSqlFixture database)
 
         var response = await host.SendPublicAsync("GET", "/css/no-such-file.css", ct);
 
-        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
         NoStore.Assert(response, "GET /css/no-such-file.css");
     }
 }

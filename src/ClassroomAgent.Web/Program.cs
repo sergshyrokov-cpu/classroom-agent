@@ -135,7 +135,8 @@ public sealed class Program
 
         // SC-4 v66: an unmatched request answers 404 to anyone. Without a matched endpoint the fallback policy would
         // challenge an anonymous request and send it to sign-in; the re-execution turns this into the error page.
-        app.MapFallback(context =>
+        // US-041: the explicit pattern drops the default "nonfile" constraint, so a file-like path is caught too.
+        app.MapFallback("{*path}", context =>
             {
                 context.Response.StatusCode = StatusCodes.Status404NotFound;
                 return Task.CompletedTask;
