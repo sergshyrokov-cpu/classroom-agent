@@ -4,27 +4,32 @@
 version: 1
 story: US-042
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: db-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: 2026-10-05T11:22:06Z
+  verdict: PASS
+  stage: DB_DESIGN
+  recorded_at: 2026-10-05T11:29:58Z
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-042-spec.md
+  - type: database_design
+    path: docs/designs/database/US-042-db-design.md
     version: 1
-  - type: open_decisions
-    path: docs/decisions/US-042-open-decisions.md
+  - type: entity_model
+    path: docs/designs/database/US-042-entity-model.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "SPEC I-1..I-10: interpretations stated in spec §11 (partial profile name, nameless label, form resets the switch, email part as stored lower-case, full name leaves the report, bounds, GET switch, no index, reusable name function); any may become an OD at the gate."
+  - "SPEC I-1..I-10: interpretations stated in spec §11; any may become an OD."
+  - "API §2.3: invalid `names` in the template form is a field error (form re-rendered), per spec VR-001/§8 — departs from the US-027 structural-400 precedent."
+  - "API §2.4: the language-switcher return path keeps `names` only when the address carried a valid one."
+  - "API §2.6: report PersonName gets its own ReportNameKind (Profile/EmailLocalPart/Unnamed); JournalNameKind unchanged."
+  - "DB D-5: existing templates get `profile` via the migration default, then the default is dropped (no lasting DB default)."
+  - "DB §3.2: report member record drops FullName for Surname/GivenName; US-025 JournalMemberRecord unchanged."
 started_at: 2026-10-05T11:11:02Z
-updated_at: 2026-10-05T11:22:06Z
+updated_at: 2026-10-05T11:29:58Z
 completed_at: null

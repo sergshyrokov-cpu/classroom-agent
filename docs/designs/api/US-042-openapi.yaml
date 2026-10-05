@@ -1,0 +1,543 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Names of students and teachers in a template report (US-042)
+  version: "1"
+  description: >
+    HTTP contract of US-042 on the installation's public port. **No operation is
+    added or removed.** Four existing operations of
+    docs/designs/api/US-027-openapi.yaml change additively: the report page gains
+    the optional query parameter `names` and a switch; the template form and its
+    two saves gain the required field `names`. Only what changes is restated here;
+    everything else of US-027 — paths, policies, evaluation orders, status codes,
+    host-wide rules — stands. Every operation reads only PostgreSQL: none calls
+    Google or reads a secret in any mode (spec FR-008, S-05). The Control Plane and
+    the private port are untouched. Companion document:
+    docs/designs/api/US-042-api-design.md.
+x-story: US-042
+x-source-specification: docs/specifications/US-042-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-042-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 86
+x-produced-by: openapi-designer
+x-extends: docs/designs/api/US-027-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type is
+  added or changed; the pages below are the installation's own screens (DC-12).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port. Illustrative."
+
+tags:
+  - name: report-templates
+    description: "The template form and its saves (spec FR-002)"
+  - name: report
+    description: "The on-screen report and the name-source switch (spec FR-003 … FR-006)"
+
+x-host-wide-rules:
+
+  inherited: >
+    Every host-wide rule of docs/designs/api/US-027-openapi.yaml
+    (`x-host-wide-rules`) applies unchanged: US-008 host rules, deny by default,
+    the antiforgery filter, the restricted session of a Dean with a temporary
+    password, `ReadOnlyModeException` → `409`, the template reference rule.
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list of anonymous endpoints gains nothing (spec S-01).
+
+  name-source: >
+    One value type for the template form field `names` and the report query
+    parameter `names` (spec FR-002, VR-001, VR-002): exactly `profile` or `email`,
+    case-sensitive, not trimmed, one occurrence. Bound as a string and parsed in
+    `Application` (US-027 api-design §2.7 — no MVC enum binding). The value names a
+    source, never a person: no personal data enters an address (spec S-03).
+
+  outbound: >
+    No operation calls anything outside the process (spec FR-008, S-05, S-10).
+
+paths:
+
+  /reports:
+
+    get:
+      tags: [report]
+      operationId: getReport
+      summary: "The report — changed: optional `names`, the name-source switch, names by FR-003"
+      description: >
+        US-027 `getReport` with three changes. (1) Query parameter `names` (spec
+        FR-005). Validation of `names` joins the existing query-shape step and runs
+        after `to` and the period pair, so the evaluation order stays:
+        authentication → restricted session → `UseReportTemplates` → query shape
+        (`400`) → template and course existence (`404`) → build (`200`).
+        (2) The effective name source (spec FR-004): the valid `names` value when
+        present, otherwise the selected template's setting; resolved once per
+        request and used for every student and teacher of the report.
+        (3) When a report is shown, the page renders the switch (`nameSwitch`): two
+        plain links (`GET`), the effective one marked current. Following a link
+        rebuilds the report; nothing is saved, nothing audited. The selection form
+        (template, course, period) carries **no** `names` field — submitting it
+        shows the chosen template with its own setting (spec I-4).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: UseReportTemplates
+      x-permission-matrix-row: "\"Использование шаблонов отчётов\" — Admin ✔, Dean ✔"
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: "nothing — no entity, no audit row, the switch included"
+      x-read-only-mode: "allowed — identical in all three BR-025 causes; IReadOnlyModeGuard not called (spec AC-007)"
+      x-database-round-trips: "fixed per request, unchanged (spec FR-006, §9); surname and given name come with the participant rows already read"
+      x-switcher-return-path: >
+        `/reports` plus the validated `template`, `courseId`, `from`, `to` and —
+        when the request carried a valid one — `names`; malformed values omitted
+        (spec FR-005, S-03; api-design §2.4).
+      x-change: additive-parameter-and-view-model
+      x-spec: [FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-010, FR-011]
+      x-acceptance-criteria: [AC-002, AC-003, AC-004, AC-006, AC-007, AC-009, AC-010, AC-011, AC-013, AC-014]
+      security:
+        - installationSession: []
+      parameters:
+        - name: template
+          in: query
+          required: false
+          description: "Unchanged — US-027."
+          schema: { type: string, pattern: "^(academic-journal|[0-9]{1,19})$" }
+        - name: courseId
+          in: query
+          required: false
+          description: "Unchanged — US-027."
+          schema: { type: string, pattern: "^[0-9]{1,19}$" }
+        - name: from
+          in: query
+          required: false
+          description: "Unchanged — US-027."
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          required: false
+          description: "Unchanged — US-027."
+          schema: { type: string, format: date }
+        - name: names
+          in: query
+          required: false
+          description: >
+            **New.** The name source for this view (spec FR-005, VR-002;
+            `x-host-wide-rules.name-source`). Absent → the template's setting.
+            Present but empty, repeated or any other value → `400`,
+            `NameSourceMalformed`; the value is not echoed, not logged, not
+            audited. Validated even when `courseId` is absent (form only), so a
+            malformed address is always reported.
+          schema:
+            $ref: "#/components/schemas/NameSource"
+          example: email
+      responses:
+        "200":
+          description: >
+            As US-027. When `report` is set it carries `nameSource` and
+            `nameSourceOrigin`, every person is named by spec FR-003, and the page
+            model carries `nameSwitch`. Read-only mode answers exactly as outside it.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportPageModel"
+        "302":
+          description: "Unchanged — not signed in `/sign-in`; restricted session `/sign-in/change-password`. Nothing is read."
+        "400":
+          description: >
+            As US-027 — **this page** with the form and every message key in
+            parameter order (`template`, `courseId`, `from`, `to`, the pair, then
+            `names`), `report` null, `nameSwitch` null; no existence lookup, no
+            report data read. One `Warning` naming the rules, never a value (spec
+            FR-011, SC-10).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportPageModel"
+        "404":
+          description: "Unchanged — US-027; `nameSwitch` null."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportPageModel"
+        "500":
+          $ref: "#/components/responses/ErrorPage"
+
+  /reports/templates/new:
+
+    get:
+      tags: [report-templates]
+      operationId: getNewReportTemplateForm
+      summary: "The new-template form — changed: `names` defaults to `profile`"
+      description: >
+        US-027 unchanged except that `values.names` is `profile` (spec FR-002, I-2).
+      x-policy: EditReportTemplates
+      x-change: additive-field
+      x-writes: nothing
+      x-read-only-mode: "allowed"
+      x-spec: [FR-002]
+      x-acceptance-criteria: [AC-005, AC-009]
+      responses:
+        "200":
+          description: "The form."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateFormPageModel"
+
+  /reports/templates/{templateRef}/copy:
+
+    get:
+      tags: [report-templates]
+      operationId: getCopyReportTemplateForm
+      summary: "The copy form — changed: `names` from the source"
+      description: >
+        US-027 unchanged except that `values.names` is the source template's
+        setting; for the built-in `academic-journal` it is `profile` (spec FR-002).
+      x-policy: EditReportTemplates
+      x-change: additive-field
+      x-writes: nothing
+      x-read-only-mode: "allowed"
+      x-spec: [FR-002]
+      x-acceptance-criteria: [AC-005, AC-009]
+      parameters:
+        - $ref: "#/components/parameters/TemplateRef"
+      responses:
+        "200":
+          description: "The pre-filled form."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateFormPageModel"
+
+  /reports/templates/{templateRef}/edit:
+
+    get:
+      tags: [report-templates]
+      operationId: getEditReportTemplateForm
+      summary: "The change form — changed: `names` from the stored template"
+      description: "US-027 unchanged except that `values.names` is the template's stored setting (spec FR-002)."
+      x-policy: EditReportTemplates
+      x-change: additive-field
+      x-writes: nothing
+      x-read-only-mode: "allowed"
+      x-spec: [FR-002]
+      x-acceptance-criteria: [AC-005, AC-009]
+      parameters:
+        - $ref: "#/components/parameters/TemplateRef"
+      responses:
+        "200":
+          description: "The form."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateFormPageModel"
+
+  /reports/templates:
+
+    post:
+      tags: [report-templates]
+      operationId: createReportTemplate
+      summary: "Save a new template or a copy — changed: required field `names`"
+      description: >
+        US-027 evaluation order unchanged. `names` is checked at the
+        **field-validation** step, not the structural step (spec VR-001, §8 — "the
+        form again with the values and a message"; api-design §2.3): a missing,
+        empty, repeated or unknown value re-renders the form with `fieldErrors`
+        entry `{field: names, key: NameSourceInvalid}`, every other value as
+        entered and `values.names` empty (the rejected value is not echoed).
+        Nothing saved, nothing audited; the log line names the field and rule,
+        never the value. A valid value is stored with the other settings; the audit
+        row stays `ReportTemplateCreated` with the template id only (spec FR-007).
+      x-policy: EditReportTemplates
+      x-antiforgery: required
+      x-calls-google: false
+      x-change: additive-field
+      x-writes: "as US-027 — the template now includes its name source; audit row unchanged in shape (no setting value)"
+      x-read-only-mode: "refused in Application, guard first — 409; audit `Refused`/`ReadOnlyMode` (unchanged)"
+      x-spec: [FR-002, FR-007, FR-008, FR-011]
+      x-acceptance-criteria: [AC-005, AC-007, AC-008, AC-009, AC-010]
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ReportTemplateForm"
+      responses:
+        "302":
+          description: "Unchanged — saved: `/reports/templates`, TempData `Created`."
+        "400":
+          description: >
+            Unchanged cases of US-027, plus `names` failing VR-001: the form
+            re-rendered with `fieldErrors` (see the operation description).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportTemplateFormPageModel"
+        "409":
+          $ref: "#/components/responses/ReadOnlyRefused"
+        "500":
+          $ref: "#/components/responses/ErrorPage"
+
+  /reports/templates/{templateRef}:
+
+    post:
+      tags: [report-templates]
+      operationId: changeReportTemplate
+      summary: "Save a created template — changed: required field `names`"
+      description: >
+        US-027 evaluation order unchanged; the built-in key is still refused
+        (`BuiltInNotChangeable`), so the built-in's `profile` cannot change (spec
+        FR-002, AC-005). `names` is validated exactly as in `createReportTemplate`
+        and replaced with the other settings. Saving writes the usual
+        `ReportTemplateChanged` row with the template id only, whether or not the
+        setting changed (spec FR-007, AC-008).
+      x-policy: EditReportTemplates
+      x-antiforgery: required
+      x-calls-google: false
+      x-change: additive-field
+      x-writes: "as US-027 — the name source is replaced with the other settings; one AuditEvent `ReportTemplateChanged`, template id only"
+      x-read-only-mode: "refused in Application, guard first — 409; audit `Refused`/`ReadOnlyMode` (unchanged)"
+      x-spec: [FR-002, FR-007, FR-008, FR-011]
+      x-acceptance-criteria: [AC-005, AC-007, AC-008, AC-009, AC-010]
+      parameters:
+        - $ref: "#/components/parameters/TemplateRef"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ReportTemplateForm"
+      responses:
+        "302":
+          description: "Unchanged — saved: `/reports/templates`, TempData `Changed`."
+        "400":
+          description: "Unchanged cases of US-027, plus `names` failing VR-001: the form re-rendered with `fieldErrors`."
+          content:
+            text/html:
+              x-view-model:
+                oneOf:
+                  - $ref: "#/components/schemas/ReportTemplateListPageModel"
+                  - $ref: "#/components/schemas/ReportTemplateFormPageModel"
+        "404":
+          description: "Unchanged — `TemplateNotFound`."
+        "409":
+          $ref: "#/components/responses/ReadOnlyRefused"
+        "500":
+          $ref: "#/components/responses/ErrorPage"
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: ClassroomAgent.Session
+      description: "As US-008."
+
+  parameters:
+    TemplateRef:
+      name: templateRef
+      in: path
+      required: true
+      description: "Unchanged — US-027."
+      schema: { type: string, pattern: "^(academic-journal|[0-9]{1,19})$" }
+
+  responses:
+    ErrorPage:
+      description: "Unchanged — US-027."
+      content:
+        text/html: {}
+    ReadOnlyRefused:
+      description: "Unchanged — US-027."
+      content:
+        text/html: {}
+
+  schemas:
+
+    # ---------- New value types ----------
+
+    NameSource:
+      type: string
+      description: >
+        Spec FR-002. `profile` — "Surname Name" from the Google profile, else the
+        email part before `@`; `email` — the email part before `@`. Labels
+        translated (spec FR-010); the value itself is never shown.
+      enum: [profile, email]
+
+    NameSourceOrigin:
+      type: string
+      description: "Where the effective source came from (spec FR-004; logged by FR-011)."
+      enum: [Page, Template]
+
+    ReportNameKind:
+      type: string
+      description: >
+        Which row of the spec FR-003 table produced the name. Replaces
+        `JournalNameKind` in the report's `PersonName` only; the US-025 journal
+        keeps `JournalNameKind` unchanged (spec FR-006 last bullet).
+        `Profile` — surname and/or given name; `EmailLocalPart` — the stored email
+        up to its first `@`; `Unnamed` — renders `Journal.Row.Unnamed` for
+        students, `Report.Teacher.Unnamed` for teachers (unchanged keys).
+      enum: [Profile, EmailLocalPart, Unnamed]
+
+    # ---------- Changed: form input ----------
+
+    ReportTemplateForm:
+      description: >
+        US-027 `ReportTemplateForm` plus one required field. All other fields,
+        rules and the structural / field-validation split are unchanged.
+      allOf:
+        - $ref: "US-027-openapi.yaml#/components/schemas/ReportTemplateForm"
+        - type: object
+          required: [names]
+          properties:
+            names:
+              type: string
+              description: >
+                Radio group, two options, one always checked by the form. VR-001:
+                exactly `profile` or `email`, one occurrence; otherwise field error
+                `NameSourceInvalid` (api-design §2.3).
+              enum: [profile, email]
+
+    ReportTemplateFieldErrorKey:
+      type: string
+      description: >
+        US-027 closed list plus one member. `NameSourceInvalid` maps to
+        `ReportTemplate.Validation.NameSourceInvalid` in both resource files (spec
+        FR-010).
+      enum:
+        - NameRequired
+        - NameTooLong
+        - NameNotUnique
+        - TextInvalidCharacters
+        - MarkTextRequired
+        - MarkTextTooLong
+        - ScaleNoRows
+        - ScaleTooManyRows
+        - ScaleBoundInvalid
+        - ScaleRowInverted
+        - ScaleLabelRequired
+        - ScaleLabelTooLong
+        - ScaleOverlap
+        - ScaleGap
+        - HoursRequired
+        - HoursOutOfRange
+        - NameSourceInvalid       # new — US-042 VR-001
+
+    ReportTemplateFormPageModel:
+      description: >
+        US-027 `ReportTemplateFormPageModel`, unchanged in shape; its `values`
+        (`ReportTemplateForm`) gain `names`. On a `400` caused by `names`,
+        `values.names` is the empty string and neither option is checked.
+      allOf:
+        - $ref: "US-027-openapi.yaml#/components/schemas/ReportTemplateFormPageModel"
+
+    ReportTemplateListPageModel:
+      description: "Unchanged — US-027."
+      allOf:
+        - $ref: "US-027-openapi.yaml#/components/schemas/ReportTemplateListPageModel"
+
+    # ---------- Changed: report page ----------
+
+    ReportMessageKey:
+      type: string
+      description: >
+        US-027 closed list plus one member. `NameSourceMalformed` maps to
+        `Report.Validation.NameSourceMalformed` in both resource files (spec
+        VR-002, FR-010).
+      enum: [TemplateMalformed, TemplateNotFound, CourseMalformed, CourseUnknown, FromMalformed, ToMalformed, PeriodInverted, NameSourceMalformed]
+
+    ReportPageModel:
+      description: "US-027 `ReportPageModel` plus `nameSwitch`; `messageKeys` uses the extended `ReportMessageKey`."
+      allOf:
+        - $ref: "US-027-openapi.yaml#/components/schemas/ReportPageModel"
+        - type: object
+          required: [nameSwitch]
+          properties:
+            nameSwitch:
+              oneOf:
+                - $ref: "#/components/schemas/NameSourceSwitch"
+                - type: "null"
+              description: "Set only when `report` is set (status `200` with a course); null otherwise."
+
+    NameSourceSwitch:
+      type: object
+      description: >
+        Spec FR-005: two links, built in `Application` from validated values only.
+        Rendered as a labelled group of two links, the current one marked
+        (`aria-current`) and not a link; usable at phone width (NFR-070).
+      required: [options]
+      properties:
+        options:
+          type: array
+          minItems: 2
+          maxItems: 2
+          description: "Always `profile` then `email`."
+          items:
+            $ref: "#/components/schemas/NameSourceSwitchOption"
+
+    NameSourceSwitchOption:
+      type: object
+      required: [source, isCurrent, path]
+      properties:
+        source:
+          $ref: "#/components/schemas/NameSource"
+        isCurrent:
+          type: boolean
+          description: "True for the effective source (spec FR-004)."
+        path:
+          type: string
+          description: >
+            `/reports?template=…&courseId=…&from=…&to=…&names=<source>` — the
+            effective template reference, course id and dates of this report plus
+            the option's source; no other parameter.
+          example: "/reports?template=7&courseId=42&from=2026-09-01&to=2026-09-30&names=email"
+
+    Report:
+      description: >
+        US-027 `Report` plus the effective name source (spec FR-006: so an export
+        from the page — US-028 — reproduces the screen).
+      allOf:
+        - $ref: "US-027-openapi.yaml#/components/schemas/Report"
+        - type: object
+          required: [nameSource, nameSourceOrigin]
+          properties:
+            nameSource:
+              $ref: "#/components/schemas/NameSource"
+            nameSourceOrigin:
+              $ref: "#/components/schemas/NameSourceOrigin"
+
+    PersonName:
+      type: object
+      description: >
+        **Changed** (report only). Every person of the report — header teachers,
+        "Lesson topics" teachers, Grading students — named by the one spec FR-003
+        function. Ordering (spec FR-006, AC-004) is done in `Application` before
+        mapping: named persons by `displayName` in the UI-language collation, ties
+        by internal participant id, then `Unnamed` by id. No internal id is carried
+        (US-027 api-design, as US-025 §2.5).
+      required: [nameKind]
+      properties:
+        displayName:
+          type: [string, "null"]
+          description: >
+            `Surname Name`, `Surname`, `Name` (profile) or the email part before `@`;
+            null when `nameKind` is `Unnamed`. Google data — HTML-encoded, never
+            translated, never corrected.
+        nameKind:
+          $ref: "#/components/schemas/ReportNameKind"
+
+x-operations-deliberately-absent:
+
+  switch-endpoint: >
+    No separate endpoint or `POST` for the switch: it changes no state, so it is a
+    `GET` of the report page with `names` (spec I-8). No antiforgery token needed.
+
+  names-in-selection-form: >
+    The report's selection form carries no `names` field (spec I-4): submitting it
+    returns to the chosen template's own setting.
+
+  api-v1: >
+    No `/api/v1` endpoint, as US-027 (spec I-12 there).
