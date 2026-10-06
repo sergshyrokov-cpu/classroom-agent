@@ -53,6 +53,22 @@ Per the Specification, API design, and `persistence-conventions.md`:
 - schema-initialization approach consistent with `persistence-conventions.md`
   (explicit schema design, not a `ddl-auto` shortcut).
 
+# Delegation
+
+The artifact is judgement work and is written here. Lookups go to `quick-look`
+(read only) from the start:
+
+- the current entity, its configuration, the latest migration and the model
+  snapshot of every table the design touches;
+- the existing constraint and index names;
+- the compile check of the entity model's skeleton signatures, when one is built
+  (a design naming C# signatures is verified only once it compiles).
+
+Each delegated prompt names the exact files or commands, says "read only" or
+which files it may touch, and "make no decisions; report facts verbatim; stop on
+anything unexpected". Independent jobs run in parallel. The stage's output
+artifact states what was delegated.
+
 # Outputs
 
 Both with front matter per `docs/workflow/artifact-schema.md`.

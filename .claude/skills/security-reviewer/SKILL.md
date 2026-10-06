@@ -467,6 +467,33 @@ data.
 
 ---
 
+# Delegation (mandatory, from Step 1)
+
+The review itself is never delegated: reading the security-relevant code,
+judging each finding and the verdict stay with this Skill's model. A subagent's
+summary of code is not evidence — read the code it points to.
+
+Delegate fact-gathering from the start (`quick-look` for lookups,
+`cheap-worker` for commands):
+
+- the Story's change set from `git status` / `git diff --stat`, grouped by
+  project and layer;
+- `dotnet list package --include-transitive` and `--vulnerable` for the changed
+  projects, with each new package's version and licence;
+- pattern sweeps over the changed files: logger calls, `[AllowAnonymous]`,
+  `IgnoreAntiforgeryToken`, file-system and temp-path use, outbound HTTP,
+  `FromSql`/raw SQL, `Html.Raw`, `innerHTML`;
+- the endpoint list with method, route and declared policy;
+- build and the security, authorization and logging test classes, with
+  failures verbatim.
+
+Each delegated prompt names the exact files or commands, says "read only" or
+which files it may touch, and "make no decisions; report facts verbatim; stop on
+anything unexpected". Independent jobs run in parallel. The stage's output
+artifact states what was delegated.
+
+---
+
 # Security Review Workflow
 
 ## Step 1: Resolve Active Story

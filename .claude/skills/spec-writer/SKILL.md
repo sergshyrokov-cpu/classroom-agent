@@ -62,6 +62,21 @@ specification`), then:
 - Open Decisions (with impact)
 - Traceability (Acceptance Criterion → functional requirement / validation rule)
 
+# Delegation
+
+The artifact is judgement work and is written here. Lookups go to `quick-look`
+(read only) from the start:
+
+- the `trebovaniya.md` sections the Story touches, found by grep and returned
+  as line ranges (never the whole ~180 KB file);
+- the earlier Stories' specifications and Open Decisions that the Story builds on;
+- facts about the existing code the Specification must not contradict.
+
+Each delegated prompt names the exact files or commands, says "read only" or
+which files it may touch, and "make no decisions; report facts verbatim; stop on
+anything unexpected". Independent jobs run in parallel. The stage's output
+artifact states what was delegated.
+
 # Output
 
 - `specification` (`docs/specifications/{story_id}-spec.md`), `status: DRAFT`.

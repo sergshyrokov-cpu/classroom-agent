@@ -59,6 +59,21 @@ Define per the Specification and `api-conventions.md`:
 - pagination where a collection can grow (per `api-conventions.md`);
 - compatibility notes for any change to an existing contract.
 
+# Delegation
+
+The artifact is judgement work and is written here. Lookups go to `quick-look`
+(read only) from the start:
+
+- the existing operations, DTOs and error keys the contract extends
+  (earlier `*-openapi.yaml`, controllers, translation keys);
+- the routes and policies the host already maps;
+- YAML validation of the produced OpenAPI file.
+
+Each delegated prompt names the exact files or commands, says "read only" or
+which files it may touch, and "make no decisions; report facts verbatim; stop on
+anything unexpected". Independent jobs run in parallel. The stage's output
+artifact states what was delegated.
+
 # Outputs
 
 - `openapi` (`docs/designs/api/{story_id}-openapi.yaml`) — the contract, with

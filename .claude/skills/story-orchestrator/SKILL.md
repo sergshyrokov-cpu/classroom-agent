@@ -303,6 +303,16 @@ pull request. Do not use write-capable remote tools.
 
 ---
 
+# Delegation
+
+Collecting state evidence is mechanical and goes to `quick-look` (read only):
+the two state files, the Story's catalog entry, `git status`, the tail of
+`history.jsonl`, and whether each stage artifact exists with which `version`
+and `status`. Interpreting it — invariants, the transition, drift, the next
+command — stays here. In `status` mode this is the whole data-gathering step.
+
+---
+
 # Failure Handling
 
 - Routed Skill fails to run: do not advance; record the failed Skill and
