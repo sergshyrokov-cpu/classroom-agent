@@ -14,4 +14,7 @@ public enum AuditTargetType
 
     /// <summary>A report template created in the school (US-027 db-design §4).</summary>
     ReportTemplate,
+
+    /// <summary>US-028 db-design §3.2: the course whose journal was exported.</summary>
+    Course,
 }

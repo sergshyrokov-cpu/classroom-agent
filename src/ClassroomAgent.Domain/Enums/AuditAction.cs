@@ -65,4 +65,7 @@ public enum AuditAction
 
     /// <summary>US-027 spec FR-016: a report template was deleted.</summary>
     ReportTemplateDeleted,
+
+    /// <summary>US-028 db-design §3.2: a journal was exported to a file.</summary>
+    JournalExported,
 }

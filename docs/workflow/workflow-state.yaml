@@ -4,23 +4,29 @@
 version: 1
 story: US-028
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
+current_stage: IMPLEMENTATION
+previous_stage: TEST_WRITING
+last_completed_stage: TEST_WRITING
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: test-writer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: 2026-10-06T05:48:59Z
+  stage: TEST_WRITING
+  recorded_at: 2026-10-06T06:10:02Z
 last_artifacts:
-  - type: database_design
-    path: docs/designs/database/US-028-db-design.md
+  - type: test_strategy
+    path: docs/tests/US-028-test-strategy.md
     version: 1
-  - type: entity_model
-    path: docs/designs/database/US-028-entity-model.md
+  - type: ac_test_matrix
+    path: docs/tests/US-028-ac-test-matrix.md
     version: 1
+  - type: test_generation_report
+    path: docs/evidence/US-028-test-generation-report.md
+    version: 1
+  - type: open_decisions
+    path: docs/decisions/US-028-open-decisions.md
+    version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
@@ -37,6 +43,9 @@ non_blocking_findings:
   - "ENTITY §3.2: Application has no localization package, so a new port IReportTexts is implemented in Web (precedent ISynchronizationRequests)."
   - "ENTITY §3.3: GetReportQuery split into ReportRequestReader + ReportBuilder, behaviour unchanged - supporting change for spec FR-003."
   - "ENTITY §2.1: number cell only for a scale label matching ^(0|[1-9][0-9]{0,14})$ so the number displays exactly as the screen."
+  - "TEST OD-005 resolved (a) by the Owner: compile-only skeleton incl. ClosedXML 0.105.1 in Infrastructure and ExportJournalCommand declared in PermittedServiceWrites (AuditEvent)."
+  - "TEST: 179 new tests - 176 red for missing implementation, 3 green regression guards; existing 3597 pass."
+  - "TEST T-1: ExportJournalCommand takes ServiceWriteScope (entity model §3.4 omitted it); T-2: button key Report.Export.Action fixed by the tests; T-3: template-id constraint expectation confirmed only after the migration."
 started_at: 2026-10-05T13:37:50Z
-updated_at: 2026-10-06T05:48:59Z
+updated_at: 2026-10-06T06:10:02Z
 completed_at: null

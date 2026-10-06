@@ -63,6 +63,24 @@ public sealed class AuditEvent
     /// <summary>US-037 db-design §2.2: <c>audit_event</c> rows deleted; null for every other action.</summary>
     public int? PurgedAuditRows { get; private set; }
 
+    /// <summary>US-028 db-design §3.2: first day of the exported period; null for every other action.</summary>
+    public DateOnly? ExportPeriodFrom { get; private set; }
+
+    /// <summary>US-028 db-design §3.2: last day of the exported period; null for every other action.</summary>
+    public DateOnly? ExportPeriodTo { get; private set; }
+
+    /// <summary>US-028 db-design §3.2: id of the template used; null for every other action.</summary>
+    public long? ExportTemplateId { get; private set; }
+
+    /// <summary>US-028 db-design §3.2: whether the template was the built-in one; null for every other action.</summary>
+    public bool? ExportTemplateBuiltIn { get; private set; }
+
+    /// <summary>US-028 db-design §3.2: number of student rows exported; null for every other action.</summary>
+    public int? ExportRows { get; private set; }
+
+    /// <summary>US-028 db-design §3.2: file format of the export; null for every other action.</summary>
+    public ExportFormat? ExportFormat { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -565,6 +583,19 @@ public sealed class AuditEvent
             RequestId = requestId,
         };
     }
+
+    /// <summary>US-028 db-design §3.2: a journal export, targeting the exported course.</summary>
+    public static AuditEvent JournalExported(
+        long actorId,
+        AppRole actorRole,
+        long courseId,
+        DateOnly from,
+        DateOnly to,
+        long? templateId,
+        int rows,
+        ExportFormat format,
+        DateTimeOffset occurredAt,
+        string? requestId) => throw new NotImplementedException("US-028 IMPLEMENTATION");
 
     /// <summary>
     /// Step 1 of the sequence: no account matched, so the row names no actor and no target at all — the typed

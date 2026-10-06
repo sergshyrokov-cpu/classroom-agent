@@ -14,6 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- US-028 OD-001: the Excel renderer only (Infrastructure/Export). -->
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
     <PackageReference Include="EFCore.NamingConventions" Version="10.0.1" />
     <PackageReference Include="Google.Apis.Admin.Reports.reports_v1" Version="1.76.0.4252" />
     <PackageReference Include="Google.Apis.Auth" Version="1.76.0" />

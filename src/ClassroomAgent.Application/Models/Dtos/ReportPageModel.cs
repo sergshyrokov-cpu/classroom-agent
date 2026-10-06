@@ -12,4 +12,5 @@ public sealed record ReportPageModel(
     IReadOnlyList<ReportMessageKey> MessageKeys,
     string ReturnPath,
     Report? Report,
-    NameSourceSwitch? NameSwitch);
+    NameSourceSwitch? NameSwitch,
+    ExportAction? Export = null);

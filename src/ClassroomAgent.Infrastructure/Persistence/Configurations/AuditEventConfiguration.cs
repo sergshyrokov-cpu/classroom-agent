@@ -130,6 +130,15 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         builder.Property(e => e.PurgedParticipants);
         builder.Property(e => e.PurgedAccounts);
         builder.Property(e => e.PurgedAuditRows);
+
+        // US-028 skeleton (OD-005): the export columns are mapped at IMPLEMENTATION, with their migration.
+        builder.Ignore(e => e.ExportPeriodFrom);
+        builder.Ignore(e => e.ExportPeriodTo);
+        builder.Ignore(e => e.ExportTemplateId);
+        builder.Ignore(e => e.ExportTemplateBuiltIn);
+        builder.Ignore(e => e.ExportRows);
+        builder.Ignore(e => e.ExportFormat);
+
         builder.Property(e => e.CreatedAt).IsRequired();
         builder.Property(e => e.UpdatedAt).IsRequired();
 

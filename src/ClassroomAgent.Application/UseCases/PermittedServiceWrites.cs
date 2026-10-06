@@ -44,5 +44,9 @@ public static class PermittedServiceWrites
             // US-037 spec FR-011, BR-075: the retention purge and its audit event run in read-only mode too —
             // retention is an obligation, and a suspended school must not keep data indefinitely.
             [typeof(RunRetentionPurgeUseCase)] = PermittedServiceWrite.RetentionPurge,
+
+            // US-028 spec FR-009, BR-026: exporting already-synced data keeps working in read-only mode, and the export's
+            // only write is its audit row. Declared with the skeleton (OD-005), so the rule above stays whole.
+            [typeof(ExportJournalCommand)] = PermittedServiceWrite.AuditEvent,
         };
 }

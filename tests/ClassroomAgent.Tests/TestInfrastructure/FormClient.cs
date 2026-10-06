@@ -93,6 +93,44 @@ public sealed partial class FormClient(HttpClient http) : IDisposable
             allHeaders);
     }
 
+    /// <summary>
+    /// US-028: sends a request and keeps the body as bytes — a file download read as text would be corrupted. Cookies
+    /// are sent and applied as by <see cref="SendAsync"/>.
+    /// </summary>
+    public async Task<BinaryResponse> SendForBytesAsync(
+        HttpMethod method,
+        string path,
+        HttpContent? content,
+        CancellationToken cancellationToken,
+        IReadOnlyDictionary<string, string>? headers = null)
+    {
+        using var request = new HttpRequestMessage(method, path) { Content = content };
+        if (_cookies.Count > 0)
+        {
+            request.Headers.Add("Cookie", string.Join("; ", _cookies.Select(c => $"{c.Key}={c.Value}")));
+        }
+
+        foreach (var (name, value) in headers ?? new Dictionary<string, string>())
+        {
+            request.Headers.TryAddWithoutValidation(name, value);
+        }
+
+        using var response = await http.SendAsync(request, cancellationToken);
+        var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+        if (response.Headers.TryGetValues("Set-Cookie", out var values))
+        {
+            foreach (var setCookie in values)
+            {
+                ApplySetCookie(setCookie);
+            }
+        }
+
+        var allHeaders = response.Headers.Concat(response.Content.Headers)
+            .SelectMany(h => h.Value.Select(v => new KeyValuePair<string, string>(h.Key, v)))
+            .ToList();
+        return new BinaryResponse(response.StatusCode, response.Headers.Location?.OriginalString, bytes, allHeaders);
+    }
+
     public void Dispose() => http.Dispose();
 
     private void ApplySetCookie(string setCookie)

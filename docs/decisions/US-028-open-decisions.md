@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-028
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-10-05T13:36:00Z
-updated_at: 2026-10-05T13:52:00Z
+updated_at: 2026-10-06T06:02:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-028-excel-export.md
@@ -18,7 +18,8 @@ supersedes: null
 
 Two carried from the Story, both resolved before activation; two raised at
 `HUMAN_SPEC_APPROVAL` (OD-003 by the Specification, OD-004 by the Owner), both
-resolved there. No item of `trebovaniya.md` §7 concerns this Story.
+resolved there. OD-005 raised by TEST_WRITING and resolved there. No item of
+`trebovaniya.md` §7 concerns this Story.
 
 ## OD-001 The Excel library
 
@@ -107,3 +108,28 @@ scaling down.
 Impact: spec FR-001, FR-002, FR-004.8, VR-001, FR-013.
 
 **Resolution:** (a), by the Owner on 2026-10-05 at `HUMAN_SPEC_APPROVAL`.
+
+## OD-005 Compile-only skeleton created at TEST_WRITING
+
+Raised by TEST_WRITING. The tests reference declarations that do not exist yet —
+the workbook model (`Workbook`, `Worksheet`, `WorksheetRow`, `WorkbookCell`,
+`WorkbookCellKind`, `PageOrientation`, `ReportText`), the ports `IReportRenderer`
+and `IReportTexts`, `ReportWorkbookMapper`, `JournalExportFileName`,
+`ExportJournalCommand` and its request / result types, `ExportAction` on
+`ReportPageModel`, `AuditEvent.JournalExported` with its six properties,
+`AuditAction.JournalExported`, `AuditTargetType.Course`, `ExportFormat`,
+`ClosedXmlReportRenderer` and `LocalizedReportTexts`. The test-writer may not
+change production code — the gap US-025 (OD-009), US-027 (OD-005), US-037
+(OD-007), US-039 (OD-008) and US-042 (OD-001) resolved the same way. The renderer
+tests read the workbook with ClosedXML, which is not referenced yet.
+
+Options: (a) a compile-only skeleton — only the declarations the tests
+reference; new members throw `NotImplementedException`; the new `AuditEvent`
+properties are ignored by EF until IMPLEMENTATION maps them with the migration;
+`ReportPageModel` gains a last optional parameter; nothing registered in DI, no
+migration, no controller, view or translation; ClosedXML 0.105.1 (OD-001) added
+to `ClassroomAgent.Infrastructure.csproj` now, the tests reading it
+transitively; IMPLEMENTATION owns and completes it; (b) no skeleton — tests that
+do not compile until IMPLEMENTATION.
+
+**Resolution:** (a) — Owner, 2026-10-06.
