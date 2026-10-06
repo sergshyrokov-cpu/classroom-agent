@@ -1,0 +1,423 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Export a journal to Excel (US-028)
+  version: "1"
+  description: >
+    HTTP contract of US-028 on the installation's public port. The report page of
+    US-027 / US-042 gains an "Export to Excel" action; the action calls the
+    installation's **first `/api/v1` operation**, `POST /api/v1/exports/journal-xlsx`
+    (API-3 export shape), which builds the same report, renders it as `.xlsx` in
+    memory, writes one audit row and returns the file (spec FR-001 … FR-012).
+    Every operation reads only PostgreSQL: none calls Google or reads a secret, in
+    any mode (spec FR-009, S-04). Because this is the first `/api/v1` resource, the
+    host-wide `/api/v1` rules reserved by US-008 (`api-v1-reserved`) are completed
+    here for 401, 403, 400 (antiforgery), 404, 405 and 500 (`x-host-wide-rules`).
+    The Control Plane and the private port are untouched. Companion document:
+    docs/designs/api/US-028-api-design.md.
+x-story: US-028
+x-source-specification: docs/specifications/US-028-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-028-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 86
+x-produced-by: openapi-designer
+x-extends:
+  - docs/designs/api/US-008-openapi.yaml
+  - docs/designs/api/US-027-openapi.yaml
+  - docs/designs/api/US-042-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type of
+  the Control Plane channel is added or changed (DC-12). `/api/v1` is the
+  installation's own REST prefix (API-1), unrelated to the channel version.
+
+servers:
+  - url: https://school.example
+    description: >
+      Installation public port. Illustrative; the real value is the configured public
+      base address (US-008 spec FR-001).
+
+tags:
+  - name: export
+    description: "Journal export (spec FR-001, FR-003 … FR-012)"
+  - name: report
+    description: "The report page — changed: the export action (spec FR-002)"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008, US-027, US-040 and US-042 configured applies and is not
+    restated: HTTPS and HSTS, the deny-by-default fallback policy (SC-4, API-9),
+    the global antiforgery filter, the session cookie and its limits, the
+    exception handler (API-10), the host-wide `Cache-Control: no-store` (US-040,
+    SC-14), the template-reference value type (US-027) and the name-source value
+    type (US-042).
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list of anonymous endpoints gains **nothing**; the endpoint
+    enumeration test classifies `POST /api/v1/exports/journal-xlsx` as protected
+    (spec FR-008, S-01).
+
+  api-v1-error-body: >
+    Completes US-008 `api-v1-reserved` (API-6: "All error responses under
+    `/api/v1` use exactly this JSON shape"). Every error answer to a request whose
+    path starts with the segment `/api/v1` is `application/json` with the
+    `ApiError` body — never a redirect, never the HTML error page. The choice is
+    made by path in one place per mechanism (AD-9, API-10):
+    (1) no session or an expired one → `401`, message key `Api.Error.SignInRequired`
+    (the cookie challenge answers instead of redirecting to `/sign-in`);
+    (2) a Dean held on the forced password change → `403`, key
+    `Api.Error.PasswordChangeRequired` (instead of the redirect to
+    `/sign-in/change-password`; the restriction itself is unchanged, US-012);
+    (3) denied by a policy → `403`, key `Error.Forbidden`;
+    (4) missing or invalid antiforgery token → `400`, key `Error.PageExpired`
+    (the result-filter path of API-7, not the exception handler);
+    (5) no `/api/v1` route matches the path → `404`, key `Error.NotFound`; a
+    route matches but not the method → `405`, key `Error.NotFound`;
+    (6) an unmapped exception → `500`, key `Error.Unexpected`, no detail;
+    (7) `ReadOnlyModeException` → `409` exactly as US-008 already maps it.
+    `message` is resolved in the requesting user's UI language (NFR-073), the
+    school default for an anonymous request; `error` is the lower-case reason
+    phrase the US-008 handler already writes (`conflict` → `bad_request`,
+    `unauthorized`, `forbidden`, `not_found`, `method_not_allowed`,
+    `unsupported_media_type`, `internal_server_error`); `path` is the request
+    path without the query string. Outside `/api/v1` nothing changes.
+
+  antiforgery-api: >
+    API-7. The token travels in the `RequestVerificationToken` header; the page
+    supplies its value from `<meta name="request-verification-token">` rendered on
+    the report page. The global filter validates it like every other `POST`; the
+    exemption list gains nothing.
+
+  outbound: >
+    No operation calls anything outside the process: no Google call, no secret-store
+    read, no Control Plane call (spec FR-009, S-04, S-13).
+
+paths:
+
+  /api/v1/exports/journal-xlsx:
+
+    post:
+      tags: [export]
+      operationId: exportJournalXlsx
+      summary: "Export the report of one template, course and period as an Excel file"
+      description: >
+        Builds the report of US-027 FR-005 with the US-042 changes through the
+        **same** `Application` query the report page uses (spec FR-003), maps it in
+        `Application` into the workbook model (spec FR-004), renders it through
+        `IReportRenderer` (ClosedXML, `Infrastructure/Export`, spec FR-011) in
+        memory, writes and commits one `AuditEvent` (spec FR-010), then returns the
+        file. Evaluation order: authentication (`401`) → restricted session (`403`)
+        → `UseReportTemplates` (`403`) → antiforgery (`400`) → `Content-Type`
+        (`415`) → body syntax (`400`, `RequestMalformed`) → field validation
+        (`400`, every failing field) → template and course existence (`404`) →
+        build → map → render → audit write and commit → `200`. Nothing is read for
+        the report before field validation passes (spec FR-005, S-05). If
+        rendering or the audit write fails, no file is returned (`500`) and nothing
+        is audited as succeeded. Not paginated (API-8). Not reachable by `GET`
+        (`405`; spec S-03).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: UseReportTemplates
+      x-permission-matrix-row: "\"Использование шаблонов отчётов\" / \"Просмотр и экспорт журнала успеваемости\" — Admin ✔, Dean ✔"
+      x-antiforgery: required (header `RequestVerificationToken`)
+      x-calls-google: false
+      x-writes: "one AuditEvent `JournalExported`, Outcome `Succeeded`, on success only; nothing else"
+      x-read-only-mode: "allowed — identical in all three BR-025 causes; IReadOnlyModeGuard not called; the audit row is written (BR-026)"
+      x-database-round-trips: "those of the report query (US-027 FR-004) plus the audit write"
+      x-file-storage: "in memory only; never written to disk or stored (spec FR-006, S-07)"
+      x-spec: [FR-001, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012]
+      x-acceptance-criteria: [AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011]
+      security:
+        - installationSession: []
+      parameters:
+        - name: RequestVerificationToken
+          in: header
+          required: true
+          description: "The antiforgery token (API-7, `x-host-wide-rules.antiforgery-api`)."
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JournalExportRequest"
+            example:
+              template: academic-journal
+              courseId: "42"
+              from: "2026-09-01"
+              to: "2026-09-30"
+              names: profile
+              orientation: portrait
+      responses:
+        "200":
+          description: >
+            The workbook (spec FR-004, FR-006). Two worksheets, "Grading" and
+            "Lesson topics" in the exporting user's UI language. An empty report is
+            a `200` like any other (spec FR-004.6). Read-only mode answers exactly
+            as outside it.
+          headers:
+            Content-Disposition:
+              description: >
+                `attachment; filename="<ASCII fallback>"; filename*=UTF-8''<percent-encoded name>`
+                (RFC 6266). The name is spec FR-006.1 —
+                `<course name> <from>–<to>.xlsx`, dates `yyyy-MM-dd`; the ASCII
+                fallback is the same name with every non-ASCII character replaced
+                by `_`, as ASP.NET Core's `SetHttpFileName` produces. No student or
+                teacher name or email, no template name (S-09).
+              schema:
+                type: string
+              example: "attachment; filename=\"______ 7-_ 2026-09-01_2026-09-30.xlsx\"; filename*=UTF-8''%D0%90%D0%BB%D0%B3%D0%B5%D0%B1%D1%80%D0%B0%207-%D0%90%202026-09-01%E2%80%932026-09-30.xlsx"
+            Cache-Control:
+              description: "`no-store`, by the host-wide rule of US-040 (SC-14); the operation adds nothing of its own (spec FR-006, AC-010)."
+              schema:
+                type: string
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                contentMediaType: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+        "400":
+          description: >
+            One of: (a) missing or invalid antiforgery token — `message`
+            `Error.PageExpired`, no `fieldErrors`; (b) the body is not a JSON
+            object, has a duplicate member or a member of the wrong JSON type —
+            `message` `Export.Validation.RequestMalformed`, no `fieldErrors`;
+            (c) field validation (`JournalExportRequest`, spec VR-001) — one
+            `fieldErrors` entry per failing field in the order `template`,
+            `courseId`, `from`, `to`, the period pair (field `to`), `names`,
+            `orientation`; `message` is the text of the first entry. The rejected
+            value is never echoed, logged or audited (S-05). No file, no audit row.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              example:
+                timestamp: "2026-10-06T09:15:30Z"
+                status: 400
+                error: bad_request
+                message: "The start of the period is not a valid date."
+                path: /api/v1/exports/journal-xlsx
+                fieldErrors:
+                  - field: from
+                    message: "The start of the period is not a valid date."
+        "401":
+          description: "No session, or it expired (`x-host-wide-rules.api-v1-error-body` (1)). Nothing is read."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: >
+            A Dean on the forced password change (`Api.Error.PasswordChangeRequired`),
+            or a session the policy denies (`Error.Forbidden`). Nothing is read.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: >
+            The body is valid, but the template (`TemplateNotFound`) or the course
+            (`CourseUnknown`) does not exist — both entries when both are missing,
+            template first; `message` is the text of the first entry. No report
+            data read beyond the existence lookups; no file; no audit row.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              example:
+                timestamp: "2026-10-06T09:15:30Z"
+                status: 404
+                error: not_found
+                message: "Choose a course from the list."
+                path: /api/v1/exports/journal-xlsx
+                fieldErrors:
+                  - field: courseId
+                    message: "Choose a course from the list."
+        "405":
+          description: "Any method other than `POST` — `GET` included (spec S-03). `message` `Error.NotFound`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "415":
+          description: "`Content-Type` is not `application/json`. `message` `Export.Validation.RequestMalformed`. Checked after antiforgery."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
+          description: >
+            Rendering or the audit write failed, or any unmapped exception. No file;
+            nothing audited as succeeded; `message` `Error.Unexpected`, no detail
+            (AD-9, API-10, spec FR-010).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /reports:
+
+    get:
+      tags: [report]
+      operationId: getReport
+      summary: "The report — changed: the export action and the token meta tag"
+      description: >
+        US-027 / US-042 `getReport` with one additive change (spec FR-002). When
+        the page shows a report (`200` with a course, an empty report included) it
+        also shows the "Export to Excel" action with the orientation choice, and
+        renders `<meta name="request-verification-token">`. The action is
+        rendered from `ReportPageModel.export`; on the form-only state and on
+        `400`/`404` `export` is null and nothing is rendered. The action is a
+        button and a radio pair (`portrait` pre-selected, `landscape`), not a form
+        submission: the static script `wwwroot/js/report-export.js` reads the
+        validated values from the action's `data-` attributes, posts the
+        `JournalExportRequest` as JSON with the token header, saves a `200` as a
+        download under the server's file name, and shows `ApiError.message` (and
+        each `fieldErrors[].message`) in a live region on any error. No inline
+        script (as `copy-instruction.js`: a later CSP needs no change). Viewing still
+        writes nothing. Unchanged otherwise.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: UseReportTemplates
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: "nothing — no entity, no audit row"
+      x-read-only-mode: "allowed — the action is shown in all three BR-025 causes (spec FR-002); showing it is not enforcement"
+      x-spec: [FR-002, FR-013]
+      x-acceptance-criteria: [AC-001, AC-006]
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: "As US-042, plus `export` when a report is shown."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ReportPageModelChange"
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: __Host-ca-session
+      description: "The installation session cookie (US-008, API-7)."
+
+  schemas:
+
+    JournalExportRequest:
+      type: object
+      description: >
+        Request DTO (AD-8), bound as strings and validated in `Application` by the
+        report page's own parsers (spec VR-001) — no MVC enum or number binding.
+        A member that is absent, JSON `null` or `""` is "absent". Members not
+        listed here are ignored and never echoed. All values are internal ids,
+        dates and enumerated tokens — no personal data (spec FR-001, S-09).
+      additionalProperties: true
+      properties:
+        template:
+          type: [string, "null"]
+          description: >
+            The template reference (US-027 `template-reference`). Absent →
+            `academic-journal` (US-027 I-4). Malformed → `400`
+            `TemplateMalformed`; unknown → `404` `TemplateNotFound`.
+          pattern: "^(academic-journal|[0-9]{1,19})$"
+        courseId:
+          type: [string, "null"]
+          description: >
+            Internal course id, as US-025 VR-001, required. Absent or malformed →
+            `400` `CourseMalformed`; unknown → `404` `CourseUnknown`.
+          pattern: "^[0-9]{1,19}$"
+        from:
+          type: [string, "null"]
+          format: date
+          description: "First day, inclusive, `yyyy-MM-dd`, required. Absent or malformed → `400` `FromMalformed`."
+        to:
+          type: [string, "null"]
+          format: date
+          description: >
+            Last day, inclusive, `yyyy-MM-dd`, required. Absent or malformed →
+            `400` `ToMalformed`. `from` > `to` → `400` `PeriodInverted` (field `to`),
+            checked only when both are well-formed.
+        names:
+          type: [string, "null"]
+          description: >
+            The name source (US-042 `name-source`). Absent → the template's setting
+            (US-042 FR-004). Any other value → `400` `NameSourceMalformed`. The
+            page always sends the effective source of the report on screen.
+          enum: [profile, email, null]
+        orientation:
+          type: [string, "null"]
+          description: >
+            Page orientation of both sheets (spec FR-004.8, OD-004 a). Absent →
+            `portrait`. Exactly `portrait` or `landscape`, case-sensitive,
+            untrimmed; anything else → `400` `OrientationInvalid`. Stored nowhere.
+          enum: [portrait, landscape, null]
+
+    ExportMessageKey:
+      type: string
+      description: >
+        Closed list of `fieldErrors` causes; `message` carries the translated text,
+        never the key. Reused keys: `TemplateMalformed`, `TemplateNotFound` →
+        `ReportTemplate.Reference.<member>`; `CourseMalformed`, `CourseUnknown`,
+        `FromMalformed`, `ToMalformed`, `PeriodInverted` →
+        `Journal.Validation.<member>`; `NameSourceMalformed` →
+        `Report.Validation.NameSourceMalformed`. New: `OrientationInvalid` →
+        `Export.Validation.OrientationInvalid` (spec FR-013).
+      enum: [TemplateMalformed, TemplateNotFound, CourseMalformed, CourseUnknown, FromMalformed, ToMalformed, PeriodInverted, NameSourceMalformed, OrientationInvalid]
+
+    ApiError:
+      type: object
+      description: >
+        The API-6 error body, unchanged from US-008 (`Application/Models/Dtos/ApiError`).
+        First returned by a real operation in this Story.
+      required: [timestamp, status, error, message, path]
+      properties:
+        timestamp: {type: string, format: date-time}
+        status: {type: integer}
+        error: {type: string}
+        message:
+          type: string
+          description: "Translated, safe to show (API-6). Never a rejected value, stack trace, type name or secret."
+        path: {type: string}
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field:
+                type: string
+                enum: [template, courseId, from, to, names, orientation]
+              message: {type: string}
+
+    ReportPageModelChange:
+      type: object
+      description: >
+        The one member `ReportPageModel` (US-027, US-042) gains. View DTO, mapped
+        in `Application` (AD-8).
+      properties:
+        export:
+          oneOf:
+            - $ref: "#/components/schemas/ExportAction"
+            - type: "null"
+
+    ExportAction:
+      type: object
+      description: >
+        The validated values of the report on screen, rendered into the action's
+        `data-` attributes (spec FR-002). Built only from values that passed
+        validation; `names` is the **effective** source, never absent.
+      required: [template, courseId, from, to, names]
+      additionalProperties: false
+      properties:
+        template: {type: string}
+        courseId: {type: integer, format: int64}
+        from: {type: string, format: date}
+        to: {type: string, format: date}
+        names: {type: string, enum: [profile, email]}

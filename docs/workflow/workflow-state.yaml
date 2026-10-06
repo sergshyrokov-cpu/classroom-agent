@@ -4,22 +4,22 @@
 version: 1
 story: US-028
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: db-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: 2026-10-05T13:55:58Z
+  verdict: PASS
+  stage: DB_DESIGN
+  recorded_at: 2026-10-06T05:48:59Z
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-028-spec.md
+  - type: database_design
+    path: docs/designs/database/US-028-db-design.md
     version: 1
-  - type: open_decisions
-    path: docs/decisions/US-028-open-decisions.md
+  - type: entity_model
+    path: docs/designs/database/US-028-entity-model.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
@@ -29,6 +29,14 @@ non_blocking_findings:
   - "SPEC F-1: Story Notes say GET; trebovaniya.md §8 v64 requires POST with antiforgery — spec follows §8."
   - "SPEC I-1..I-9: interpretations in spec §11; any may become an OD."
   - "SPEC FR-011: ClosedXML 0.105.1 in Infrastructure only; transitive packages/licences to be checked at SECURITY_REVIEW."
+  - "API §2.1-2.2: export is POST /api/v1/exports/journal-xlsx (API-3 shape), JSON body, script call with header token."
+  - "API §2.5: first /api/v1 resource - host-wide /api/v1 errors become API-6 JSON (401 challenge, 403 restricted session/policy, 400 token, 404/405, 500); outside /api/v1 unchanged."
+  - "API §8: workbook model, IReportRenderer shape, AuditEvent detail fields left to DB_DESIGN."
+  - "API A-1: reused NameSourceMalformed text mentions 'page address'; kept per spec VR-001."
+  - "DB D-1..D-4: export details as six typed nullable audit_event columns (US-037 pattern); action journal_exported, target course; built-in marker = export_template_built_in; format xlsx. Migration AddJournalExportAudit."
+  - "ENTITY §3.2: Application has no localization package, so a new port IReportTexts is implemented in Web (precedent ISynchronizationRequests)."
+  - "ENTITY §3.3: GetReportQuery split into ReportRequestReader + ReportBuilder, behaviour unchanged - supporting change for spec FR-003."
+  - "ENTITY §2.1: number cell only for a scale label matching ^(0|[1-9][0-9]{0,14})$ so the number displays exactly as the screen."
 started_at: 2026-10-05T13:37:50Z
-updated_at: 2026-10-05T13:55:58Z
+updated_at: 2026-10-06T05:48:59Z
 completed_at: null
