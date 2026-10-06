@@ -215,6 +215,24 @@ Create security-focused tests for applicable behavior, as
 Also cover, where the Story touches them: translation keys in both Ukrainian and
 English, and date or period boundaries in a non-UTC school time zone (TC-8).
 
+## Delegation (mandatory, from the first step)
+
+Judgement stays with this Skill's model; bulk goes to `cheap-worker` subagents
+from the start, not after the user asks.
+
+Keep inline: the test design (`test_strategy`, `ac_test_matrix`), the
+compile-only skeleton and its Open Decision, migration and data tests, and the
+red-phase verdict — what each failure means.
+
+Delegate: bulk test code once the scenarios are decided — HTTP allowed/
+forbidden-role tests, page tests against a fixed contract, logging and
+translation-key tests, adapter tests with a known pattern — and every
+`dotnet build` / `dotnet test` run.
+
+Each delegated prompt names the files it may touch, a finish condition and
+"make no design decisions; stop and report on a contradiction". The test
+generation report states which parts were delegated.
+
 ## Workflow
 
 1. Read the active story and confirm the current workflow stage.

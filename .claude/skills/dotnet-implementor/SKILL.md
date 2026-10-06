@@ -385,6 +385,38 @@ tests start.
 
 ---
 
+# Delegation (mandatory, from Step 1)
+
+The project runs on a limited plan: judgement stays with this Skill's model,
+mechanical work goes to subagents (`cheap-worker` for edits and runs,
+`quick-look` for read-only lookups). This is not optional and is not decided
+"later" — plan it at Step 3, before the first edit.
+
+Keep inline (judgement):
+
+- C# that embodies a business rule, a security rule or the API/error contract;
+- deciding what a failing test means, and whether a test or the code is wrong;
+- any deviation from an approved artifact; the implementation report.
+
+Delegate from the start (decided work):
+
+- every `dotnet build` / `dotnet test` / `dotnet format` run, incremental or
+  full — the full suite takes minutes; report failures verbatim;
+- translation entries, DI registration, views and scripts against a fixed
+  contract, snapshot/registry test updates that follow from the approved design;
+- mechanical edits already decided inline.
+
+Each delegated prompt names the exact files it may touch, a finish condition
+(a named test class green, a build with 0 warnings) and the instruction "make
+no design decisions; if the task contradicts the architecture or the
+artifacts, stop and report". Run independent delegated jobs in parallel while
+doing the inline part; give parallel jobs disjoint files.
+
+The implementation report lists, under §5, which runs and edits were
+delegated. A report with no delegated work must say why.
+
+---
+
 # Implementation Workflow
 
 ## Step 1: Resolve Active Story
@@ -822,7 +854,8 @@ supporting change). No file without a trace.
 
 Actual commands run, exit status, and results for: build, tests (unit,
 integration, contract, security), format check. Do not claim `PASS` for a check
-that was not executed.
+that was not executed. State which runs and edits were delegated (see
+Delegation).
 
 ## 6. Configuration Changes
 
