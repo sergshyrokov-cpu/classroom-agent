@@ -128,8 +128,9 @@ public sealed class WorkspaceConnectionReadOnlyTests(PostgreSqlFixture database)
     [Fact]
     public void NoNewUseCase_IsRegisteredAsAPermittedServiceWrite()
     {
-        // Eight since US-037 registered the retention purge (BR-075); none of them concerns the connection.
-        Assert.Equal(8, PermittedServiceWrites.Declarations.Count);
+        // Eight since US-037 registered the retention purge (BR-075); nine since US-028 registered
+        // ExportJournalCommand (US-028: the export's audit row, BR-026); none of them concerns the connection.
+        Assert.Equal(9, PermittedServiceWrites.Declarations.Count);
         Assert.DoesNotContain(
             PermittedServiceWrites.Declarations.Keys,
             t => t.Name.Contains("WorkspaceConnection", StringComparison.Ordinal));

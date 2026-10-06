@@ -55,7 +55,7 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
         // US-037 adds no table: its migration amends audit_event and indexes course_membership (db-design §7).
         // US-019 adds none either: its migration amends audit_event's checks only (db-design §3).
         // US-027 adds one migration (US-027 db-design §7); US-042 one more, adding columns only (US-042 db-design §4).
-        Assert.Equal(12, migrations.Count);
+        Assert.Equal(13, migrations.Count);
         Assert.EndsWith("_InitialLegitimacyState", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_InitialAppUserAndAuditEvent", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_AddWorkspaceConnection", migrations[2], StringComparison.Ordinal);

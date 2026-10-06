@@ -33,6 +33,12 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
                 "actor_role character varying 16 YES -",
                 "actor_type character varying 16 NO -",
                 "created_at timestamp with time zone - NO -",
+                "export_format character varying 8 YES -",
+                "export_period_from date - YES -",
+                "export_period_to date - YES -",
+                "export_rows integer - YES -",
+                "export_template_built_in boolean - YES -",
+                "export_template_id bigint - YES -",
                 "id bigint - NO -",
                 "occurred_at timestamp with time zone - NO -",
                 "outcome character varying 16 NO -",
@@ -85,6 +91,10 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
                 "ck_audit_event_actor_role",
                 "ck_audit_event_actor_role_value",
                 "ck_audit_event_actor_type",
+                "ck_audit_event_export_columns",
+                "ck_audit_event_export_columns_absent",
+                "ck_audit_event_export_shape",
+                "ck_audit_event_export_template_id",
                 "ck_audit_event_immutable",
                 "ck_audit_event_outcome",
                 "ck_audit_event_purge_actor",
@@ -259,8 +269,8 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
     /// <summary>db-design 4.1: the target columns travel together.</summary>
     [Theory]
     // US-012 added app_user to the closed list of target types, so the unknown-type example moved on to a
-    // type a later Epic will add.
-    [InlineData("course", null)]
+    // type a later Epic will add. US-028 added course, so it moved on again.
+    [InlineData("meeting", null)]
     [InlineData(null, 7L)]
     public async Task AHalfSetTarget_IsRejected(string? targetType, long? targetId)
     {

@@ -273,6 +273,19 @@
   <data name="Report.Lesson.Signature" xml:space="preserve"><value>Teacher's signature</value></data>
   <data name="Report.Empty.NothingPublished" xml:space="preserve"><value>Nothing was published in this period.</value></data>
   <data name="Report.Empty.NoStudents" xml:space="preserve"><value>No students in this period.</value></data>
+  <data name="Export.Sheet.Grading" xml:space="preserve"><value>Grading</value></data>
+  <data name="Export.Sheet.LessonTopics" xml:space="preserve"><value>Lesson topics</value></data>
+  <data name="Export.Header.Template" xml:space="preserve"><value>Template</value></data>
+  <data name="Export.Header.Course" xml:space="preserve"><value>Course</value></data>
+  <data name="Export.Course.Fallback" xml:space="preserve"><value>course</value></data>
+  <data name="Report.Export.Action" xml:space="preserve"><value>Export to Excel</value></data>
+  <data name="Report.Export.Orientation" xml:space="preserve"><value>Page orientation</value></data>
+  <data name="Report.Export.Orientation.Portrait" xml:space="preserve"><value>Portrait</value></data>
+  <data name="Report.Export.Orientation.Landscape" xml:space="preserve"><value>Landscape</value></data>
+  <data name="Export.Validation.OrientationInvalid" xml:space="preserve"><value>Unknown page orientation.</value></data>
+  <data name="Export.Validation.RequestMalformed" xml:space="preserve"><value>The request is malformed.</value></data>
+  <data name="Api.Error.SignInRequired" xml:space="preserve"><value>Sign-in is required.</value></data>
+  <data name="Api.Error.PasswordChangeRequired" xml:space="preserve"><value>Change your temporary password first.</value></data>
   <data name="Report.Teacher.Unnamed" xml:space="preserve"><value>teacher without a name</value></data>
   <data name="ReportTemplate.Form.Names" xml:space="preserve"><value>Names</value></data>
   <data name="ReportTemplate.NameSource.Profile" xml:space="preserve"><value>From the Google profile (surname and name)</value></data>

@@ -147,15 +147,33 @@ public static class InstallationSecurityServices
         options.Events = new CookieAuthenticationEvents
         {
             // No return URL is emitted or honoured: it is an open-redirect surface for no gain (api-design §2.6).
+            // US-028 api-design §2.5: under /api/v1 a script gets 401 with the API-6 body instead.
             OnRedirectToLogin = context =>
             {
+                if (ApiErrorResponse.IsApi(context.Request.Path))
+                {
+                    return ApiErrorResponse.WriteAsync(
+                        context.HttpContext,
+                        ApiErrorResponse.Create(context.HttpContext, StatusCodes.Status401Unauthorized, JournalExportTextKeys.SignInRequired),
+                        context.HttpContext.RequestAborted);
+                }
+
                 context.Response.Redirect(SignInRoutes.SignInPage);
                 return Task.CompletedTask;
             },
 
-            // A denied signed-in request gets 403 with the error page, not a redirect (SC-4 v66).
+            // A denied signed-in request gets 403 with the error page, not a redirect (SC-4 v66); under /api/v1 the
+            // API-6 body (US-028 api-design §2.5).
             OnRedirectToAccessDenied = context =>
             {
+                if (ApiErrorResponse.IsApi(context.Request.Path))
+                {
+                    return ApiErrorResponse.WriteAsync(
+                        context.HttpContext,
+                        ApiErrorResponse.Create(context.HttpContext, StatusCodes.Status403Forbidden, "Error.Forbidden"),
+                        context.HttpContext.RequestAborted);
+                }
+
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
                 return Task.CompletedTask;
             },

@@ -306,7 +306,7 @@ stories:
   - id: US-028
     epic: EPIC-3
     title: Export a journal to Excel using a school template
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: >
       Depends on US-027 and US-042.
     # Story file authored: docs/stories/US-028-excel-export.md (aligned with v86).

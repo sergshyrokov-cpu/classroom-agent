@@ -102,7 +102,9 @@ public sealed class JournalExportTests(PostgreSqlFixture database)
         var all = string.Join('\n', Texts(grading));
         Assert.Contains(SeededJournal.CourseName, all, StringComparison.Ordinal);
         Assert.Contains(SeededJournal.GradedTitle, all, StringComparison.Ordinal);
-        Assert.Contains(SeededJournal.StudentName, all, StringComparison.Ordinal);
+        // US-028 implementation finding T-4: the seeded student has no name parts, so the report shows the email local
+        // part (US-042 FR-003), never full_name — the file shows the same label as the screen.
+        Assert.Contains("student.one", all, StringComparison.Ordinal);
         Assert.DoesNotContain(SeededJournal.TeacherName + "\n", all, StringComparison.Ordinal);
         Assert.DoesNotContain(SeededJournal.OctoberTitle, all, StringComparison.Ordinal);
     }
@@ -151,7 +153,9 @@ public sealed class JournalExportTests(PostgreSqlFixture database)
         var all = string.Join('\n', Texts(workbook.Worksheet(1)));
         Assert.Contains(host.Text("ReportTemplate.BuiltIn.AcademicJournal", "en"), all, StringComparison.Ordinal);
         Assert.Contains(SeededJournal.CourseName, all, StringComparison.Ordinal);
-        Assert.Contains(SeededJournal.StudentName, all, StringComparison.Ordinal);
+        // US-028 implementation finding T-4: the seeded student has no name parts, so the report shows the email local
+        // part (US-042 FR-003), never full_name — the file shows the same label as the screen.
+        Assert.Contains("student.one", all, StringComparison.Ordinal);
     }
 
     /// <summary>AC-007, FR-010: one audit row with ids, period, built-in marker, row count and format — and no personal data.</summary>

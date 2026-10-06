@@ -4,6 +4,7 @@ using ClassroomAgent.Application.UseCases;
 using ClassroomAgent.Domain.Entities;
 using ClassroomAgent.Contracts;
 using ClassroomAgent.Infrastructure.ControlPlane;
+using ClassroomAgent.Infrastructure.Export;
 using ClassroomAgent.Infrastructure.Google;
 using ClassroomAgent.Infrastructure.Persistence;
 using ClassroomAgent.Infrastructure.Security;
@@ -161,6 +162,10 @@ public static class InstallationServices
         services.AddScoped<SaveReportTemplateUseCase>();
         services.AddScoped<DeleteReportTemplateUseCase>();
         services.AddScoped<GetReportQuery>();
+        // US-028: the journal export (spec FR-011): the renderer in Infrastructure, the text port in Web.
+        services.AddScoped<ExportJournalCommand>();
+        services.AddSingleton<IReportRenderer, ClosedXmlReportRenderer>();
+        services.AddScoped<IReportTexts, LocalizedReportTexts>();
 
         // US-017 spec FR-007: the "Last synchronization" block of the connection page. It reads and writes
         // nothing, so it needs no guard and no unit of work.

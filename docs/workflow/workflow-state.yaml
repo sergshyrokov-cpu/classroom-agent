@@ -4,29 +4,23 @@
 version: 1
 story: US-028
 workflow: story-delivery
-current_stage: IMPLEMENTATION
-previous_stage: TEST_WRITING
-last_completed_stage: TEST_WRITING
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: test-writer
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: TEST_WRITING
-  recorded_at: 2026-10-06T06:10:02Z
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_PR_APPROVAL
+  recorded_at: 2026-10-06T10:20:00Z
 last_artifacts:
-  - type: test_strategy
-    path: docs/tests/US-028-test-strategy.md
+  - type: implementation_report
+    path: docs/evidence/US-028-implementation-report.md
     version: 1
-  - type: ac_test_matrix
-    path: docs/tests/US-028-ac-test-matrix.md
+  - type: security_review
+    path: docs/reviews/security/US-028-security-review.md
     version: 1
-  - type: test_generation_report
-    path: docs/evidence/US-028-test-generation-report.md
-    version: 1
-  - type: open_decisions
-    path: docs/decisions/US-028-open-decisions.md
-    version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
@@ -46,6 +40,12 @@ non_blocking_findings:
   - "TEST OD-005 resolved (a) by the Owner: compile-only skeleton incl. ClosedXML 0.105.1 in Infrastructure and ExportJournalCommand declared in PermittedServiceWrites (AuditEvent)."
   - "TEST: 179 new tests - 176 red for missing implementation, 3 green regression guards; existing 3597 pass."
   - "TEST T-1: ExportJournalCommand takes ServiceWriteScope (entity model §3.4 omitted it); T-2: button key Report.Export.Action fixed by the tests; T-3: template-id constraint expectation confirmed only after the migration."
+  - "IMPL D-1: JournalExportResult gains an optional JournalExportSummary (ids, dates, codes, counts) for the FR-012 log line."
+  - "IMPL D-2..D-5: 415 checked in the controller; 405 under /api/v1 via the fallback; API-6 JSON writes Cyrillic unescaped; ReportBuilder reads the clock itself."
+  - "IMPL T-4: export fixture now takes a fresh token from the report page; T-5 (Owner decision 1a): two assertions expect the email local part student.one, as the screen shows."
+  - "IMPL: 3776 tests green, build 0 warnings, format clean. Skill files .claude/skills/{dotnet-implementor,test-writer} changed outside the Story — commit separately."
+  - "SEC M-1 (Minor): export body has no explicit size limit beyond Kestrel default; recommendation only."
+  - "SEC I-1: anonymous GET on the export path answers 405 + Allow (api-design 2.5 rule 5); I-2: SixLabors.Fonts Apache-2.0, rest MIT, no vulnerable packages; I-3: downloaded file holds personal data by design; I-4: skill files out of Story scope."
 started_at: 2026-10-05T13:37:50Z
-updated_at: 2026-10-06T06:10:02Z
-completed_at: null
+updated_at: 2026-10-06T10:20:00Z
+completed_at: 2026-10-06T10:20:00Z

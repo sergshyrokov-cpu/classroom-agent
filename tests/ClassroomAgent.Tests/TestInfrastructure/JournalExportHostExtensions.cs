@@ -53,7 +53,9 @@ public static class JournalExportHostExtensions
 
     /// <summary>
     /// Opens the report page (which carries a token, as every page does through the language switcher) and posts the
-    /// body as JSON with that token in the header (API-7).
+    /// body as JSON with that token in the header (API-7). A fresh token is always taken from the report page before
+    /// the POST, as the browser does: a token taken from the sign-in page before signing in belongs to the anonymous
+    /// user and is rejected after sign-in.
     /// </summary>
     public static async Task<BinaryResponse> ExportAsync(
         this FormClient client,
@@ -62,7 +64,7 @@ public static class JournalExportHostExtensions
         bool withToken = true,
         string contentType = "application/json")
     {
-        if (withToken && client.LastToken is null)
+        if (withToken)
         {
             await client.GetAsync(ReportTemplateTestData.ReportPath, cancellationToken);
         }

@@ -272,6 +272,19 @@
   <data name="Report.Lesson.IndependentWork" xml:space="preserve"><value>Самостійна робота</value></data>
   <data name="Report.Lesson.Signature" xml:space="preserve"><value>Підпис викладача</value></data>
   <data name="Report.Empty.NothingPublished" xml:space="preserve"><value>У цьому періоді нічого не опубліковано.</value></data>
+  <data name="Export.Sheet.Grading" xml:space="preserve"><value>Оцінювання</value></data>
+  <data name="Export.Sheet.LessonTopics" xml:space="preserve"><value>Теми занять</value></data>
+  <data name="Export.Header.Template" xml:space="preserve"><value>Шаблон</value></data>
+  <data name="Export.Header.Course" xml:space="preserve"><value>Курс</value></data>
+  <data name="Export.Course.Fallback" xml:space="preserve"><value>курс</value></data>
+  <data name="Report.Export.Action" xml:space="preserve"><value>Експорт в Excel</value></data>
+  <data name="Report.Export.Orientation" xml:space="preserve"><value>Орієнтація сторінки</value></data>
+  <data name="Report.Export.Orientation.Portrait" xml:space="preserve"><value>Книжкова</value></data>
+  <data name="Report.Export.Orientation.Landscape" xml:space="preserve"><value>Альбомна</value></data>
+  <data name="Export.Validation.OrientationInvalid" xml:space="preserve"><value>Невідома орієнтація сторінки.</value></data>
+  <data name="Export.Validation.RequestMalformed" xml:space="preserve"><value>Запит має неправильний формат.</value></data>
+  <data name="Api.Error.SignInRequired" xml:space="preserve"><value>Потрібно увійти.</value></data>
+  <data name="Api.Error.PasswordChangeRequired" xml:space="preserve"><value>Спочатку змініть тимчасовий пароль.</value></data>
   <data name="Report.Empty.NoStudents" xml:space="preserve"><value>У цьому періоді в курсі немає учнів.</value></data>
   <data name="Report.Teacher.Unnamed" xml:space="preserve"><value>викладач без імені</value></data>
   <data name="ReportTemplate.Form.Names" xml:space="preserve"><value>Імена</value></data>

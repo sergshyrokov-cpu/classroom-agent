@@ -32,6 +32,14 @@ public sealed class GlobalAntiforgeryFilter(IAntiforgery antiforgery) : IAsyncAu
         }
         catch (AntiforgeryValidationException)
         {
+            // US-028 api-design §2.5: a script under /api/v1 gets the API-6 body with the same message.
+            if (ApiErrorResponse.IsApi(httpContext.Request.Path))
+            {
+                context.Result = ApiErrorResponse.Result(
+                    ApiErrorResponse.Create(httpContext, StatusCodes.Status400BadRequest, "Error.PageExpired"));
+                return;
+            }
+
             context.Result = ErrorController.Page(httpContext, StatusCodes.Status400BadRequest, BackLink(httpContext.Request.Path));
         }
     }

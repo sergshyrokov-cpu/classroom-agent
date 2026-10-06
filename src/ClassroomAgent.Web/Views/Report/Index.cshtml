@@ -1,5 +1,8 @@
 @using System.Globalization
 @using ClassroomAgent.Application.Models.Dtos
+@using ClassroomAgent.Application.Validation
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery Antiforgery
 @model ReportPageModel
 @{
     ViewData["Title"] = T[ReportTemplateTextKeys.ReportTitle];
@@ -83,6 +86,28 @@
                 }
             }
         </nav>
+    }
+
+    @* US-028 api-design §2.6: the action carries validated values only (never a student name); a static script posts
+       them as JSON with the antiforgery header. No form submission, no inline script. *@
+    @if (Model.Export is { } export)
+    {
+        <section id="report-export">
+            <meta name="request-verification-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
+            <fieldset>
+                <legend>@T[JournalExportTextKeys.OrientationCaption]</legend>
+                <label><input type="radio" name="orientation" value="portrait" checked="checked" /> @T[JournalExportTextKeys.OrientationPortrait]</label>
+                <label><input type="radio" name="orientation" value="landscape" /> @T[JournalExportTextKeys.OrientationLandscape]</label>
+            </fieldset>
+            <button type="button" id="report-export-button"
+                    data-template="@export.Template"
+                    data-course-id="@export.CourseId.ToString(CultureInfo.InvariantCulture)"
+                    data-from="@export.From.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                    data-to="@export.To.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                    data-names="@NameSourceCode.Of(export.Names)">@T[JournalExportTextKeys.Action]</button>
+            <p id="report-export-error" class="form-error" aria-live="polite"></p>
+        </section>
+        <script src="~/js/report-export.js"></script>
     }
 
     @if (report.EmptyStateKey is { } empty)

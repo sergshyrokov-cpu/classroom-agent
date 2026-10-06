@@ -10,7 +10,8 @@ namespace ClassroomAgent.Infrastructure.Persistence.Configurations;
 /// copy of the Control Plane's. No column can carry a personal datum, <c>actor_id</c> carries no foreign key
 /// because audit rows outlive the accounts they name (PC-9, PC-11), and there is no index at all — the table is
 /// write-only until the audit viewer (EPIC-9) and the retention purge (US-037, EPIC-5) bring their own queries (PC-7).
-/// US-037 db-design §2 adds the purge row's five counts, its constraints and the one index the purge's delete needs.
+/// US-037 db-design §2 adds the purge row's five counts, its constraints and the one index the purge's delete needs;
+/// US-028 db-design §3 adds the six export columns of a journal export and their constraints.
 /// </summary>
 public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEvent>
 {
@@ -30,7 +31,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 + "'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', "
                 + "'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run', "
                 + "'synchronization_requested', 'report_template_created', 'report_template_changed', "
-                + "'report_template_deleted')");
+                + "'report_template_deleted', 'journal_exported')");
 
             // US-009 db-design §4.1: a refused action names WHAT was refused without naming a row that was never
             // created, so a target type without an id is now legal. An id without a type — an identifier belonging
@@ -38,7 +39,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
             table.HasCheckConstraint("ck_audit_event_target", "target_id IS NULL OR target_type IS NOT NULL");
             table.HasCheckConstraint(
                 "ck_audit_event_target_type_value",
-                "target_type IS NULL OR target_type IN ('workspace_connection', 'app_user', 'report_template')");
+                "target_type IS NULL OR target_type IN ('workspace_connection', 'app_user', 'report_template', 'course')");
             table.HasCheckConstraint("ck_audit_event_outcome", "outcome IN ('succeeded', 'refused')");
             table.HasCheckConstraint(
                 "ck_audit_event_refusal_category",
@@ -94,6 +95,28 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 + "AND (refusal_category IS NULL OR refusal_category = 'read_only_mode') "
                 + "AND (outcome <> 'succeeded' OR target_id IS NOT NULL) "
                 + "AND (action <> 'report_template_created' OR outcome = 'succeeded' OR target_id IS NULL))");
+
+            // US-028 db-design §3.4: the export details belong to the export row — all required ones there, none
+            // anywhere else; an export is a user's, names the course, is audited only when it succeeded, and records
+            // exactly one form of the template.
+            table.HasCheckConstraint(
+                "ck_audit_event_export_columns",
+                "(action = 'journal_exported') = (export_period_from IS NOT NULL AND export_period_to IS NOT NULL "
+                + "AND export_template_built_in IS NOT NULL AND export_rows IS NOT NULL AND export_format IS NOT NULL)");
+            table.HasCheckConstraint(
+                "ck_audit_event_export_columns_absent",
+                "action = 'journal_exported' OR (export_period_from IS NULL AND export_period_to IS NULL "
+                + "AND export_template_id IS NULL AND export_template_built_in IS NULL AND export_rows IS NULL "
+                + "AND export_format IS NULL)");
+            table.HasCheckConstraint(
+                "ck_audit_event_export_shape",
+                "action <> 'journal_exported' OR (actor_type = 'app_user' AND target_type = 'course' "
+                + "AND target_id IS NOT NULL AND outcome = 'succeeded' AND export_period_from <= export_period_to "
+                + "AND export_rows >= 0 AND export_format IN ('xlsx') "
+                + "AND export_template_built_in = (export_template_id IS NULL))");
+            table.HasCheckConstraint(
+                "ck_audit_event_export_template_id",
+                "export_template_id IS NULL OR export_template_id > 0");
         });
 
         builder.HasKey(e => e.Id).HasName("pk_audit_event");
@@ -131,13 +154,16 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         builder.Property(e => e.PurgedAccounts);
         builder.Property(e => e.PurgedAuditRows);
 
-        // US-028 skeleton (OD-005): the export columns are mapped at IMPLEMENTATION, with their migration.
-        builder.Ignore(e => e.ExportPeriodFrom);
-        builder.Ignore(e => e.ExportPeriodTo);
-        builder.Ignore(e => e.ExportTemplateId);
-        builder.Ignore(e => e.ExportTemplateBuiltIn);
-        builder.Ignore(e => e.ExportRows);
-        builder.Ignore(e => e.ExportFormat);
+        // US-028 db-design §3.2: calendar days of the school, a bare template id (no foreign key, PC-9), a count and
+        // a closed format code.
+        builder.Property(e => e.ExportPeriodFrom).HasColumnType("date");
+        builder.Property(e => e.ExportPeriodTo).HasColumnType("date");
+        builder.Property(e => e.ExportTemplateId);
+        builder.Property(e => e.ExportTemplateBuiltIn);
+        builder.Property(e => e.ExportRows);
+        builder.Property(e => e.ExportFormat)
+            .HasMaxLength(8)
+            .HasConversion(v => NullableExportFormatCode(v), code => NullableExportFormatFromCode(code));
 
         builder.Property(e => e.CreatedAt).IsRequired();
         builder.Property(e => e.UpdatedAt).IsRequired();
@@ -208,6 +234,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         AuditAction.ReportTemplateCreated => "report_template_created",
         AuditAction.ReportTemplateChanged => "report_template_changed",
         AuditAction.ReportTemplateDeleted => "report_template_deleted",
+        AuditAction.JournalExported => "journal_exported",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -227,6 +254,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         "report_template_created" => AuditAction.ReportTemplateCreated,
         "report_template_changed" => AuditAction.ReportTemplateChanged,
         "report_template_deleted" => AuditAction.ReportTemplateDeleted,
+        "journal_exported" => AuditAction.JournalExported,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 
@@ -236,6 +264,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         AuditTargetType.WorkspaceConnection => "workspace_connection",
         AuditTargetType.AppUser => "app_user",
         AuditTargetType.ReportTemplate => "report_template",
+        AuditTargetType.Course => "course",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -244,6 +273,21 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         "workspace_connection" => AuditTargetType.WorkspaceConnection,
         "app_user" => AuditTargetType.AppUser,
         "report_template" => AuditTargetType.ReportTemplate,
+        "course" => AuditTargetType.Course,
+        _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
+    };
+
+    private static string? NullableExportFormatCode(ExportFormat? value) => value switch
+    {
+        null => null,
+        ExportFormat.Xlsx => "xlsx",
+        _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
+    };
+
+    private static ExportFormat? NullableExportFormatFromCode(string? code) => code switch
+    {
+        null => null,
+        "xlsx" => ExportFormat.Xlsx,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 

@@ -584,7 +584,11 @@ public sealed class AuditEvent
         };
     }
 
-    /// <summary>US-028 db-design §3.2: a journal export, targeting the exported course.</summary>
+    /// <summary>
+    /// US-028 spec FR-010 (entity model §1.1): one row per successful journal export, targeting the exported course. A
+    /// null <paramref name="templateId"/> is the built-in template. Only ids, the period, a count and a format code are
+    /// recorded — no content and no personal data (SC-10, SC-11). There is no refused form: a failed export writes no row.
+    /// </summary>
     public static AuditEvent JournalExported(
         long actorId,
         AppRole actorRole,
@@ -595,7 +599,51 @@ public sealed class AuditEvent
         int rows,
         ExportFormat format,
         DateTimeOffset occurredAt,
-        string? requestId) => throw new NotImplementedException("US-028 IMPLEMENTATION");
+        string? requestId)
+    {
+        if (!Enum.IsDefined(actorRole))
+        {
+            throw new ArgumentOutOfRangeException(nameof(actorRole), actorRole, "Not a declared role.");
+        }
+
+        if (!Enum.IsDefined(format))
+        {
+            throw new ArgumentOutOfRangeException(nameof(format), format, "Not a declared export format.");
+        }
+
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(courseId);
+        if (templateId is { } id)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id, nameof(templateId));
+        }
+
+        if (from > to)
+        {
+            throw new ArgumentOutOfRangeException(nameof(from), from, "The exported period begins after it ends.");
+        }
+
+        ArgumentOutOfRangeException.ThrowIfNegative(rows);
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = actorId,
+            ActorRole = actorRole,
+            Action = AuditAction.JournalExported,
+            TargetType = AuditTargetType.Course,
+            TargetId = courseId,
+            Outcome = AuditOutcome.Succeeded,
+            RefusalCategory = null,
+            RequestId = requestId,
+            ExportPeriodFrom = from,
+            ExportPeriodTo = to,
+            ExportTemplateId = templateId,
+            ExportTemplateBuiltIn = templateId is null,
+            ExportRows = rows,
+            ExportFormat = format,
+        };
+    }
 
     /// <summary>
     /// Step 1 of the sequence: no account matched, so the row names no actor and no target at all — the typed

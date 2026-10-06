@@ -147,7 +147,12 @@ public sealed class AccessCheckAuditSchemaTests(PostgreSqlFixture database)
         Assert.Equal(
             new[]
             {
-                "action", "actor_id", "actor_role", "actor_type", "created_at", "id", "occurred_at", "outcome",
+                "action", "actor_id", "actor_role", "actor_type", "created_at",
+
+                // US-028 db-design: the six columns of the journal export's row.
+                "export_format", "export_period_from", "export_period_to", "export_rows",
+                "export_template_built_in", "export_template_id",
+                "id", "occurred_at", "outcome",
 
                 // US-037 db-design §2.2: the five counts of the retention purge's own row.
                 "purged_accounts", "purged_audit_rows", "purged_courses", "purged_leaver_memberships",

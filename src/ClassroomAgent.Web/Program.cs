@@ -136,8 +136,17 @@ public sealed class Program
         // SC-4 v66: an unmatched request answers 404 to anyone. Without a matched endpoint the fallback policy would
         // challenge an anonymous request and send it to sign-in; the re-execution turns this into the error page.
         // US-041: the explicit pattern drops the default "nonfile" constraint, so a file-like path is caught too.
+        // US-028 api-design §2.5 rule (5): an /api/v1 operation asked with another method answers 405, not 404.
         app.MapFallback("{*path}", context =>
             {
+                var methods = ApiErrorResponse.MethodsServing(context);
+                if (methods.Count > 0)
+                {
+                    context.Response.Headers.Allow = string.Join(", ", methods);
+                    context.Response.StatusCode = StatusCodes.Status405MethodNotAllowed;
+                    return Task.CompletedTask;
+                }
+
                 context.Response.StatusCode = StatusCodes.Status404NotFound;
                 return Task.CompletedTask;
             })

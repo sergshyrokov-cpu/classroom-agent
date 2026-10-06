@@ -41,7 +41,8 @@ public sealed class NamePartsPersistenceTests(PostgreSqlFixture database)
 
         var ours = Assert.Single(migrations, m => m.EndsWith("_ParticipantNamePartsAndTemplateNameSource", StringComparison.Ordinal));
         Assert.True(string.CompareOrdinal(ours, BeforeThisStory) > 0);
-        Assert.Equal(ours, migrations[^1]);
+        // US-028 added a later migration, so the check is by presence, not position.
+        Assert.Contains("20261005125917_ParticipantNamePartsAndTemplateNameSource", migrations);
     }
 
     /// <summary>
