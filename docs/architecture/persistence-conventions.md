@@ -251,7 +251,7 @@ the product enforces the period the school agreed with the Owner.
 
 ## PC-12 Meet data
 
-Decided in `trebovaniya.md` sections 3 and 4 (v23).
+Decided in `trebovaniya.md` sections 3 and 4 (v23, v87).
 
 - A Meet `call_ended` event carries about 60 fields, most of them network
   telemetry. Only what the reports need is stored. Telemetry is discarded at
@@ -260,8 +260,17 @@ Decided in `trebovaniya.md` sections 3 and 4 (v23).
     Google sends no session start or end: they are computed at ingestion from the
     connections (earliest join, latest join + duration) and stored.
   - `MeetParticipation`: `endpoint_id`, the domain account's email — or, for
-    external guests and connections without an account, only an "other
-    participant" flag with no address or name — join time and duration.
+    external guests and connections without an account, only the "other
+    participant" mark with no address or name — join time and duration. The mark
+    may be stored as the absence of the email; a separate column that repeats it
+    is not required.
+- **Only meetings organized by a domain account are stored** (v87). A meeting
+  whose organizer is outside the school's domain, or has no organizer email, is
+  not stored at all — neither the meeting nor any of its connections.
+- **A domain account** is an email whose domain after `@` equals the
+  `WorkspaceConnection` domain exactly, case-insensitively; subdomains are not
+  the school's domain (v87). Only a domain account's email is stored on a
+  participation.
 - **`MeetParticipation` has no foreign key to `ClassroomParticipant`.** Whether a
   person was a student or teacher of the course is resolved when a report is
   built, by matching the email against the roster on the meeting's date
