@@ -370,6 +370,16 @@ count there. *(§2, §4 Epic 4, v41)*
 deleted with its participations N years after its own date, so it cannot outlive
 the retention period — even in a course that is still kept. *(§5, v55)*
 
+**BR-083** Not every meeting code has a course — a staff meeting, a parents'
+meeting, a consultation for several groups. A Dean or Admin may mark any code,
+unlinked or linked (automatically or by a person), as "not a course": its
+meetings then count in no course's reports or last activity, the code leaves the
+unassigned-meetings list for a separate list of marked codes, its share is no
+longer computed and automatic linking never touches it. The mark is always set
+by a person and records who and when; it is removed by picking a course for the
+code. Setting and removing it are audited and blocked in read-only mode; the mark
+is purged once the code has no meetings left. *(§2, §3, §4 Epic 4, §5, v88)*
+
 ## Privacy
 
 **BR-070** Journals and Meet statistics contain personal data of students who may be

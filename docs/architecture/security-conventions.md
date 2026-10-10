@@ -400,7 +400,8 @@ when" — above all, who took personal data out of the system.
   changing `WorkspaceConnection`; running the "check access" diagnostic; starting
   a synchronization by hand; every change to a Meet meeting code link — the
   automatic link (actor `system`), picking a course for an unassigned code,
-  confirming and re-linking (v55); creating, changing and deleting a report
+  confirming and re-linking (v55), marking a code "not a course" and removing
+  the mark (v88); creating, changing and deleting a report
   template, recording the template id only (v84); **exporting a journal or report**; each retention purge run
   (actor `system`, counts only — PC-11).
 - **Audited in the Control Plane:** Owner sign-in and refused sign-in; creating

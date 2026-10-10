@@ -176,7 +176,8 @@ class leaves no Meet data (BR-060).
   (US-037) to every Meet meeting and its participations by the meeting's own date
 - US-032 Link meeting codes to courses: automatic suggestion by organizer and
   participant overlap, unassigned-meetings list, confirmation and re-linking by a
-  Dean or Admin (BR-065); extends the retention purge (US-037, US-031) to linked
+  Dean or Admin (BR-065), the "not a course" mark for codes with no course
+  (BR-083, v88); extends the retention purge (US-037, US-031) to linked
   meetings: `MeetingCodeLink` rows and the meetings reached through them are
   deleted with the course, leavers' participations in them are deleted, and their
   start counts toward the course's last activity (PC-11)

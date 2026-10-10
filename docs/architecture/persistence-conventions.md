@@ -144,7 +144,10 @@ resulting migration must both match them.
 - `MeetingCodeLink` maps a meeting code to one `Course`: unique on the code,
   several codes per course (a reset Classroom link gets a new code). `MeetSession`
   reaches its course only through this link and has no course column of its own,
-  so re-linking a code moves all its meetings at once.
+  so re-linking a code moves all its meetings at once. Instead of a course, a link
+  may carry a person's "not a course" mark (who and when): its meetings belong to
+  no course and automatic linking never touches the code (`trebovaniya.md`
+  sections 3, 4, v88).
 - No lazy-loading proxies package. Navigation properties are loaded explicitly
   per query via `.Include()` / `.ThenInclude()` in the repository.
 - Cascade behavior is explicit and minimal: `.OnDelete(DeleteBehavior.Restrict)`
@@ -242,6 +245,8 @@ the product enforces the period the school agreed with the Owner.
   not — is purged with its `MeetParticipation` rows when its own date is more
   than N years old, even if the course is still kept (`trebovaniya.md` section 5,
   v23, v55).
+- A `MeetingCodeLink` carrying the "not a course" mark is purged once its meeting
+  code has no `MeetSession` left (`trebovaniya.md` section 5, v88).
 - Each purge run writes one `AuditEvent`: actor `system`, counts of courses,
   leavers' memberships, Meet meetings, participants, accounts and audit
   rows removed, no personal data.
@@ -283,7 +288,8 @@ Decided in `trebovaniya.md` sections 3 and 4 (v23, v87).
   call is a new conference in Google and a new row here; nothing is merged.
 - Meet data is pulled regularly and kept locally beyond Google's 180-day window.
 - A `MeetSession` whose meeting code has no `MeetingCodeLink` is still stored and
-  appears in the unassigned-meetings list. Every `MeetSession`, linked or not,
+  appears in the unassigned-meetings list; one whose code is marked "not a
+  course" appears in the separate list of marked codes (v88). Every `MeetSession`, linked or not,
   is purged N years after its own date (PC-11, v55).
 
 ## PC-13 Coursework and submission data
