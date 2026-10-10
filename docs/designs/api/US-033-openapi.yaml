@@ -1,0 +1,585 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Built-in Meet reports for a course and period (US-033)
+  version: "1"
+  description: >
+    HTTP contract of US-033 on the installation's public port. It adds the
+    built-in Meet reports of one course for a period, granted to Admin and Dean
+    (`trebovaniya.md` §2 "Просмотр и экспорт статистики Meet-занятий" ✔ ✔; §4
+    Epic 4). There are two server-rendered `GET` pages and no JSON API:
+    reports 1–3 (summary, meeting list, student participation) on one page, and
+    report 4 (one meeting in detail) on its own page. The pages only read: they
+    write nothing, call no Google API and read no secret, in every mode (spec
+    FR-015). The home page gains a navigation entry. The installation's
+    host-wide rules of docs/designs/api/US-008-openapi.yaml apply unchanged.
+    Companion document: docs/designs/api/US-033-api-design.md.
+x-story: US-033
+x-source-specification: docs/specifications/US-033-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-033-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 88
+x-produced-by: openapi-designer
+x-extends: docs/designs/api/US-008-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type is
+  added or changed; both pages are the installation's own screens (DC-12).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port. Illustrative (US-008 spec FR-001)."
+
+tags:
+  - name: meet-reports
+    description: "Built-in Meet reports of one course for a period (spec FR-001 … FR-016)"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 configured host-wide applies and is not restated: HTTPS and
+    HSTS, deny-by-default fallback policy (SC-4, API-9), the global antiforgery
+    filter (not engaged: both pages are `GET`), the single error page, the
+    anonymous catch-all `404`, the session cookie, the restricted session of a
+    Dean with a temporary password (US-012), the exception handler (API-10), and
+    the global `Cache-Control: no-store` of US-040 (spec §7).
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list of anonymous endpoints gains **nothing**. The US-008
+    endpoint enumeration test passes with both new paths classified as
+    protected (spec AC-014).
+
+  antiforgery-list-unchanged: >
+    Both pages change nothing (API-4), so they need no token and gain no
+    exemption.
+
+  outbound: >
+    Nothing is called outside the process: no Google call, no secret-store read,
+    no Control Plane call (spec §7, SC-13).
+
+paths:
+
+  /workspace/meet-reports:
+
+    get:
+      tags: [meet-reports]
+      operationId: getMeetReports
+      summary: "Reports 1–3 of one course for a period"
+      description: >
+        Always renders the selection form (course drop-down, period) with the
+        effective values. With a valid `courseId` it also renders the delay
+        notice (spec FR-012) and reports 1, 2 and 3 (spec FR-007 … FR-009) for
+        that course and period. Without `courseId` it renders the form with the
+        default period (spec FR-001, FR-003). The form submits by `GET` to this
+        same path. Validation (spec §6) runs before any report data is read. A
+        failure re-renders **this page**, not the host's error page, with the
+        form and the message keys (spec FR-013). Evaluation order:
+        authentication → restricted session → authorization → query shape
+        (`400`) → course existence (`404`) → build (`200`).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewMeetReports
+      x-permission-matrix-row: "\"Просмотр и экспорт статистики Meet-занятий\" — Admin ✔, Dean ✔"
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: "nothing — no entity, no audit row, no SyncState (spec FR-015)"
+      x-read-only-mode: "allowed — identical behaviour in all three BR-025 causes (spec FR-015)"
+      x-database-round-trips: "fixed per request, independent of the number of meetings and students (spec §9)"
+      x-spec: [FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016]
+      x-acceptance-criteria: [AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-018]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/CourseIdOptional"
+        - $ref: "#/components/parameters/From"
+        - $ref: "#/components/parameters/To"
+      responses:
+        "200":
+          description: >
+            The page. It is one of the following: (1) the form only, with no
+            `courseId`; (2) the reports of the chosen course and period, possibly
+            with empty-state keys (spec FR-014); (3) the "no course stored"
+            message instead of the drop-down (spec FR-002). Read-only mode answers
+            exactly as outside it.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/MeetReportsPageModel"
+        "302":
+          description: >
+            (1) Not signed in: `Location: /sign-in`. (2) A Dean with a temporary
+            password: `Location: /sign-in/change-password`. Nothing is read.
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: [/sign-in, /sign-in/change-password]
+        "400":
+          description: >
+            A query parameter is malformed, or the period is inverted (spec
+            VR-001, VR-002). **This page** is rendered with the form and every
+            message key found, and `reports` is null. No course lookup is done
+            and no report data is read. The log line names the parameter and the
+            rule, never the value (SC-10).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/MeetReportsPageModel"
+        "404":
+          description: >
+            A well-formed `courseId` that names no stored course. **This page** is
+            rendered with `CourseUnknown`, and `reports` is null.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/MeetReportsPageModel"
+        "500":
+          description: "Unexpected failure: the single error page, no detail (API-10)."
+          content:
+            text/html: {}
+
+  /workspace/meet-reports/meetings/{meetingId}:
+
+    get:
+      tags: [meet-reports]
+      operationId: getMeetReportMeeting
+      summary: "Report 4 — one meeting of the course in detail"
+      description: >
+        Renders report 4 (spec FR-010) for one meeting **of the chosen course**.
+        The period is not checked (spec I-1). `from` and `to` only build the link
+        back to `/workspace/meet-reports`. A malformed or absent `from`/`to` is
+        dropped from that link and is not an error (api-design §2.4). Evaluation
+        order: authentication → restricted session → authorization → shape of
+        `meetingId` and `courseId` (`400`) → course exists and the meeting is
+        one of its meetings (`404`) → build (`200`).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewMeetReports
+      x-permission-matrix-row: "\"Просмотр и экспорт статистики Meet-занятий\" — Admin ✔, Dean ✔"
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: "nothing (spec FR-015)"
+      x-read-only-mode: "allowed — identical behaviour in all three BR-025 causes"
+      x-database-round-trips: "fixed per request, independent of the number of connections"
+      x-spec: [FR-005, FR-006, FR-010, FR-011, FR-013, FR-015, FR-016]
+      x-acceptance-criteria: [AC-005, AC-007, AC-009, AC-010, AC-013, AC-014, AC-015, AC-016]
+      security:
+        - installationSession: []
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          description: >
+            Internal id of a stored `MeetSession` (spec VR-003): decimal digits
+            only, a positive 64-bit integer. The route constraint lets only digits
+            reach the action, so a non-digit value meets the host's catch-all
+            `404`. Zero or an overflow gives `404` with `MeetingNotFound`.
+          schema:
+            type: string
+            pattern: "^[0-9]{1,19}$"
+          example: "1207"
+        - name: courseId
+          in: query
+          required: true
+          description: >
+            The course the meeting is viewed in (spec VR-003, VR-001). It is
+            required. Absent, empty or malformed gives `400` with
+            `CourseMalformed`. A well-formed id of no stored course gives `404`
+            with `MeetingNotFound`: the page does not say which of the two was
+            missing.
+          schema:
+            type: string
+            pattern: "^[0-9]{1,19}$"
+          example: "42"
+        - name: from
+          in: query
+          required: false
+          description: "Only for the link back; dropped when not a valid `yyyy-MM-dd` date (api-design §2.4)."
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: false
+          description: "Only for the link back; same rule as `from`."
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: "Report 4 of the meeting."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/MeetReportMeetingPageModel"
+        "302":
+          description: "Not signed in, or a Dean with a temporary password — as for `getMeetReports`."
+        "400":
+          description: >
+            `courseId` is absent or malformed. The report-4 page is rendered with
+            `messageKey: CourseMalformed` and `meeting` null, plus a link to
+            `/workspace/meet-reports`. Nothing is read.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/MeetReportMeetingPageModel"
+        "404":
+          description: >
+            One of: no stored course with that id; no stored meeting with that
+            id; or the meeting is not one of the course's meetings (its code is
+            not linked to the course, or is marked "not a course"). The report-4
+            page is rendered with `messageKey: MeetingNotFound` and `meeting`
+            null. The three cases look the same.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/MeetReportMeetingPageModel"
+        "500":
+          description: "Unexpected failure: the single error page (API-10)."
+          content:
+            text/html: {}
+
+  /:
+    get:
+      operationId: getLanding
+      summary: "Existing US-008 home page — changed additively"
+      description: >
+        Unchanged in behaviour, policy and status codes. It gains a "Meet
+        reports" navigation entry linking to `/workspace/meet-reports`, next to
+        "Journal" and "Meet meetings", rendered for both Admin and Dean and in
+        read-only mode too (spec FR-001). The entry is a plain link and enforces
+        nothing; `ViewMeetReports` does.
+      x-policy: ViewLegitimacyStatus
+      x-change: additive-markup
+      x-acceptance-criteria: [AC-001]
+      responses:
+        "200":
+          description: "The page; see US-008-openapi.yaml for everything else."
+          content:
+            text/html: {}
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: ClassroomAgent.Session
+      description: "The installation's session cookie (US-008); name illustrative."
+
+  parameters:
+
+    CourseIdOptional:
+      name: courseId
+      in: query
+      required: false
+      description: >
+        Internal id of a stored `Course` (spec VR-001), as in the journal.
+        Absent or empty means the form only. It must be exactly one occurrence
+        of decimal digits forming a positive 64-bit integer. Anything else is
+        `400` with `CourseMalformed`. A well-formed id of no stored course is
+        `404` with `CourseUnknown`.
+      schema:
+        type: string
+        pattern: "^[0-9]{1,19}$"
+      example: "42"
+
+    From:
+      name: from
+      in: query
+      required: false
+      description: >
+        The first day of the period, inclusive, in the school's time zone (spec
+        FR-003, VR-002). Absent or empty means the first day of the current
+        month. It must be exactly one occurrence of `yyyy-MM-dd`, a real date
+        in the years 2000–2100. Otherwise the answer is `400` with
+        `FromMalformed`.
+      schema:
+        type: string
+        format: date
+        pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+      example: "2026-10-01"
+
+    To:
+      name: to
+      in: query
+      required: false
+      description: >
+        The last day of the period, inclusive. Absent or empty means the last
+        day of the current month. The same rules as `from` apply; otherwise
+        the answer is `400` with `ToMalformed`. If, after the defaults, `from`
+        is later than `to`, the answer is `400` with `PeriodInverted`.
+      schema:
+        type: string
+        format: date
+        pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+      example: "2026-10-31"
+
+  schemas:
+
+    MeetReportsPageModel:
+      type: object
+      description: >
+        View DTO of the reports page, mapped in `Application` (AD-8). No entity
+        crosses into it. Strings from Google are rendered HTML-encoded and never
+        translated (spec FR-016, VR-004).
+      required: [courses, noCoursesStored, messageKeys]
+      properties:
+        courses:
+          type: array
+          description: "Every stored course, archived ones included, the same list as the journal's (spec FR-002, OD-007)."
+          items:
+            $ref: "#/components/schemas/CourseOption"
+        noCoursesStored:
+          type: boolean
+        selectedCourseId:
+          type: [integer, "null"]
+          format: int64
+          description: "The chosen course when valid and found; otherwise null."
+        from:
+          type: [string, "null"]
+          format: date
+          description: "The effective first day; null when the submitted value was malformed (it is never echoed)."
+        to:
+          type: [string, "null"]
+          format: date
+        messageKeys:
+          type: array
+          description: "Validation messages in parameter order; empty on success."
+          items:
+            $ref: "#/components/schemas/MeetReportsMessageKey"
+        reports:
+          oneOf:
+            - $ref: "#/components/schemas/MeetReports"
+            - type: "null"
+          description: "Null when no course is chosen and on any validation failure."
+
+    CourseOption:
+      description: "The journal's own `CourseOption` (US-025-openapi.yaml), reused unchanged."
+      $ref: "./US-025-openapi.yaml#/components/schemas/CourseOption"
+
+    MeetReports:
+      type: object
+      required: [delayNotice, summary, meetings, students]
+      properties:
+        delayNotice:
+          $ref: "#/components/schemas/MeetDelayNotice"
+        summary:
+          $ref: "#/components/schemas/MeetSummary"
+        meetings:
+          type: array
+          description: "Report 2, ordered by start, then by id (spec FR-008). Empty → `MeetReports.Empty.NoMeetings`."
+          items:
+            $ref: "#/components/schemas/MeetListRow"
+        students:
+          type: array
+          description: "Report 3, ordered by displayed name, then email, then id (spec FR-009, I-10). Empty → `MeetReports.Empty.NoStudents`."
+          items:
+            $ref: "#/components/schemas/StudentParticipationRow"
+
+    MeetDelayNotice:
+      type: object
+      description: "Spec FR-012. The notice text itself is a translation key, `MeetReports.DelayNotice`."
+      properties:
+        meetLoadedUpTo:
+          type: [string, "null"]
+          format: date-time
+          description: >
+            `LastSynchronizationView.MeetLoadedUpTo` as a local date-time in the
+            school's time zone, without an offset. Null means Meet meetings have
+            not been loaded yet (`MeetReports.DelayNotice.NotLoaded`).
+
+    MeetSummary:
+      type: object
+      description: "Report 1 (spec FR-007). All zero when there is no meeting."
+      required: [meetingCount, totalDurationSeconds, averageDurationSeconds, averageStudentsPerMeeting]
+      properties:
+        meetingCount:
+          type: integer
+        totalDurationSeconds:
+          type: integer
+          format: int64
+          description: "Rendered as hours and minutes (spec I-6)."
+        averageDurationSeconds:
+          type: integer
+          format: int64
+          description: "Rendered in minutes, FR-006 rounding."
+        averageStudentsPerMeeting:
+          type: number
+          description: "Mean of `MeetListRow.courseStudents`; rendered with one decimal in the UI language's format."
+
+    MeetListRow:
+      type: object
+      description: "Report 2, one Google meeting (BR-063, spec FR-008)."
+      required: [meetingId, startedAt, endedAt, durationSeconds, organizer, organizerNotCourseTeacher, courseTeachers, courseStudents, notOnCourseList, otherParticipants]
+      properties:
+        meetingId:
+          type: integer
+          format: int64
+          description: "Used only to build the link to report 4."
+        startedAt:
+          type: string
+          format: date-time
+          description: "Local date-time in the school's time zone; date and start columns."
+        endedAt:
+          type: string
+          format: date-time
+          description: "Local date-time; the date is shown too when it differs from the start date (spec I-7)."
+        durationSeconds:
+          type: integer
+          format: int64
+        organizer:
+          $ref: "#/components/schemas/PersonRef"
+        organizerNotCourseTeacher:
+          type: boolean
+          description: "Renders `MeetReports.Mark.NotCourseTeacher` next to the organizer (spec FR-005)."
+        courseTeachers:
+          type: integer
+        courseStudents:
+          type: integer
+        notOnCourseList:
+          type: integer
+        otherParticipants:
+          type: integer
+          description: "Distinct non-personal domain emails plus connections with no email (spec I-8)."
+
+    StudentParticipationRow:
+      type: object
+      description: "Report 3 (spec FR-009)."
+      required: [student, meetings, totalSeconds]
+      properties:
+        student:
+          $ref: "#/components/schemas/PersonRef"
+        meetings:
+          type: integer
+          description: "Meetings of the report at which this person was a course student (spec FR-005)."
+        totalSeconds:
+          type: integer
+          format: int64
+          description: "Sum of capped seconds (spec FR-006); rounded to minutes only when rendered."
+
+    PersonRef:
+      type: object
+      description: >
+        A person shown as the full name the installation knows for the email,
+        with the email beside it, or the email alone (spec FR-011, I-12). Both
+        values are Google data and are not translated.
+      required: [email]
+      properties:
+        fullName:
+          type: [string, "null"]
+        email:
+          type: string
+
+    MeetReportMeetingPageModel:
+      type: object
+      description: "View DTO of report 4, mapped in `Application` (AD-8)."
+      properties:
+        backLink:
+          type: object
+          description: "The query string of the link back: `courseId` always, and `from`/`to` only when they were valid dates."
+          properties:
+            courseId:
+              type: [integer, "null"]
+              format: int64
+            from:
+              type: [string, "null"]
+              format: date
+            to:
+              type: [string, "null"]
+              format: date
+        messageKey:
+          oneOf:
+            - $ref: "#/components/schemas/MeetReportMeetingMessageKey"
+            - type: "null"
+        meeting:
+          oneOf:
+            - $ref: "#/components/schemas/MeetingDetail"
+            - type: "null"
+          description: "Null on `400` and `404`."
+
+    MeetingDetail:
+      type: object
+      description: "Report 4 (spec FR-010)."
+      required: [courseName, meetingCode, startedAt, endedAt, durationSeconds, organizer, organizerNotCourseTeacher, people, otherParticipants]
+      properties:
+        courseName:
+          type: string
+          description: "Google data, not translated."
+        meetingCode:
+          type: string
+          description: "Google data, not translated."
+        startedAt:
+          type: string
+          format: date-time
+          description: "Local date-time, school time zone."
+        endedAt:
+          type: string
+          format: date-time
+        durationSeconds:
+          type: integer
+          format: int64
+        organizer:
+          $ref: "#/components/schemas/PersonRef"
+        organizerNotCourseTeacher:
+          type: boolean
+        people:
+          type: array
+          description: >
+            One line per identified person: the organizer first if they
+            connected (spec I-3), then course teachers, course students and not
+            on the course list. Each group is ordered by displayed name, then
+            email (spec I-10).
+          items:
+            $ref: "#/components/schemas/MeetingPersonLine"
+        otherParticipants:
+          type: object
+          description: "One line, count and total minutes only, without any address or name (spec FR-010, I-11)."
+          required: [count, totalSeconds]
+          properties:
+            count:
+              type: integer
+            totalSeconds:
+              type: integer
+              format: int64
+              description: "Sum over the line's connections, each capped at the meeting's duration."
+
+    MeetingPersonLine:
+      type: object
+      required: [person, mark, seconds]
+      properties:
+        person:
+          $ref: "#/components/schemas/PersonRef"
+        mark:
+          $ref: "#/components/schemas/MeetParticipantMark"
+        seconds:
+          type: integer
+          format: int64
+          description: "Capped at the meeting's duration (spec FR-006); rendered \"N of M min\"."
+
+    MeetParticipantMark:
+      type: string
+      description: "Closed list (spec FR-005, v58); each maps to `MeetReports.Mark.<member>`."
+      enum: [Organizer, CourseTeacher, CourseStudent, NotOnCourseList]
+
+    MeetReportsMessageKey:
+      type: string
+      description: "Closed list; each maps to `MeetReports.Validation.<member>` in both resource files."
+      enum: [CourseMalformed, CourseUnknown, FromMalformed, ToMalformed, PeriodInverted]
+
+    MeetReportMeetingMessageKey:
+      type: string
+      description: "Closed list; each maps to `MeetReports.Meeting.<member>`."
+      enum: [CourseMalformed, MeetingNotFound]
+
+x-operations-deliberately-absent:
+
+  api-v1-meet-reports: >
+    There is no `/api/v1` endpoint and no paginated collection. The reports of
+    one course for one period are rendered whole (spec I-9).
+
+  post: >
+    Nothing here is a `POST`. Viewing changes nothing and is not audited
+    (SC-11). Export, which is audited, belongs to US-044.

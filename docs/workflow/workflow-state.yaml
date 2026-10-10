@@ -4,29 +4,36 @@
 version: 1
 story: US-033
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-writer
+last_invoked_skill: db-designer
 last_result:
   verdict: PASS
-  stage: SPECIFICATION
-  recorded_at: '2026-10-10T19:41:38Z'
+  stage: DB_DESIGN
+  recorded_at: '2026-10-10T19:57:02Z'
 last_artifacts:
-- type: specification
-  path: docs/specifications/US-033-spec.md
+- type: database_design
+  path: docs/designs/database/US-033-db-design.md
   version: 1
-- type: open_decisions
-  path: docs/decisions/US-033-open-decisions.md
+- type: entity_model
+  path: docs/designs/database/US-033-entity-model.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'DB design §1: no schema change, no migration; every report query served by existing indexes (§3).'
+- 'DB design §7: classroom_participant.email is nullable but openapi PersonRef.email is required — a report-3 student without email needs PersonRef.email nullable plus an "unnamed" fallback key (like Journal.Row.Unnamed).
+  One-line contract correction, to be recorded at TEST_WRITING.'
+- 'Entity model: IMeetReportSource port (R1–R6) and read records; C# signatures not yet compile-verified.'
+- 'API design §2.2: new policy ViewMeetReports (Admin, Dean) for its own matrix row; US-044 export reuses it.'
+- 'API design §2.4: report 4 answers one 404 key (MeetingNotFound) for unknown course, unknown meeting and meeting of another course; courseId required (400 when absent); from/to only rebuild the back link.'
+- 'API design §8: DB_DESIGN to decide indexes for meet_session by code+start and participation email lookups.'
 - Spec §11 lists interpretations I-1 … I-12 for the gate; I-5 (minute rounding), I-8 (counting other participants) and I-11 (other participants as one line in report 4) are flagged. All approved as written
   at HUMAN_SPEC_APPROVAL 2026-10-10.
 - OD-001 … OD-010 carried from the Story, all resolved; no new Open Decision.
 started_at: '2026-10-10T19:41:38Z'
-updated_at: '2026-10-10T19:51:18Z'
+updated_at: '2026-10-10T19:57:02Z'
 completed_at: null
