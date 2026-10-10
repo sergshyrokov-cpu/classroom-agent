@@ -147,10 +147,10 @@ These are binding.
 
 # Domain Essentials
 
-**Non-normative summary** of `trebovaniya.md` sections 2, 5, 6 and 9 — a cheap
+**Non-normative summary** of `trebovaniya.md` sections 2, 4, 5, 6 and 9 — a cheap
 cache so routine decisions do not require opening a ~180 KB Russian document.
 `trebovaniya.md` always wins; on conflict this section is the one that gets
-corrected. **Verified against v80.** When `trebovaniya.md` moves past that
+corrected. **Verified against v87.** When `trebovaniya.md` moves past that
 version, re-verify this section and update the marker.
 
 - **Roles in the first version are Owner, Admin and Dean only.** Teacher and
@@ -165,6 +165,10 @@ version, re-verify this section and update the marker.
   user in `WorkspaceConnection` is a school account with read-only roles, created
   by the school's super-admin; nobody logs in with it (BR-015). The prototype's
   impersonation of a super-admin is not a precedent.
+- **Google data is a mirror nobody edits** (v83). What the system reads from
+  Google is stored as Google returned it and never corrected by a user; data the
+  school owns lives in its own tables and refers to the mirror through link
+  records, the way a Meet code links to a course.
 - **Dean does the day-to-day work**; Admin installs, configures and grants roles.
   The permission matrix is in `trebovaniya.md` section 2 — do not invent cells.
 - **The service-account key never reaches a school.** The Owner places it at
