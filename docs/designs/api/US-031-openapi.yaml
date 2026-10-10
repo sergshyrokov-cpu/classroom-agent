@@ -1,0 +1,183 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Meet pull on the connection page (US-031)
+  version: "1"
+  description: >
+    HTTP delta of US-031. No new operation, path, method, status code, policy,
+    query parameter or antiforgery rule (spec FR-011, VR-004). The one change is
+    the view model of the existing connection settings page (US-009
+    `getWorkspaceConnectionSettings`, extended by US-017): its
+    `LastSynchronizationView` gains how far Meet meetings are loaded and, for a
+    failed run, which step stopped it. Every HTML response that renders that
+    page — the GET and the re-rendered page of a rejected US-009 save — carries
+    it. The Meet pull itself, its window, retries and failure classification are
+    internal to synchronization and never reach HTTP (AD-5). The host-wide rules
+    of docs/designs/api/US-008-openapi.yaml and the operation of
+    docs/designs/api/US-009-openapi.yaml / US-017-openapi.yaml apply unchanged.
+    Companion document: docs/designs/api/US-031-api-design.md.
+x-story: US-031
+x-source-specification: docs/specifications/US-031-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-031-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 87
+x-produced-by: openapi-designer
+x-extends:
+  - docs/designs/api/US-008-openapi.yaml
+  - docs/designs/api/US-009-openapi.yaml
+  - docs/designs/api/US-017-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**: nothing on the
+  service channel changes (DC-12). Nothing is sent to the Control Plane (SC-13).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port (illustrative)."
+
+tags:
+  - name: settings
+
+paths:
+
+  /settings/workspace-connection:
+
+    get:
+      tags: [settings]
+      operationId: getWorkspaceConnectionSettings
+      summary: "The connection settings page — now with how far Meet is loaded"
+      description: >
+        Unchanged from US-009/US-017 except for `lastSynchronization`, which
+        gains `meetLoadedUpTo` and `failedStep`. Reading the page writes
+        nothing. Viewable in read-only mode (BR-026, US-017 FR-009).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ConfigureWorkspaceConnection
+      x-permission-matrix-row: "Просмотр состояния синхронизации с диагностикой ошибок на странице подключения (v80, v87) — Admin ✔, Dean ✘"
+      x-spec: [FR-010, FR-011, FR-014]
+      x-acceptance-criteria: [AC-007, AC-009, AC-014]
+      x-change: view-model-extended
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: >
+            The settings page in the user's language; the "Last
+            synchronization" block shows the line "Meet meetings loaded up to:
+            <date and time>" in the school's time zone, or "Meet meetings: not
+            loaded yet", and for a failed run the step that stopped it.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/WorkspaceConnectionPageModel"
+        "302":
+          description: "Not signed in: the challenge sends the visitor to `/sign-in` (US-008). Unchanged."
+        "403":
+          description: >
+            Signed in as a Dean: the translated error page, revealing nothing
+            about the connection, synchronization or Meet. Unchanged.
+          content:
+            text/html: {}
+
+components:
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: ".ClassroomAgent.Session"
+      description: "As defined in docs/designs/api/US-008-openapi.yaml."
+
+  schemas:
+
+    WorkspaceConnectionPageModel:
+      description: >
+        US-009's view model (see docs/designs/api/US-009-openapi.yaml for every
+        other property, unchanged); `lastSynchronization` as extended below.
+        Still a DTO built in `Application` (AD-8).
+      type: object
+      required: [lastSynchronization]
+      properties:
+        lastSynchronization:
+          $ref: "#/components/schemas/LastSynchronizationView"
+
+    LastSynchronizationView:
+      type: object
+      additionalProperties: false
+      description: >
+        US-017's DTO (`status`, `startedAt`, `finishedAt`,
+        `lastSuccessfulRunAt`, `diagnosis` unchanged — see
+        docs/designs/api/US-017-openapi.yaml) plus two properties. Read by
+        `GetLastSynchronizationQuery` (spec FR-011). No personal data, no Google
+        text, no meeting data.
+      required: [status, meetLoadedUpTo]
+      properties:
+        status:
+          type: string
+          enum: [NeverRun, Running, Completed, Failed]
+        startedAt:
+          type: [string, "null"]
+          format: date-time
+        finishedAt:
+          type: [string, "null"]
+          format: date-time
+        lastSuccessfulRunAt:
+          type: [string, "null"]
+          format: date-time
+        diagnosis:
+          oneOf:
+            - $ref: "#/components/schemas/SyncDiagnosis"
+            - type: "null"
+        meetLoadedUpTo:
+          oneOf:
+            - $ref: "#/components/schemas/SchoolLocalDateTime"
+            - type: "null"
+          description: >
+            New (spec FR-007, FR-011, OD-010 a). The stored Meet watermark,
+            already converted in `Application` to the school's time zone
+            (`SchoolTimeZone`, US-025 FR-010) — the view does no time-zone
+            arithmetic. Null when no Meet pull has succeeded: the view renders
+            "not loaded yet". Independent of `status`: present also while a run
+            is running or after a failed one. The other times of the block stay
+            UTC instants, as US-017 shipped them.
+        failedStep:
+          oneOf:
+            - $ref: "#/components/schemas/SyncStep"
+            - type: "null"
+          description: >
+            New (spec FR-010, I-5). Set only for `Failed`: the step that stopped
+            the run. Null for every other status and for a failed row written
+            before this Story — the view then shows the diagnosis without a step,
+            as today.
+
+    SchoolLocalDateTime:
+      type: string
+      format: date-time
+      description: >
+        A local date and time in the school's time zone, without an offset
+        (`yyyy-MM-ddTHH:mm:ss`). The view formats it in the request culture
+        (US-039 FR-009), to the minute.
+
+    SyncStep:
+      type: string
+      description: >
+        Rendered as a translation key (spec FR-014): the step names in `uk` and
+        `en`, telling the Admin which read is not configured — the Classroom
+        read or the Meet events read in Admin Reports — as "Check access" names
+        its steps.
+      enum:
+        - Classroom
+        - Meet
+
+    SyncDiagnosis:
+      type: string
+      description: "Unchanged from docs/designs/api/US-017-openapi.yaml (spec FR-010 reuses it)."
+      enum:
+        - ScopeNotAuthorized
+        - TechnicalAccountUnknown
+        - TechnicalAccountCannotRead
+        - ApiNotEnabled
+        - KeyUnavailable
+        - KeyRejected
+        - GoogleUnavailable
+        - Unexpected
