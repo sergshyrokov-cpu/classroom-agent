@@ -4,17 +4,29 @@
 version: 1
 story: US-033
 workflow: story-delivery
-current_stage: SPECIFICATION
-previous_stage: null
-last_completed_stage: null
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
-last_result: null
-last_artifacts: []
+last_invoked_skill: spec-writer
+last_result:
+  verdict: PASS
+  stage: SPECIFICATION
+  recorded_at: '2026-10-10T19:41:38Z'
+last_artifacts:
+- type: specification
+  path: docs/specifications/US-033-spec.md
+  version: 1
+- type: open_decisions
+  path: docs/decisions/US-033-open-decisions.md
+  version: 1
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings: []
-started_at: null
-updated_at: 2026-10-10T19:37:17Z
+non_blocking_findings:
+- Spec §11 lists interpretations I-1 … I-12 for the gate; I-5 (minute rounding), I-8 (counting other participants) and I-11 (other participants as one line in report 4) are flagged. All approved as written
+  at HUMAN_SPEC_APPROVAL 2026-10-10.
+- OD-001 … OD-010 carried from the Story, all resolved; no new Open Decision.
+started_at: '2026-10-10T19:41:38Z'
+updated_at: '2026-10-10T19:51:18Z'
 completed_at: null
