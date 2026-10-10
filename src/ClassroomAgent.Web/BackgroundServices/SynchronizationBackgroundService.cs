@@ -182,6 +182,7 @@ public sealed partial class SynchronizationBackgroundService(
         else
         {
             LogSkippedCourses(runId, outcome);
+            LogMeetSkipped(runId, outcome);
 
             if (outcome.Failed)
             {
@@ -208,7 +209,42 @@ public sealed partial class SynchronizationBackgroundService(
                 LogCourseSkippedByAge(logger, runId, GoogleLogValue.Bounded(googleId));
             }
 
+            if (outcome.Meet is { } meet)
+            {
+                // US-031 spec FR-012: the window and the counts only — no email, meeting code, organizer,
+                // participant, endpoint or conference id (SC-10, AC-012, I-6).
+                LogMeetStepCompleted(
+                    logger,
+                    runId,
+                    meet.WindowFrom,
+                    meet.WindowTo,
+                    meet.EventsRead,
+                    meet.SessionsAdded,
+                    meet.SessionsUpdated,
+                    meet.ParticipationsAdded,
+                    meet.ParticipationsUpdated,
+                    meet.NotOfTheSchool,
+                    meet.SkippedTotal);
+            }
+
             LogRunCompleted(logger, runId, outcome.ProcessedCount ?? 0, outcome.MembershipsMarkedOffRoster);
+        }
+    }
+
+    /// <summary>
+    /// US-031 spec FR-012, VR-001: one Warning line per reason invalid Meet events were skipped for — the reason and the
+    /// count, never a value of the event (AC-012). Written whether the run completed or stopped later.
+    /// </summary>
+    private void LogMeetSkipped(Guid runId, SynchronizationRunOutcome outcome)
+    {
+        if (outcome.Meet is not { } meet)
+        {
+            return;
+        }
+
+        foreach (var (reason, count) in meet.Skipped.OrderBy(pair => pair.Key))
+        {
+            LogMeetEventsSkipped(logger, runId, reason.ToString(), count);
         }
     }
 
@@ -256,8 +292,36 @@ public sealed partial class SynchronizationBackgroundService(
             diagnosis == SyncDiagnosis.GoogleUnavailable ? LogLevel.Warning : LogLevel.Error,
             runId,
             diagnosis.ToString(),
+            outcome.FailedStep?.ToString() ?? "none",
             diagnosis == SyncDiagnosis.Unexpected ? outcome.UnexpectedExceptionType ?? "unknown" : "none");
     }
+
+    [LoggerMessage(
+        EventId = 5132,
+        EventName = "SyncMeetStepCompleted",
+        Level = LogLevel.Information,
+        Message = "Synchronization run {RunId} Meet step finished for {WindowFrom} to {WindowTo}: {EventsRead} events read, "
+            + "{SessionsAdded} meetings new, {SessionsUpdated} updated, {ParticipationsAdded} connections new, "
+            + "{ParticipationsUpdated} updated, {NotOfTheSchool} not of the school, {Skipped} skipped")]
+    private static partial void LogMeetStepCompleted(
+        ILogger logger,
+        Guid runId,
+        DateTimeOffset windowFrom,
+        DateTimeOffset windowTo,
+        int eventsRead,
+        int sessionsAdded,
+        int sessionsUpdated,
+        int participationsAdded,
+        int participationsUpdated,
+        int notOfTheSchool,
+        int skipped);
+
+    [LoggerMessage(
+        EventId = 5133,
+        EventName = "SyncMeetEventsSkipped",
+        Level = LogLevel.Warning,
+        Message = "Synchronization run {RunId} skipped {Count} invalid Meet events: {Reason}")]
+    private static partial void LogMeetEventsSkipped(ILogger logger, Guid runId, string reason, int count);
 
     [LoggerMessage(
         EventId = 5121,
@@ -311,12 +375,13 @@ public sealed partial class SynchronizationBackgroundService(
     [LoggerMessage(
         EventId = 5123,
         EventName = "SyncRunFailed",
-        Message = "Synchronization run {RunId} failed: {Diagnosis}, exception type {ExceptionType}")]
+        Message = "Synchronization run {RunId} failed: {Diagnosis} at step {Step}, exception type {ExceptionType}")]
     private static partial void LogRunFailed(
         ILogger logger,
         LogLevel level,
         Guid runId,
         string diagnosis,
+        string step,
         string exceptionType);
 
     [LoggerMessage(

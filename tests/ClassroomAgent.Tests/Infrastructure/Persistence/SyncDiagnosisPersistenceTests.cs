@@ -44,7 +44,9 @@ public sealed class SyncDiagnosisPersistenceTests(PostgreSqlFixture database)
     private static async Task<LastSynchronizationView> ViewAsync(InstallationTestHost host, CancellationToken ct)
     {
         using var scope = host.CreateScope();
-        return await new GetLastSynchronizationQuery(scope.ServiceProvider.GetRequiredService<ISyncStateRepository>())
+        return await new GetLastSynchronizationQuery(
+                scope.ServiceProvider.GetRequiredService<ISyncStateRepository>(),
+                scope.ServiceProvider.GetRequiredService<SchoolTimeZone>())
             .ExecuteAsync(ct);
     }
 
@@ -82,7 +84,7 @@ public sealed class SyncDiagnosisPersistenceTests(PostgreSqlFixture database)
         using (var scope = host.CreateScope())
         {
             var state = await scope.ServiceProvider.GetRequiredService<ISyncStateRepository>().GetAsync(ct);
-            state!.FailRun(host.Time.GetUtcNow(), 2, diagnosis);
+            state!.FailRun(host.Time.GetUtcNow(), 2, diagnosis, SyncStep.Classroom);
             await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().SaveChangesAsync(ct);
         }
 
@@ -109,7 +111,7 @@ public sealed class SyncDiagnosisPersistenceTests(PostgreSqlFixture database)
         using (var scope = host.CreateScope())
         {
             var state = await scope.ServiceProvider.GetRequiredService<ISyncStateRepository>().GetAsync(ct);
-            state!.FailRun(host.Time.GetUtcNow(), 0, SyncDiagnosis.KeyRejected);
+            state!.FailRun(host.Time.GetUtcNow(), 0, SyncDiagnosis.KeyRejected, SyncStep.Classroom);
             await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().SaveChangesAsync(ct);
         }
 
@@ -121,7 +123,7 @@ public sealed class SyncDiagnosisPersistenceTests(PostgreSqlFixture database)
             state!.BeginRun(Guid.NewGuid(), host.Time.GetUtcNow());
             await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().SaveChangesAsync(ct);
             host.Time.Advance(TimeSpan.FromSeconds(10));
-            state.CompleteRun(host.Time.GetUtcNow(), 4);
+            state.CompleteRun(host.Time.GetUtcNow(), 4, host.Time.GetUtcNow());
             await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().SaveChangesAsync(ct);
         }
 

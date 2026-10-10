@@ -15,7 +15,7 @@ public sealed class RetentionPurgeAuditEventTests
     [Fact]
     public void ThePurgeRow_IsASystemActionWithNoTargetAndNoRequest()
     {
-        var row = AuditEvent.RetentionPurgeRun(new RetentionPurgeCounts(1, 2, 3, 4, 5), At);
+        var row = AuditEvent.RetentionPurgeRun(new RetentionPurgeCounts(1, 2, 3, 4, 5, 6, 7), At);
 
         Assert.Equal(AuditActorType.System, row.ActorType);
         Assert.Null(row.ActorId);
@@ -46,7 +46,7 @@ public sealed class RetentionPurgeAuditEventTests
     [InlineData(0, 0, 0, 0, -1)]
     public void ANegativeCount_IsRejected(int courses, int leavers, int participants, int accounts, int auditRows)
     {
-        var counts = new RetentionPurgeCounts(courses, leavers, participants, accounts, auditRows);
+        var counts = new RetentionPurgeCounts(courses, leavers, participants, accounts, auditRows, 0, 0);
 
         Assert.Throws<ArgumentOutOfRangeException>(() => AuditEvent.RetentionPurgeRun(counts, At));
     }

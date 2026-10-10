@@ -22,6 +22,7 @@ public sealed class InstallationFactory(
     TimeProvider timeProvider,
     IControlPlaneClient controlPlaneClient,
     FakeClassroomReader classroomReader,
+    FakeMeetReportsReader meetReader,
     Action<IServiceCollection>? configureServices = null,
     HttpMessageHandler? controlPlaneHandler = null) : WebApplicationFactory<ClassroomAgent.Web.Program>
 {
@@ -61,6 +62,10 @@ public sealed class InstallationFactory(
             services.RemoveAll<IClassroomReader>();
             services.AddSingleton(classroomReader);
             services.AddSingleton<IClassroomReader>(p => p.GetRequiredService<FakeClassroomReader>());
+
+            // US-031 spec FR-015, TC-4, AC-015: the Meet port too — no host test resolves the real adapter and calls it.
+            services.RemoveAll<IMeetReportsReader>();
+            services.AddSingleton<IMeetReportsReader>(meetReader);
 
             // US-007: the synthetic write and Google use cases the enforcement is proven on (test strategy 3).
             configureServices?.Invoke(services);

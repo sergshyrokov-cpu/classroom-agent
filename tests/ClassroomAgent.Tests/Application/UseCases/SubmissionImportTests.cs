@@ -29,7 +29,9 @@ public sealed class SubmissionImportTests
             world.Memberships,
             world.CourseWork,
             world.Submissions,
-            world.Retention);
+            world.Retention,
+            world.Meet,
+            world.MeetSessions);
 
     /// <summary>
     /// AC-002, FR-004, OD-002: submissions are read once for the whole course, not once per coursework item —

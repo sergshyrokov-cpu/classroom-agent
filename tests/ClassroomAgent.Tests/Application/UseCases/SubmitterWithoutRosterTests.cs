@@ -29,7 +29,9 @@ public sealed class SubmitterWithoutRosterTests
             world.Memberships,
             world.CourseWork,
             world.Submissions,
-            world.Retention);
+            world.Retention,
+            world.Meet,
+            world.MeetSessions);
 
     /// <summary>AC-004, FR-007: a submitter never seen on the roster gets a <c>student</c> membership marked off it.</summary>
     [Fact]

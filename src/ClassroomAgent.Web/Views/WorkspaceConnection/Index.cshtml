@@ -25,6 +25,10 @@
 <section id="last-synchronization">
     <h2>@T["LastSync.Title"]</h2>
     <p id="last-synchronization-status">@T[LastSyncStatusKey(last.Status)]</p>
+    @if (last.Status == LastSynchronizationStatus.Failed && last.FailedStep is { } failedStep)
+    {
+        <p id="last-synchronization-step">@T["LastSync.Step." + failedStep]</p>
+    }
     @if (last.Status == LastSynchronizationStatus.Failed && last.Diagnosis is { } diagnosis)
     {
         <p id="last-synchronization-diagnosis">@T[LastSyncDiagnosisKey(diagnosis)]</p>
@@ -51,6 +55,14 @@
     else
     {
         <p>@T["LastSync.LastSuccess.None"]</p>
+    }
+    @if (last.MeetLoadedUpTo is { } meetLoadedUpTo)
+    {
+        <p id="last-synchronization-meet">@T["LastSync.Meet.LoadedUpTo"] @meetLoadedUpTo.ToString(System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern + " HH:mm", System.Globalization.CultureInfo.CurrentCulture)</p>
+    }
+    else
+    {
+        <p id="last-synchronization-meet">@T["LastSync.Meet.NotLoaded"]</p>
     }
 </section>
 

@@ -34,7 +34,7 @@ public sealed class SyncStateInvariantTests
     public void ANewRun_ClearsTheErrorAndTheCounter_AndKeepsTheLastSuccess()
     {
         var state = SyncState.BeginFirstRun(SyncWorld.RunId(1), Start);
-        state.CompleteRun(Start + TimeSpan.FromSeconds(3), 7);
+        state.CompleteRun(Start + TimeSpan.FromSeconds(3), 7, Start + TimeSpan.FromSeconds(3));
         var lastSuccess = state.LastSuccessfulRunAt;
 
         state.BeginRun(SyncWorld.RunId(2), Start + TimeSpan.FromHours(1));
@@ -51,9 +51,9 @@ public sealed class SyncStateInvariantTests
     public void CompletingATerminalRow_IsRejected()
     {
         var state = SyncState.BeginFirstRun(SyncWorld.RunId(1), Start);
-        state.CompleteRun(Start + TimeSpan.FromSeconds(3), 0);
+        state.CompleteRun(Start + TimeSpan.FromSeconds(3), 0, Start + TimeSpan.FromSeconds(3));
 
-        Assert.ThrowsAny<ArgumentException>(() => state.CompleteRun(Start + TimeSpan.FromSeconds(4), 0));
+        Assert.ThrowsAny<ArgumentException>(() => state.CompleteRun(Start + TimeSpan.FromSeconds(4), 0, Start + TimeSpan.FromSeconds(4)));
     }
 
     /// <summary>A terminal row cannot be failed again either.</summary>
@@ -61,10 +61,10 @@ public sealed class SyncStateInvariantTests
     public void FailingATerminalRow_IsRejected()
     {
         var state = SyncState.BeginFirstRun(SyncWorld.RunId(1), Start);
-        state.FailRun(Start + TimeSpan.FromSeconds(3), 0, SyncDiagnosis.Unexpected);
+        state.FailRun(Start + TimeSpan.FromSeconds(3), 0, SyncDiagnosis.Unexpected, SyncStep.Classroom);
 
         Assert.ThrowsAny<ArgumentException>(
-            () => state.FailRun(Start + TimeSpan.FromSeconds(4), 0, SyncDiagnosis.Unexpected));
+            () => state.FailRun(Start + TimeSpan.FromSeconds(4), 0, SyncDiagnosis.Unexpected, SyncStep.Classroom));
     }
 
     /// <summary>The counter is never negative (spec VR-002).</summary>
@@ -75,7 +75,7 @@ public sealed class SyncStateInvariantTests
     {
         var state = SyncState.BeginFirstRun(SyncWorld.RunId(1), Start);
 
-        Assert.ThrowsAny<ArgumentException>(() => state.CompleteRun(Start + TimeSpan.FromSeconds(1), processedCount));
+        Assert.ThrowsAny<ArgumentException>(() => state.CompleteRun(Start + TimeSpan.FromSeconds(1), processedCount, Start + TimeSpan.FromSeconds(1)));
     }
 
     /// <summary>The end of a run never precedes its start (spec VR-002).</summary>
@@ -84,7 +84,7 @@ public sealed class SyncStateInvariantTests
     {
         var state = SyncState.BeginFirstRun(SyncWorld.RunId(1), Start);
 
-        Assert.ThrowsAny<ArgumentException>(() => state.CompleteRun(Start - TimeSpan.FromSeconds(1), 0));
+        Assert.ThrowsAny<ArgumentException>(() => state.CompleteRun(Start - TimeSpan.FromSeconds(1), 0, Start - TimeSpan.FromSeconds(1)));
     }
 
     /// <summary>The eight diagnoses of US-017 spec FR-006, for the theories below.</summary>
@@ -121,7 +121,7 @@ public sealed class SyncStateInvariantTests
     {
         var state = SyncState.BeginFirstRun(SyncWorld.RunId(1), Start);
 
-        state.FailRun(Start + TimeSpan.FromSeconds(1), 2, diagnosis);
+        state.FailRun(Start + TimeSpan.FromSeconds(1), 2, diagnosis, SyncStep.Classroom);
 
         Assert.Equal(SyncRunStatus.Failed, state.Status);
         Assert.Equal(diagnosis.ToString(), state.LastError);
@@ -139,14 +139,14 @@ public sealed class SyncStateInvariantTests
         var state = SyncState.BeginFirstRun(SyncWorld.RunId(1), Start);
 
         Assert.Throws<ArgumentOutOfRangeException>(
-            () => state.FailRun(Start + TimeSpan.FromSeconds(1), 5, (SyncDiagnosis)99));
+            () => state.FailRun(Start + TimeSpan.FromSeconds(1), 5, (SyncDiagnosis)99, SyncStep.Classroom));
 
         Assert.Equal(SyncRunStatus.Running, state.Status);
         Assert.Null(state.FinishedAt);
         Assert.Null(state.LastError);
         Assert.Equal(0, state.ProcessedCount);
 
-        state.FailRun(Start + TimeSpan.FromSeconds(2), 0, SyncDiagnosis.Unexpected);
+        state.FailRun(Start + TimeSpan.FromSeconds(2), 0, SyncDiagnosis.Unexpected, SyncStep.Classroom);
         Assert.Equal("Unexpected", state.LastError);
     }
 
@@ -155,9 +155,9 @@ public sealed class SyncStateInvariantTests
     public void TheTerminalFields_NeverDisagreeWithTheStatus()
     {
         var completed = SyncState.BeginFirstRun(SyncWorld.RunId(1), Start);
-        completed.CompleteRun(Start + TimeSpan.FromSeconds(1), 3);
+        completed.CompleteRun(Start + TimeSpan.FromSeconds(1), 3, Start + TimeSpan.FromSeconds(1));
         var failed = SyncState.BeginFirstRun(SyncWorld.RunId(2), Start);
-        failed.FailRun(Start + TimeSpan.FromSeconds(1), 1, SyncDiagnosis.GoogleUnavailable);
+        failed.FailRun(Start + TimeSpan.FromSeconds(1), 1, SyncDiagnosis.GoogleUnavailable, SyncStep.Classroom);
 
         Assert.Null(completed.LastError);
         Assert.NotNull(completed.FinishedAt);

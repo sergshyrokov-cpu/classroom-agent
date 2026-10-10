@@ -73,6 +73,19 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 + "AND (purged_participants IS NULL OR purged_participants >= 0) "
                 + "AND (purged_accounts IS NULL OR purged_accounts >= 0) "
                 + "AND (purged_audit_rows IS NULL OR purged_audit_rows >= 0)");
+            // US-031 db-design §5.2: the two Meet counts have their own rules, because purge rows written before
+            // US-031 cannot be given them (ck_audit_event_immutable) — both or neither, only on the purge row, never
+            // negative. Every purge row written since carries both (the factory takes non-nullable counts).
+            table.HasCheckConstraint(
+                "ck_audit_event_purge_meet_counts",
+                "(purged_meet_sessions IS NULL) = (purged_meet_participations IS NULL)");
+            table.HasCheckConstraint(
+                "ck_audit_event_purge_meet_counts_absent",
+                "action = 'retention_purge_run' OR (purged_meet_sessions IS NULL AND purged_meet_participations IS NULL)");
+            table.HasCheckConstraint(
+                "ck_audit_event_purge_meet_counts_non_negative",
+                "(purged_meet_sessions IS NULL OR purged_meet_sessions >= 0) "
+                + "AND (purged_meet_participations IS NULL OR purged_meet_participations >= 0)");
             table.HasCheckConstraint(
                 "ck_audit_event_purge_actor",
                 "action <> 'retention_purge_run' OR (actor_type = 'system' AND target_type IS NULL "
@@ -153,6 +166,8 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         builder.Property(e => e.PurgedParticipants);
         builder.Property(e => e.PurgedAccounts);
         builder.Property(e => e.PurgedAuditRows);
+        builder.Property(e => e.PurgedMeetSessions);
+        builder.Property(e => e.PurgedMeetParticipations);
 
         // US-028 db-design §3.2: calendar days of the school, a bare template id (no foreign key, PC-9), a count and
         // a closed format code.

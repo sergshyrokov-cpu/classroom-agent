@@ -155,7 +155,8 @@ public sealed class DeanAccountAuditSchemaTests(PostgreSqlFixture database)
         // target_type, target_id, outcome, refusal_category, request_id, created_at, updated_at — plus, since
         // US-037 (db-design §2.2), the five integer counts of the retention purge's row.
         // US-028 adds the six export columns of the journal export's row (db-design).
-        Assert.Equal(24, columns.Count);
+        // US-031 adds the two Meet counts of the purge's row (db-design §5.1).
+        Assert.Equal(26, columns.Count);
     }
 
     private static string Text(Exception exception)

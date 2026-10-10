@@ -90,6 +90,9 @@ public sealed class InstallationTestHost : IAsyncDisposable
     /// <summary>US-014: the Classroom port of this host, empty unless a test seeds it before <see cref="Start"/> (TC-4).</summary>
     public FakeClassroomReader Classroom { get; } = new();
 
+    /// <summary>US-031: the Meet port of this host, empty unless a test seeds it before <see cref="Start"/> (TC-4, AC-015).</summary>
+    public FakeMeetReportsReader Meet { get; } = new();
+
     public IServiceProvider Services => Factory.Services;
 
     private InstallationFactory Factory => _factory ?? throw new InvalidOperationException("The host is not started.");
@@ -125,7 +128,7 @@ public sealed class InstallationTestHost : IAsyncDisposable
     /// <summary>Builds and starts the host; throws when the host refuses to start (AC-001).</summary>
     public void Start()
     {
-        _factory = new InstallationFactory(Settings, Time, ControlPlane, Classroom, ConfigureServices, ControlPlaneHandler);
+        _factory = new InstallationFactory(Settings, Time, ControlPlane, Classroom, Meet, ConfigureServices, ControlPlaneHandler);
         try
         {
             _ = _factory.Server;

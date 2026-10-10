@@ -63,6 +63,14 @@ public sealed class AuditEvent
     /// <summary>US-037 db-design §2.2: <c>audit_event</c> rows deleted; null for every other action.</summary>
     public int? PurgedAuditRows { get; private set; }
 
+    /// <summary>
+    /// US-031 db-design §5: Meet meetings deleted; null for every other action and on purge rows written before US-031.
+    /// </summary>
+    public int? PurgedMeetSessions { get; private set; }
+
+    /// <summary>US-031 db-design §5: Meet connections deleted; null exactly when <see cref="PurgedMeetSessions"/> is.</summary>
+    public int? PurgedMeetParticipations { get; private set; }
+
     /// <summary>US-028 db-design §3.2: first day of the exported period; null for every other action.</summary>
     public DateOnly? ExportPeriodFrom { get; private set; }
 
@@ -96,6 +104,8 @@ public sealed class AuditEvent
         ArgumentOutOfRangeException.ThrowIfNegative(counts.Participants, nameof(counts));
         ArgumentOutOfRangeException.ThrowIfNegative(counts.Accounts, nameof(counts));
         ArgumentOutOfRangeException.ThrowIfNegative(counts.AuditRows, nameof(counts));
+        ArgumentOutOfRangeException.ThrowIfNegative(counts.MeetSessions, nameof(counts));
+        ArgumentOutOfRangeException.ThrowIfNegative(counts.MeetParticipations, nameof(counts));
 
         return new AuditEvent
         {
@@ -114,6 +124,8 @@ public sealed class AuditEvent
             PurgedParticipants = counts.Participants,
             PurgedAccounts = counts.Accounts,
             PurgedAuditRows = counts.AuditRows,
+            PurgedMeetSessions = counts.MeetSessions,
+            PurgedMeetParticipations = counts.MeetParticipations,
         };
     }
 

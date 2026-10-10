@@ -32,7 +32,9 @@ public sealed class SynchronizationRunOutcome
         SyncDiagnosis? diagnosis = null,
         string? unexpectedExceptionType = null,
         IReadOnlyList<string>? coursesGone = null,
-        IReadOnlyList<string>? coursesWithBlankName = null)
+        IReadOnlyList<string>? coursesWithBlankName = null,
+        SyncStep? failedStep = null,
+        MeetPullCounts? meet = null)
     {
         RunId = runId;
         ProcessedCount = processedCount;
@@ -47,6 +49,8 @@ public sealed class SynchronizationRunOutcome
         UnexpectedExceptionType = unexpectedExceptionType;
         CoursesGone = coursesGone ?? [];
         CoursesWithBlankName = coursesWithBlankName ?? [];
+        FailedStep = failedStep;
+        Meet = meet;
     }
 
     public Guid? RunId { get; }
@@ -90,6 +94,15 @@ public sealed class SynchronizationRunOutcome
     /// <summary>US-017 spec FR-012: the Google ids of courses skipped before their reads because their name is blank.</summary>
     public IReadOnlyList<string> CoursesWithBlankName { get; }
 
+    /// <summary>
+    /// US-031 spec FR-012: what the Meet step did, for the host's log lines — counts and instants only, never an event
+    /// value (SC-10); null when the step did not run.
+    /// </summary>
+    public MeetPullCounts? Meet { get; }
+
+    /// <summary>US-031 spec FR-010: the step that stopped a failed run; null otherwise.</summary>
+    public SyncStep? FailedStep { get; }
+
     public bool Failed => Error is not null;
 
     public static SynchronizationRunOutcome Ran(
@@ -101,7 +114,8 @@ public sealed class SynchronizationRunOutcome
         IReadOnlyList<string>? coursesSkippedByAge = null,
         IReadOnlyList<UnrecognisedSubmission>? unrecognisedSubmissions = null,
         IReadOnlyList<string>? coursesGone = null,
-        IReadOnlyList<string>? coursesWithBlankName = null) =>
+        IReadOnlyList<string>? coursesWithBlankName = null,
+        MeetPullCounts? meet = null) =>
         new(
             runId,
             processedCount,
@@ -115,7 +129,9 @@ public sealed class SynchronizationRunOutcome
             null,
             null,
             coursesGone,
-            coursesWithBlankName);
+            coursesWithBlankName,
+            null,
+            meet);
 
     /// <summary>
     /// A run that stopped with a diagnosis (US-017 spec FR-005, FR-006): <see cref="Error"/> is the diagnosis name,
@@ -129,7 +145,9 @@ public sealed class SynchronizationRunOutcome
         IReadOnlyList<SkippedCourse>? skippedCourses = null,
         IReadOnlyList<string>? coursesSkippedByAge = null,
         IReadOnlyList<string>? coursesGone = null,
-        IReadOnlyList<string>? coursesWithBlankName = null) =>
+        IReadOnlyList<string>? coursesWithBlankName = null,
+        SyncStep? failedStep = null,
+        MeetPullCounts? meet = null) =>
         new(
             runId,
             processedCount,
@@ -143,7 +161,9 @@ public sealed class SynchronizationRunOutcome
             diagnosis,
             unexpectedExceptionType,
             coursesGone,
-            coursesWithBlankName);
+            coursesWithBlankName,
+            failedStep,
+            meet);
 
     public static SynchronizationRunOutcome SkippedReadOnly(LegitimacyModeReason reason) =>
         new(null, null, null, reason, null);

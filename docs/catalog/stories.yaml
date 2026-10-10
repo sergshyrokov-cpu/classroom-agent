@@ -336,7 +336,7 @@ stories:
   - id: US-031
     epic: EPIC-4
     title: Pull Meet events and keep history beyond 180 days
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: >
       Depends on US-013 (the Meet pull is part of synchronization) and US-037
       (it extends the retention purge to every Meet meeting and its

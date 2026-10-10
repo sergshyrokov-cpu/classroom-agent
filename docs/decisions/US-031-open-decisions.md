@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-031
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-10-10T05:35:31Z
-updated_at: 2026-10-10T05:46:13Z
+updated_at: 2026-10-10T06:02:59Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-031-meet-events-pull.md
@@ -105,3 +105,26 @@ Options:
   Story's wording).
 
 Resolution: **(a)**, by the Owner on 2026-10-10 at `HUMAN_SPEC_APPROVAL`.
+
+## OD-011 Compile-only skeleton created at TEST_WRITING — RESOLVED (a)
+
+Raised by TEST_WRITING. The tests reference declarations that do not exist yet —
+`MeetSession`, `MeetParticipation`, `MeetConnection`, `SchoolDomainAccount`,
+`SyncStep`, the new `SyncState` members (`MeetLoadedUpTo`, `FailedStep`, the
+three-argument `CompleteRun`, the four-argument `FailRun`), the two
+`RetentionPurgeCounts` counts and the two `AuditEvent` purge properties, the
+ports `IMeetReportsReader` and `IMeetSessionRepository` with their models, the
+two `IRetentionPurgeStore` methods, the `LastSynchronizationView` additions, the
+Meet counts of `SynchronizationRunOutcome`, `GoogleMeetReportsReader` and
+`MeetSessionRepository`. The test-writer may not change production code — the
+gap US-017 (OD-010), US-025, US-027, US-028 (OD-005), US-037 (OD-007), US-039 and
+US-042 (OD-001) resolved the same way.
+
+Options: (a) a compile-only skeleton — only the declarations the tests
+reference; new members throw `NotImplementedException`; no EF mapping, no
+migration; the port and the repository registered in DI only because the
+synchronization use case cannot be constructed without them (the host tests
+substitute the port); IMPLEMENTATION owns and completes it; (b) no skeleton —
+tests that do not compile until IMPLEMENTATION.
+
+**Resolution:** (a) — Owner, 2026-10-10.

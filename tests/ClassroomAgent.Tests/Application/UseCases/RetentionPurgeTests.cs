@@ -342,7 +342,7 @@ public sealed class RetentionPurgeTests(PostgreSqlFixture database)
         Assert.Null(row.RequestId);
         Assert.Equal(Now, row.OccurredAt);
         Assert.Equal((1, 2, 3, 1, 3), (row.Courses, row.LeaverMemberships, row.Participants, row.Accounts, row.AuditRows));
-        Assert.Equal(new RetentionPurgeOutcome(Cutoff, new(1, 2, 3, 1, 3), []).Counts, outcome.Counts);
+        Assert.Equal(new RetentionPurgeOutcome(Cutoff, new(1, 2, 3, 1, 3, 0, 0), []).Counts, outcome.Counts);
         Assert.Equal(Cutoff, outcome.Cutoff);
         Assert.Empty(outcome.Failures);
         Assert.Equal(1L, await host.CountAsync("course", ct, "id = @id", ("id", kept.CourseId)));

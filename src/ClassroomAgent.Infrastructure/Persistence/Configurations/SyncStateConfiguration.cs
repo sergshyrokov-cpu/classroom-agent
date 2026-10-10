@@ -2,6 +2,7 @@ using ClassroomAgent.Domain.Entities;
 using ClassroomAgent.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ClassroomAgent.Infrastructure.Persistence.Configurations;
 
@@ -38,6 +39,17 @@ public sealed class SyncStateConfiguration : IEntityTypeConfiguration<SyncState>
             table.HasCheckConstraint(
                 "ck_sync_state_error_length",
                 "last_error IS NULL OR char_length(last_error) BETWEEN 1 AND 512");
+
+            // US-031 db-design §4.2: a step only on a failed row, from the closed list; a failed row written before
+            // US-031 keeps a null step. ck_sync_state_terminal_fields is deliberately left unchanged.
+            table.HasCheckConstraint(
+                "ck_sync_state_failed_step",
+                "failed_step IS NULL OR (status = 'failed' AND failed_step IN ('classroom', 'meet'))");
+
+            // US-031 db-design §4.2: a watermark is only ever written by a completed run (spec FR-007).
+            table.HasCheckConstraint(
+                "ck_sync_state_meet_loaded_up_to",
+                "meet_loaded_up_to IS NULL OR last_successful_run_at IS NOT NULL");
         });
 
         builder.HasKey(s => s.Id).HasName("pk_sync_state");
@@ -53,6 +65,10 @@ public sealed class SyncStateConfiguration : IEntityTypeConfiguration<SyncState>
         builder.Property(s => s.ProcessedCount).IsRequired();
         builder.Property(s => s.LastError).HasMaxLength(SyncState.MaxErrorLength);
         builder.Property(s => s.LastSuccessfulRunAt);
+        builder.Property(s => s.MeetLoadedUpTo);
+        builder.Property(s => s.FailedStep)
+            .HasMaxLength(16)
+            .HasConversion(new ValueConverter<SyncStep, string>(v => StepCode(v), code => StepFromCode(code)));
         builder.Property(s => s.CreatedAt).IsRequired();
         builder.Property(s => s.UpdatedAt).IsRequired();
 
@@ -65,6 +81,20 @@ public sealed class SyncStateConfiguration : IEntityTypeConfiguration<SyncState>
         SyncRunStatus.Completed => "completed",
         SyncRunStatus.Failed => "failed",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
+    };
+
+    private static string StepCode(SyncStep value) => value switch
+    {
+        SyncStep.Classroom => "classroom",
+        SyncStep.Meet => "meet",
+        _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
+    };
+
+    private static SyncStep StepFromCode(string code) => code switch
+    {
+        "classroom" => SyncStep.Classroom,
+        "meet" => SyncStep.Meet,
+        _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 
     private static SyncRunStatus StatusFromCode(string code) => code switch

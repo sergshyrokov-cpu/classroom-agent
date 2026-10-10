@@ -139,6 +139,8 @@ public sealed class DeanAccountSchemaTests(PostgreSqlFixture database)
                 "course_membership",
                 "course_work",
                 "legitimacy_state",
+                "meet_participation",
+                "meet_session",
                 "report_template",
                 "report_template_mark",
                 "report_template_scale_row",

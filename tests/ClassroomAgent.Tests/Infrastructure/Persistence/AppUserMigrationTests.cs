@@ -32,7 +32,7 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
         // tables in ONE migration and alters none of the existing ones (US-014 db-design §1, §6). US-015 adds
         // course_work and submission in one further migration and alters none of the existing tables (US-015
         // db-design §1, §6). US-027 adds report_template and its two child tables in one migration (US-027
-        // db-design §2).
+        // db-design §2). US-031 adds meet_session and meet_participation in one migration (US-031 db-design §8).
         Assert.Equal(
             new[]
             {
@@ -45,6 +45,8 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
                 "app_user",
                 "audit_event",
                 "legitimacy_state",
+                "meet_participation",
+                "meet_session",
                 "report_template",
                 "report_template_mark",
                 "report_template_scale_row",
@@ -55,7 +57,8 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
         // US-037 adds no table: its migration amends audit_event and indexes course_membership (db-design §7).
         // US-019 adds none either: its migration amends audit_event's checks only (db-design §3).
         // US-027 adds one migration (US-027 db-design §7); US-042 one more, adding columns only (US-042 db-design §4).
-        Assert.Equal(13, migrations.Count);
+        // US-031 adds AddMeetPull, the last one (US-031 db-design §8).
+        Assert.Equal(14, migrations.Count);
         Assert.EndsWith("_InitialLegitimacyState", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_InitialAppUserAndAuditEvent", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_AddWorkspaceConnection", migrations[2], StringComparison.Ordinal);
@@ -66,6 +69,7 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
         Assert.EndsWith(CourseWorkTestData.Migration, migrations[7], StringComparison.Ordinal);
         Assert.EndsWith("_AddRetentionPurge", migrations[8], StringComparison.Ordinal);
         Assert.EndsWith("_AddSynchronizationRequestAudit", migrations[9], StringComparison.Ordinal);
+        Assert.EndsWith("_AddMeetPull", migrations[13], StringComparison.Ordinal);
     }
 
     /// <summary>db-design 7.1: the migration seeds nothing — the first account appears when a person signs in.</summary>

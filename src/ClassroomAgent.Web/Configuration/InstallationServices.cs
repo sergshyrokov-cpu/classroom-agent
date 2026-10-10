@@ -147,6 +147,17 @@ public static class InstallationServices
         // rather than the whole settings object, which SC-7 keeps out of the container (US-013 security review F-1).
         services.AddSingleton(new RetentionSettings(settings.RetentionYears));
 
+        // US-031 spec FR-015: the Meet port beside the Classroom one, over its own transport to Google only (SC-13),
+        // and the meetings' repository.
+        services.AddSingleton<IMeetReportsReader>(provider => new GoogleMeetReportsReader(
+            provider.GetRequiredService<ISecretStore>(),
+            provider.GetRequiredService<GoogleServiceAccountSettings>(),
+            new SocketsHttpHandler { AllowAutoRedirect = false, UseCookies = false },
+            provider.GetRequiredService<TimeProvider>(),
+            provider.GetRequiredService<IGoogleRetryJitter>(),
+            provider.GetRequiredService<ILogger<GoogleMeetReportsReader>>()));
+        services.AddScoped<IMeetSessionRepository, MeetSessionRepository>();
+
         services.AddScoped<RunSynchronizationUseCase>();
 
         // US-025 spec FR-010, FR-014, entity model §6: the school's time zone as its own narrow record (as

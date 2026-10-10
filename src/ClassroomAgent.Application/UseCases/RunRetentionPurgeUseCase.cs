@@ -25,6 +25,9 @@ public sealed class RunRetentionPurgeUseCase(
     TimeProvider timeProvider,
     RetentionSettings retention)
 {
+    /// <summary>US-031 db-design §6: how many meetings one transaction deletes.</summary>
+    public const int MeetBatchSize = 500;
+
     public async Task<RetentionPurgeOutcome> ExecuteAsync(CancellationToken cancellationToken)
     {
         var startedAt = timeProvider.GetUtcNow();
@@ -62,6 +65,36 @@ public sealed class RunRetentionPurgeUseCase(
             {
                 counts = counts with { LeaverMemberships = counts.LeaverMemberships + deleted };
             }
+        }
+
+        // US-031 spec FR-013, db-design §6: every meeting whose own date is past the cutoff, with all its connections,
+        // whether or not its code is linked — a batch per transaction, so a meeting is never left half-deleted. A batch
+        // that fails stops the step (it would select the same ids again); the next run retries it (OD-003).
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var expired = await store.GetExpiredMeetSessionIdsAsync(cutoff, MeetBatchSize, cancellationToken);
+            if (expired.Count == 0)
+            {
+                break;
+            }
+
+            (int Sessions, int Participations) deleted = default;
+            if (!await TryUnitAsync(
+                    RetentionPurgeStep.ExpiredMeetings,
+                    null,
+                    async ct => deleted = await store.DeleteMeetSessionsAsync(expired, ct),
+                    failures,
+                    cancellationToken))
+            {
+                break;
+            }
+
+            counts = counts with
+            {
+                MeetSessions = counts.MeetSessions + deleted.Sessions,
+                MeetParticipations = counts.MeetParticipations + deleted.Participations,
+            };
         }
 
         // FR-006 … FR-008, in the order FR-009 fixes; the run's own audit row comes after the audit-row delete.

@@ -18,10 +18,11 @@ public sealed class SyncWorld
         bool readOnly = false,
         SeededConnection connection = SeededConnection.Usable,
         DateTimeOffset? now = null,
-        int retentionYears = 5)
+        int retentionYears = 5,
+        LegitimacyModeReason readOnlyReason = LegitimacyModeReason.SuspendedByOwner)
     {
         Time = new ManualTimeProvider(now ?? InstallationTestHost.DefaultStart);
-        ReadOnly = new Guard(readOnly);
+        ReadOnly = new Guard(readOnly, readOnlyReason);
         States = new StateRepository();
         Connections = new ConnectionRepository(connection);
         // The school's domain is known because a check succeeded — which is independent of whether a connection
@@ -66,6 +67,15 @@ public sealed class SyncWorld
     /// <summary>The <c>submission</c> port, in memory (US-015 entity model §7).</summary>
     public SubmissionRepository Submissions { get; } = new();
 
+    /// <summary>
+    /// The Meet port, in memory (US-031, TC-4). Empty by default, which keeps every earlier test true: a run whose Meet
+    /// step reads nothing still completes.
+    /// </summary>
+    public FakeMeetReportsReader Meet { get; } = new();
+
+    /// <summary>The <c>meet_session</c> port, in memory (US-031 entity model §5).</summary>
+    public MeetSessionRepository MeetSessions { get; } = new();
+
     public RunSynchronizationUseCase Run =>
         new(
             States,
@@ -79,7 +89,9 @@ public sealed class SyncWorld
             Memberships,
             CourseWork,
             Submissions,
-            Retention);
+            Retention,
+            Meet,
+            MeetSessions);
 
     /// <summary>
     /// The run use case over this world's stores but another Classroom reader — a later run that sees different
@@ -98,13 +110,15 @@ public sealed class SyncWorld
             Memberships,
             CourseWork,
             Submissions,
-            Retention);
+            Retention,
+            Meet,
+            MeetSessions);
 
     /// <summary>A run identifier the assertions can recognise.</summary>
     public static Guid RunId(int ordinal) => new($"00000000-0000-0000-0000-{ordinal:D12}");
 
     /// <summary>The read-only guard, with the cause the tests need and a record of what it was asked.</summary>
-    public sealed class Guard(bool readOnly) : IReadOnlyModeGuard
+    public sealed class Guard(bool readOnly, LegitimacyModeReason reason = LegitimacyModeReason.SuspendedByOwner) : IReadOnlyModeGuard
     {
         private readonly List<string> _operations = [];
 
@@ -117,7 +131,7 @@ public sealed class SyncWorld
         {
             _operations.Add(operation);
             return IsReadOnly
-                ? throw new ReadOnlyModeException(LegitimacyModeReason.SuspendedByOwner, null, operation)
+                ? throw new ReadOnlyModeException(reason, null, operation)
                 : Task.CompletedTask;
         }
     }
@@ -598,6 +612,48 @@ public sealed class SyncWorld
             Stored[(submission.CourseWorkId, submission.GoogleId)] = submission;
             Added.Add(submission);
         }
+    }
+
+    /// <summary>
+    /// The stored Meet meetings, in memory, keyed on the conference id the upsert matches (US-031 db-design §7). A
+    /// session keeps its participations, as the repository loads them with it.
+    /// </summary>
+    public sealed class MeetSessionRepository : IMeetSessionRepository
+    {
+        private long _nextId = 1;
+
+        /// <summary>Every session staged for insert, in order.</summary>
+        public List<MeetSession> Added { get; } = [];
+
+        /// <summary>The stored sessions by conference id, as the database would hold them.</summary>
+        public Dictionary<string, MeetSession> Stored { get; } = new(StringComparer.Ordinal);
+
+        /// <summary>How many times the repository was read (the read-only tests assert zero).</summary>
+        public int Reads { get; private set; }
+
+        public Task<IReadOnlyList<MeetSession>> GetByConferenceIdsAsync(
+            IReadOnlyCollection<string> conferenceIds,
+            CancellationToken cancellationToken)
+        {
+            Reads++;
+            IReadOnlyList<MeetSession> found = conferenceIds
+                .Distinct(StringComparer.Ordinal)
+                .Where(Stored.ContainsKey)
+                .Select(id => Stored[id])
+                .ToList();
+            return Task.FromResult(found);
+        }
+
+        public void Add(MeetSession session)
+        {
+            Identity.Assign(session, _nextId++);
+            Stored[session.ConferenceId] = session;
+            Added.Add(session);
+        }
+
+        /// <summary>Every stored participation, across sessions.</summary>
+        public IReadOnlyList<MeetParticipation> AllParticipations =>
+            Stored.Values.SelectMany(session => session.Participations).ToList();
     }
 
     /// <summary>

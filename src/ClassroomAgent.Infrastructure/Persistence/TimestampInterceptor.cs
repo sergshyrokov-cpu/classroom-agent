@@ -41,6 +41,7 @@ public sealed class TimestampInterceptor(TimeProvider timeProvider) : SaveChange
             // three tables of courses and rosters, whose created_at / updated_at are stamped the same way (PC-6).
             // US-015 db-design §3.1, §4.1 add course_work and submission, stamped the same way.
             // US-027 db-design §2 adds the template aggregate, stamped the same way.
+            // US-031 db-design §2.1, §3.1 add meet_session and meet_participation, stamped the same way (PC-6).
             if (entry.Entity is not (LegitimacyState
                 or AppUser
                 or AuditEvent
@@ -51,7 +52,9 @@ public sealed class TimestampInterceptor(TimeProvider timeProvider) : SaveChange
                 or Submission
                 or ReportTemplate
                 or ReportTemplateMark
-                or ReportTemplateScaleRow))
+                or ReportTemplateScaleRow
+                or MeetSession
+                or MeetParticipation))
             {
                 continue;
             }

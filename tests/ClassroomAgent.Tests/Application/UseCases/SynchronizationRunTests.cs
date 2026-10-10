@@ -92,7 +92,7 @@ public sealed class SynchronizationRunTests
         world.Time.Advance(SyncTestData.DefaultInterval);
 
         world.States.Stored.BeginRun(SyncWorld.RunId(2), world.Time.GetUtcNow());
-        world.States.Stored.FailRun(world.Time.GetUtcNow(), 0, SyncDiagnosis.GoogleUnavailable);
+        world.States.Stored.FailRun(world.Time.GetUtcNow(), 0, SyncDiagnosis.GoogleUnavailable, SyncStep.Classroom);
 
         Assert.Equal(SyncRunStatus.Failed, world.States.Stored.Status);
         Assert.Equal(lastSuccess, world.States.Stored.LastSuccessfulRunAt);
@@ -111,7 +111,7 @@ public sealed class SynchronizationRunTests
         await world.Run.ExecuteAsync(SyncWorld.RunId(1), ct);
 
         world.States.Stored!.BeginRun(SyncWorld.RunId(2), world.Time.GetUtcNow());
-        world.States.Stored.FailRun(world.Time.GetUtcNow(), 0, SyncDiagnosis.KeyRejected);
+        world.States.Stored.FailRun(world.Time.GetUtcNow(), 0, SyncDiagnosis.KeyRejected, SyncStep.Classroom);
 
         Assert.NotNull(world.States.Stored.LastError);
         Assert.Contains(world.States.Stored.LastError, Enum.GetNames<SyncDiagnosis>());

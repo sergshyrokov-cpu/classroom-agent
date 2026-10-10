@@ -19,7 +19,8 @@ public sealed class GetLastSynchronizationQueryTests
 
     public static TheoryData<SyncDiagnosis> AllDiagnoses => new(Enum.GetValues<SyncDiagnosis>());
 
-    private static GetLastSynchronizationQuery QueryOver(SyncWorld world) => new(world.States);
+    private static GetLastSynchronizationQuery QueryOver(SyncWorld world) =>
+        new(world.States, new SchoolTimeZone(JournalTestData.Kyiv));
 
     /// <summary>AC-006: before any run the row is absent and the view says so, with nothing to show.</summary>
     [Fact]
@@ -64,7 +65,7 @@ public sealed class GetLastSynchronizationQueryTests
         var state = SyncState.BeginFirstRun(SyncWorld.RunId(1), Start);
         world.States.Add(state);
         var end = Start + TimeSpan.FromSeconds(42);
-        state.CompleteRun(end, 3);
+        state.CompleteRun(end, 3, end);
 
         var view = await QueryOver(world).ExecuteAsync(ct);
 
@@ -85,7 +86,7 @@ public sealed class GetLastSynchronizationQueryTests
         var state = SyncState.BeginFirstRun(SyncWorld.RunId(1), Start);
         world.States.Add(state);
         var end = Start + TimeSpan.FromSeconds(7);
-        state.FailRun(end, 1, diagnosis);
+        state.FailRun(end, 1, diagnosis, SyncStep.Classroom);
 
         var view = await QueryOver(world).ExecuteAsync(ct);
 
@@ -105,11 +106,11 @@ public sealed class GetLastSynchronizationQueryTests
         var state = SyncState.BeginFirstRun(SyncWorld.RunId(1), Start);
         world.States.Add(state);
         var success = Start + TimeSpan.FromSeconds(5);
-        state.CompleteRun(success, 2);
+        state.CompleteRun(success, 2, success);
         var secondStart = Start + TimeSpan.FromHours(1);
         state.BeginRun(SyncWorld.RunId(2), secondStart);
         var failure = secondStart + TimeSpan.FromSeconds(3);
-        state.FailRun(failure, 0, SyncDiagnosis.GoogleUnavailable);
+        state.FailRun(failure, 0, SyncDiagnosis.GoogleUnavailable, SyncStep.Classroom);
 
         var view = await QueryOver(world).ExecuteAsync(ct);
 
@@ -158,7 +159,7 @@ public sealed class GetLastSynchronizationQueryTests
     private static SyncState FailedRowHolding(string lastError)
     {
         var state = SyncState.BeginFirstRun(SyncWorld.RunId(1), Start);
-        state.FailRun(Start + TimeSpan.FromSeconds(1), 0, SyncDiagnosis.Unexpected);
+        state.FailRun(Start + TimeSpan.FromSeconds(1), 0, SyncDiagnosis.Unexpected, SyncStep.Classroom);
         typeof(SyncState).GetProperty(nameof(SyncState.LastError))!.SetValue(state, lastError);
         return state;
     }

@@ -1,6 +1,7 @@
 using ClassroomAgent.Application.Exceptions;
 using ClassroomAgent.Application.Models;
 using ClassroomAgent.Application.Ports;
+using ClassroomAgent.Application.Validation;
 using ClassroomAgent.Domain.Entities;
 using ClassroomAgent.Domain.Enums;
 using ClassroomAgent.Domain.Rules;
@@ -22,6 +23,11 @@ namespace ClassroomAgent.Application.UseCases;
 /// US-014 adds the pipeline's first step: the school's courses and both rosters of each of them, one course per
 /// transaction (spec FR-001, FR-012, OD-009), counted as courses processed (spec FR-013, OD-005).
 /// </para>
+/// <para>
+/// US-031 adds the second step, after the Classroom one in the same run: the <c>call_ended</c> events of Meet, stored
+/// per conference and committed a page at a time, and the watermark that only a completed run moves (spec FR-001 …
+/// FR-010). The guard and the connection check above cover both steps.
+/// </para>
 /// </remarks>
 public sealed class RunSynchronizationUseCase(
     ISyncStateRepository syncStates,
@@ -35,10 +41,21 @@ public sealed class RunSynchronizationUseCase(
     ICourseMembershipRepository memberships,
     ICourseWorkRepository courseWork,
     ISubmissionRepository submissions,
-    RetentionSettings retention)
+    RetentionSettings retention,
+    IMeetReportsReader meet,
+    IMeetSessionRepository meetSessions)
 {
     /// <summary>The operation name the read-only refusal carries (US-007 spec VR-001).</summary>
     public const string Operation = "Sync.Run";
+
+    /// <summary>
+    /// US-031 spec FR-002, I-1: the earliest instant ever asked for is now minus this — Google's 180 days less an
+    /// hour, which keeps a long first pull clear of Google's boundary.
+    /// </summary>
+    public static readonly TimeSpan MeetHorizon = TimeSpan.FromDays(180) - TimeSpan.FromHours(1);
+
+    /// <summary>US-031 spec FR-002, OD-003: a later pull starts this far before the watermark (BR-061).</summary>
+    public static readonly TimeSpan MeetOverlap = TimeSpan.FromDays(3);
 
     public async Task<SynchronizationRunOutcome> ExecuteAsync(Guid runId, CancellationToken cancellationToken)
     {
@@ -55,17 +72,28 @@ public sealed class RunSynchronizationUseCase(
 
         // The technical account every Classroom call is made on behalf of (BR-015, spec S-03). A usable connection
         // always carries one; without it there is nothing to read Google as, which is the same skip.
-        if (!connection.IsUsable || connection.SavedImpersonationUserEmail is not { Length: > 0 } impersonationUser)
+        // US-031 spec FR-006: the saved domain is what a domain account is matched against; a usable connection holds one.
+        if (!connection.IsUsable
+            || connection.SavedImpersonationUserEmail is not { Length: > 0 } impersonationUser
+            || connection.SavedDomain is not { Length: > 0 } schoolDomain)
         {
             return SynchronizationRunOutcome.SkippedConnection(connection.State);
         }
 
         var state = await BeginAsync(runId, cancellationToken);
         var import = new ImportProgress();
+        var meetPull = new MeetProgress();
+        var step = SyncStep.Classroom;
         try
         {
             await ImportCoursesAsync(impersonationUser, import, cancellationToken);
-            state.CompleteRun(timeProvider.GetUtcNow(), import.ProcessedCount);
+
+            // US-031 spec FR-001: reached only when the Classroom step did not stop the run.
+            step = SyncStep.Meet;
+            await PullMeetAsync(impersonationUser, schoolDomain, state.MeetLoadedUpTo, meetPull, cancellationToken);
+
+            // FR-007: the watermark moves only here, once every page is read and written and the run completes.
+            state.CompleteRun(timeProvider.GetUtcNow(), import.ProcessedCount, meetPull.WindowTo);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return SynchronizationRunOutcome.Ran(
                 runId,
@@ -76,7 +104,8 @@ public sealed class RunSynchronizationUseCase(
                 import.CoursesSkippedByAge,
                 import.UnrecognisedSubmissions,
                 import.CoursesGone,
-                import.CoursesWithBlankName);
+                import.CoursesWithBlankName,
+                meetPull.ToCounts());
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -88,8 +117,9 @@ public sealed class RunSynchronizationUseCase(
             // US-017 spec FR-005, FR-006: the run stops; the courses committed before the stop stay and are counted
             // (I-5). The stored value is a code of the closed list, never the exception's own message or type
             // (SC-10); the type name travels in the outcome for the host's one Error line (spec FR-010).
+            // US-031 spec FR-010: the step that stopped the run is recorded with the code; the watermark stays.
             var diagnosis = DiagnosisOf(failure);
-            state.FailRun(timeProvider.GetUtcNow(), import.ProcessedCount, diagnosis);
+            state.FailRun(timeProvider.GetUtcNow(), import.ProcessedCount, diagnosis, step);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return SynchronizationRunOutcome.RanAndFailed(
                 runId,
@@ -99,8 +129,161 @@ public sealed class RunSynchronizationUseCase(
                 import.SkippedCourses,
                 import.CoursesSkippedByAge,
                 import.CoursesGone,
-                import.CoursesWithBlankName);
+                import.CoursesWithBlankName,
+                step,
+                step == SyncStep.Meet ? meetPull.ToCounts() : null);
         }
+    }
+
+    /// <summary>
+    /// US-031 spec FR-002 … FR-009: the Meet step. The window is fixed once — the same for every page and every retry —
+    /// and each page is validated, decided per conference and committed in its own transaction (AD-7). A failure
+    /// propagates with the pages already committed kept; only <see cref="SyncState.CompleteRun"/> records success.
+    /// </summary>
+    private async Task PullMeetAsync(
+        string impersonationUser,
+        string schoolDomain,
+        DateTimeOffset? watermark,
+        MeetProgress progress,
+        CancellationToken cancellationToken)
+    {
+        var now = timeProvider.GetUtcNow();
+        var horizon = now - MeetHorizon;
+        var from = watermark is { } loaded ? loaded - MeetOverlap : horizon;
+        if (from < horizon)
+        {
+            from = horizon;
+        }
+
+        progress.WindowFrom = from;
+        progress.WindowTo = now;
+
+        await foreach (var page in meet.ReadCallEndedAsync(impersonationUser, from, now, cancellationToken)
+            .WithCancellation(cancellationToken))
+        {
+            progress.EventsRead += page.Events.Count + page.UnreadableCount;
+            progress.Skip(MeetEventRejection.Unreadable, page.UnreadableCount);
+
+            var valid = new List<MeetCallEndedEvent>();
+            foreach (var meetEvent in page.Events)
+            {
+                if (MeetEventValidator.Check(meetEvent, from, now, out var trimmed) is { } rejection)
+                {
+                    progress.Skip(rejection, 1);
+                    continue;
+                }
+
+                valid.Add(trimmed);
+            }
+
+            if (valid.Count == 0)
+            {
+                continue;
+            }
+
+            await unitOfWork.ExecuteInTransactionAsync(
+                ct => StoreMeetPageAsync(valid, schoolDomain, progress, ct),
+                cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// One page, decided per conference (spec FR-005, I-4): a stored conference takes every connection read now; an
+    /// unstored one is stored when an event of it read in this run names a domain organizer, that event's code and
+    /// organizer becoming the meeting's, together with the connections earlier pages of the run read for it. Until
+    /// then nothing of it is written; what is still undecided when the run ends counts as not of the school.
+    /// </summary>
+    private async Task StoreMeetPageAsync(
+        List<MeetCallEndedEvent> events,
+        string schoolDomain,
+        MeetProgress progress,
+        CancellationToken cancellationToken)
+    {
+        var conferences = events.GroupBy(e => e.ConferenceId!, StringComparer.Ordinal).ToList();
+        var stored = (await meetSessions.GetByConferenceIdsAsync(
+                conferences.Select(c => c.Key).ToList(),
+                cancellationToken))
+            .ToDictionary(s => s.ConferenceId, StringComparer.Ordinal);
+
+        foreach (var conference in conferences)
+        {
+            if (stored.TryGetValue(conference.Key, out var session))
+            {
+                progress.SessionsUpdated++;
+            }
+            else
+            {
+                var organizing = conference.FirstOrDefault(e =>
+                    MeetEventValidator.IsUsableEmail(e.OrganizerEmail)
+                    && SchoolDomainAccount.IsDomainAccount(e.OrganizerEmail, schoolDomain));
+                if (organizing is null)
+                {
+                    progress.Hold(conference.Key, conference);
+                    continue;
+                }
+
+                session = MeetSession.Store(
+                    conference.Key,
+                    organizing.MeetingCode!,
+                    organizing.OrganizerEmail!,
+                    ConnectionOf(organizing, schoolDomain));
+                meetSessions.Add(session);
+                stored[conference.Key] = session;
+                progress.SessionsAdded++;
+                progress.ParticipationsAdded++;
+
+                // The organizing event is already its first connection; the others of the run follow.
+                foreach (var other in progress.Release(conference.Key).Concat(conference.Where(e => !ReferenceEquals(e, organizing))))
+                {
+                    Record(session, other, schoolDomain, progress);
+                }
+
+                continue;
+            }
+
+            foreach (var meetEvent in conference)
+            {
+                Record(session, meetEvent, schoolDomain, progress);
+            }
+        }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>Adds or updates one connection of a session, counted as new or updated (spec FR-009, FR-012).</summary>
+    private static void Record(MeetSession session, MeetCallEndedEvent meetEvent, string schoolDomain, MeetProgress progress)
+    {
+        var connection = ConnectionOf(meetEvent, schoolDomain);
+        var known = session.Participations.Any(p => string.Equals(p.EndpointId, connection.EndpointId, StringComparison.Ordinal));
+        session.Record(connection);
+        if (known)
+        {
+            progress.ParticipationsUpdated++;
+        }
+        else
+        {
+            progress.ParticipationsAdded++;
+        }
+    }
+
+    /// <summary>
+    /// One validated event as a connection (spec FR-008, I-3): joined at the event time minus the duration; the
+    /// participant's email kept only when the identifier is an email of a domain account, otherwise none (AC-005).
+    /// </summary>
+    private static MeetConnection ConnectionOf(MeetCallEndedEvent meetEvent, string schoolDomain)
+    {
+        var duration = (int)meetEvent.DurationSeconds!.Value;
+        var isEmail = string.Equals(meetEvent.IdentifierType, MeetEventValidator.EmailIdentifierType, StringComparison.OrdinalIgnoreCase);
+        var email = isEmail
+                    && MeetEventValidator.IsUsableEmail(meetEvent.Identifier)
+                    && SchoolDomainAccount.IsDomainAccount(meetEvent.Identifier, schoolDomain)
+            ? meetEvent.Identifier
+            : null;
+        return new MeetConnection(
+            meetEvent.EndpointId!,
+            email,
+            meetEvent.OccurredAt!.Value - TimeSpan.FromSeconds(duration),
+            duration);
     }
 
     /// <summary>
@@ -596,6 +779,66 @@ public sealed class RunSynchronizationUseCase(
         public List<string> CoursesGone { get; } = [];
 
         public List<string> CoursesWithBlankName { get; } = [];
+    }
+
+    /// <summary>What the Meet step did so far, for the outcome the host logs (US-031 spec FR-012).</summary>
+    private sealed class MeetProgress
+    {
+        private readonly Dictionary<MeetEventRejection, int> _skipped = [];
+
+        /// <summary>Events of conferences not stored and not yet shown to be the school's (spec FR-005).</summary>
+        private readonly Dictionary<string, List<MeetCallEndedEvent>> _undecided = new(StringComparer.Ordinal);
+
+        public DateTimeOffset WindowFrom { get; set; }
+
+        public DateTimeOffset WindowTo { get; set; }
+
+        public int EventsRead { get; set; }
+
+        public int SessionsAdded { get; set; }
+
+        public int SessionsUpdated { get; set; }
+
+        public int ParticipationsAdded { get; set; }
+
+        public int ParticipationsUpdated { get; set; }
+
+        /// <summary>The events of conferences no event of the run showed to be the school's (spec FR-005, FR-012).</summary>
+        public int NotOfTheSchool => _undecided.Values.Sum(events => events.Count);
+
+        public void Hold(string conferenceId, IEnumerable<MeetCallEndedEvent> events)
+        {
+            if (!_undecided.TryGetValue(conferenceId, out var held))
+            {
+                held = [];
+                _undecided[conferenceId] = held;
+            }
+
+            held.AddRange(events);
+        }
+
+        public IReadOnlyList<MeetCallEndedEvent> Release(string conferenceId) =>
+            _undecided.Remove(conferenceId, out var held) ? held : [];
+
+        public void Skip(MeetEventRejection reason, int count)
+        {
+            if (count > 0)
+            {
+                _skipped[reason] = _skipped.GetValueOrDefault(reason) + count;
+            }
+        }
+
+        public MeetPullCounts ToCounts() =>
+            new(
+                WindowFrom,
+                WindowTo,
+                EventsRead,
+                SessionsAdded,
+                SessionsUpdated,
+                ParticipationsAdded,
+                ParticipationsUpdated,
+                NotOfTheSchool,
+                new Dictionary<MeetEventRejection, int>(_skipped));
     }
 
     /// <summary>What one course's transaction did (US-015 spec FR-011, FR-016, OD-005).</summary>

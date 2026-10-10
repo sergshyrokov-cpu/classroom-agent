@@ -149,6 +149,10 @@
   <data name="LastSync.LastSuccess.None" xml:space="preserve"><value>There has been no successful synchronization yet</value></data>
   <data name="LastSync.Diagnosis.GoogleUnavailable" xml:space="preserve"><value>Google did not answer after several attempts. The next run will try again.</value></data>
   <data name="LastSync.Diagnosis.Unexpected" xml:space="preserve"><value>An unexpected error stopped the run. The next run will try again.</value></data>
+  <data name="LastSync.Meet.LoadedUpTo" xml:space="preserve"><value>Meet meetings loaded up to:</value></data>
+  <data name="LastSync.Meet.NotLoaded" xml:space="preserve"><value>Meet meetings: not loaded yet</value></data>
+  <data name="LastSync.Step.Classroom" xml:space="preserve"><value>Step: reading Google Classroom</value></data>
+  <data name="LastSync.Step.Meet" xml:space="preserve"><value>Step: reading Meet events (Admin Reports)</value></data>
   <data name="Synchronization.Request.Button" xml:space="preserve"><value>Synchronize</value></data>
   <data name="Synchronization.Request.Requested" xml:space="preserve"><value>Synchronization requested. It will start in a few seconds and run in the background.</value></data>
   <data name="Synchronization.Request.RequestedAfterCurrentWork" xml:space="preserve"><value>Synchronization requested. It will start as soon as the current synchronization or clean-up finishes.</value></data>

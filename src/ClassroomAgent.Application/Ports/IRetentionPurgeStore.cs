@@ -29,4 +29,15 @@ public interface IRetentionPurgeStore
 
     /// <summary>Deletes every audit row that occurred before the cutoff (spec FR-008) — the only audit deletion.</summary>
     Task<int> DeleteAuditEventsOlderThanAsync(DateTimeOffset cutoff, CancellationToken cancellationToken);
+
+    /// <summary>US-031 db-design §6: up to <paramref name="batchSize"/> meetings that started before the cutoff, by id.</summary>
+    Task<IReadOnlyList<long>> GetExpiredMeetSessionIdsAsync(
+        DateTimeOffset cutoff,
+        int batchSize,
+        CancellationToken cancellationToken);
+
+    /// <summary>US-031 db-design §6: deletes those meetings' participations, then the meetings; returns both counts.</summary>
+    Task<(int Sessions, int Participations)> DeleteMeetSessionsAsync(
+        IReadOnlyCollection<long> sessionIds,
+        CancellationToken cancellationToken);
 }

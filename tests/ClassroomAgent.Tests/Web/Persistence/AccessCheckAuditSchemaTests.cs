@@ -122,6 +122,8 @@ public sealed class AccessCheckAuditSchemaTests(PostgreSqlFixture database)
                 "course_membership",
                 "course_work",
                 "legitimacy_state",
+                "meet_participation",
+                "meet_session",
                 "report_template",
                 "report_template_mark",
                 "report_template_scale_row",
@@ -156,6 +158,9 @@ public sealed class AccessCheckAuditSchemaTests(PostgreSqlFixture database)
 
                 // US-037 db-design §2.2: the five counts of the retention purge's own row.
                 "purged_accounts", "purged_audit_rows", "purged_courses", "purged_leaver_memberships",
+
+                // US-031 db-design §5.1: the two Meet counts of the purge's row.
+                "purged_meet_participations", "purged_meet_sessions",
                 "purged_participants",
                 "refusal_category", "request_id", "target_id", "target_type", "updated_at",
             },

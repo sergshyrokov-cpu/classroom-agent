@@ -43,6 +43,12 @@ public sealed class ClassroomAgentDbContext(DbContextOptions<ClassroomAgentDbCon
     /// <summary>US-027 entity model §2.1: the school's created report templates (db-design §2).</summary>
     public DbSet<ReportTemplate> ReportTemplates => Set<ReportTemplate>();
 
+    /// <summary>US-031 entity model §1: the school's stored Meet meetings (db-design §2).</summary>
+    public DbSet<MeetSession> MeetSessions => Set<MeetSession>();
+
+    /// <summary>US-031 entity model §2: their connections (db-design §3); written only through the session.</summary>
+    public DbSet<MeetParticipation> MeetParticipations => Set<MeetParticipation>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new LegitimacyStateConfiguration());
@@ -58,5 +64,7 @@ public sealed class ClassroomAgentDbContext(DbContextOptions<ClassroomAgentDbCon
         modelBuilder.ApplyConfiguration(new ReportTemplateConfiguration());
         modelBuilder.ApplyConfiguration(new ReportTemplateMarkConfiguration());
         modelBuilder.ApplyConfiguration(new ReportTemplateScaleRowConfiguration());
+        modelBuilder.ApplyConfiguration(new MeetSessionConfiguration());
+        modelBuilder.ApplyConfiguration(new MeetParticipationConfiguration());
     }
 }

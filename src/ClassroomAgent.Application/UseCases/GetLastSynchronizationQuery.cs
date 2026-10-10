@@ -16,7 +16,7 @@ namespace ClassroomAgent.Application.UseCases;
 /// (spec FR-006, VR-002, I-6). <see cref="Enum.TryParse{TEnum}(string?, out TEnum)"/> is deliberately not used: it
 /// accepts numbers and ignores padding.
 /// </remarks>
-public sealed class GetLastSynchronizationQuery(ISyncStateRepository states)
+public sealed class GetLastSynchronizationQuery(ISyncStateRepository states, SchoolTimeZone schoolTimeZone)
 {
     public async Task<LastSynchronizationView> ExecuteAsync(CancellationToken cancellationToken)
     {
@@ -34,12 +34,16 @@ public sealed class GetLastSynchronizationQuery(ISyncStateRepository states)
             _ => throw new ArgumentOutOfRangeException(nameof(state), state.Status, null),
         };
 
+        // US-031 api-design §3: the watermark is independent of the status and is converted here, so the view does no
+        // time-zone arithmetic (AD-3, OD-010 a); the step is shown only for a failed run (spec FR-010, I-5).
         return new LastSynchronizationView(
             status,
             state.StartedAt,
             state.FinishedAt,
             state.LastSuccessfulRunAt,
-            status == LastSynchronizationStatus.Failed ? DiagnosisOf(state) : null);
+            status == LastSynchronizationStatus.Failed ? DiagnosisOf(state) : null,
+            state.MeetLoadedUpTo is { } watermark ? TimeZoneInfo.ConvertTime(watermark, schoolTimeZone.Zone).DateTime : null,
+            status == LastSynchronizationStatus.Failed ? state.FailedStep : null);
     }
 
     private static SyncDiagnosis DiagnosisOf(SyncState state)

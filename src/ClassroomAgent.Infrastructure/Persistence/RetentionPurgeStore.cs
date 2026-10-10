@@ -78,4 +78,35 @@ public sealed class RetentionPurgeStore(ClassroomAgentDbContext db) : IRetention
 
     public Task<int> DeleteAuditEventsOlderThanAsync(DateTimeOffset cutoff, CancellationToken cancellationToken) =>
         db.AuditEvents.Where(e => e.OccurredAt < cutoff).ExecuteDeleteAsync(cancellationToken);
+
+    /// <summary>US-031 db-design §6 step 1: a batch of meetings that started before the cutoff, by id.</summary>
+    public async Task<IReadOnlyList<long>> GetExpiredMeetSessionIdsAsync(
+        DateTimeOffset cutoff,
+        int batchSize,
+        CancellationToken cancellationToken) =>
+        await db.MeetSessions
+            .AsNoTracking()
+            .Where(s => s.StartedAt < cutoff)
+            .OrderBy(s => s.Id)
+            .Select(s => s.Id)
+            .Take(batchSize)
+            .ToListAsync(cancellationToken);
+
+    /// <summary>
+    /// US-031 db-design §6 step 2: the participations of those meetings first (<c>RESTRICT</c>), then the meetings; the
+    /// caller wraps both in one transaction, so a meeting is never left half-deleted (spec FR-013).
+    /// </summary>
+    public async Task<(int Sessions, int Participations)> DeleteMeetSessionsAsync(
+        IReadOnlyCollection<long> sessionIds,
+        CancellationToken cancellationToken)
+    {
+        var ids = sessionIds.ToList();
+        var participations = await db.MeetParticipations
+            .Where(p => ids.Contains(p.MeetSessionId))
+            .ExecuteDeleteAsync(cancellationToken);
+        var sessions = await db.MeetSessions
+            .Where(s => ids.Contains(s.Id))
+            .ExecuteDeleteAsync(cancellationToken);
+        return (sessions, participations);
+    }
 }
