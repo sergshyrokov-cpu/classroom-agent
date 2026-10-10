@@ -68,7 +68,8 @@ deployed — before linking (US-032) and reports (US-033) are useful.
   as another conference stays another meeting (BR-063).
 - **Window** (§4 Epic 4 v87):
   - **first pull** — everything Google still keeps: from 180 days before the
-    run;
+    run, plus 1 hour so a long pull stays clear of Google's boundary (the
+    earliest start ever asked, also after a long outage);
   - **every later pull** — from 3 days before the end of the last successful
     Meet pull, to cover events that arrive up to 24 hours late (BR-061);
   - the end of the last successful Meet pull is stored; a failed Meet step does
@@ -150,7 +151,8 @@ are "other participants" with no email and no name.
 
 **Given** no Meet pull has ever succeeded
 
-**Then** the reader is asked for events from 180 days before the run.
+**Then** the reader is asked for events from 180 days before the run plus 1
+hour.
 
 **Given** the last successful Meet pull ended at T
 
@@ -221,7 +223,9 @@ All resolved by the Owner on 2026-10-06, before activation:
 
 - **OD-001** Scope — (a) pull, storage and per-meeting expiry only; linking is
   US-032, reports US-033.
-- **OD-002** First pull — (a) everything Google keeps, 180 days back.
+- **OD-002** First pull — (a) everything Google keeps, 180 days back. Refined at
+  `HUMAN_SPEC_APPROVAL` on 2026-10-10 (Specification I-1): the start is 180 days
+  back plus 1 hour.
 - **OD-003** Later pulls — (a) re-read the last 3 days before the end of the last
   successful Meet pull.
 - **OD-004** Which meetings — (a) only meetings organized by a domain account

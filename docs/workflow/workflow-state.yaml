@@ -2,50 +2,30 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-028
+story: US-031
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: spec-writer
 last_result:
   verdict: HUMAN_APPROVED
-  stage: HUMAN_PR_APPROVAL
-  recorded_at: 2026-10-06T10:20:00Z
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: 2026-10-10T05:46:13Z
 last_artifacts:
-  - type: implementation_report
-    path: docs/evidence/US-028-implementation-report.md
+  - type: specification
+    path: docs/specifications/US-031-spec.md
     version: 1
-  - type: security_review
-    path: docs/reviews/security/US-028-security-review.md
+  - type: open_decisions
+    path: docs/decisions/US-031-open-decisions.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "SPEC OD-003 resolved (a) at the gate: a whole-number grade alone is a number, all else text as on screen."
-  - "SPEC OD-004 resolved (a) at the gate: portrait/landscape chosen at export, portrait default, stored nowhere."
-  - "SPEC F-1: Story Notes say GET; trebovaniya.md §8 v64 requires POST with antiforgery — spec follows §8."
-  - "SPEC I-1..I-9: interpretations in spec §11; any may become an OD."
-  - "SPEC FR-011: ClosedXML 0.105.1 in Infrastructure only; transitive packages/licences to be checked at SECURITY_REVIEW."
-  - "API §2.1-2.2: export is POST /api/v1/exports/journal-xlsx (API-3 shape), JSON body, script call with header token."
-  - "API §2.5: first /api/v1 resource - host-wide /api/v1 errors become API-6 JSON (401 challenge, 403 restricted session/policy, 400 token, 404/405, 500); outside /api/v1 unchanged."
-  - "API §8: workbook model, IReportRenderer shape, AuditEvent detail fields left to DB_DESIGN."
-  - "API A-1: reused NameSourceMalformed text mentions 'page address'; kept per spec VR-001."
-  - "DB D-1..D-4: export details as six typed nullable audit_event columns (US-037 pattern); action journal_exported, target course; built-in marker = export_template_built_in; format xlsx. Migration AddJournalExportAudit."
-  - "ENTITY §3.2: Application has no localization package, so a new port IReportTexts is implemented in Web (precedent ISynchronizationRequests)."
-  - "ENTITY §3.3: GetReportQuery split into ReportRequestReader + ReportBuilder, behaviour unchanged - supporting change for spec FR-003."
-  - "ENTITY §2.1: number cell only for a scale label matching ^(0|[1-9][0-9]{0,14})$ so the number displays exactly as the screen."
-  - "TEST OD-005 resolved (a) by the Owner: compile-only skeleton incl. ClosedXML 0.105.1 in Infrastructure and ExportJournalCommand declared in PermittedServiceWrites (AuditEvent)."
-  - "TEST: 179 new tests - 176 red for missing implementation, 3 green regression guards; existing 3597 pass."
-  - "TEST T-1: ExportJournalCommand takes ServiceWriteScope (entity model §3.4 omitted it); T-2: button key Report.Export.Action fixed by the tests; T-3: template-id constraint expectation confirmed only after the migration."
-  - "IMPL D-1: JournalExportResult gains an optional JournalExportSummary (ids, dates, codes, counts) for the FR-012 log line."
-  - "IMPL D-2..D-5: 415 checked in the controller; 405 under /api/v1 via the fallback; API-6 JSON writes Cyrillic unescaped; ReportBuilder reads the clock itself."
-  - "IMPL T-4: export fixture now takes a fresh token from the report page; T-5 (Owner decision 1a): two assertions expect the email local part student.one, as the screen shows."
-  - "IMPL: 3776 tests green, build 0 warnings, format clean. Skill files .claude/skills/{dotnet-implementor,test-writer} changed outside the Story — commit separately."
-  - "SEC M-1 (Minor): export body has no explicit size limit beyond Kestrel default; recommendation only."
-  - "SEC I-1: anonymous GET on the export path answers 405 + Allow (api-design 2.5 rule 5); I-2: SixLabors.Fonts Apache-2.0, rest MIT, no vulnerable packages; I-3: downloaded file holds personal data by design; I-4: skill files out of Story scope."
-started_at: 2026-10-05T13:37:50Z
-updated_at: 2026-10-06T10:20:00Z
-completed_at: 2026-10-06T10:20:00Z
+  - "persistence-conventions.md PC-12 does not yet state the v87 rules (only domain-organized meetings; exact domain match, no subdomains) — derived-document drift, to fix outside this Story's commit."
+  - "AGENTS.md Domain Essentials is marked verified against v80; requirements are now v87."
+started_at: 2026-10-10T05:35:31Z
+updated_at: 2026-10-10T05:46:13Z
+completed_at: null
