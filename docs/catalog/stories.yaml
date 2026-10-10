@@ -346,12 +346,14 @@ stories:
   - id: US-032
     epic: EPIC-4
     title: Link meeting codes to courses
-    state: BACKLOG
+    state: IN_PROGRESS
     blocked_by: >
       Depends on US-014 (course rosters for matching), US-031 (meetings to
       link) and US-037 (it extends the retention purge to linked meetings:
       MeetingCodeLink rows and their meetings with the course, leavers'
       participations, meetings in the course's last activity, PC-11).
+    # Story file authored: docs/stories/US-032-meet-code-linking.md (aligned with v88).
+    # OD-001 … OD-008 resolved by the Owner on 2026-10-10, before activation.
   - id: US-033
     epic: EPIC-4
     title: Built-in Meet reports for a course and period, with export

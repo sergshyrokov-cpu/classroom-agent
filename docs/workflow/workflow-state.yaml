@@ -2,36 +2,30 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-031
+story: US-032
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
+last_invoked_skill: spec-writer
 last_result:
   verdict: HUMAN_APPROVED
-  stage: HUMAN_PR_APPROVAL
-  recorded_at: 2026-10-10T08:07:11Z
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: 2026-10-10T13:38:20Z
 last_artifacts:
-  - type: implementation_report
-    path: docs/evidence/US-031-implementation-report.md
-    version: 2
-  - type: security_review
-    path: docs/reviews/security/US-031-security-review.md
-    version: 2
+  - type: specification
+    path: docs/specifications/US-032-spec.md
+    version: 1
+  - type: open_decisions
+    path: docs/decisions/US-032-open-decisions.md
+    version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "HUMAN_PR_APPROVAL rejected 2026-10-10T07:49:51Z: Исправить M-1 из security review: email с пустой частью до @ или с несколькими @ не считать школьным аккаунтом (spec VR-001/FR-005), добавить тест"
-  - "AGENTS.md Domain Essentials is marked verified against v80; requirements are now v87."
-  - "Implementation deviations (cross-page conference decision, two test fixture fixes, schema snapshot updates, duplicated adapter helpers): implementation report §7."
-  - "First delegated full run hit environmental Npgsql timeouts; clean rerun 3982/3982."
-  - "Security review v2: M-1 resolved and verified; independent full run 3986/3986."
-  - "Security review I-4 (Informational): the four M-1 test cases are not yet in ac-test-matrix v1."
-  - "Attempt 2: M-1 fixed in MeetEventValidator.IsUsableEmail; 2 new theories in MeetEventValidationTests (not yet in ac-test-matrix v1); full run 3986/3986."
-  - "Security review I-1..I-3 (Informational): undecided conferences held in memory for the run; no repeating page-token guard; OD-009 field names unverified (fails closed)."
-started_at: 2026-10-10T05:35:31Z
-updated_at: 2026-10-10T08:07:11Z
-completed_at: 2026-10-10T08:07:11Z
+  - "Spec §11 lists interpretations I-1 … I-14 for the gate; I-1 (meetings before the first synchronization find nobody on the roster), I-9 (a person's link is unconfirmed) and I-11 (refused audit row in read-only mode) were flagged; all approved as written at HUMAN_SPEC_APPROVAL 2026-10-10."
+  - "FR-005 adds MeetLinking:MinSharePercent / MinGapPoints; deployment-conventions.md DC-3 must gain them in this Story."
+started_at: 2026-10-10T09:34:59Z
+updated_at: 2026-10-10T13:38:20Z
+completed_at: null
