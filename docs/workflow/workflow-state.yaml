@@ -4,30 +4,32 @@
 version: 1
 story: US-032
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: PASS
-  stage: API_DESIGN
-  recorded_at: 2026-10-10T13:42:52Z
+  stage: DB_DESIGN
+  recorded_at: 2026-10-10T13:48:55Z
 last_artifacts:
-  - type: openapi
-    path: docs/designs/api/US-032-openapi.yaml
+  - type: database_design
+    path: docs/designs/database/US-032-db-design.md
     version: 1
-  - type: api_design
-    path: docs/designs/api/US-032-api-design.md
+  - type: entity_model
+    path: docs/designs/database/US-032-entity-model.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "DB design: entity-model C# signatures are not yet compile-verified; TEST_WRITING builds the skeleton and records any signature change."
+  - "DB design §5.2 adds ix_classroom_participant_email_lower (expression index on lower(email)) for case-insensitive email matching; outside the Story's new table but required by spec FR-002/FR-003."
   - "API design §2.1: spec FR-007 says the Google Workspace section's other entries stay Admin-only; /workspace (Journal) is open to both roles, Admin-only pages are under /settings. No effect on the contract; correct the sentence at the next spec revision."
   - "API design §2.6: the course-choice options are not paginated (x-pagination-deviation), as OD-004 offers any course."
   - "Spec §11 lists interpretations I-1 … I-14 for the gate; I-1 (meetings before the first synchronization find nobody on the roster), I-9 (a person's link is unconfirmed) and I-11 (refused audit row in read-only mode) were flagged; all approved as written at HUMAN_SPEC_APPROVAL 2026-10-10."
   - "FR-005 adds MeetLinking:MinSharePercent / MinGapPoints; deployment-conventions.md DC-3 must gain them in this Story."
 started_at: 2026-10-10T09:34:59Z
-updated_at: 2026-10-10T13:42:52Z
+updated_at: 2026-10-10T13:48:55Z
 completed_at: null
