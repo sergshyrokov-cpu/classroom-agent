@@ -356,10 +356,24 @@ stories:
     # OD-001 … OD-008 resolved by the Owner on 2026-10-10, before activation.
   - id: US-033
     epic: EPIC-4
-    title: Built-in Meet reports for a course and period, with export
-    state: BACKLOG
+    title: Built-in Meet reports for a course and period
+    state: IN_PROGRESS
     blocked_by: >
       Depends on US-032.
+    # Story file authored: docs/stories/US-033-meet-reports.md (aligned with v88).
+    # OD-001 … OD-010 resolved by the Owner on 2026-10-10, before activation;
+    # export split off to US-044 (OD-001).
+  - id: US-044
+    epic: EPIC-4
+    title: Export the built-in Meet reports to Excel
+    state: BACKLOG
+    blocked_by: >
+      Depends on US-033. Decided in US-033 discovery (OD-002, OD-003): Excel
+      only (Word later with US-029); one workbook per course and period with
+      sheets Summary, Meetings, Student participation; report 4 exported
+      separately; a built-in fixed layout, not a school template; export is a
+      POST with an audit row (course id, period, row count), works in
+      read-only mode.
 
   # --- EPIC-9 (next version): Audit log viewing ----------------------------
   # Not part of the first version. AuditEvent rows are written from v1
