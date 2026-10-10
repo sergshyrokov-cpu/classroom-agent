@@ -271,3 +271,4 @@
 {"timestamp":"2026-10-10T09:34:59Z","story":"US-032","from_stage":null,"to_stage":"SPECIFICATION","skill":null,"verdict":"ACTIVATED","artifacts":[],"attempt":1}
 {"timestamp":"2026-10-10T09:42:30Z","story":"US-032","from_stage":"SPECIFICATION","to_stage":"HUMAN_SPEC_APPROVAL","skill":"spec-writer","verdict":"PASS","artifacts":["docs/specifications/US-032-spec.md","docs/decisions/US-032-open-decisions.md"],"attempt":1}
 {"timestamp":"2026-10-10T13:38:20Z","story":"US-032","from_stage":"HUMAN_SPEC_APPROVAL","to_stage":"API_DESIGN","skill":null,"verdict":"HUMAN_APPROVED","artifacts":["docs/specifications/US-032-spec.md"],"attempt":1,"decided_by":"Serhii SHYROKOV (/so:approve)"}
+{"timestamp":"2026-10-10T13:42:52Z","story":"US-032","from_stage":"API_DESIGN","to_stage":"DB_DESIGN","skill":"openapi-designer","verdict":"PASS","artifacts":["docs/designs/api/US-032-openapi.yaml","docs/designs/api/US-032-api-design.md"],"attempt":1}

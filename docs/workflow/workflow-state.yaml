@@ -4,28 +4,30 @@
 version: 1
 story: US-032
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-writer
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: 2026-10-10T13:38:20Z
+  verdict: PASS
+  stage: API_DESIGN
+  recorded_at: 2026-10-10T13:42:52Z
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-032-spec.md
+  - type: openapi
+    path: docs/designs/api/US-032-openapi.yaml
     version: 1
-  - type: open_decisions
-    path: docs/decisions/US-032-open-decisions.md
+  - type: api_design
+    path: docs/designs/api/US-032-api-design.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "API design §2.1: spec FR-007 says the Google Workspace section's other entries stay Admin-only; /workspace (Journal) is open to both roles, Admin-only pages are under /settings. No effect on the contract; correct the sentence at the next spec revision."
+  - "API design §2.6: the course-choice options are not paginated (x-pagination-deviation), as OD-004 offers any course."
   - "Spec §11 lists interpretations I-1 … I-14 for the gate; I-1 (meetings before the first synchronization find nobody on the roster), I-9 (a person's link is unconfirmed) and I-11 (refused audit row in read-only mode) were flagged; all approved as written at HUMAN_SPEC_APPROVAL 2026-10-10."
   - "FR-005 adds MeetLinking:MinSharePercent / MinGapPoints; deployment-conventions.md DC-3 must gain them in this Story."
 started_at: 2026-10-10T09:34:59Z
-updated_at: 2026-10-10T13:38:20Z
+updated_at: 2026-10-10T13:42:52Z
 completed_at: null

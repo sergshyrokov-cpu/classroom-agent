@@ -1,0 +1,647 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Meet meeting codes linked to courses (US-032)
+  version: "1"
+  description: >
+    HTTP contract of US-032 on the installation's public port: the "Meet meetings"
+    page of the Google Workspace section (`trebovaniya.md` v88 §4 Epic 4) with the
+    lists Unassigned, Linked and Not a course, the course-choice form, and the three
+    writes — set the code's course (pick, re-link, remove the mark), confirm an
+    automatic link, mark a code "not a course" (§2 matrix row "Привязка кода
+    встречи Meet к курсу" — Admin ✔, Dean ✔). Server-rendered pages only; no JSON
+    API. No operation calls Google or reads a secret, in any mode (spec §7). The
+    automatic linking step of a synchronization run has no HTTP surface; its only
+    visible effect on an existing contract is one new `failedStep` value in the
+    Admin's "Last synchronization" block. The host-wide rules of
+    docs/designs/api/US-008-openapi.yaml and the `no-store` rule of US-040 apply
+    unchanged. Companion document: docs/designs/api/US-032-api-design.md.
+x-story: US-032
+x-source-specification: docs/specifications/US-032-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-032-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 88
+x-produced-by: openapi-designer
+x-extends: docs/designs/api/US-008-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type
+  between installation and Control Plane is added or changed (DC-12).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port. Illustrative; the real value is the configured public base address."
+
+tags:
+  - name: meet-codes
+    description: "The Meet meetings page, the course-choice form and the link writes (spec FR-007 … FR-015)"
+  - name: existing
+    description: "Existing operations changed additively"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 configured host-wide applies and is not restated: HTTPS and
+    HSTS, the deny-by-default fallback policy (SC-4, API-9), the global antiforgery
+    filter, the single error page, the anonymous catch-all `404`, the session cookie,
+    the restricted session of a Dean with a temporary password (US-012 §2.6), the
+    exception handler (API-10) and its mapping of `ReadOnlyModeException` to `409`
+    with the translated error page naming the BR-025 reason, and `Cache-Control:
+    no-store` on every response (US-040).
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list of anonymous endpoints gains **nothing**. Every path below
+    is protected; an unauthenticated request is redirected `302` to `/sign-in`
+    (the forbidden case of TC-5 for this Story — both v1 roles are allowed,
+    spec AC-014).
+
+  antiforgery: >
+    Every `POST` below requires the antiforgery token; the exemption list gains
+    nothing. A missing or invalid token answers `400` with the translated error page
+    (`Error.PageExpired`) before any use case runs.
+
+  outbound: "No operation calls anything outside the process: no Google, no secret store, no Control Plane (spec §7)."
+
+  meeting-code: >
+    `{meetingCode}` is the code exactly as stored on `MeetSession` (spec VR-001):
+    bound as a string, validated in `Application` — non-blank, at most 64
+    characters, no control characters; compared exactly (case-sensitive). A value
+    failing the shape is malformed (`400`, error page). A well-formed code with
+    neither a `MeetingCodeLink` row nor a `MeetSession` is `404`. The code travels
+    in the path, never in a query string (spec I-14); it is never logged.
+
+  write-evaluation-order: >
+    For the three `POST`s: authentication → restricted session → `LinkMeetCodes`
+    → antiforgery → **read-only guard** (`409` error page; one refused audit row,
+    spec FR-014/FR-015) → form shape: code, `expectedState`, `expectedCourseId`,
+    `courseId`, `returnPage` (`400` error page, nothing echoed) → code exists
+    (`404`) → course exists, `link` only (`404`) → current state equals the
+    expected state (`409` stale, list re-rendered with `StateChanged`) → re-link to
+    the current course (`400`, choice form with field error) → write of the link
+    change and its audit row in one transaction (AD-7) → `302`.
+
+  restricted-session: "A Dean held on the forced password change is redirected to `/sign-in/change-password` by every operation below (US-012)."
+
+paths:
+
+  /workspace/meet-codes:
+    get:
+      tags: [meet-codes]
+      operationId: getMeetCodes
+      summary: "The Meet meetings page — one of three lists, paginated"
+      description: >
+        Shows one list at a time, chosen by `list`, with the size of all three in the
+        list switcher (spec FR-007). Orders: Unassigned — codes with candidates
+        first, then "no candidates"; within each, latest last-meeting first, then
+        code. Linked — latest last-meeting first (codes with no meeting left last),
+        then code. Not a course — latest mark first, then code. Shares are computed
+        by spec FR-003 from current data and shown rounded down to a whole percent.
+        Shows a one-time confirmation (TempData `MeetCodeMessage`) after a
+        successful write. Works in read-only mode: the lists are complete; the
+        action controls may be shown disabled with the reason, enforcement is in
+        `Application` (spec FR-015, AD-6). A `page` beyond the last answers `200`
+        with empty `content`.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewMeetCodes
+      x-permission-matrix-row: "\"Привязка кода встречи Meet к курсу\" — Admin ✔, Dean ✔"
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: nothing
+      x-read-only-mode: "allowed — identical in all three BR-025 causes"
+      x-spec: [FR-003, FR-007, FR-015, FR-017, VR-004]
+      x-acceptance-criteria: [AC-001, AC-003, AC-011, AC-013, AC-014, AC-015, AC-017]
+      security:
+        - installationSession: []
+      parameters:
+        - name: list
+          in: query
+          required: false
+          description: "Which list. Default `unassigned`. Bound as a string; validated in `Application`."
+          schema: { $ref: "#/components/schemas/MeetCodeList" }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: "The page."
+          content:
+            text/html:
+              x-view-model: { $ref: "#/components/schemas/MeetCodesPageModel" }
+        "400":
+          description: >
+            `list`, `page` or `size` malformed, out of range or repeated (spec VR-004).
+            The page itself with the Unassigned list at its defaults and the message
+            `QueryInvalid` — never the host error page.
+          content:
+            text/html:
+              x-view-model: { $ref: "#/components/schemas/MeetCodesPageModel" }
+        "302":
+          description: "Not signed in — `Location: /sign-in`; restricted session — `/sign-in/change-password`."
+        "500": { $ref: "#/components/responses/ErrorPage" }
+
+  /workspace/meet-codes/{meetingCode}/course-choice:
+    get:
+      tags: [meet-codes]
+      operationId: getMeetCodeCourseChoice
+      summary: "The course-choice form for one code — pick, re-link or remove the mark"
+      description: >
+        For an unassigned code (pick), a linked code (re-link) or a marked code
+        (pick, removes the mark), by the code's current state (spec FR-008, FR-010,
+        FR-012). Offers every course stored in the installation (OD-004): the code's
+        candidates first, best share first, with the share; then every other course
+        by name in the UI-language collation, ties by id. The course the code is
+        linked to is not offered. The form posts to `…/link` with the state shown
+        (`expectedState`, `expectedCourseId`) and `returnPage`. Works in read-only
+        mode (a `GET`); the post is refused there.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: LinkMeetCodes
+      x-permission-matrix-row: "\"Привязка кода встречи Meet к курсу\" — Admin ✔, Dean ✔"
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: nothing
+      x-read-only-mode: "allowed"
+      x-pagination-deviation: >
+        The course options are not paginated: OD-004 requires a choice among any
+        course, which is a form control over the school's courses (hundreds at
+        most), not a browsed collection. See api-design §2.6.
+      x-spec: [FR-003, FR-008, FR-010, FR-012, VR-001]
+      x-acceptance-criteria: [AC-008, AC-010, AC-012]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/MeetingCode"
+        - name: returnPage
+          in: query
+          required: false
+          description: "The page of the list the user came from, carried into the form. Not a whole number 0 … 2147483647 → treated as 0 (navigation aid, not data)."
+          schema: { type: integer, minimum: 0 }
+      responses:
+        "200":
+          description: "The form."
+          content:
+            text/html:
+              x-view-model: { $ref: "#/components/schemas/MeetCodeCourseChoicePageModel" }
+        "400": { $ref: "#/components/responses/Malformed" }
+        "404":
+          description: "Unknown code: the Meet meetings page (Unassigned, defaults) with the message `CodeNotFound`."
+          content:
+            text/html:
+              x-view-model: { $ref: "#/components/schemas/MeetCodesPageModel" }
+        "302":
+          description: "Not signed in — `/sign-in`; restricted session — `/sign-in/change-password`."
+        "500": { $ref: "#/components/responses/ErrorPage" }
+
+  /workspace/meet-codes/{meetingCode}/link:
+    post:
+      tags: [meet-codes]
+      operationId: setMeetCodeCourse
+      summary: "Set the code's course — pick for an unassigned code, re-link, or remove the mark"
+      description: >
+        One resource, the code's link to a course; which change it is follows from
+        the expected state, which must equal the current one (spec FR-013):
+        `unassigned` → a new link (audit `MeetCodeCoursePicked`, spec FR-008);
+        `linked` + `expectedCourseId` → re-link (audit `MeetCodeRelinked` with old and
+        new course, FR-010); `marked` → the mark removed and the link set (audit
+        `MeetCodeMarkRemoved` with the new course, FR-012). The resulting link is
+        made by the acting person, now, unconfirmed (spec I-9). Order:
+        `x-host-wide-rules.write-evaluation-order`.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: LinkMeetCodes
+      x-permission-matrix-row: "\"Привязка кода встречи Meet к курсу\" — Admin ✔, Dean ✔"
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: >
+        one MeetingCodeLink inserted or changed and one AuditEvent `Succeeded`; on a
+        read-only refusal one AuditEvent `Refused`/`ReadOnlyMode` (action from
+        `expectedState` when it parses, else `MeetCodeCoursePicked`) and nothing else
+      x-read-only-mode: "refused in Application, guard first — 409"
+      x-spec: [FR-008, FR-010, FR-012, FR-013, FR-014, FR-015, VR-001, VR-002, VR-003]
+      x-acceptance-criteria: [AC-008, AC-010, AC-012, AC-014, AC-015]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/MeetingCode"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema: { $ref: "#/components/schemas/MeetCodeLinkForm" }
+      responses:
+        "302":
+          description: >
+            Success — `Location: /workspace/meet-codes?list=<the list the code came
+            from>&page=<returnPage>` with TempData `MeetCodeMessage` = `CoursePicked` |
+            `Relinked` | `MarkRemoved`. Also: not signed in / restricted session.
+        "400":
+          description: >
+            Malformed form or code — the error page `Error.PageExpired` (see
+            `components.responses.Malformed`). Re-link to the course the code is
+            already linked to — the choice form re-rendered with field error
+            `SameCourse` (spec VR-002).
+          content:
+            text/html:
+              x-view-model: { $ref: "#/components/schemas/MeetCodeCourseChoicePageModel" }
+        "404":
+          description: >
+            Unknown code — the Meet meetings page (Unassigned) with `CodeNotFound`.
+            Unknown course (e.g. purged since the form was opened) — the choice form
+            re-rendered with field error `CourseNotFound`.
+          content:
+            text/html: {}
+        "409":
+          description: >
+            Read-only mode — `components.responses.ReadOnlyRefused`. Stale state — the
+            Meet meetings page showing the list where the code now is, page 0, with
+            the message `StateChanged`; nothing changed, no audit row.
+          content:
+            text/html:
+              x-view-model: { $ref: "#/components/schemas/MeetCodesPageModel" }
+        "500": { $ref: "#/components/responses/ErrorPage" }
+
+  /workspace/meet-codes/{meetingCode}/confirmation:
+    post:
+      tags: [meet-codes]
+      operationId: confirmMeetCodeLink
+      summary: "Confirm an automatic, unconfirmed link"
+      description: >
+        Allowed only when the code is linked to `expectedCourseId`, automatically, and
+        not yet confirmed (spec FR-009, I-9); anything else is a stale state (`409`).
+        Records the acting person and now; nothing else changes. Audit
+        `MeetCodeLinkConfirmed` with code and course. Order:
+        `x-host-wide-rules.write-evaluation-order` (no `courseId`).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: LinkMeetCodes
+      x-permission-matrix-row: "\"Привязка кода встречи Meet к курсу\" — Admin ✔, Dean ✔"
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: "the link's confirmation and one AuditEvent; on a read-only refusal one AuditEvent `Refused`/`ReadOnlyMode` and nothing else"
+      x-read-only-mode: "refused in Application, guard first — 409"
+      x-spec: [FR-009, FR-013, FR-014, FR-015, VR-001, VR-003]
+      x-acceptance-criteria: [AC-009, AC-014, AC-015]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/MeetingCode"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema: { $ref: "#/components/schemas/MeetCodeConfirmationForm" }
+      responses:
+        "302":
+          description: "Success — `Location: /workspace/meet-codes?list=linked&page=<returnPage>`, TempData `MeetCodeMessage` = `Confirmed`. Also: not signed in / restricted session."
+        "400": { $ref: "#/components/responses/Malformed" }
+        "404":
+          description: "Unknown code — the Meet meetings page (Unassigned) with `CodeNotFound`."
+          content:
+            text/html: {}
+        "409":
+          description: "Read-only — `ReadOnlyRefused`. Stale state — the page with the code's current list and `StateChanged`; no change, no audit row."
+          content:
+            text/html: {}
+        "500": { $ref: "#/components/responses/ErrorPage" }
+
+  /workspace/meet-codes/{meetingCode}/not-a-course-mark:
+    post:
+      tags: [meet-codes]
+      operationId: markMeetCodeNotACourse
+      summary: "Mark a code \"not a course\""
+      description: >
+        Allowed on an unassigned code (`expectedState` = `unassigned`) and on any
+        course link (`linked` + `expectedCourseId`), automatic or by a person,
+        confirmed or not (spec FR-011, BR-083). `marked` is never a valid expected
+        state here: a marked code is already marked (a stale screen gives `409`).
+        The code's row then carries the mark, the acting person and now, and no
+        course, maker or confirmation. Audit `MeetCodeMarkedNotACourse` with the code
+        and the previous course if any. Order:
+        `x-host-wide-rules.write-evaluation-order` (no `courseId`).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: LinkMeetCodes
+      x-permission-matrix-row: "\"Привязка кода встречи Meet к курсу\" — Admin ✔, Dean ✔"
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: "one MeetingCodeLink inserted or changed and one AuditEvent; on a read-only refusal one AuditEvent `Refused`/`ReadOnlyMode` and nothing else"
+      x-read-only-mode: "refused in Application, guard first — 409"
+      x-spec: [FR-011, FR-013, FR-014, FR-015, VR-001, VR-003]
+      x-acceptance-criteria: [AC-011, AC-014, AC-015]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/MeetingCode"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema: { $ref: "#/components/schemas/MeetCodeMarkForm" }
+      responses:
+        "302":
+          description: "Success — `Location: /workspace/meet-codes?list=<the list the code came from>&page=<returnPage>`, TempData `MeetCodeMessage` = `Marked`. Also: not signed in / restricted session."
+        "400": { $ref: "#/components/responses/Malformed" }
+        "404":
+          description: "Unknown code — the Meet meetings page (Unassigned) with `CodeNotFound`."
+          content:
+            text/html: {}
+        "409":
+          description: "Read-only — `ReadOnlyRefused`. Stale state — the page with the code's current list and `StateChanged`; no change, no audit row."
+          content:
+            text/html: {}
+        "500": { $ref: "#/components/responses/ErrorPage" }
+
+  /:
+    get:
+      tags: [existing]
+      operationId: getLanding
+      summary: "Existing US-008 home page — changed additively"
+      description: >
+        Gains a "Meet meetings" link to `/workspace/meet-codes` in the Google
+        Workspace section, beside "Journal" (US-025), for Admin and Dean, in
+        read-only mode too (spec FR-007). A plain link, not enforcement.
+      x-policy: ViewLegitimacyStatus
+      x-change: additive-markup
+      x-acceptance-criteria: [AC-014]
+      responses:
+        "200":
+          description: "The page; see earlier contracts for everything else."
+          content:
+            text/html: {}
+
+  /settings/workspace-connection:
+    get:
+      tags: [existing]
+      operationId: getWorkspaceConnectionSettings
+      summary: "Existing US-010/US-017/US-031 page — one enum value added"
+      description: >
+        Unchanged in path, policy (`ConfigureWorkspaceConnection`, Admin), status
+        codes and behaviour. `LastSynchronizationView.failedStep` (US-031
+        api-design) may now also be `Linking`, shown with its own translated step
+        name, when the linking step stopped the run (spec FR-006).
+      x-policy: ConfigureWorkspaceConnection
+      x-change: additive-enum-value
+      x-spec: [FR-006, FR-017]
+      responses:
+        "200":
+          description: "The page; see US-017 and US-031 contracts."
+          content:
+            text/html:
+              x-view-model-delta:
+                LastSynchronizationView.failedStep:
+                  type: [string, "null"]
+                  enum: [Classroom, Meet, Linking, null]
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: ClassroomAgent.Session
+      description: "The installation's session cookie (US-008); name illustrative."
+
+  parameters:
+    MeetingCode:
+      name: meetingCode
+      in: path
+      required: true
+      description: "See `x-host-wide-rules.meeting-code`."
+      schema: { type: string, minLength: 1, maxLength: 64 }
+      example: "abc-defg-hij"
+    Page:
+      name: page
+      in: query
+      required: false
+      description: "0-based page (API-8). Default 0. Whole number 0 … 2147483647."
+      schema: { type: integer, minimum: 0, default: 0 }
+    Size:
+      name: size
+      in: query
+      required: false
+      description: "Page size (API-8). Default 20, 1 … 100."
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+
+  responses:
+    ErrorPage:
+      description: "Unexpected failure: the single error page, no detail (API-10, SC-10)."
+      content:
+        text/html: {}
+    Malformed:
+      description: >
+        Malformed code or form field — a value the legitimate page never sends
+        (unknown `expectedState`, missing `expectedCourseId` for `linked`, non-numeric
+        `courseId`, a repeated field, a code failing its shape). The translated error
+        page `Error.PageExpired`, nothing echoed, nothing written (as US-027 §2.5).
+      content:
+        text/html: {}
+    ReadOnlyRefused:
+      description: >
+        Read-only mode (any BR-025 cause): `ReadOnlyModeException` from the guard,
+        called first in the use case (spec FR-015, AD-6). The host-wide handler renders
+        the translated error page naming the reason. Nothing changed; one AuditEvent
+        `Refused`/`ReadOnlyMode` with the code when it passes its shape (spec FR-014).
+      content:
+        text/html: {}
+
+  schemas:
+
+    # ---------- Form input (Application/Models/Requests; every field bound as a string) ----------
+
+    MeetCodeExpectedState:
+      type: string
+      enum: [unassigned, linked, marked]
+      description: "The state the person saw (spec FR-013, VR-003). Case-sensitive."
+
+    MeetCodeLinkForm:
+      type: object
+      required: [courseId, expectedState]
+      properties:
+        courseId:
+          type: string
+          pattern: "^[1-9][0-9]{0,18}$"
+          description: "Internal `Course` id, positive 64-bit (spec VR-002)."
+        expectedState: { $ref: "#/components/schemas/MeetCodeExpectedState" }
+        expectedCourseId:
+          type: string
+          pattern: "^[1-9][0-9]{0,18}$"
+          description: "Required exactly when `expectedState` = `linked`; must be absent otherwise."
+        returnPage:
+          type: string
+          description: "Optional; not a whole number 0 … 2147483647 → 0."
+
+    MeetCodeConfirmationForm:
+      type: object
+      required: [expectedCourseId]
+      properties:
+        expectedCourseId:
+          type: string
+          pattern: "^[1-9][0-9]{0,18}$"
+        returnPage: { type: string }
+
+    MeetCodeMarkForm:
+      type: object
+      required: [expectedState]
+      properties:
+        expectedState:
+          type: string
+          enum: [unassigned, linked]
+        expectedCourseId:
+          type: string
+          pattern: "^[1-9][0-9]{0,18}$"
+          description: "Required exactly when `expectedState` = `linked`."
+        returnPage: { type: string }
+
+    # ---------- View models (DTOs mapped in Application, AD-8) ----------
+
+    MeetCodeList:
+      type: string
+      enum: [unassigned, linked, not-a-course]
+
+    MeetCodesPageModel:
+      type: object
+      required: [list, counts, page, readOnly]
+      properties:
+        list: { $ref: "#/components/schemas/MeetCodeList" }
+        counts:
+          type: object
+          required: [unassigned, linked, notACourse]
+          properties:
+            unassigned: { type: integer, minimum: 0 }
+            linked: { type: integer, minimum: 0 }
+            notACourse: { type: integer, minimum: 0 }
+        page:
+          description: "API-8 page of the selected list; items are the type of that list."
+          type: object
+          required: [content, page, size, totalElements, totalPages]
+          properties:
+            content:
+              type: array
+              items:
+                oneOf:
+                  - $ref: "#/components/schemas/UnassignedCodeItem"
+                  - $ref: "#/components/schemas/LinkedCodeItem"
+                  - $ref: "#/components/schemas/NotACourseCodeItem"
+            page: { type: integer }
+            size: { type: integer }
+            totalElements: { type: integer, format: int64 }
+            totalPages: { type: integer }
+        readOnly:
+          type: boolean
+          description: "Convenience for disabling controls; never enforcement (AD-6)."
+        message:
+          type: [string, "null"]
+          enum: [CoursePicked, Relinked, MarkRemoved, Confirmed, Marked, CodeNotFound, StateChanged, QueryInvalid, null]
+          description: "Translated as `MeetCodes.Message.<value>`."
+
+    UnassignedCodeItem:
+      type: object
+      required: [meetingCode, organizerEmails, firstMeetingDate, lastMeetingDate, meetingCount, participantCount, candidates]
+      properties:
+        meetingCode: { type: string }
+        organizerEmails:
+          type: array
+          items: { type: string }
+          description: "Distinct, ordinal order."
+        firstMeetingDate: { type: string, format: date, description: "School time zone." }
+        lastMeetingDate: { type: string, format: date }
+        meetingCount: { type: integer, minimum: 1 }
+        participantCount:
+          type: integer
+          minimum: 0
+          description: "Distinct domain accounts (organizers excluded) + other-participant connections (spec I-6)."
+        candidates:
+          type: array
+          description: "Best share first, then course name. Empty → shown as \"no candidates\" (spec FR-007, AC-013)."
+          items: { $ref: "#/components/schemas/CandidateCourse" }
+
+    CandidateCourse:
+      type: object
+      required: [course, sharePercent]
+      properties:
+        course: { $ref: "#/components/schemas/CourseOption" }
+        sharePercent:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: "Spec FR-003 share, rounded down."
+
+    LinkedCodeItem:
+      type: object
+      required: [meetingCode, course, madeAutomatically, madeAt, meetingCount, canConfirm]
+      properties:
+        meetingCode: { type: string }
+        course: { $ref: "#/components/schemas/CourseOption" }
+        madeAutomatically: { type: boolean }
+        madeBy:
+          oneOf:
+            - $ref: "#/components/schemas/AccountLabel"
+            - type: "null"
+          description: "Null exactly when `madeAutomatically`."
+        madeAt: { type: string, format: date-time, description: "Rendered in the school time zone." }
+        confirmedBy:
+          oneOf:
+            - $ref: "#/components/schemas/AccountLabel"
+            - type: "null"
+        confirmedAt: { type: [string, "null"], format: date-time }
+        canConfirm:
+          type: boolean
+          description: "True exactly for an automatic, unconfirmed link (spec FR-009, I-9)."
+        meetingCount: { type: integer, minimum: 0 }
+        lastMeetingDate: { type: [string, "null"], format: date }
+
+    NotACourseCodeItem:
+      type: object
+      required: [meetingCode, markedBy, markedAt, meetingCount]
+      properties:
+        meetingCode: { type: string }
+        markedBy: { $ref: "#/components/schemas/AccountLabel" }
+        markedAt: { type: string, format: date-time }
+        meetingCount: { type: integer, minimum: 0 }
+        lastMeetingDate: { type: [string, "null"], format: date }
+
+    AccountLabel:
+      type: object
+      required: [deleted]
+      description: "The account's email as other pages show accounts; `deleted` → translated \"deleted account\" (spec I-7)."
+      properties:
+        deleted: { type: boolean }
+        email: { type: [string, "null"] }
+
+    MeetCodeCourseChoicePageModel:
+      type: object
+      required: [meetingCode, currentState, candidates, otherCourses, returnPage]
+      properties:
+        meetingCode: { type: string }
+        currentState: { $ref: "#/components/schemas/MeetCodeExpectedState" }
+        currentCourse:
+          oneOf:
+            - $ref: "#/components/schemas/CourseOption"
+            - type: "null"
+          description: "The linked course when `currentState` = `linked`; not offered for choice."
+        candidates:
+          type: array
+          items: { $ref: "#/components/schemas/CandidateCourse" }
+        otherCourses:
+          type: array
+          description: "Every other stored course, by name (UI-language collation), ties by id."
+          items: { $ref: "#/components/schemas/CourseOption" }
+        returnPage: { type: integer, minimum: 0 }
+        fieldError:
+          type: [string, "null"]
+          enum: [SameCourse, CourseNotFound, null]
+          description: "Translated as `MeetCodes.FieldError.<value>`."
+
+    CourseOption:
+      type: object
+      description: "As US-025 (`docs/designs/api/US-025-openapi.yaml`)."
+      required: [id, name]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        section: { type: [string, "null"] }
