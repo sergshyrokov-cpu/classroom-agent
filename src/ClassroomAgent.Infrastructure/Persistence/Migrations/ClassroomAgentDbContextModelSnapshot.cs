@@ -199,6 +199,15 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("export_template_id");
 
+                    b.Property<string>("MeetCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("meet_code");
+
+                    b.Property<long?>("MeetPreviousCourseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("meet_previous_course_id");
+
                     b.Property<DateTimeOffset>("OccurredAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("occurred_at");
@@ -224,6 +233,10 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                     b.Property<int?>("PurgedLeaverMemberships")
                         .HasColumnType("integer")
                         .HasColumnName("purged_leaver_memberships");
+
+                    b.Property<int?>("PurgedMeetCodeLinks")
+                        .HasColumnType("integer")
+                        .HasColumnName("purged_meet_code_links");
 
                     b.Property<int?>("PurgedMeetParticipations")
                         .HasColumnType("integer")
@@ -268,7 +281,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                     b.ToTable("audit_event", null, t =>
                         {
-                            t.HasCheckConstraint("ck_audit_event_action", "action IN ('admin_sign_in', 'workspace_connection_saved', 'access_check_run', 'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', 'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run', 'synchronization_requested', 'report_template_created', 'report_template_changed', 'report_template_deleted', 'journal_exported')");
+                            t.HasCheckConstraint("ck_audit_event_action", "action IN ('admin_sign_in', 'workspace_connection_saved', 'access_check_run', 'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', 'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run', 'synchronization_requested', 'report_template_created', 'report_template_changed', 'report_template_deleted', 'journal_exported', 'meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', 'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed')");
 
                             t.HasCheckConstraint("ck_audit_event_actor_id", "(actor_type = 'app_user') = (actor_id IS NOT NULL)");
 
@@ -288,6 +301,12 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_audit_event_immutable", "updated_at = created_at");
 
+                            t.HasCheckConstraint("ck_audit_event_meet_code_absent", "action IN ('meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', 'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed') OR (meet_code IS NULL AND meet_previous_course_id IS NULL)");
+
+                            t.HasCheckConstraint("ck_audit_event_meet_code_shape", "action NOT IN ('meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', 'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed') OR ( (actor_type = 'system') = (action = 'meet_code_auto_linked') AND (action <> 'meet_code_auto_linked' OR (outcome = 'succeeded' AND request_id IS NULL)) AND (refusal_category IS NULL OR refusal_category = 'read_only_mode') AND (target_type IS NULL OR target_type = 'course') AND (target_type IS NULL) = (target_id IS NULL) AND (outcome = 'succeeded' OR (target_id IS NULL AND meet_previous_course_id IS NULL)) AND (outcome <> 'succeeded' OR (meet_code IS NOT NULL AND (target_id IS NULL) = (action = 'meet_code_marked_not_a_course'))) AND (meet_previous_course_id IS NULL OR action IN ('meet_code_relinked', 'meet_code_marked_not_a_course')) AND (action <> 'meet_code_relinked' OR outcome <> 'succeeded' OR meet_previous_course_id IS NOT NULL))");
+
+                            t.HasCheckConstraint("ck_audit_event_meet_code_values", "(meet_code IS NULL OR char_length(meet_code) >= 1) AND (meet_previous_course_id IS NULL OR meet_previous_course_id > 0)");
+
                             t.HasCheckConstraint("ck_audit_event_outcome", "outcome IN ('succeeded', 'refused')");
 
                             t.HasCheckConstraint("ck_audit_event_purge_actor", "action <> 'retention_purge_run' OR (actor_type = 'system' AND target_type IS NULL AND target_id IS NULL AND outcome = 'succeeded' AND request_id IS NULL)");
@@ -297,6 +316,8 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_audit_event_purge_counts_absent", "action = 'retention_purge_run' OR (purged_courses IS NULL AND purged_leaver_memberships IS NULL AND purged_participants IS NULL AND purged_accounts IS NULL AND purged_audit_rows IS NULL)");
 
                             t.HasCheckConstraint("ck_audit_event_purge_counts_non_negative", "(purged_courses IS NULL OR purged_courses >= 0) AND (purged_leaver_memberships IS NULL OR purged_leaver_memberships >= 0) AND (purged_participants IS NULL OR purged_participants >= 0) AND (purged_accounts IS NULL OR purged_accounts >= 0) AND (purged_audit_rows IS NULL OR purged_audit_rows >= 0)");
+
+                            t.HasCheckConstraint("ck_audit_event_purge_meet_code_links", "(purged_meet_code_links IS NULL OR (action = 'retention_purge_run' AND purged_meet_code_links >= 0))");
 
                             t.HasCheckConstraint("ck_audit_event_purge_meet_counts", "(purged_meet_sessions IS NULL) = (purged_meet_participations IS NULL)");
 
@@ -820,6 +841,89 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("ClassroomAgent.Domain.Entities.MeetingCodeLink", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("concurrency_stamp");
+
+                    b.Property<DateTimeOffset?>("ConfirmedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("confirmed_at");
+
+                    b.Property<long?>("ConfirmedByAppUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("confirmed_by_app_user_id");
+
+                    b.Property<long?>("CourseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("course_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("LinkedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("linked_at");
+
+                    b.Property<bool?>("LinkedAutomatically")
+                        .HasColumnType("boolean")
+                        .HasColumnName("linked_automatically");
+
+                    b.Property<long?>("LinkedByAppUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("linked_by_app_user_id");
+
+                    b.Property<DateTimeOffset?>("MarkedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("marked_at");
+
+                    b.Property<long?>("MarkedByAppUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("marked_by_app_user_id");
+
+                    b.Property<string>("MeetingCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("meeting_code");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_meeting_code_link");
+
+                    b.HasAlternateKey("MeetingCode")
+                        .HasName("uq_meeting_code_link_meeting_code");
+
+                    b.HasIndex("CourseId")
+                        .HasDatabaseName("ix_meeting_code_link_course_id");
+
+                    b.ToTable("meeting_code_link", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_meeting_code_link_confirmation", "(confirmed_by_app_user_id IS NULL) = (confirmed_at IS NULL) AND (confirmed_at IS NULL OR linked_automatically)");
+
+                            t.HasCheckConstraint("ck_meeting_code_link_maker", "linked_automatically IS NULL OR linked_automatically = (linked_by_app_user_id IS NULL)");
+
+                            t.HasCheckConstraint("ck_meeting_code_link_state", "(course_id IS NOT NULL AND linked_automatically IS NOT NULL AND linked_at IS NOT NULL AND marked_by_app_user_id IS NULL AND marked_at IS NULL) OR (course_id IS NULL AND linked_automatically IS NULL AND linked_at IS NULL AND linked_by_app_user_id IS NULL AND confirmed_by_app_user_id IS NULL AND confirmed_at IS NULL AND marked_by_app_user_id IS NOT NULL AND marked_at IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_meeting_code_link_values", "char_length(meeting_code) >= 1 AND char_length(concurrency_stamp) >= 1");
+                        });
+                });
+
             modelBuilder.Entity("ClassroomAgent.Domain.Entities.ReportTemplate", b =>
                 {
                     b.Property<long>("Id")
@@ -1177,7 +1281,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_sync_state_error_length", "last_error IS NULL OR char_length(last_error) BETWEEN 1 AND 512");
 
-                            t.HasCheckConstraint("ck_sync_state_failed_step", "failed_step IS NULL OR (status = 'failed' AND failed_step IN ('classroom', 'meet'))");
+                            t.HasCheckConstraint("ck_sync_state_failed_step", "failed_step IS NULL OR (status = 'failed' AND failed_step IN ('classroom', 'meet', 'linking'))");
 
                             t.HasCheckConstraint("ck_sync_state_finished_after_started", "finished_at IS NULL OR finished_at >= started_at");
 
@@ -1187,7 +1291,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_sync_state_status", "status IN ('running', 'completed', 'failed')");
 
-                            t.HasCheckConstraint("ck_sync_state_terminal_fields", "(status = 'running' AND finished_at IS NULL AND last_error IS NULL)\nOR (status = 'completed' AND finished_at IS NOT NULL AND last_error IS NULL)\nOR (status = 'failed' AND finished_at IS NOT NULL AND last_error IS NOT NULL)");
+                            t.HasCheckConstraint("ck_sync_state_terminal_fields", "(status = 'running' AND finished_at IS NULL AND last_error IS NULL)\r\nOR (status = 'completed' AND finished_at IS NOT NULL AND last_error IS NULL)\r\nOR (status = 'failed' AND finished_at IS NOT NULL AND last_error IS NOT NULL)");
                         });
                 });
 
@@ -1292,6 +1396,15 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_meet_participation_meet_session_id");
+                });
+
+            modelBuilder.Entity("ClassroomAgent.Domain.Entities.MeetingCodeLink", b =>
+                {
+                    b.HasOne("ClassroomAgent.Domain.Entities.Course", null)
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_meeting_code_link_course_id");
                 });
 
             modelBuilder.Entity("ClassroomAgent.Domain.Entities.ReportTemplateMark", b =>

@@ -39,23 +39,32 @@ public sealed class RunRetentionPurgeUseCase(
 
         // FR-002, FR-003: one transaction per expired course.
         var courses = await store.GetCourseActivityDatesAsync(cancellationToken);
+        // US-032 spec FR-016: the course's meetings reached through its linked codes, its links and their connections go
+        // with it, in the same transaction, and are counted with the meetings and links.
         foreach (var course in courses.Where(c => IsExpired(c, cutoff)))
         {
+            CourseDeletionCounts? removed = null;
             if (await TryUnitAsync(
                     RetentionPurgeStep.ExpiredCourse,
                     course.CourseId,
-                    ct => store.DeleteCourseAsync(course.CourseId, ct),
+                    async ct => removed = await store.DeleteCourseAsync(course.CourseId, ct),
                     failures,
                     cancellationToken))
             {
-                counts = counts with { Courses = counts.Courses + 1 };
+                counts = counts with
+                {
+                    Courses = counts.Courses + 1,
+                    MeetSessions = counts.MeetSessions + (removed?.MeetSessions ?? 0),
+                    MeetParticipations = counts.MeetParticipations + (removed?.MeetParticipations ?? 0),
+                    MeetCodeLinks = counts.MeetCodeLinks + (removed?.MeetCodeLinks ?? 0),
+                };
             }
         }
 
         // FR-005: leavers of the courses that remain, one transaction per course.
         foreach (var courseId in await store.GetCourseIdsWithExpiredLeaversAsync(cutoff, cancellationToken))
         {
-            var deleted = 0;
+            LeaverDeletionCounts? deleted = null;
             if (await TryUnitAsync(
                     RetentionPurgeStep.Leavers,
                     courseId,
@@ -63,7 +72,12 @@ public sealed class RunRetentionPurgeUseCase(
                     failures,
                     cancellationToken))
             {
-                counts = counts with { LeaverMemberships = counts.LeaverMemberships + deleted };
+                // US-032 spec FR-016 rule 3: the leaver's connections to the course's linked meetings count with the rest.
+                counts = counts with
+                {
+                    LeaverMemberships = counts.LeaverMemberships + (deleted?.Memberships ?? 0),
+                    MeetParticipations = counts.MeetParticipations + (deleted?.MeetParticipations ?? 0),
+                };
             }
         }
 
@@ -95,6 +109,18 @@ public sealed class RunRetentionPurgeUseCase(
                 MeetSessions = counts.MeetSessions + deleted.Sessions,
                 MeetParticipations = counts.MeetParticipations + deleted.Participations,
             };
+        }
+
+        // US-032 spec FR-016 rule 4: after the meeting-date rule, a "not a course" mark whose code has no meeting left goes.
+        var marks = 0;
+        if (await TryUnitAsync(
+                RetentionPurgeStep.OrphanedMarks,
+                null,
+                async ct => marks = await store.DeleteOrphanedNotACourseMarksAsync(ct),
+                failures,
+                cancellationToken))
+        {
+            counts = counts with { MeetCodeLinks = counts.MeetCodeLinks + marks };
         }
 
         // FR-006 … FR-008, in the order FR-009 fixes; the run's own audit row comes after the audit-row delete.
@@ -146,7 +172,10 @@ public sealed class RunRetentionPurgeUseCase(
         return new RetentionPurgeOutcome(cutoff, counts, failures);
     }
 
-    /// <summary>FR-002, OD-006: the latest Google date, or the import time when there is none at all.</summary>
+    /// <summary>
+    /// FR-002, OD-006: the latest Google date — US-032 spec FR-016 adds the start of a meeting reached through the course's
+    /// linked codes — or the import time when there is none at all.
+    /// </summary>
     private static bool IsExpired(CourseActivityDates course, DateTimeOffset cutoff)
     {
         var lastActivity = RetentionRule.LatestActivity(
@@ -155,6 +184,7 @@ public sealed class RunRetentionPurgeUseCase(
                 course.LatestItemCreationTime,
                 course.LatestItemUpdateTime,
                 course.LatestSubmissionUpdateTime,
+                course.LatestLinkedMeetingStart,
             ]) ?? course.CourseCreatedAt;
         return RetentionRule.IsExpired(lastActivity, cutoff);
     }

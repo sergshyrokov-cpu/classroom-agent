@@ -49,6 +49,9 @@ public sealed class ClassroomAgentDbContext(DbContextOptions<ClassroomAgentDbCon
     /// <summary>US-031 entity model §2: their connections (db-design §3); written only through the session.</summary>
     public DbSet<MeetParticipation> MeetParticipations => Set<MeetParticipation>();
 
+    /// <summary>US-032 entity model §1: a meeting code linked to a course, or marked "not a course" (db-design §2).</summary>
+    public DbSet<MeetingCodeLink> MeetingCodeLinks => Set<MeetingCodeLink>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new LegitimacyStateConfiguration());
@@ -66,5 +69,6 @@ public sealed class ClassroomAgentDbContext(DbContextOptions<ClassroomAgentDbCon
         modelBuilder.ApplyConfiguration(new ReportTemplateScaleRowConfiguration());
         modelBuilder.ApplyConfiguration(new MeetSessionConfiguration());
         modelBuilder.ApplyConfiguration(new MeetParticipationConfiguration());
+        modelBuilder.ApplyConfiguration(new MeetingCodeLinkConfiguration());
     }
 }

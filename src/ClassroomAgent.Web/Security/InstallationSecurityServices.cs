@@ -79,6 +79,19 @@ public static class InstallationSecurityServices
                     InstallationSession.RoleName(AppRole.Admin),
                     InstallationSession.RoleName(AppRole.Dean)));
 
+            // US-032 spec §7, api-design §2.10: viewing the Meet meetings page and linking codes are one matrix row
+            // ("Привязка кода встречи Meet к курсу"), two policies, both roles.
+            options.AddPolicy(
+                InstallationPolicies.ViewMeetCodes,
+                policy => policy.RequireAuthenticatedUser().RequireRole(
+                    InstallationSession.RoleName(AppRole.Admin),
+                    InstallationSession.RoleName(AppRole.Dean)));
+            options.AddPolicy(
+                InstallationPolicies.LinkMeetCodes,
+                policy => policy.RequireAuthenticatedUser().RequireRole(
+                    InstallationSession.RoleName(AppRole.Admin),
+                    InstallationSession.RoleName(AppRole.Dean)));
+
             // US-027 spec FR-012: the two report-template matrix rows, one policy each, both roles; no ownership
             // check and no scoping by roster (S-03).
             options.AddPolicy(

@@ -117,6 +117,9 @@ public sealed class AdminLoginCheckEveryTimeTests(PostgreSqlFixture database)
                 "legitimacy_state",
                 "meet_participation",
                 "meet_session",
+
+                // US-032 adds meeting_code_link (US-032 db-design §2).
+                "meeting_code_link",
                 "report_template",
                 "report_template_mark",
                 "report_template_scale_row",

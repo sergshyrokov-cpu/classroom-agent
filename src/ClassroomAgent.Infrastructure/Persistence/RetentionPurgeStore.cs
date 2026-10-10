@@ -29,17 +29,34 @@ public sealed class RetentionPurgeStore(ClassroomAgentDbContext db) : IRetention
                 db.CourseWorks.Where(w => w.CourseId == c.Id).Max(w => w.UpdateTime),
                 db.Submissions
                     .Where(s => db.CourseWorks.Any(w => w.Id == s.CourseWorkId && w.CourseId == c.Id))
-                    .Max(s => s.UpdateTime)))
+                    .Max(s => s.UpdateTime),
+                // US-032 db-design §6 step 1: the latest meeting reached through the course's linked codes.
+                db.MeetSessions
+                    .Where(m => db.MeetingCodeLinks.Any(l => l.CourseId == c.Id && l.MeetingCode == m.MeetingCode))
+                    .Max(m => (DateTimeOffset?)m.StartedAt)))
             .ToListAsync(cancellationToken);
 
-    public async Task DeleteCourseAsync(long courseId, CancellationToken cancellationToken)
+    public async Task<CourseDeletionCounts> DeleteCourseAsync(long courseId, CancellationToken cancellationToken)
     {
+        // US-032 db-design §6 step 2: the meetings reached through the course's links go first, child-first.
+        var meetParticipations = await db.MeetParticipations
+            .Where(p => db.MeetSessions.Any(s => s.Id == p.MeetSessionId
+                                                 && db.MeetingCodeLinks.Any(l => l.CourseId == courseId
+                                                                                 && l.MeetingCode == s.MeetingCode)))
+            .ExecuteDeleteAsync(cancellationToken);
+        var meetSessions = await db.MeetSessions
+            .Where(s => db.MeetingCodeLinks.Any(l => l.CourseId == courseId && l.MeetingCode == s.MeetingCode))
+            .ExecuteDeleteAsync(cancellationToken);
+        var meetCodeLinks = await db.MeetingCodeLinks
+            .Where(l => l.CourseId == courseId)
+            .ExecuteDeleteAsync(cancellationToken);
         await db.Submissions
             .Where(s => db.CourseWorks.Any(w => w.Id == s.CourseWorkId && w.CourseId == courseId))
             .ExecuteDeleteAsync(cancellationToken);
         await db.CourseWorks.Where(w => w.CourseId == courseId).ExecuteDeleteAsync(cancellationToken);
         await db.CourseMemberships.Where(m => m.CourseId == courseId).ExecuteDeleteAsync(cancellationToken);
         await db.Courses.Where(c => c.Id == courseId).ExecuteDeleteAsync(cancellationToken);
+        return new CourseDeletionCounts(meetSessions, meetParticipations, meetCodeLinks);
     }
 
     public async Task<IReadOnlyList<long>> GetCourseIdsWithExpiredLeaversAsync(
@@ -52,8 +69,24 @@ public sealed class RetentionPurgeStore(ClassroomAgentDbContext db) : IRetention
             .OrderBy(id => id)
             .ToListAsync(cancellationToken);
 
-    public async Task<int> DeleteExpiredLeaversAsync(long courseId, DateTimeOffset cutoff, CancellationToken cancellationToken)
+    public async Task<LeaverDeletionCounts> DeleteExpiredLeaversAsync(
+        long courseId,
+        DateTimeOffset cutoff,
+        CancellationToken cancellationToken)
     {
+        // US-032 db-design §6 step 3: before the memberships go, the leavers' participations (email matched
+        // case-insensitively) in meetings whose code is linked to this course.
+        var meetParticipations = await db.MeetParticipations
+            .Where(p => p.Email != null
+                        && db.MeetSessions.Any(s => s.Id == p.MeetSessionId
+                                                    && db.MeetingCodeLinks.Any(l => l.CourseId == courseId
+                                                                                    && l.MeetingCode == s.MeetingCode))
+                        && db.CourseMemberships.Any(m => m.CourseId == courseId
+                                                         && !m.OnRoster
+                                                         && m.LastSeenAt < cutoff
+                                                         && m.Participant.Email != null
+                                                         && m.Participant.Email.ToLower() == p.Email.ToLower()))
+            .ExecuteDeleteAsync(cancellationToken);
         await db.Submissions
             .Where(s => db.CourseWorks.Any(w => w.Id == s.CourseWorkId && w.CourseId == courseId)
                         && db.CourseMemberships.Any(m => m.CourseId == courseId
@@ -61,9 +94,10 @@ public sealed class RetentionPurgeStore(ClassroomAgentDbContext db) : IRetention
                                                          && !m.OnRoster
                                                          && m.LastSeenAt < cutoff))
             .ExecuteDeleteAsync(cancellationToken);
-        return await db.CourseMemberships
+        var memberships = await db.CourseMemberships
             .Where(m => m.CourseId == courseId && !m.OnRoster && m.LastSeenAt < cutoff)
             .ExecuteDeleteAsync(cancellationToken);
+        return new LeaverDeletionCounts(memberships, meetParticipations);
     }
 
     public Task<int> DeleteOrphanedParticipantsAsync(CancellationToken cancellationToken) =>
@@ -109,4 +143,13 @@ public sealed class RetentionPurgeStore(ClassroomAgentDbContext db) : IRetention
             .ExecuteDeleteAsync(cancellationToken);
         return (sessions, participations);
     }
+
+    /// <summary>
+    /// US-032 db-design §6 step 4: "not a course" marks whose code has no meeting left, in one set-based statement.
+    /// Course links with no meeting left are deliberately not touched (spec FR-016 rule 4).
+    /// </summary>
+    public Task<int> DeleteOrphanedNotACourseMarksAsync(CancellationToken cancellationToken) =>
+        db.MeetingCodeLinks
+            .Where(l => l.CourseId == null && !db.MeetSessions.Any(s => s.MeetingCode == l.MeetingCode))
+            .ExecuteDeleteAsync(cancellationToken);
 }

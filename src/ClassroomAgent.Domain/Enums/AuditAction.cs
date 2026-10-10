@@ -68,4 +68,22 @@ public enum AuditAction
 
     /// <summary>US-028 db-design §3.2: a journal was exported to a file.</summary>
     JournalExported,
+
+    /// <summary>US-032 spec FR-014: the synchronization linked a meeting code to a course (actor <c>system</c>).</summary>
+    MeetCodeAutoLinked,
+
+    /// <summary>US-032 spec FR-014: a person picked a course for an unassigned code.</summary>
+    MeetCodeCoursePicked,
+
+    /// <summary>US-032 spec FR-014: a person confirmed an automatic link.</summary>
+    MeetCodeLinkConfirmed,
+
+    /// <summary>US-032 spec FR-014: a person moved a code to another course.</summary>
+    MeetCodeRelinked,
+
+    /// <summary>US-032 spec FR-014: a person marked a code "not a course".</summary>
+    MeetCodeMarkedNotACourse,
+
+    /// <summary>US-032 spec FR-014: a person picked a course for a marked code, removing the mark.</summary>
+    MeetCodeMarkRemoved,
 }

@@ -1,3 +1,4 @@
+using ClassroomAgent.Application.Models;
 using ClassroomAgent.Domain.Enums;
 
 namespace ClassroomAgent.Web.Configuration;
@@ -25,6 +26,9 @@ namespace ClassroomAgent.Web.Configuration;
 /// US-013 spec FR-013: the optional synchronization run interval; the default is applied by the code that reads
 /// it, not here.
 /// </param>
+/// <param name="MeetLinking">
+/// US-032 spec FR-005: the optional automatic-linking thresholds; null means <see cref="MeetLinkingThresholds.Default"/>.
+/// </param>
 public sealed record InstallationSettings(
     Guid InstallationId,
     Uri ControlPlaneAddress,
@@ -39,4 +43,5 @@ public sealed record InstallationSettings(
     int RetentionYears,
     TimeZoneInfo TimeZone,
     string? ServiceAccountKeyReference = null,
-    TimeSpan SyncInterval = default);
+    TimeSpan SyncInterval = default,
+    MeetLinkingThresholds? MeetLinking = null);

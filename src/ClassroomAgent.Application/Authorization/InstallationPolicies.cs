@@ -50,6 +50,18 @@ public static class InstallationPolicies
     public const string UseReportTemplates = nameof(UseReportTemplates);
 
     /// <summary>
+    /// "Привязка кода встречи Meet к курсу" — ✔ Admin, ✔ Dean (<c>trebovaniya.md</c> §2; US-032 spec §7): the Meet
+    /// meetings page and its lists.
+    /// </summary>
+    public const string ViewMeetCodes = nameof(ViewMeetCodes);
+
+    /// <summary>
+    /// "Привязка кода встречи Meet к курсу" — ✔ Admin, ✔ Dean (<c>trebovaniya.md</c> §2; US-032 spec §7): the
+    /// course-choice form and the three link writes.
+    /// </summary>
+    public const string LinkMeetCodes = nameof(LinkMeetCodes);
+
+    /// <summary>
     /// "Создание и редактирование шаблонов отчётов" — ✔ Admin, ✔ Dean (<c>trebovaniya.md</c> §2 v84; US-027 spec
     /// FR-012): the new, copy, change and delete forms and saves.
     /// </summary>

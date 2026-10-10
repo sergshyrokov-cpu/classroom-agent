@@ -89,9 +89,138 @@ public sealed class AuditEvent
     /// <summary>US-028 db-design §3.2: file format of the export; null for every other action.</summary>
     public ExportFormat? ExportFormat { get; private set; }
 
+    /// <summary>US-032 db-design §3.2: the meeting code of a link change; null for every other action.</summary>
+    public string? MeetCode { get; private set; }
+
+    /// <summary>US-032 db-design §3.2: the course before a re-link or a mark; null otherwise.</summary>
+    public long? MeetPreviousCourseId { get; private set; }
+
+    /// <summary>US-032 db-design §3.2: links removed by a purge run; null for every other action and older purge rows.</summary>
+    public int? PurgedMeetCodeLinks { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
+
+    /// <summary>US-032 spec FR-014: the linking step linked a code (actor <c>system</c>, target the course).</summary>
+    public static AuditEvent MeetCodeAutoLinked(string meetingCode, long courseId, DateTimeOffset occurredAt)
+    {
+        CheckMeetCode(meetingCode);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(courseId);
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.System,
+            Action = AuditAction.MeetCodeAutoLinked,
+            TargetType = AuditTargetType.Course,
+            TargetId = courseId,
+            Outcome = AuditOutcome.Succeeded,
+            MeetCode = meetingCode,
+        };
+    }
+
+    /// <summary>
+    /// US-032 spec FR-014, db-design §3.2: a person's succeeded link change. <paramref name="courseId"/> is the course
+    /// after the change (null only for a mark), <paramref name="previousCourseId"/> the course before a re-link or a mark.
+    /// </summary>
+    public static AuditEvent MeetCodeChanged(
+        AuditAction action,
+        long appUserId,
+        AppRole actorRole,
+        string meetingCode,
+        long? courseId,
+        long? previousCourseId,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        CheckPersonsMeetCodeAction(action);
+        CheckMeetCode(meetingCode);
+        CheckOptionalId(courseId, nameof(courseId));
+        CheckOptionalId(previousCourseId, nameof(previousCourseId));
+
+        // db-design §3.2: the course after the change is the target — none only for a mark; the previous course is
+        // recorded for a re-link (always) and a mark (when the code was linked), never for anything else.
+        var shapeHolds = action switch
+        {
+            AuditAction.MeetCodeMarkedNotACourse => courseId is null,
+            AuditAction.MeetCodeRelinked => courseId is not null && previousCourseId is not null,
+            _ => courseId is not null && previousCourseId is null,
+        };
+        if (!shapeHolds)
+        {
+            throw new ArgumentException("The courses do not fit the action (ck_audit_event_meet_code_shape).", nameof(action));
+        }
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = appUserId,
+            ActorRole = actorRole,
+            Action = action,
+            TargetType = courseId is null ? null : AuditTargetType.Course,
+            TargetId = courseId,
+            Outcome = AuditOutcome.Succeeded,
+            RequestId = requestId,
+            MeetCode = meetingCode,
+            MeetPreviousCourseId = previousCourseId,
+        };
+    }
+
+    /// <summary>US-032 api-design §2.5: a link change refused in read-only mode — no course ids, the code only when well-formed.</summary>
+    public static AuditEvent MeetCodeChangeRefused(
+        AuditAction action,
+        long appUserId,
+        AppRole actorRole,
+        string? meetingCode,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        CheckPersonsMeetCodeAction(action);
+        if (meetingCode is not null)
+        {
+            CheckMeetCode(meetingCode);
+        }
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = appUserId,
+            ActorRole = actorRole,
+            Action = action,
+            Outcome = AuditOutcome.Refused,
+            RefusalCategory = AuditRefusalCategory.ReadOnlyMode,
+            RequestId = requestId,
+            MeetCode = meetingCode,
+        };
+    }
+
+    private static void CheckPersonsMeetCodeAction(AuditAction action)
+    {
+        if (action is not (AuditAction.MeetCodeCoursePicked or AuditAction.MeetCodeLinkConfirmed
+            or AuditAction.MeetCodeRelinked or AuditAction.MeetCodeMarkedNotACourse or AuditAction.MeetCodeMarkRemoved))
+        {
+            throw new ArgumentOutOfRangeException(nameof(action), action, "Not a person's meeting-code link change.");
+        }
+    }
+
+    private static void CheckMeetCode(string meetingCode)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(meetingCode);
+        if (meetingCode.Length > MeetSession.MeetingCodeMaxLength)
+        {
+            throw new ArgumentException("The meeting code is longer than its limit.", nameof(meetingCode));
+        }
+    }
+
+    private static void CheckOptionalId(long? id, string name)
+    {
+        if (id is { } value)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value, name);
+        }
+    }
 
     /// <summary>
     /// US-037 spec FR-010: the one row a retention purge run writes — actor <c>system</c>, no target, succeeded, no
@@ -106,6 +235,7 @@ public sealed class AuditEvent
         ArgumentOutOfRangeException.ThrowIfNegative(counts.AuditRows, nameof(counts));
         ArgumentOutOfRangeException.ThrowIfNegative(counts.MeetSessions, nameof(counts));
         ArgumentOutOfRangeException.ThrowIfNegative(counts.MeetParticipations, nameof(counts));
+        ArgumentOutOfRangeException.ThrowIfNegative(counts.MeetCodeLinks, nameof(counts));
 
         return new AuditEvent
         {
@@ -126,6 +256,7 @@ public sealed class AuditEvent
             PurgedAuditRows = counts.AuditRows,
             PurgedMeetSessions = counts.MeetSessions,
             PurgedMeetParticipations = counts.MeetParticipations,
+            PurgedMeetCodeLinks = counts.MeetCodeLinks,
         };
     }
 

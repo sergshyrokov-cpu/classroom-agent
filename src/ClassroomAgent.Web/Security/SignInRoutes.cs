@@ -40,6 +40,24 @@ public static class SignInRoutes
     /// </summary>
     public const string Journal = "/workspace/journal";
 
+    /// <summary>US-032 api-design §2.1: the Meet meetings page, one list at a time. GET only.</summary>
+    public const string MeetCodes = "/workspace/meet-codes";
+
+    /// <summary>US-032: the course-choice form for one code (GET).</summary>
+    public const string MeetCodeCourseChoice = "/workspace/meet-codes/{meetingCode}/course-choice";
+
+    /// <summary>US-032: the code's link to a course — pick, re-link, remove the mark (POST).</summary>
+    public const string MeetCodeLink = "/workspace/meet-codes/{meetingCode}/link";
+
+    /// <summary>US-032: confirming an automatic link (POST).</summary>
+    public const string MeetCodeConfirmation = "/workspace/meet-codes/{meetingCode}/confirmation";
+
+    /// <summary>US-032: marking a code "not a course" (POST).</summary>
+    public const string MeetCodeNotACourseMark = "/workspace/meet-codes/{meetingCode}/not-a-course-mark";
+
+    /// <summary>US-032 api-design §2.7: the key the one-time confirmation travels under in TempData.</summary>
+    public const string MeetCodeMessageTempDataKey = "MeetCodeMessage";
+
     /// <summary>US-027 api-design §2.1: the report templates list (the section's entry page) and the create save.</summary>
     public const string ReportTemplates = "/reports/templates";
 

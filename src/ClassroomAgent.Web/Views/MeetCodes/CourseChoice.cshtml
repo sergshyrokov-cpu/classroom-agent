@@ -1,0 +1,76 @@
+@using System.Globalization
+@using ClassroomAgent.Application.Models.Dtos
+@model MeetCodeCourseChoicePageModel
+@{
+    ViewData["Title"] = T[MeetCodesTextKeys.ChoiceTitle];
+
+    // Api-design §2.11: the code is in the path; the query carries only the validated returnPage.
+    ViewData[UiLanguageController.ReturnPathViewDataKey] =
+        SignInRoutes.MeetCodes + "/" + Uri.EscapeDataString(Model.MeetingCode) + "/course-choice?"
+        + MeetCodesController.ReturnPageParameter + "=" + Model.ReturnPage.ToString(CultureInfo.InvariantCulture);
+    var state = Model.CurrentState.ToString().ToLowerInvariant();
+}
+
+<h1>@T[MeetCodesTextKeys.ChoiceTitle]</h1>
+<p id="meet-code">@Model.MeetingCode</p>
+
+@if (Model.FieldError is { } fieldError)
+{
+    <p id="meet-codes-field-error" class="form-error">@T[MeetCodesTextKeys.FieldError(fieldError)]</p>
+}
+
+@if (Model.CurrentCourse is { } current)
+{
+    <p id="meet-code-current-course">@T[MeetCodesTextKeys.ChoiceCurrent]: @CourseLabel(current)</p>
+}
+
+<form id="meet-code-choice-form" method="post" action="@(SignInRoutes.MeetCodes + "/" + Uri.EscapeDataString(Model.MeetingCode) + "/link")">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="expectedState" value="@state" />
+    @if (Model.CurrentState == MeetCodeExpectedState.Linked && Model.CurrentCourse is { } linked)
+    {
+        <input type="hidden" name="expectedCourseId" value="@linked.Id.ToString(CultureInfo.InvariantCulture)" />
+    }
+    <input type="hidden" name="returnPage" value="@Model.ReturnPage.ToString(CultureInfo.InvariantCulture)" />
+
+    @if (Model.Candidates.Count > 0)
+    {
+        <fieldset>
+            <legend>@T[MeetCodesTextKeys.ChoiceCandidates]</legend>
+            @foreach (var candidate in Model.Candidates)
+            {
+                <p>
+                    <label>
+                        <input type="radio" name="courseId" value="@candidate.Course.Id.ToString(CultureInfo.InvariantCulture)" required />
+                        @CourseLabel(candidate.Course) (@candidate.SharePercent.ToString(CultureInfo.InvariantCulture)%)
+                    </label>
+                </p>
+            }
+        </fieldset>
+    }
+
+    @if (Model.OtherCourses.Count > 0)
+    {
+        <fieldset>
+            <legend>@T[MeetCodesTextKeys.ChoiceOtherCourses]</legend>
+            @foreach (var course in Model.OtherCourses)
+            {
+                <p>
+                    <label>
+                        <input type="radio" name="courseId" value="@course.Id.ToString(CultureInfo.InvariantCulture)" required />
+                        @CourseLabel(course)
+                    </label>
+                </p>
+            }
+        </fieldset>
+    }
+
+    <button type="submit">@T[MeetCodesTextKeys.ChoiceSubmit]</button>
+    <a href="@(SignInRoutes.MeetCodes)">@T[MeetCodesTextKeys.ChoiceCancel]</a>
+</form>
+
+@functions {
+    /// <summary>Spec I-7: the course name, then its section when it has one; Google data, not translated.</summary>
+    private static string CourseLabel(CourseOption course) =>
+        string.IsNullOrEmpty(course.Section) ? course.Name : course.Name + " — " + course.Section;
+}

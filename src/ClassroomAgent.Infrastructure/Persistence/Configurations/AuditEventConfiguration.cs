@@ -31,7 +31,9 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 + "'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', "
                 + "'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run', "
                 + "'synchronization_requested', 'report_template_created', 'report_template_changed', "
-                + "'report_template_deleted', 'journal_exported')");
+                + "'report_template_deleted', 'journal_exported', "
+                + "'meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', "
+                + "'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed')");
 
             // US-009 db-design §4.1: a refused action names WHAT was refused without naming a row that was never
             // created, so a target type without an id is now legal. An id without a type — an identifier belonging
@@ -130,6 +132,35 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
             table.HasCheckConstraint(
                 "ck_audit_event_export_template_id",
                 "export_template_id IS NULL OR export_template_id > 0");
+
+            // US-032 db-design §3.3: the meeting-code columns belong to the six link actions; a link action is the
+            // system's exactly when automatic, targets only a course, and a succeeded one names its code.
+            table.HasCheckConstraint(
+                "ck_audit_event_meet_code_absent",
+                "action IN ('meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', 'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed') "
+                + "OR (meet_code IS NULL AND meet_previous_course_id IS NULL)");
+            table.HasCheckConstraint(
+                "ck_audit_event_meet_code_shape",
+                "action NOT IN ('meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', 'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed') OR ( "
+                + "(actor_type = 'system') = (action = 'meet_code_auto_linked') "
+                + "AND (action <> 'meet_code_auto_linked' OR (outcome = 'succeeded' AND request_id IS NULL)) "
+                + "AND (refusal_category IS NULL OR refusal_category = 'read_only_mode') "
+                + "AND (target_type IS NULL OR target_type = 'course') "
+                + "AND (target_type IS NULL) = (target_id IS NULL) "
+                + "AND (outcome = 'succeeded' OR (target_id IS NULL AND meet_previous_course_id IS NULL)) "
+                + "AND (outcome <> 'succeeded' OR (meet_code IS NOT NULL "
+                + "AND (target_id IS NULL) = (action = 'meet_code_marked_not_a_course'))) "
+                + "AND (meet_previous_course_id IS NULL "
+                + "OR action IN ('meet_code_relinked', 'meet_code_marked_not_a_course')) "
+                + "AND (action <> 'meet_code_relinked' OR outcome <> 'succeeded' "
+                + "OR meet_previous_course_id IS NOT NULL))");
+            table.HasCheckConstraint(
+                "ck_audit_event_meet_code_values",
+                "(meet_code IS NULL OR char_length(meet_code) >= 1) "
+                + "AND (meet_previous_course_id IS NULL OR meet_previous_course_id > 0)");
+            table.HasCheckConstraint(
+                "ck_audit_event_purge_meet_code_links",
+                "(purged_meet_code_links IS NULL OR (action = 'retention_purge_run' AND purged_meet_code_links >= 0))");
         });
 
         builder.HasKey(e => e.Id).HasName("pk_audit_event");
@@ -168,6 +199,11 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         builder.Property(e => e.PurgedAuditRows);
         builder.Property(e => e.PurgedMeetSessions);
         builder.Property(e => e.PurgedMeetParticipations);
+        builder.Property(e => e.PurgedMeetCodeLinks);
+
+        // US-032 db-design §3.2: a code and bare course ids (no foreign key, PC-11).
+        builder.Property(e => e.MeetCode).HasMaxLength(MeetSession.MeetingCodeMaxLength);
+        builder.Property(e => e.MeetPreviousCourseId);
 
         // US-028 db-design §3.2: calendar days of the school, a bare template id (no foreign key, PC-9), a count and
         // a closed format code.
@@ -250,6 +286,12 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         AuditAction.ReportTemplateChanged => "report_template_changed",
         AuditAction.ReportTemplateDeleted => "report_template_deleted",
         AuditAction.JournalExported => "journal_exported",
+        AuditAction.MeetCodeAutoLinked => "meet_code_auto_linked",
+        AuditAction.MeetCodeCoursePicked => "meet_code_course_picked",
+        AuditAction.MeetCodeLinkConfirmed => "meet_code_link_confirmed",
+        AuditAction.MeetCodeRelinked => "meet_code_relinked",
+        AuditAction.MeetCodeMarkedNotACourse => "meet_code_marked_not_a_course",
+        AuditAction.MeetCodeMarkRemoved => "meet_code_mark_removed",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -270,6 +312,12 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         "report_template_changed" => AuditAction.ReportTemplateChanged,
         "report_template_deleted" => AuditAction.ReportTemplateDeleted,
         "journal_exported" => AuditAction.JournalExported,
+        "meet_code_auto_linked" => AuditAction.MeetCodeAutoLinked,
+        "meet_code_course_picked" => AuditAction.MeetCodeCoursePicked,
+        "meet_code_link_confirmed" => AuditAction.MeetCodeLinkConfirmed,
+        "meet_code_relinked" => AuditAction.MeetCodeRelinked,
+        "meet_code_marked_not_a_course" => AuditAction.MeetCodeMarkedNotACourse,
+        "meet_code_mark_removed" => AuditAction.MeetCodeMarkRemoved,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 

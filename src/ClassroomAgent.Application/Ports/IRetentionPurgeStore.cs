@@ -12,14 +12,20 @@ public interface IRetentionPurgeStore
     /// <summary>Every stored course with the raw maxima of its dates (db-design §4); the rule is applied by the caller.</summary>
     Task<IReadOnlyList<CourseActivityDates>> GetCourseActivityDatesAsync(CancellationToken cancellationToken);
 
-    /// <summary>Deletes one course child first: submissions, coursework, memberships, the course (spec FR-003).</summary>
-    Task DeleteCourseAsync(long courseId, CancellationToken cancellationToken);
+    /// <summary>
+    /// Deletes one course child first: the participations and meetings reached through its linked codes, its links
+    /// (US-032 db-design §6), submissions, coursework, memberships, the course (spec FR-003).
+    /// </summary>
+    Task<CourseDeletionCounts> DeleteCourseAsync(long courseId, CancellationToken cancellationToken);
 
     /// <summary>Courses holding at least one off-roster membership last seen before the cutoff (spec FR-005).</summary>
     Task<IReadOnlyList<long>> GetCourseIdsWithExpiredLeaversAsync(DateTimeOffset cutoff, CancellationToken cancellationToken);
 
-    /// <summary>Deletes a course's expired leavers with their submissions in it; returns the memberships deleted.</summary>
-    Task<int> DeleteExpiredLeaversAsync(long courseId, DateTimeOffset cutoff, CancellationToken cancellationToken);
+    /// <summary>
+    /// Deletes a course's expired leavers with their submissions in it and — US-032 db-design §6 — their participations
+    /// (email matched case-insensitively) in meetings reached through the course's linked codes.
+    /// </summary>
+    Task<LeaverDeletionCounts> DeleteExpiredLeaversAsync(long courseId, DateTimeOffset cutoff, CancellationToken cancellationToken);
 
     /// <summary>Deletes every participant no membership references (spec FR-006); returns how many.</summary>
     Task<int> DeleteOrphanedParticipantsAsync(CancellationToken cancellationToken);
@@ -40,4 +46,7 @@ public interface IRetentionPurgeStore
     Task<(int Sessions, int Participations)> DeleteMeetSessionsAsync(
         IReadOnlyCollection<long> sessionIds,
         CancellationToken cancellationToken);
+
+    /// <summary>US-032 db-design §6: deletes every "not a course" mark whose code has no meeting left; returns how many.</summary>
+    Task<int> DeleteOrphanedNotACourseMarksAsync(CancellationToken cancellationToken);
 }

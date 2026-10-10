@@ -8,4 +8,7 @@ public enum SyncStep
 {
     Classroom,
     Meet,
+
+    /// <summary>US-032 spec FR-006: the automatic linking of meeting codes after the Meet step.</summary>
+    Linking,
 }

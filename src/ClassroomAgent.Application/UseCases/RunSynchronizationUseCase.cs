@@ -28,6 +28,11 @@ namespace ClassroomAgent.Application.UseCases;
 /// per conference and committed a page at a time, and the watermark that only a completed run moves (spec FR-001 …
 /// FR-010). The guard and the connection check above cover both steps.
 /// </para>
+/// <para>
+/// US-032 adds the third step, the automatic linking of meeting codes (spec FR-006), run only when the Meet step
+/// completed. It is optional in the constructor so the Application tests that predate it build the run without it; the
+/// host always supplies it.
+/// </para>
 /// </remarks>
 public sealed class RunSynchronizationUseCase(
     ISyncStateRepository syncStates,
@@ -43,7 +48,8 @@ public sealed class RunSynchronizationUseCase(
     ISubmissionRepository submissions,
     RetentionSettings retention,
     IMeetReportsReader meet,
-    IMeetSessionRepository meetSessions)
+    IMeetSessionRepository meetSessions,
+    LinkMeetCodesStep? linking = null)
 {
     /// <summary>The operation name the read-only refusal carries (US-007 spec VR-001).</summary>
     public const string Operation = "Sync.Run";
@@ -92,6 +98,11 @@ public sealed class RunSynchronizationUseCase(
             step = SyncStep.Meet;
             await PullMeetAsync(impersonationUser, schoolDomain, state.MeetLoadedUpTo, meetPull, cancellationToken);
 
+            // US-032 spec FR-006, OD-007: reached only when the Meet step did not stop the run. A failure here stops the
+            // run at its own step; the meetings stored above stay, and the watermark is not moved (only CompleteRun does).
+            step = SyncStep.Linking;
+            var linked = linking is null ? null : await linking.ExecuteAsync(unitOfWork, cancellationToken);
+
             // FR-007: the watermark moves only here, once every page is read and written and the run completes.
             state.CompleteRun(timeProvider.GetUtcNow(), import.ProcessedCount, meetPull.WindowTo);
             await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -105,7 +116,8 @@ public sealed class RunSynchronizationUseCase(
                 import.UnrecognisedSubmissions,
                 import.CoursesGone,
                 import.CoursesWithBlankName,
-                meetPull.ToCounts());
+                meetPull.ToCounts(),
+                linked);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -131,7 +143,7 @@ public sealed class RunSynchronizationUseCase(
                 import.CoursesGone,
                 import.CoursesWithBlankName,
                 step,
-                step == SyncStep.Meet ? meetPull.ToCounts() : null);
+                step is SyncStep.Meet or SyncStep.Linking ? meetPull.ToCounts() : null);
         }
     }
 

@@ -102,7 +102,10 @@ the previous one — the dependency is real, not stylistic
   v75, v78). Optional:
   the school's default UI language (`uk` or `en`, `uk` if unset — NFR-073), and
   the synchronization run interval (`Sync:IntervalMinutes`, whole minutes,
-  1 to 1440, 60 — one hour — if unset, US-013).
+  1 to 1440, 60 — one hour — if unset, US-013), and the automatic-linking
+  thresholds of Meet meeting codes (`MeetLinking:MinSharePercent`, default 60,
+  and `MeetLinking:MinGapPoints`, default 30 — whole numbers 1 to 100; a present
+  value that is blank or invalid stops the start; not shown in the UI — US-032).
 - **The public base address is configuration, not a request header** (v78). The
   Google redirect URI is built from it, so deriving it from the incoming request's
   host or forwarded headers — which a reverse proxy makes forgeable — is a

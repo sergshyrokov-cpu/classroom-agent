@@ -227,6 +227,12 @@ public sealed partial class SynchronizationBackgroundService(
                     meet.SkippedTotal);
             }
 
+            if (outcome.Linking is { } linking)
+            {
+                // US-032 spec FR-006, SC-10: counts only — never a meeting code, email or course name.
+                LogLinkingStepCompleted(logger, runId, linking.CodesScored, linking.LinksCreated);
+            }
+
             LogRunCompleted(logger, runId, outcome.ProcessedCount ?? 0, outcome.MembershipsMarkedOffRoster);
         }
     }
@@ -315,6 +321,13 @@ public sealed partial class SynchronizationBackgroundService(
         int participationsUpdated,
         int notOfTheSchool,
         int skipped);
+
+    [LoggerMessage(
+        EventId = 5134,
+        EventName = "SyncLinkingStepCompleted",
+        Level = LogLevel.Information,
+        Message = "Synchronization run {RunId} linking step finished: {CodesScored} codes scored, {LinksCreated} links created")]
+    private static partial void LogLinkingStepCompleted(ILogger logger, Guid runId, int codesScored, int linksCreated);
 
     [LoggerMessage(
         EventId = 5133,

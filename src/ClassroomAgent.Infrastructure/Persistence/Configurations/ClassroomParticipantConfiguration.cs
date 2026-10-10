@@ -37,5 +37,9 @@ public sealed class ClassroomParticipantConfiguration : IEntityTypeConfiguration
         // Not unique, on purpose (OD-011): Epic 4 resolves an address through the roster of the course on the
         // meeting's date (PC-12, BR-051), never against this table globally.
         builder.HasIndex(p => p.Email).HasDatabaseName("ix_classroom_participant_email");
+
+        // US-032 db-design §5.2: ix_classroom_participant_email_lower, an expression index on lower(email), keeps the
+        // case-insensitive lookup by a set of emails an index scan. EF Core cannot express an expression index in
+        // the model, so it exists only in the AddMeetingCodeLinks migration (migrationBuilder.Sql CREATE/DROP INDEX).
     }
 }

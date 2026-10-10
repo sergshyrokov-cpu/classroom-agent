@@ -195,7 +195,8 @@ public static class RetentionPurgeHost
         return host;
     }
 
-    private static void RemovePurgeService(IServiceCollection services)
+    /// <summary>Removes the purge background service from a host's services (also used by tests that start a sync host).</summary>
+    public static void RemovePurgeService(IServiceCollection services)
     {
         foreach (var descriptor in services
                      .Where(d => d.ServiceType == typeof(IHostedService)

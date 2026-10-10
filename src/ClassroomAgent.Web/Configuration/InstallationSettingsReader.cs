@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
+using ClassroomAgent.Application.Models;
 using ClassroomAgent.Application.Ports;
 using ClassroomAgent.Domain.Enums;
 
@@ -53,6 +54,12 @@ public static class InstallationSettingsReader
     /// <summary>US-013 spec FR-013, VR-001: the optional synchronization run interval, in minutes.</summary>
     public const string SyncIntervalKey = "Sync:IntervalMinutes";
 
+    /// <summary>US-032 spec FR-005: optional, whole number 1 … 100, 60 if absent.</summary>
+    public const string MeetLinkingMinSharePercentKey = "MeetLinking:MinSharePercent";
+
+    /// <summary>US-032 spec FR-005: optional, whole number 1 … 100, 30 if absent.</summary>
+    public const string MeetLinkingMinGapPointsKey = "MeetLinking:MinGapPoints";
+
     /// <summary>
     /// US-015 spec FR-012, VR-008, I-2: the retention period N, in whole years. <b>Required</b> — unlike
     /// <see cref="SyncIntervalKey"/> there is no default and no "keep for ever" (DC-3, PC-11).
@@ -99,7 +106,8 @@ public static class InstallationSettingsReader
             RetentionYears(configuration),
             TimeZone(configuration),
             ServiceAccountKeyReference(configuration),
-            SyncInterval(configuration));
+            SyncInterval(configuration),
+            MeetLinking(configuration));
 
     /// <summary>
     /// US-025 VR-006: trimmed; an IANA id the runtime knows — a Windows id is refused even where the runtime would
@@ -237,6 +245,27 @@ public static class InstallationSettingsReader
         }
 
         return TimeSpan.FromMinutes(minutes);
+    }
+
+    /// <summary>
+    /// US-032 spec FR-005, VR-005: both keys optional (60 and 30 when absent); a present value — blank included — is a
+    /// whole number from 1 to 100 written as plain digits. The exception names the key, never the value (SC-10).
+    /// </summary>
+    private static MeetLinkingThresholds MeetLinking(IConfiguration configuration) =>
+        new(
+            Threshold(configuration, MeetLinkingMinSharePercentKey, MeetLinkingThresholds.Default.MinSharePercent),
+            Threshold(configuration, MeetLinkingMinGapPointsKey, MeetLinkingThresholds.Default.MinGapPoints));
+
+    private static int Threshold(IConfiguration configuration, string key, int defaultValue)
+    {
+        if (configuration[key] is not { } configured)
+        {
+            return defaultValue;
+        }
+
+        return int.TryParse(configured, NumberStyles.None, CultureInfo.InvariantCulture, out var value) && value is >= 1 and <= 100
+            ? value
+            : throw InstallationSettingException.Invalid(key, "expected a whole number from 1 to 100");
     }
 
     /// <summary>VR-004: <c>uk</c> or <c>en</c>, case-insensitive, or absent - Ukrainian when absent.</summary>

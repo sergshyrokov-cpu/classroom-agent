@@ -297,4 +297,53 @@
   <data name="ReportTemplate.Validation.NameSourceInvalid" xml:space="preserve"><value>Choose where the names come from: the Google profile or the email.</value></data>
   <data name="Report.NameSwitch.Caption" xml:space="preserve"><value>Names in the report</value></data>
   <data name="Report.Validation.NameSourceMalformed" xml:space="preserve"><value>Unknown name source in the page address.</value></data>
+  <data name="LastSync.Step.Linking" xml:space="preserve"><value>Step: linking Meet meeting codes to courses</value></data>
+  <data name="MeetCodes.NavigationEntry" xml:space="preserve"><value>Meet meetings</value></data>
+  <data name="MeetCodes.Title" xml:space="preserve"><value>Meet meetings</value></data>
+  <data name="MeetCodes.List.Unassigned" xml:space="preserve"><value>Unassigned</value></data>
+  <data name="MeetCodes.List.Linked" xml:space="preserve"><value>Linked</value></data>
+  <data name="MeetCodes.List.NotACourse" xml:space="preserve"><value>Not a course</value></data>
+  <data name="MeetCodes.Empty.Unassigned" xml:space="preserve"><value>There are no unassigned meeting codes.</value></data>
+  <data name="MeetCodes.Empty.Linked" xml:space="preserve"><value>There are no linked meeting codes.</value></data>
+  <data name="MeetCodes.Empty.NotACourse" xml:space="preserve"><value>No meeting codes are marked “not a course”.</value></data>
+  <data name="MeetCodes.NoCandidates" xml:space="preserve"><value>No candidates</value></data>
+  <data name="MeetCodes.Automatically" xml:space="preserve"><value>Automatically</value></data>
+  <data name="MeetCodes.DeletedAccount" xml:space="preserve"><value>Deleted account</value></data>
+  <data name="MeetCodes.NotConfirmed" xml:space="preserve"><value>Not confirmed</value></data>
+  <data name="MeetCodes.Action.PickCourse" xml:space="preserve"><value>Choose a course</value></data>
+  <data name="MeetCodes.Action.Confirm" xml:space="preserve"><value>Confirm</value></data>
+  <data name="MeetCodes.Action.Relink" xml:space="preserve"><value>Link to another course</value></data>
+  <data name="MeetCodes.Action.MarkNotACourse" xml:space="preserve"><value>Mark as “not a course”</value></data>
+  <data name="MeetCodes.Choice.Title" xml:space="preserve"><value>Choose a course for the meeting code</value></data>
+  <data name="MeetCodes.Choice.Candidates" xml:space="preserve"><value>Candidates</value></data>
+  <data name="MeetCodes.Choice.OtherCourses" xml:space="preserve"><value>Other courses</value></data>
+  <data name="MeetCodes.Choice.Submit" xml:space="preserve"><value>Link</value></data>
+  <data name="MeetCodes.Choice.Current" xml:space="preserve"><value>Current course</value></data>
+  <data name="MeetCodes.Choice.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="MeetCodes.Column.Code" xml:space="preserve"><value>Code</value></data>
+  <data name="MeetCodes.Column.Organizers" xml:space="preserve"><value>Organizers</value></data>
+  <data name="MeetCodes.Column.FirstMeeting" xml:space="preserve"><value>First meeting</value></data>
+  <data name="MeetCodes.Column.LastMeeting" xml:space="preserve"><value>Last meeting</value></data>
+  <data name="MeetCodes.Column.Meetings" xml:space="preserve"><value>Meetings</value></data>
+  <data name="MeetCodes.Column.Participants" xml:space="preserve"><value>Participants</value></data>
+  <data name="MeetCodes.Column.Candidates" xml:space="preserve"><value>Candidates</value></data>
+  <data name="MeetCodes.Column.Course" xml:space="preserve"><value>Course</value></data>
+  <data name="MeetCodes.Column.MadeBy" xml:space="preserve"><value>Linked by</value></data>
+  <data name="MeetCodes.Column.MadeAt" xml:space="preserve"><value>Linked at</value></data>
+  <data name="MeetCodes.Column.ConfirmedBy" xml:space="preserve"><value>Confirmation</value></data>
+  <data name="MeetCodes.Column.MarkedBy" xml:space="preserve"><value>Marked by</value></data>
+  <data name="MeetCodes.Column.MarkedAt" xml:space="preserve"><value>Marked at</value></data>
+  <data name="MeetCodes.Column.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="MeetCodes.Pagination.Previous" xml:space="preserve"><value>Previous</value></data>
+  <data name="MeetCodes.Pagination.Next" xml:space="preserve"><value>Next</value></data>
+  <data name="MeetCodes.Message.CoursePicked" xml:space="preserve"><value>The meeting code is linked to the course.</value></data>
+  <data name="MeetCodes.Message.Relinked" xml:space="preserve"><value>The meeting code is linked to another course.</value></data>
+  <data name="MeetCodes.Message.MarkRemoved" xml:space="preserve"><value>The “not a course” mark is removed and the code is linked to the course.</value></data>
+  <data name="MeetCodes.Message.Confirmed" xml:space="preserve"><value>The link is confirmed.</value></data>
+  <data name="MeetCodes.Message.Marked" xml:space="preserve"><value>The meeting code is marked “not a course”.</value></data>
+  <data name="MeetCodes.Message.CodeNotFound" xml:space="preserve"><value>There is no such meeting code.</value></data>
+  <data name="MeetCodes.Message.StateChanged" xml:space="preserve"><value>The code changed while the page was open. Nothing was changed; review the code and try again.</value></data>
+  <data name="MeetCodes.Message.QueryInvalid" xml:space="preserve"><value>The page parameters are invalid. The unassigned codes are shown.</value></data>
+  <data name="MeetCodes.FieldError.SameCourse" xml:space="preserve"><value>The code is already linked to this course. Choose another course.</value></data>
+  <data name="MeetCodes.FieldError.CourseNotFound" xml:space="preserve"><value>The chosen course no longer exists. Choose another course.</value></data>
 </root>

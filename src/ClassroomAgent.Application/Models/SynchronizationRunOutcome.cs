@@ -34,7 +34,8 @@ public sealed class SynchronizationRunOutcome
         IReadOnlyList<string>? coursesGone = null,
         IReadOnlyList<string>? coursesWithBlankName = null,
         SyncStep? failedStep = null,
-        MeetPullCounts? meet = null)
+        MeetPullCounts? meet = null,
+        MeetLinkingCounts? linking = null)
     {
         RunId = runId;
         ProcessedCount = processedCount;
@@ -51,6 +52,7 @@ public sealed class SynchronizationRunOutcome
         CoursesWithBlankName = coursesWithBlankName ?? [];
         FailedStep = failedStep;
         Meet = meet;
+        Linking = linking;
     }
 
     public Guid? RunId { get; }
@@ -100,6 +102,9 @@ public sealed class SynchronizationRunOutcome
     /// </summary>
     public MeetPullCounts? Meet { get; }
 
+    /// <summary>US-032 spec FR-006, §9: what the linking step did, for the host's log line; null when it did not complete.</summary>
+    public MeetLinkingCounts? Linking { get; }
+
     /// <summary>US-031 spec FR-010: the step that stopped a failed run; null otherwise.</summary>
     public SyncStep? FailedStep { get; }
 
@@ -115,7 +120,8 @@ public sealed class SynchronizationRunOutcome
         IReadOnlyList<UnrecognisedSubmission>? unrecognisedSubmissions = null,
         IReadOnlyList<string>? coursesGone = null,
         IReadOnlyList<string>? coursesWithBlankName = null,
-        MeetPullCounts? meet = null) =>
+        MeetPullCounts? meet = null,
+        MeetLinkingCounts? linking = null) =>
         new(
             runId,
             processedCount,
@@ -131,7 +137,8 @@ public sealed class SynchronizationRunOutcome
             coursesGone,
             coursesWithBlankName,
             null,
-            meet);
+            meet,
+            linking);
 
     /// <summary>
     /// A run that stopped with a diagnosis (US-017 spec FR-005, FR-006): <see cref="Error"/> is the diagnosis name,

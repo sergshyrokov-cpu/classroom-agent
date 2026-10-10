@@ -4,26 +4,27 @@
 version: 1
 story: US-032
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: security-reviewer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: 2026-10-10T13:48:55Z
+  stage: SECURITY_REVIEW
+  recorded_at: 2026-10-10T18:53:30Z
 last_artifacts:
-  - type: database_design
-    path: docs/designs/database/US-032-db-design.md
-    version: 1
-  - type: entity_model
-    path: docs/designs/database/US-032-entity-model.md
+  - type: security_review
+    path: docs/reviews/security/US-032-security-review.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+  - "SECURITY_REVIEW: PASS, 0 Critical / 0 Major; independent re-run 4345/4345 green, no vulnerable packages. MIN-1 (misplaced XML doc in InstallationPolicies.cs) fixed after the review, before approval; build 0 warnings. INFO-1: LinkMeetCodesStep is invisible to WritePathRule (unit of work passed as argument); only caller is the guarded run — consider an architecture test pinning its caller. INFO-2…4 in the review."
+  - "IMPLEMENTATION: 4345/4345 green, build 0 warnings, format clean. Deviations for the security review in implementation report §7 — notably LinkMeetCodesStep receives the run's unit of work as an argument (WritePathRule vs spec FR-006 no second guard call), and failed link saves are detached in UnitOfWork."
+  - "TEST_WRITING: red phase verified — 4345 total, 3986 passed, 359 failed (358 new + AppUserMigrationTests updated to 15 migrations); no regression. OD-009 (compile-only skeleton) resolved (a) by the Owner."
+  - "Test-generation report §2 lists entity-model deviations fixed by the tests (one MeetCodeFormInput, CourseExistsAsync on the link port) and the names IMPLEMENTATION must use."
   - "DB design: entity-model C# signatures are not yet compile-verified; TEST_WRITING builds the skeleton and records any signature change."
   - "DB design §5.2 adds ix_classroom_participant_email_lower (expression index on lower(email)) for case-insensitive email matching; outside the Story's new table but required by spec FR-002/FR-003."
   - "API design §2.1: spec FR-007 says the Google Workspace section's other entries stay Admin-only; /workspace (Journal) is open to both roles, Admin-only pages are under /settings. No effect on the contract; correct the sentence at the next spec revision."
@@ -31,5 +32,5 @@ non_blocking_findings:
   - "Spec §11 lists interpretations I-1 … I-14 for the gate; I-1 (meetings before the first synchronization find nobody on the roster), I-9 (a person's link is unconfirmed) and I-11 (refused audit row in read-only mode) were flagged; all approved as written at HUMAN_SPEC_APPROVAL 2026-10-10."
   - "FR-005 adds MeetLinking:MinSharePercent / MinGapPoints; deployment-conventions.md DC-3 must gain them in this Story."
 started_at: 2026-10-10T09:34:59Z
-updated_at: 2026-10-10T13:48:55Z
-completed_at: null
+updated_at: 2026-10-10T18:56:06Z
+completed_at: 2026-10-10T18:56:06Z

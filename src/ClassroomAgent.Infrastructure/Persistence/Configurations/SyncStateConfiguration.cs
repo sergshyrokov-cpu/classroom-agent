@@ -40,11 +40,11 @@ public sealed class SyncStateConfiguration : IEntityTypeConfiguration<SyncState>
                 "ck_sync_state_error_length",
                 "last_error IS NULL OR char_length(last_error) BETWEEN 1 AND 512");
 
-            // US-031 db-design §4.2: a step only on a failed row, from the closed list; a failed row written before
+            // US-031 db-design §4.2 (US-032 db-design §4 adds 'linking'): a step only on a failed row, from the closed list; a failed row written before
             // US-031 keeps a null step. ck_sync_state_terminal_fields is deliberately left unchanged.
             table.HasCheckConstraint(
                 "ck_sync_state_failed_step",
-                "failed_step IS NULL OR (status = 'failed' AND failed_step IN ('classroom', 'meet'))");
+                "failed_step IS NULL OR (status = 'failed' AND failed_step IN ('classroom', 'meet', 'linking'))");
 
             // US-031 db-design §4.2: a watermark is only ever written by a completed run (spec FR-007).
             table.HasCheckConstraint(
@@ -87,6 +87,7 @@ public sealed class SyncStateConfiguration : IEntityTypeConfiguration<SyncState>
     {
         SyncStep.Classroom => "classroom",
         SyncStep.Meet => "meet",
+        SyncStep.Linking => "linking",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -94,6 +95,7 @@ public sealed class SyncStateConfiguration : IEntityTypeConfiguration<SyncState>
     {
         "classroom" => SyncStep.Classroom,
         "meet" => SyncStep.Meet,
+        "linking" => SyncStep.Linking,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 

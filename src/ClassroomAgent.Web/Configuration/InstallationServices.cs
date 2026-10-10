@@ -158,6 +158,14 @@ public static class InstallationServices
             provider.GetRequiredService<ILogger<GoogleMeetReportsReader>>()));
         services.AddScoped<IMeetSessionRepository, MeetSessionRepository>();
 
+        // US-032 spec FR-005, FR-006: the automatic-linking thresholds as their own narrow record (as RetentionSettings),
+        // the code-link repository with the two read sources, and the linking step run after the Meet step.
+        services.AddSingleton(settings.MeetLinking ?? MeetLinkingThresholds.Default);
+        services.AddScoped<IMeetingCodeLinkRepository, MeetingCodeLinkRepository>();
+        services.AddScoped<IMeetCodeScoringSource, MeetCodeScoringSource>();
+        services.AddScoped<IMeetCodesReadSource, MeetCodesReadSource>();
+        services.AddScoped<LinkMeetCodesStep>();
+
         services.AddScoped<RunSynchronizationUseCase>();
 
         // US-025 spec FR-010, FR-014, entity model §6: the school's time zone as its own narrow record (as
@@ -173,6 +181,13 @@ public static class InstallationServices
         services.AddScoped<SaveReportTemplateUseCase>();
         services.AddScoped<DeleteReportTemplateUseCase>();
         services.AddScoped<GetReportQuery>();
+        // US-032 spec FR-007 … FR-013: the Meet meetings page, the course-choice form and the three link writes. The
+        // two queries read only; the writes take the read-only guard first (spec FR-015).
+        services.AddScoped<GetMeetCodesQuery>();
+        services.AddScoped<GetMeetCodeCourseChoiceQuery>();
+        services.AddScoped<SetMeetCodeCourseUseCase>();
+        services.AddScoped<ConfirmMeetCodeLinkUseCase>();
+        services.AddScoped<MarkMeetCodeNotACourseUseCase>();
         // US-028: the journal export (spec FR-011): the renderer in Infrastructure, the text port in Web.
         services.AddScoped<ExportJournalCommand>();
         services.AddSingleton<IReportRenderer, ClosedXmlReportRenderer>();

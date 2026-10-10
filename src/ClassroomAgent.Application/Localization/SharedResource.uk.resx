@@ -297,4 +297,53 @@
   <data name="ReportTemplate.Validation.NameSourceInvalid" xml:space="preserve"><value>Виберіть, звідки брати імена: з профілю Google або з електронної пошти.</value></data>
   <data name="Report.NameSwitch.Caption" xml:space="preserve"><value>Імена у звіті</value></data>
   <data name="Report.Validation.NameSourceMalformed" xml:space="preserve"><value>Невідоме джерело імен в адресі сторінки.</value></data>
+  <data name="LastSync.Step.Linking" xml:space="preserve"><value>Крок: прив'язка кодів зустрічей Meet до курсів</value></data>
+  <data name="MeetCodes.NavigationEntry" xml:space="preserve"><value>Зустрічі Meet</value></data>
+  <data name="MeetCodes.Title" xml:space="preserve"><value>Зустрічі Meet</value></data>
+  <data name="MeetCodes.List.Unassigned" xml:space="preserve"><value>Непризначені</value></data>
+  <data name="MeetCodes.List.Linked" xml:space="preserve"><value>Прив'язані</value></data>
+  <data name="MeetCodes.List.NotACourse" xml:space="preserve"><value>Не курс</value></data>
+  <data name="MeetCodes.Empty.Unassigned" xml:space="preserve"><value>Непризначених кодів зустрічей немає.</value></data>
+  <data name="MeetCodes.Empty.Linked" xml:space="preserve"><value>Прив'язаних кодів зустрічей немає.</value></data>
+  <data name="MeetCodes.Empty.NotACourse" xml:space="preserve"><value>Кодів, позначених як «не курс», немає.</value></data>
+  <data name="MeetCodes.NoCandidates" xml:space="preserve"><value>Немає кандидатів</value></data>
+  <data name="MeetCodes.Automatically" xml:space="preserve"><value>Автоматично</value></data>
+  <data name="MeetCodes.DeletedAccount" xml:space="preserve"><value>Видалений обліковий запис</value></data>
+  <data name="MeetCodes.NotConfirmed" xml:space="preserve"><value>Не підтверджено</value></data>
+  <data name="MeetCodes.Action.PickCourse" xml:space="preserve"><value>Обрати курс</value></data>
+  <data name="MeetCodes.Action.Confirm" xml:space="preserve"><value>Підтвердити</value></data>
+  <data name="MeetCodes.Action.Relink" xml:space="preserve"><value>Прив'язати до іншого курсу</value></data>
+  <data name="MeetCodes.Action.MarkNotACourse" xml:space="preserve"><value>Позначити як «не курс»</value></data>
+  <data name="MeetCodes.Choice.Title" xml:space="preserve"><value>Вибір курсу для коду зустрічі</value></data>
+  <data name="MeetCodes.Choice.Candidates" xml:space="preserve"><value>Кандидати</value></data>
+  <data name="MeetCodes.Choice.OtherCourses" xml:space="preserve"><value>Інші курси</value></data>
+  <data name="MeetCodes.Choice.Submit" xml:space="preserve"><value>Прив'язати</value></data>
+  <data name="MeetCodes.Choice.Current" xml:space="preserve"><value>Поточний курс</value></data>
+  <data name="MeetCodes.Choice.Cancel" xml:space="preserve"><value>Скасувати</value></data>
+  <data name="MeetCodes.Column.Code" xml:space="preserve"><value>Код</value></data>
+  <data name="MeetCodes.Column.Organizers" xml:space="preserve"><value>Організатори</value></data>
+  <data name="MeetCodes.Column.FirstMeeting" xml:space="preserve"><value>Перша зустріч</value></data>
+  <data name="MeetCodes.Column.LastMeeting" xml:space="preserve"><value>Остання зустріч</value></data>
+  <data name="MeetCodes.Column.Meetings" xml:space="preserve"><value>Зустрічей</value></data>
+  <data name="MeetCodes.Column.Participants" xml:space="preserve"><value>Учасників</value></data>
+  <data name="MeetCodes.Column.Candidates" xml:space="preserve"><value>Кандидати</value></data>
+  <data name="MeetCodes.Column.Course" xml:space="preserve"><value>Курс</value></data>
+  <data name="MeetCodes.Column.MadeBy" xml:space="preserve"><value>Прив'язав</value></data>
+  <data name="MeetCodes.Column.MadeAt" xml:space="preserve"><value>Прив'язано</value></data>
+  <data name="MeetCodes.Column.ConfirmedBy" xml:space="preserve"><value>Підтвердження</value></data>
+  <data name="MeetCodes.Column.MarkedBy" xml:space="preserve"><value>Позначив</value></data>
+  <data name="MeetCodes.Column.MarkedAt" xml:space="preserve"><value>Позначено</value></data>
+  <data name="MeetCodes.Column.Actions" xml:space="preserve"><value>Дії</value></data>
+  <data name="MeetCodes.Pagination.Previous" xml:space="preserve"><value>Назад</value></data>
+  <data name="MeetCodes.Pagination.Next" xml:space="preserve"><value>Далі</value></data>
+  <data name="MeetCodes.Message.CoursePicked" xml:space="preserve"><value>Код зустрічі прив'язано до курсу.</value></data>
+  <data name="MeetCodes.Message.Relinked" xml:space="preserve"><value>Код зустрічі прив'язано до іншого курсу.</value></data>
+  <data name="MeetCodes.Message.MarkRemoved" xml:space="preserve"><value>Позначку «не курс» знято, код прив'язано до курсу.</value></data>
+  <data name="MeetCodes.Message.Confirmed" xml:space="preserve"><value>Прив'язку підтверджено.</value></data>
+  <data name="MeetCodes.Message.Marked" xml:space="preserve"><value>Код зустрічі позначено як «не курс».</value></data>
+  <data name="MeetCodes.Message.CodeNotFound" xml:space="preserve"><value>Такого коду зустрічі немає.</value></data>
+  <data name="MeetCodes.Message.StateChanged" xml:space="preserve"><value>Стан коду змінився, поки сторінка була відкрита. Нічого не змінено; перегляньте код і повторіть дію.</value></data>
+  <data name="MeetCodes.Message.QueryInvalid" xml:space="preserve"><value>Параметри сторінки некоректні. Показано непризначені коди.</value></data>
+  <data name="MeetCodes.FieldError.SameCourse" xml:space="preserve"><value>Код уже прив'язано до цього курсу. Оберіть інший курс.</value></data>
+  <data name="MeetCodes.FieldError.CourseNotFound" xml:space="preserve"><value>Обраного курсу більше немає. Оберіть інший курс.</value></data>
 </root>

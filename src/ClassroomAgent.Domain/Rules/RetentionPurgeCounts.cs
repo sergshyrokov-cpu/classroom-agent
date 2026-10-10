@@ -11,7 +11,8 @@ public readonly record struct RetentionPurgeCounts(
     int Accounts,
     int AuditRows,
     int MeetSessions,
-    int MeetParticipations)
+    int MeetParticipations,
+    int MeetCodeLinks = 0)
 {
     /// <summary>A run that removed nothing.</summary>
     public static RetentionPurgeCounts Zero => default;

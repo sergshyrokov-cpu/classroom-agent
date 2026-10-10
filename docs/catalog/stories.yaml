@@ -346,7 +346,7 @@ stories:
   - id: US-032
     epic: EPIC-4
     title: Link meeting codes to courses
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: >
       Depends on US-014 (course rosters for matching), US-031 (meetings to
       link) and US-037 (it extends the retention purge to linked meetings:

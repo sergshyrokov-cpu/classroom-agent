@@ -124,6 +124,9 @@ public sealed class AccessCheckAuditSchemaTests(PostgreSqlFixture database)
                 "legitimacy_state",
                 "meet_participation",
                 "meet_session",
+
+                // US-032 adds meeting_code_link (US-032 db-design §2).
+                "meeting_code_link",
                 "report_template",
                 "report_template_mark",
                 "report_template_scale_row",
@@ -154,12 +157,18 @@ public sealed class AccessCheckAuditSchemaTests(PostgreSqlFixture database)
                 // US-028 db-design: the six columns of the journal export's row.
                 "export_format", "export_period_from", "export_period_to", "export_rows",
                 "export_template_built_in", "export_template_id",
-                "id", "occurred_at", "outcome",
+                "id",
+
+                // US-032 adds the meeting code and the previous course id (US-032 db-design §3).
+                "meet_code", "meet_previous_course_id",
+                "occurred_at", "outcome",
 
                 // US-037 db-design §2.2: the five counts of the retention purge's own row.
                 "purged_accounts", "purged_audit_rows", "purged_courses", "purged_leaver_memberships",
 
                 // US-031 db-design §5.1: the two Meet counts of the purge's row.
+                // US-032 adds the count of purged meeting code links (US-032 db-design §3).
+                "purged_meet_code_links",
                 "purged_meet_participations", "purged_meet_sessions",
                 "purged_participants",
                 "refusal_category", "request_id", "target_id", "target_type", "updated_at",
