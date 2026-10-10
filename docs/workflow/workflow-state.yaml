@@ -4,28 +4,27 @@
 version: 1
 story: US-031
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: PASS
-  stage: API_DESIGN
-  recorded_at: 2026-10-10T05:48:47Z
+  stage: DB_DESIGN
+  recorded_at: 2026-10-10T05:54:15Z
 last_artifacts:
-  - type: openapi
-    path: docs/designs/api/US-031-openapi.yaml
+  - type: database_design
+    path: docs/designs/database/US-031-db-design.md
     version: 1
-  - type: api_design
-    path: docs/designs/api/US-031-api-design.md
+  - type: entity_model
+    path: docs/designs/database/US-031-entity-model.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "persistence-conventions.md PC-12 does not yet state the v87 rules (only domain-organized meetings; exact domain match, no subdomains) — derived-document drift, to fix outside this Story's commit."
   - "AGENTS.md Domain Essentials is marked verified against v80; requirements are now v87."
 started_at: 2026-10-10T05:35:31Z
-updated_at: 2026-10-10T05:48:47Z
+updated_at: 2026-10-10T05:54:15Z
 completed_at: null
