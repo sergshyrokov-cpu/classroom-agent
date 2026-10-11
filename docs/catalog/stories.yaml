@@ -374,6 +374,9 @@ stories:
       separately; a built-in fixed layout, not a school template; export is a
       POST with an audit row (course id, period, row count), works in
       read-only mode.
+    # Story file authored: docs/stories/US-044-meet-reports-export.md (aligned with v88).
+    # OD-001 … OD-003 carried from US-033; OD-004 … OD-012 resolved by the Owner
+    # on 2026-10-11, before activation (row filtering = Excel autofilter).
 
   # --- EPIC-9 (next version): Audit log viewing ----------------------------
   # Not part of the first version. AuditEvent rows are written from v1
