@@ -2,41 +2,36 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-020
+story: US-021
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
+last_invoked_skill: db-designer
 last_result:
   verdict: PASS
-  stage: SECURITY_REVIEW
-  recorded_at: '2026-10-11T19:12:00Z'
+  stage: DB_DESIGN
+  recorded_at: '2026-10-11T16:12:31Z'
 last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-020-security-review.md
+- type: database_design
+  path: docs/designs/database/US-021-db-design.md
+  version: 1
+- type: entity_model
+  path: docs/designs/database/US-021-entity-model.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-- 'HUMAN_PR_APPROVAL: approved without comment.'
-- 'SECURITY_REVIEW: PASS, 0 critical/major/minor; full suite re-run 5093/5093 green, 0 vulnerable packages. INFO-1 q in query string (history/markup only, never logged, no third-party Referer); INFO-2 teacher emails per I-2/I-3; INFO-3 migration needs ICU PostgreSQL (runbook).'
-- 'IMPLEMENTATION: no full-suite run green in one pass — only Npgsql read timeouts in unrelated classes (57, then 3), all green on targeted re-run (Testcontainers flakiness, US-033 INFO-3).'
-- 'IMPLEMENTATION: three test edits disclosed in report §7 — CourseListSourceTests fixture «Єдність» contains «іст» (now «Єва»); LandingPageTests sets aside the /workspace/courses href; AppUserMigrationTests count 16→17.'
-- 'IMPLEMENTATION: migration AddCourseListSupport needs PostgreSQL built with ICU (db-design §2.3) — deployment runbook.'
-- 'TEST_WRITING: OD-012 (compile-only skeleton) raised and resolved (a) by the Owner; openapi PersonName is C# CourseListPersonName (name collision with US-027 PersonName).'
-- 'TEST_WRITING: red phase verified — full suite 5093 tests, 197 failed (all US-020: 196 new + modified CourseMembershipSchemaTests.TheRequiredIndexes_Exist), 0 regressions; markup hooks and 34 Courses.* keys fixed in test strategy §4, §6.'
-- 'TEST_WRITING: TheSearchText_IsNeverLogged waits for any Information event (weaker wait, test strategy §8).'
-- 'DB_DESIGN: no table/column change; migration AddCourseListSupport adds ICU collation course_name_uk (uk-UA, deterministic) and partial index ix_course_membership_current_teacher; no new index on course (substring search, 750-char name vs B-tree limit, few thousand rows).'
-- 'DB_DESIGN: verified on postgres:17-alpine — Ukrainian order correct, Cyrillic sorts BEFORE Latin; lower() folds Cyrillic only under the ICU collation. Deployment needs PostgreSQL built with ICU.'
-- 'API_DESIGN: GET /workspace/courses, params status|teacherId|q|page, policy ViewCourses; 400 for any malformed parameter (all reported), 404 TeacherUnknown only when shape passes; q split into SearchRepeated/SearchTooLong/SearchControlCharacter; one CourseListUrl rule for paging links and switcher return path.'
-- 'API_DESIGN: q (free search text) travels in the query string as the spec allows; flagged for SECURITY_REVIEW per US-039 INFO-1.'
+- 'DB_DESIGN: no schema change, no migration; two untracked queries (course by pk; all memberships+participants of the course ordered by label under course_name_uk, email none-first, id; is_owner computed in SQL so no Google id leaves Infrastructure); existing uq_course_membership_course_participant serves.'
+- 'DB_DESIGN: supporting refactor — GetCourseListQuery.NameOf extracted to internal static CoursePersonNameRule, shared with GetCourseCardQuery; entity-model skeleton compiled (0 warnings).'
+- 'API_DESIGN: GET /workspace/courses/{courseId}, route constraint ^[0-9]{1,19}$, policy ViewCourses (reused); every bad value is the host 404 (no 400) — no-route, CourseMalformed (0/overflow), CourseUnknown; Warning log names courseId and outcome only.'
+- 'API_DESIGN: name rule reuses CourseListPersonName; card NoName label is Courses.Card.NoName; counts are array lengths; US-020 list name becomes a link (markup only).'
 - 'HUMAN_SPEC_APPROVAL: approved without comment; interpretations I-1…I-9 accepted as written.'
-- 'SPECIFICATION: OD-001…OD-011 carried resolved (a); no new Open Decision; trebovaniya §7 blocks nothing.'
-- 'SPECIFICATION: interpretations I-1…I-9 for the gate — I-1 home page section is the menu (no layout menu); I-2 full email, FullName unused; I-3 email added to same-name teachers in the choice; I-4 search ≤100 chars, literal, not logged; I-5 pages from 1, past-end shows last; I-6 no JSON endpoint; I-7 one Ukrainian-aware order, DB paging; I-8 empty cell without updateTime; I-9 unknown teacher id refused.'
-- 'SPECIFICATION: new policy ViewCourses for matrix row «Просмотр курсов и участников»; indexes left to DB_DESIGN with migration.'
-started_at: '2026-10-11T10:25:19Z'
-updated_at: '2026-10-11T19:20:00Z'
-completed_at: '2026-10-11T19:20:00Z'
+- 'SPECIFICATION: OD-001…OD-012 carried resolved (a); no new Open Decision; trebovaniya §7 blocks nothing (items 14, 27 change which leaver memberships exist, not how the card shows them).'
+- 'SPECIFICATION: interpretations I-1…I-9 for the gate — I-1 blank = not given; I-2 neutral "no name" label (submitter-only students have no name/email); I-3 nameless rows last; I-4 leavers section also counted; I-5 leavers show date only; I-6 leading zeros accepted (007 → 7); I-7 owner as current student not marked; I-8 no JSON endpoint; I-9 purged course is 404.'
+- 'SPECIFICATION: reuses policy ViewCourses; route indicative /workspace/courses/{courseId}; malformed and unknown id answer the same 404 via /error/404; indexes left to DB_DESIGN.'
+started_at: '2026-10-11T16:04:43Z'
+updated_at: '2026-10-11T16:12:31Z'
+completed_at: null

@@ -1,0 +1,378 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Course detail with roster (US-021)
+  version: "1"
+  description: >
+    HTTP contract of US-021 on the installation's public port. It adds the card
+    of one synchronized Classroom course — its details, current teachers with
+    the owner marked, current students, and those who have left — granted to
+    Admin and Dean (`trebovaniya.md` §2 "Просмотр курсов и участников" ✔ ✔; §4
+    Epic 2), as one server-rendered `GET` page addressed by the internal course
+    id in the path. There is no JSON API (spec I-8). The card only reads: it
+    writes nothing, calls no Google API and reads no secret, in every mode (spec
+    FR-014). The US-020 course list makes each course name a link to the card
+    (spec FR-009). The host-wide rules of docs/designs/api/US-008-openapi.yaml
+    apply unchanged. Companion document: docs/designs/api/US-021-api-design.md.
+x-story: US-021
+x-source-specification: docs/specifications/US-021-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-021-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 88
+x-produced-by: openapi-designer
+x-extends:
+  - docs/designs/api/US-008-openapi.yaml
+  - docs/designs/api/US-020-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type of
+  the Control Plane channel is added or changed; the page is the installation's
+  own screen (DC-12).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port. Illustrative (US-008 spec FR-001)."
+
+tags:
+  - name: courses
+    description: "The course card (spec FR-001 … FR-016) and the course list's link to it"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 configured host-wide applies and is not restated: HTTPS and
+    HSTS, deny-by-default fallback policy (SC-4, API-9), the global antiforgery
+    filter (not engaged: the page is a `GET`), the single error page
+    (`ErrorController`, `/error/{statusCode}` re-execution), the anonymous
+    catch-all `404` for a path no route matches, the session cookie, the
+    restricted session of a Dean with a temporary password (US-012), the
+    exception handler (API-10), and the host-wide `Cache-Control: no-store` of
+    US-040 (SC-14).
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list of anonymous endpoints gains **nothing**. The US-008
+    endpoint enumeration test passes with `/workspace/courses/{courseId}`
+    classified as protected (spec FR-012, S-01).
+
+  antiforgery-list-unchanged: >
+    The page changes nothing (API-4), so it needs no token and gains no
+    exemption.
+
+  outbound: >
+    Nothing is called outside the process: no Google call, no secret-store read,
+    no Control Plane call (spec FR-014, S-04, S-10).
+
+paths:
+
+  /workspace/courses/{courseId}:
+
+    get:
+      tags: [courses]
+      operationId: getCourseCard
+      summary: "The course card: details, teachers, students, leavers"
+      description: >
+        Renders one course's details (spec FR-002) and its three roster sections
+        (spec FR-003 … FR-008) with the links of spec FR-009. Evaluation order:
+        route match (a non-digit or over-long value matches no route → the
+        host's catch-all `404`, whether signed in or not) → authentication
+        (`302`) → restricted session (`302`) → `ViewCourses` → parse of
+        `courseId` (`404` `CourseMalformed`) → the course is read (`404`
+        `CourseUnknown`) → its memberships with their participants (`200`).
+        Nothing is read before the value parses (spec FR-011, S-05). Answered by
+        the `Application` query `GetCourseCardQuery` returning
+        `CourseCardPageModel` (AD-8); the controller passes the raw path value,
+        maps the outcome to `200` or `404`, and renders. Any query parameter is
+        ignored and never echoed (spec FR-001).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewCourses
+      x-permission-matrix-row: "\"Просмотр курсов и участников\" — Admin ✔, Dean ✔"
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: "nothing — no entity, no audit row, no SyncState (spec FR-014, FR-015, S-11)"
+      x-read-only-mode: "allowed — identical behaviour in all three BR-025 causes; IReadOnlyModeGuard not called (spec FR-014)"
+      x-database-round-trips: >
+        a fixed number per request, independent of the roster size (spec FR-015,
+        AC-017): the course, then all its memberships with their participants.
+        DB_DESIGN fixes the exact queries, the ordering mechanism and the
+        indexes.
+      x-route-constant: >
+        `SignInRoutes.CourseCard` (name indicative): `/workspace/courses/{courseId}`
+        with a route constraint accepting exactly 1 to 19 ASCII digits
+        (`^[0-9]{1,19}$`; braces doubled in the ASP.NET Core template). The
+        constraint is the contract, the constant's name is not.
+      x-spec: [FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016]
+      x-acceptance-criteria: [AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/CourseId"
+      responses:
+        "200":
+          description: >
+            The card. Read-only mode answers exactly as outside it.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/CourseCardPageModel"
+        "302":
+          description: >
+            (1) Not signed in: `Location: /sign-in`. (2) A Dean with a temporary
+            password: `Location: /sign-in/change-password`. Nothing is read.
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: [/sign-in, /sign-in/change-password]
+        "404":
+          description: >
+            The host's ordinary not-found page (`ErrorController`, text
+            `Error.NotFound`), identical for every cause (spec FR-011, OD-010, I-9):
+            (1) the value matches no route (non-digits, empty, more than 19
+            digits); (2) it matches but does not parse to a positive `Int64`
+            (zero, overflow) — `CourseMalformed`; (3) it parses but no stored
+            `Course` has that id, including a purged one — `CourseUnknown`. The
+            controller answers `NotFound()` and the status-code re-execution
+            draws the page; the value appears nowhere in it. Causes (2) and (3)
+            log one `Warning` line naming the parameter `courseId` and the
+            cause, never the value (spec FR-013, SC-10); cause (1) never reaches
+            the controller and logs nothing of its own.
+          content:
+            text/html: {}
+        "500":
+          description: "Unexpected failure: the single error page, no detail (AD-9, API-10)."
+          content:
+            text/html: {}
+
+  /workspace/courses:
+    get:
+      operationId: getCourseList
+      summary: "Existing US-020 course list — changed additively"
+      description: >
+        Unchanged in behaviour, parameters, policy, status codes and view-model
+        shape. In each row the course **name** becomes a link to that course's
+        card, `/workspace/courses/{courseId}` with the row's `courseId` (spec
+        FR-009, OD-009), built from the route constant. The section, the status
+        and the "Journal" / "Meet reports" links are unchanged.
+      x-policy: ViewCourses
+      x-change: additive-markup
+      x-acceptance-criteria: [AC-007]
+      responses:
+        "200":
+          description: "The page; see US-020-openapi.yaml for everything else."
+          content:
+            text/html: {}
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: ClassroomAgent.Session
+      description: "The installation's session cookie (US-008); name illustrative."
+
+  parameters:
+
+    CourseId:
+      name: courseId
+      in: path
+      required: true
+      description: >
+        Internal `Course.Id` (spec FR-001, VR-001) — never a Google id, name or
+        email. The route accepts 1 to 19 ASCII digits; `Application` parses it
+        with `NumberStyles.None` and the invariant culture into a positive
+        `Int64`. Leading zeros are accepted (`007` is course 7, spec I-6); every
+        URL the system produces uses the canonical decimal form.
+      schema:
+        type: string
+        pattern: "^[0-9]{1,19}$"
+      example: "42"
+
+  schemas:
+
+    CourseCardPageModel:
+      type: object
+      description: >
+        View DTO of the card, mapped in `Application` (AD-8). No entity crosses
+        into it. Strings from Google are rendered HTML-encoded and never
+        translated (spec FR-016, VR-002).
+      required: [course, teachers, students, leavers, returnPath]
+      additionalProperties: false
+      properties:
+        course:
+          $ref: "#/components/schemas/CourseCardDetails"
+        teachers:
+          type: array
+          description: >
+            `Role = Teacher`, `OnRoster = true` (spec FR-003). Ordered by spec
+            FR-007. The count shown is the array's length. Empty — the view shows
+            `Courses.Card.Empty.Teachers` (spec FR-008).
+          items:
+            $ref: "#/components/schemas/CourseCardTeacher"
+        students:
+          type: array
+          description: >
+            `Role = Student`, `OnRoster = true`. Ordered by spec FR-007. Empty —
+            `Courses.Card.Empty.Students`.
+          items:
+            $ref: "#/components/schemas/CourseCardPerson"
+        leavers:
+          type: array
+          description: >
+            `OnRoster = false`, either role (spec FR-003, OD-005). Ordered by spec
+            FR-007. The count is shown too (spec I-4). Empty —
+            `Courses.Card.Empty.Leavers`.
+          items:
+            $ref: "#/components/schemas/CourseCardLeaver"
+        returnPath:
+          type: string
+          description: >
+            The language switcher's return-path override
+            (`UiLanguageController.ReturnPathViewDataKey`): the card URL rebuilt
+            from the parsed id in canonical decimal form, never from the raw path
+            (spec FR-010).
+          example: "/workspace/courses/42"
+
+    CourseCardDetails:
+      type: object
+      description: >
+        Spec FR-002, OD-001. Every optional field is null when Google gave
+        nothing or only white space (spec I-1); the view then omits the field
+        and its label. Not present by design: `AlternateLink`, teacher folder,
+        `CalendarId`, `GoogleId`, `OwnerGoogleId` (OD-001, OD-002, S-10).
+      required: [courseId, name, state]
+      additionalProperties: false
+      properties:
+        courseId:
+          type: integer
+          format: int64
+          description: >
+            Internal `Course.Id`. The view builds the three links from route
+            constants (spec FR-009): `SignInRoutes.Journal?courseId={courseId}`,
+            `SignInRoutes.MeetReports?courseId={courseId}`, and
+            `SignInRoutes.Courses` with no query.
+        name:
+          type: string
+          description: "`Course.Name` as stored; the page heading."
+        section:
+          type: [string, "null"]
+        state:
+          type: string
+          enum: [Active, Archived, Provisioned, Declined, Suspended]
+          description: "Rendered as the existing US-020 key `Courses.Status.<member>`."
+        room:
+          type: [string, "null"]
+        descriptionHeading:
+          type: [string, "null"]
+        description:
+          type: [string, "null"]
+          description: >
+            Plain text as stored. The view HTML-encodes it and keeps its line
+            breaks by rendering (for example `white-space: pre-line`), never by
+            inserting markup into the text; URLs are not made clickable (spec
+            FR-002, AC-016, VR-002).
+        createdAt:
+          type: [string, "null"]
+          format: local-date-time
+          description: >
+            `Course.CreationTime` in the school's time zone (`SchoolTimeZone`,
+            NFR-074), `yyyy-MM-ddTHH:mm`, no offset; formatted for the UI
+            language by the view.
+          example: "2025-09-01T09:15"
+        updatedAt:
+          type: [string, "null"]
+          format: local-date-time
+          description: "`Course.UpdateTime`, as `createdAt`."
+          example: "2026-04-01T01:30"
+
+    PersonName:
+      type: object
+      description: >
+        The name rule of spec FR-005 (US-020 FR-007, OD-006). Implemented by the
+        existing `Application` DTO `CourseListPersonName` with
+        `CourseListPersonNameKind` — the same rule, one type. `kind` says which
+        branch applied; `text` is rendered as stored.
+      required: [kind]
+      additionalProperties: false
+      properties:
+        kind:
+          type: string
+          enum: [ProfileName, Email, NoName]
+          description: >
+            On the card `NoName` renders the role-neutral key
+            `Courses.Card.NoName` (spec I-2), not the list's
+            `Courses.Teacher.NoName`.
+        text:
+          type: [string, "null"]
+          description: "Null exactly when `kind` is `NoName`."
+
+    CourseCardPerson:
+      type: object
+      required: [participantId, name]
+      additionalProperties: false
+      properties:
+        participantId:
+          type: integer
+          format: int64
+          description: >
+            `ClassroomParticipant.Id`; the last tie-breaker of the order (spec
+            FR-007). Not rendered and not put into any URL.
+        name:
+          $ref: "#/components/schemas/PersonName"
+        email:
+          type: [string, "null"]
+          description: "`ClassroomParticipant.Email` as stored; null — an empty cell (spec FR-005)."
+
+    CourseCardTeacher:
+      allOf:
+        - $ref: "#/components/schemas/CourseCardPerson"
+        - type: object
+          required: [isOwner]
+          properties:
+            isOwner:
+              type: boolean
+              description: >
+                `GoogleUserId` equals the course's `OwnerGoogleId`, ordinal
+                comparison (spec FR-004). At most one teacher is `true`; the view
+                renders `Courses.Card.Owner`.
+
+    CourseCardLeaver:
+      allOf:
+        - $ref: "#/components/schemas/CourseCardPerson"
+        - type: object
+          required: [role, lastSeenOn]
+          properties:
+            role:
+              type: string
+              enum: [Teacher, Student]
+              description: "Stored `CourseMembership.Role`; rendered as `Courses.Card.Role.<member>`."
+            lastSeenOn:
+              type: string
+              format: date
+              description: >
+                `CourseMembership.LastSeenAt` converted to the school's time zone,
+                date only (spec FR-006, I-5); formatted for the UI language by the
+                view.
+              example: "2026-04-01"
+
+    CourseCardOutcome:
+      type: string
+      description: >
+        Result of `GetCourseCardQuery`, mapped by the controller: `Shown` →
+        `200`; `CourseMalformed`, `CourseUnknown` → `404` with the host's page
+        and one `Warning` log line naming `courseId` and the outcome, never the
+        value (spec FR-011, FR-013).
+      enum: [Shown, CourseMalformed, CourseUnknown]
+
+x-operations-deliberately-absent:
+
+  api-v1-course: >
+    There is no `/api/v1` endpoint and no JSON body (spec I-8, §10).
+
+  roster-export: >
+    No export of the roster (OD-011).
+
+  roster-query-parameters: >
+    No search, filter, sort or page parameter (OD-007, OD-008).
