@@ -407,6 +407,15 @@ artifacts, not from the context that designed them. Do not invoke
 `test-writer` in the same invocation or conversation turn that recorded
 `DB_DESIGN → TEST_WRITING`.
 
+**Fresh context before `/so:start`.** A Story starts in a fresh conversation:
+its Specification is written from the Story file and `trebovaniya.md`, not from
+the discussion that authored the Story or delivered the previous one. When the
+recorded transition ends at `COMPLETED`, the Recommended Command is `/clear`,
+then `/so:start <StoryId>`. In `start` mode, if this conversation already holds
+other work — Story discovery or authoring, or another Story's stages — do not
+activate: report that nothing was changed and recommend `/clear`, then the same
+`/so:start <StoryId>`. Everything the start needs is in committed files.
+
 ---
 
 # Prohibited Actions
