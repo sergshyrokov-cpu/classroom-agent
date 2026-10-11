@@ -346,4 +346,53 @@
   <data name="MeetCodes.Message.QueryInvalid" xml:space="preserve"><value>The page parameters are invalid. The unassigned codes are shown.</value></data>
   <data name="MeetCodes.FieldError.SameCourse" xml:space="preserve"><value>The code is already linked to this course. Choose another course.</value></data>
   <data name="MeetCodes.FieldError.CourseNotFound" xml:space="preserve"><value>The chosen course no longer exists. Choose another course.</value></data>
+  <data name="MeetReports.NavigationEntry" xml:space="preserve"><value>Meet reports</value></data>
+  <data name="MeetReports.Title" xml:space="preserve"><value>Meet reports</value></data>
+  <data name="MeetReports.Form.Course" xml:space="preserve"><value>Course</value></data>
+  <data name="MeetReports.Form.From" xml:space="preserve"><value>From</value></data>
+  <data name="MeetReports.Form.To" xml:space="preserve"><value>To</value></data>
+  <data name="MeetReports.Form.Submit" xml:space="preserve"><value>Show reports</value></data>
+  <data name="MeetReports.NoCourses" xml:space="preserve"><value>There are no courses yet: run a synchronization first.</value></data>
+  <data name="MeetReports.DelayNotice" xml:space="preserve"><value>Meet data arrive with a delay of up to 24 hours.</value></data>
+  <data name="MeetReports.DelayNotice.LoadedUpTo" xml:space="preserve"><value>Meet meetings are loaded up to</value></data>
+  <data name="MeetReports.DelayNotice.NotLoaded" xml:space="preserve"><value>Meet meetings have not been loaded yet.</value></data>
+  <data name="MeetReports.Summary.Title" xml:space="preserve"><value>Summary</value></data>
+  <data name="MeetReports.Summary.MeetingCount" xml:space="preserve"><value>Number of meetings</value></data>
+  <data name="MeetReports.Summary.TotalDuration" xml:space="preserve"><value>Total duration (h:mm)</value></data>
+  <data name="MeetReports.Summary.AverageDuration" xml:space="preserve"><value>Average duration, min</value></data>
+  <data name="MeetReports.Summary.AverageStudents" xml:space="preserve"><value>Average number of course students per meeting</value></data>
+  <data name="MeetReports.Meetings.Title" xml:space="preserve"><value>Meeting list</value></data>
+  <data name="MeetReports.Meetings.Date" xml:space="preserve"><value>Date</value></data>
+  <data name="MeetReports.Meetings.Start" xml:space="preserve"><value>Start</value></data>
+  <data name="MeetReports.Meetings.End" xml:space="preserve"><value>End</value></data>
+  <data name="MeetReports.Meetings.Duration" xml:space="preserve"><value>Duration, min</value></data>
+  <data name="MeetReports.Meetings.Organizer" xml:space="preserve"><value>Organizer</value></data>
+  <data name="MeetReports.Meetings.CourseTeachers" xml:space="preserve"><value>Course teachers</value></data>
+  <data name="MeetReports.Meetings.CourseStudents" xml:space="preserve"><value>Course students</value></data>
+  <data name="MeetReports.Meetings.NotOnCourseList" xml:space="preserve"><value>Not on the course list</value></data>
+  <data name="MeetReports.Meetings.OtherParticipants" xml:space="preserve"><value>Other participants</value></data>
+  <data name="MeetReports.Students.Title" xml:space="preserve"><value>Student participation</value></data>
+  <data name="MeetReports.Students.Student" xml:space="preserve"><value>Student</value></data>
+  <data name="MeetReports.Students.Meetings" xml:space="preserve"><value>Meetings</value></data>
+  <data name="MeetReports.Students.Minutes" xml:space="preserve"><value>Minutes</value></data>
+  <data name="MeetReports.Empty.NoMeetings" xml:space="preserve"><value>There are no Meet meetings of this course in the period.</value></data>
+  <data name="MeetReports.Empty.NoStudents" xml:space="preserve"><value>There are no students in this period.</value></data>
+  <data name="MeetReports.Mark.Organizer" xml:space="preserve"><value>meeting organizer</value></data>
+  <data name="MeetReports.Mark.CourseTeacher" xml:space="preserve"><value>course teacher</value></data>
+  <data name="MeetReports.Mark.CourseStudent" xml:space="preserve"><value>course student</value></data>
+  <data name="MeetReports.Mark.NotOnCourseList" xml:space="preserve"><value>not on the course list</value></data>
+  <data name="MeetReports.Mark.NotCourseTeacher" xml:space="preserve"><value>not a teacher of this course</value></data>
+  <data name="MeetReports.Person.Unnamed" xml:space="preserve"><value>no name</value></data>
+  <data name="MeetReports.MinutesOf" xml:space="preserve"><value>{0} of {1} min</value></data>
+  <data name="MeetReports.Meeting.Title" xml:space="preserve"><value>Meet meeting</value></data>
+  <data name="MeetReports.Meeting.Code" xml:space="preserve"><value>Meeting code</value></data>
+  <data name="MeetReports.Meeting.OtherParticipants" xml:space="preserve"><value>Other participants</value></data>
+  <data name="MeetReports.Meeting.Back" xml:space="preserve"><value>Back to the Meet reports</value></data>
+  <data name="MeetReports.Meeting.CourseMalformed" xml:space="preserve"><value>The course is missing or invalid. Return to the reports and choose a course.</value></data>
+  <data name="MeetReports.Meeting.MeetingNotFound" xml:space="preserve"><value>The meeting was not found in this course.</value></data>
+  <data name="MeetReports.Validation.CourseMalformed" xml:space="preserve"><value>Choose a course from the list.</value></data>
+  <data name="MeetReports.Validation.CourseUnknown" xml:space="preserve"><value>This course is not in the program.</value></data>
+  <data name="MeetReports.Validation.FromMalformed" xml:space="preserve"><value>The start date of the period is invalid.</value></data>
+  <data name="MeetReports.Validation.ToMalformed" xml:space="preserve"><value>The end date of the period is invalid.</value></data>
+  <data name="MeetReports.Validation.PeriodInverted" xml:space="preserve"><value>The start of the period is after its end.</value></data>
 </root>

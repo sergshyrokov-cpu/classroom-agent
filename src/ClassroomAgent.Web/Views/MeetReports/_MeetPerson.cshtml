@@ -1,0 +1,19 @@
+@using ClassroomAgent.Application.Models.Dtos
+@model PersonRef
+@* Spec FR-011, OD-012: the full name as Google gave it with the email beside it; the email alone without a name;
+   the translated "unnamed" label without either. HTML-encoded by Razor, never translated (spec FR-016, VR-004). *@
+@if (Model.FullName is null && Model.Email is null)
+{
+    <span>@T[MeetReportsTextKeys.PersonUnnamed]</span>
+}
+else
+{
+    @if (Model.FullName is not null)
+    {
+        <span class="meet-person-name">@Model.FullName</span>
+    }
+    @if (Model.Email is not null)
+    {
+        <span class="meet-person-email">@Model.Email</span>
+    }
+}

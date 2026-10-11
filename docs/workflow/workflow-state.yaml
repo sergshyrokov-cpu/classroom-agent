@@ -4,36 +4,27 @@
 version: 1
 story: US-033
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: security-reviewer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: '2026-10-10T19:57:02Z'
+  stage: SECURITY_REVIEW
+  recorded_at: '2026-10-11T05:55:25Z'
 last_artifacts:
-- type: database_design
-  path: docs/designs/database/US-033-db-design.md
-  version: 1
-- type: entity_model
-  path: docs/designs/database/US-033-entity-model.md
+- type: security_review
+  path: docs/reviews/security/US-033-security-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-- 'DB design §1: no schema change, no migration; every report query served by existing indexes (§3).'
-- 'DB design §7: classroom_participant.email is nullable but openapi PersonRef.email is required — a report-3 student without email needs PersonRef.email nullable plus an "unnamed" fallback key (like Journal.Row.Unnamed).
-  One-line contract correction, to be recorded at TEST_WRITING.'
-- 'Entity model: IMeetReportSource port (R1–R6) and read records; C# signatures not yet compile-verified.'
-- 'API design §2.2: new policy ViewMeetReports (Admin, Dean) for its own matrix row; US-044 export reuses it.'
-- 'API design §2.4: report 4 answers one 404 key (MeetingNotFound) for unknown course, unknown meeting and meeting of another course; courseId required (400 when absent); from/to only rebuild the back link.'
-- 'API design §8: DB_DESIGN to decide indexes for meet_session by code+start and participation email lookups.'
-- Spec §11 lists interpretations I-1 … I-12 for the gate; I-5 (minute rounding), I-8 (counting other participants) and I-11 (other participants as one line in report 4) are flagged. All approved as written
-  at HUMAN_SPEC_APPROVAL 2026-10-10.
-- OD-001 … OD-010 carried from the Story, all resolved; no new Open Decision.
+- 'SECURITY_REVIEW: 0 critical / 0 major / 0 minor / 3 informational; build 0/0; full suite 4549/4549; story tests 217/217; Web.Security 361/361; no vulnerable packages.'
+- 'INFO-1: MeetReportSource.GetPeopleAsync comment says the name is taken from the lowest id with a membership; code takes the lowest id with a name. No exposure.'
+- 'INFO-2: report 4 checks the course via GetCourseNameAsync, the reports page via the journal course list; keep consistent if courses are ever filtered.'
+- 'INFO-3: two full test runs failed only on Testcontainers PostgreSQL timeouts (33, then 331); third run on fresh Docker 4549/4549. Rerun before treating a red full run as a defect.'
 started_at: '2026-10-10T19:41:38Z'
-updated_at: '2026-10-10T19:57:02Z'
-completed_at: null
+updated_at: '2026-10-11T06:09:17Z'
+completed_at: '2026-10-11T06:09:17Z'

@@ -40,6 +40,12 @@ public static class SignInRoutes
     /// </summary>
     public const string Journal = "/workspace/journal";
 
+    /// <summary>US-033 api-design §2.1: reports 1–3 of one course for a period. GET only.</summary>
+    public const string MeetReports = "/workspace/meet-reports";
+
+    /// <summary>US-033 api-design §2.4: report 4, one meeting of the course. GET only.</summary>
+    public const string MeetReportMeeting = "/workspace/meet-reports/meetings/{meetingId:regex(^\\d+$)}";
+
     /// <summary>US-032 api-design §2.1: the Meet meetings page, one list at a time. GET only.</summary>
     public const string MeetCodes = "/workspace/meet-codes";
 

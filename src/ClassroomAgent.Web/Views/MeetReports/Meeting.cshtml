@@ -1,0 +1,102 @@
+@using System.Globalization
+@using ClassroomAgent.Application.Models.Dtos
+@model MeetReportMeetingPageModel
+@{
+    ViewData["Title"] = T[MeetReportsTextKeys.MeetingTitle];
+
+    // api-design §2.4: the language switcher returns to the meeting with the validated query only.
+    ViewData[UiLanguageController.ReturnPathViewDataKey] = Model.Meeting is null
+        ? BackUrl()
+        : Context.Request.Path + Query();
+    var culture = CultureInfo.CurrentCulture;
+}
+
+@* api-design §5: a refusal is this page with its message and the way back; a rejected value is never echoed. *@
+@if (Model.MessageKey is { } message)
+{
+    <p class="form-error">@T[MeetReportsTextKeys.Meeting(message)]</p>
+}
+
+<p><a id="meet-report-back" href="@BackUrl()">@T[MeetReportsTextKeys.MeetingBack]</a></p>
+
+@if (Model.Meeting is { } meeting)
+{
+    var meetingMinutes = Minutes(meeting.DurationSeconds);
+
+    @* Spec FR-010: the course, the meeting's times and code, and the organizer with their mark. *@
+    <section id="meet-report-meeting">
+        <h2>@meeting.CourseName</h2>
+        <dl>
+            <dt>@T[MeetReportsTextKeys.MeetingsDate]</dt>
+            <dd>@meeting.StartedAt.ToString("d", culture)</dd>
+            <dt>@T[MeetReportsTextKeys.MeetingsStart]</dt>
+            <dd>@meeting.StartedAt.ToString("HH:mm", culture)</dd>
+            <dt>@T[MeetReportsTextKeys.MeetingsEnd]</dt>
+            <dd>@(meeting.EndedAt.Date == meeting.StartedAt.Date ? meeting.EndedAt.ToString("HH:mm", culture) : meeting.EndedAt.ToString("d", culture) + " " + meeting.EndedAt.ToString("HH:mm", culture))</dd>
+            <dt>@T[MeetReportsTextKeys.MeetingsDuration]</dt>
+            <dd>@meetingMinutes</dd>
+            <dt>@T[MeetReportsTextKeys.MeetingCode]</dt>
+            <dd>@meeting.MeetingCode</dd>
+            <dt>@T[MeetReportsTextKeys.MeetingsOrganizer]</dt>
+            <dd>
+                @await Html.PartialAsync("_MeetPerson", meeting.Organizer)
+                @if (meeting.OrganizerNotCourseTeacher)
+                {
+                    <br /><span>@T[MeetReportsTextKeys.MarkNotCourseTeacher]</span>
+                }
+            </dd>
+        </dl>
+    </section>
+
+    @* Spec FR-010, I-11: one line per identified person, then one line for the other participants — a count and
+       their minutes, never an address or a name. *@
+    <div class="table-scroll">
+        <table id="meet-report-people">
+            <tbody>
+                @foreach (var line in meeting.People)
+                {
+                    <tr>
+                        <th scope="row">@await Html.PartialAsync("_MeetPerson", line.Person)</th>
+                        <td>@T[MeetReportsTextKeys.Mark(line.Mark)]</td>
+                        <td>@T[MeetReportsTextKeys.MinutesOf, Minutes(line.Seconds), meetingMinutes]</td>
+                    </tr>
+                }
+                <tr>
+                    <th scope="row">@T[MeetReportsTextKeys.MeetingOtherParticipants]</th>
+                    <td>@meeting.OtherParticipants.Count.ToString(culture)</td>
+                    <td>@T[MeetReportsTextKeys.StudentsMinutes]: @Minutes(meeting.OtherParticipants.TotalSeconds)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+}
+
+@functions {
+    /// <summary>Spec I-5: seconds as whole minutes, half up.</summary>
+    private static string Minutes(long seconds) =>
+        ((seconds + 30) / 60).ToString(CultureInfo.CurrentCulture);
+
+    /// <summary>api-design §2.4: the course id and the dates that were valid — never a rejected value.</summary>
+    private string Query()
+    {
+        var parts = new List<string>();
+        if (Model.BackLink.CourseId is { } courseId)
+        {
+            parts.Add(MeetReportsController.CourseIdParameter + "=" + courseId.ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (Model.BackLink.From is { } from)
+        {
+            parts.Add(MeetReportsController.FromParameter + "=" + from.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        }
+
+        if (Model.BackLink.To is { } to)
+        {
+            parts.Add(MeetReportsController.ToParameter + "=" + to.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        }
+
+        return parts.Count == 0 ? string.Empty : "?" + string.Join('&', parts);
+    }
+
+    private string BackUrl() => SignInRoutes.MeetReports + Query();
+}

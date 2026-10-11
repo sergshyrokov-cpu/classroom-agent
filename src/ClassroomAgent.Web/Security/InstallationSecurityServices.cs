@@ -92,6 +92,13 @@ public static class InstallationSecurityServices
                     InstallationSession.RoleName(AppRole.Admin),
                     InstallationSession.RoleName(AppRole.Dean)));
 
+            // US-033 api-design §2.2: its own matrix row ("Просмотр и экспорт статистики Meet-занятий"), both roles.
+            options.AddPolicy(
+                InstallationPolicies.ViewMeetReports,
+                policy => policy.RequireAuthenticatedUser().RequireRole(
+                    InstallationSession.RoleName(AppRole.Admin),
+                    InstallationSession.RoleName(AppRole.Dean)));
+
             // US-027 spec FR-012: the two report-template matrix rows, one policy each, both roles; no ownership
             // check and no scoping by roster (S-03).
             options.AddPolicy(

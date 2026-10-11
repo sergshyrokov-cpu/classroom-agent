@@ -56,6 +56,12 @@ public static class InstallationPolicies
     public const string ViewMeetCodes = nameof(ViewMeetCodes);
 
     /// <summary>
+    /// "Просмотр и экспорт статистики Meet-занятий" — ✔ Admin, ✔ Dean (<c>trebovaniya.md</c> §2; US-033 api-design
+    /// §2.2): the Meet reports page and report 4.
+    /// </summary>
+    public const string ViewMeetReports = nameof(ViewMeetReports);
+
+    /// <summary>
     /// "Привязка кода встречи Meet к курсу" — ✔ Admin, ✔ Dean (<c>trebovaniya.md</c> §2; US-032 spec §7): the
     /// course-choice form and the three link writes.
     /// </summary>

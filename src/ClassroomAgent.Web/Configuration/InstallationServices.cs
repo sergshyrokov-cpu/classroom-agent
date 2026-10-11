@@ -188,6 +188,10 @@ public static class InstallationServices
         services.AddScoped<SetMeetCodeCourseUseCase>();
         services.AddScoped<ConfirmMeetCodeLinkUseCase>();
         services.AddScoped<MarkMeetCodeNotACourseUseCase>();
+        // US-033 spec FR-017, entity model §6: the Meet reports' read port and the two queries; both read only (FR-015).
+        services.AddScoped<IMeetReportSource, MeetReportSource>();
+        services.AddScoped<GetMeetReportsQuery>();
+        services.AddScoped<GetMeetReportMeetingQuery>();
         // US-028: the journal export (spec FR-011): the renderer in Infrastructure, the text port in Web.
         services.AddScoped<ExportJournalCommand>();
         services.AddSingleton<IReportRenderer, ClosedXmlReportRenderer>();

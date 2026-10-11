@@ -1,0 +1,210 @@
+@using System.Globalization
+@using ClassroomAgent.Application.Models.Dtos
+@model MeetReportsPageModel
+@{
+    ViewData["Title"] = T[MeetReportsTextKeys.Title];
+
+    // Spec VR-004: the language switcher returns to the effective query — never the raw one, so a malformed value or an
+    // unknown parameter is not echoed.
+    ViewData[UiLanguageController.ReturnPathViewDataKey] = ReportsUrl();
+    var culture = CultureInfo.CurrentCulture;
+}
+
+@* Spec FR-013: every message the query found, in parameter order; a malformed value is never echoed. *@
+@foreach (var message in Model.MessageKeys)
+{
+    <p class="form-error">@T[MeetReportsTextKeys.Validation(message)]</p>
+}
+
+@* api-design §2.1: the form submits to this page by GET, so a report is a bookmarkable URL. The query string carries
+   the internal course id and two dates — no personal data (spec §7). *@
+<form id="meet-reports-form" method="get" action="@SignInRoutes.MeetReports">
+    @if (Model.NoCoursesStored)
+    {
+        <p>@T[MeetReportsTextKeys.NoCourses]</p>
+    }
+    else
+    {
+        <p>
+            <label for="meet-reports-course">@T[MeetReportsTextKeys.FormCourse]</label>
+            <select id="meet-reports-course" name="@MeetReportsController.CourseIdParameter">
+                <option value=""></option>
+                @foreach (var course in Model.Courses)
+                {
+                    <option value="@course.Id.ToString(CultureInfo.InvariantCulture)" selected="@(course.Id == Model.SelectedCourseId)">@CourseLabel(course)</option>
+                }
+            </select>
+        </p>
+    }
+    <p>
+        <label for="meet-reports-from">@T[MeetReportsTextKeys.FormFrom]</label>
+        <input id="meet-reports-from" type="date" name="@MeetReportsController.FromParameter" value="@IsoDate(Model.From)" />
+        <label for="meet-reports-to">@T[MeetReportsTextKeys.FormTo]</label>
+        <input id="meet-reports-to" type="date" name="@MeetReportsController.ToParameter" value="@IsoDate(Model.To)" />
+    </p>
+    <button type="submit">@T[MeetReportsTextKeys.FormSubmit]</button>
+</form>
+
+@if (Model.Reports is { } reports)
+{
+    @* Spec FR-012: Meet data arrive late; the time Meet meetings are loaded up to, in the school's zone. *@
+    <p id="meet-reports-delay-notice">
+        @T[MeetReportsTextKeys.DelayNotice]
+        @if (reports.DelayNotice.MeetLoadedUpTo is { } loadedUpTo)
+        {
+            <span>@T[MeetReportsTextKeys.DelayNoticeLoadedUpTo] @loadedUpTo.ToString(culture.DateTimeFormat.ShortDatePattern + " HH:mm", culture)</span>
+        }
+        else
+        {
+            <span>@T[MeetReportsTextKeys.DelayNoticeNotLoaded]</span>
+        }
+    </p>
+
+    @* Report 1 (spec FR-007, I-6). *@
+    <section id="meet-reports-summary">
+        <h2>@T[MeetReportsTextKeys.SummaryTitle]</h2>
+        <dl>
+            <dt>@T[MeetReportsTextKeys.SummaryMeetingCount]</dt>
+            <dd>@reports.Summary.MeetingCount.ToString(culture)</dd>
+            <dt>@T[MeetReportsTextKeys.SummaryTotalDuration]</dt>
+            <dd>@HoursAndMinutes(reports.Summary.TotalDurationSeconds)</dd>
+            <dt>@T[MeetReportsTextKeys.SummaryAverageDuration]</dt>
+            <dd>@Minutes(reports.Summary.AverageDurationSeconds)</dd>
+            <dt>@T[MeetReportsTextKeys.SummaryAverageStudents]</dt>
+            <dd>@reports.Summary.AverageStudentsPerMeeting.ToString("0.0", culture)</dd>
+        </dl>
+    </section>
+
+    @* Report 2 (spec FR-008): one row per Google meeting, each linking to report 4; rendered whole (I-9). *@
+    <section id="meet-reports-meetings">
+        <h2>@T[MeetReportsTextKeys.MeetingsTitle]</h2>
+        @if (reports.Meetings.Count == 0)
+        {
+            <p>@T[MeetReportsTextKeys.EmptyNoMeetings]</p>
+        }
+        else
+        {
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">@T[MeetReportsTextKeys.MeetingsDate]</th>
+                            <th scope="col">@T[MeetReportsTextKeys.MeetingsStart]</th>
+                            <th scope="col">@T[MeetReportsTextKeys.MeetingsEnd]</th>
+                            <th scope="col">@T[MeetReportsTextKeys.MeetingsDuration]</th>
+                            <th scope="col">@T[MeetReportsTextKeys.MeetingsOrganizer]</th>
+                            <th scope="col">@T[MeetReportsTextKeys.MeetingsCourseTeachers]</th>
+                            <th scope="col">@T[MeetReportsTextKeys.MeetingsCourseStudents]</th>
+                            <th scope="col">@T[MeetReportsTextKeys.MeetingsNotOnCourseList]</th>
+                            <th scope="col">@T[MeetReportsTextKeys.MeetingsOtherParticipants]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in reports.Meetings)
+                        {
+                            <tr>
+                                <td><a href="@MeetingUrl(row.MeetingId)">@row.StartedAt.ToString("d", culture)</a></td>
+                                <td>@row.StartedAt.ToString("HH:mm", culture)</td>
+                                <td>@(row.EndedAt.Date == row.StartedAt.Date ? row.EndedAt.ToString("HH:mm", culture) : row.EndedAt.ToString("d", culture) + " " + row.EndedAt.ToString("HH:mm", culture))</td>
+                                <td>@Minutes(row.DurationSeconds)</td>
+                                <td>
+                                    @await Html.PartialAsync("_MeetPerson", row.Organizer)
+                                    @if (row.OrganizerNotCourseTeacher)
+                                    {
+                                        <br /><span>@T[MeetReportsTextKeys.MarkNotCourseTeacher]</span>
+                                    }
+                                </td>
+                                <td>@row.CourseTeachers.ToString(culture)</td>
+                                <td>@row.CourseStudents.ToString(culture)</td>
+                                <td>@row.NotOnCourseList.ToString(culture)</td>
+                                <td>@row.OtherParticipants.ToString(culture)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+
+    @* Report 3 (spec FR-009): the students of the period, by name; rendered whole. *@
+    <section id="meet-reports-students">
+        <h2>@T[MeetReportsTextKeys.StudentsTitle]</h2>
+        @if (reports.Students.Count == 0)
+        {
+            <p>@T[MeetReportsTextKeys.EmptyNoStudents]</p>
+        }
+        else
+        {
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">@T[MeetReportsTextKeys.StudentsStudent]</th>
+                            <th scope="col">@T[MeetReportsTextKeys.StudentsMeetings]</th>
+                            <th scope="col">@T[MeetReportsTextKeys.StudentsMinutes]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in reports.Students)
+                        {
+                            <tr>
+                                <th scope="row">@await Html.PartialAsync("_MeetPerson", row.Student)</th>
+                                <td>@row.Meetings.ToString(culture)</td>
+                                <td>@Minutes(row.TotalSeconds)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+}
+
+@functions {
+    /// <summary>The course name, then its section when it has one; Google data, not translated.</summary>
+    private static string CourseLabel(CourseOption course) =>
+        string.IsNullOrEmpty(course.Section) ? course.Name : course.Name + " — " + course.Section;
+
+    /// <summary>The value an HTML date input expects; empty when the date is unknown or was malformed.</summary>
+    private static string IsoDate(DateOnly? date) =>
+        date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty;
+
+    /// <summary>Spec I-5: seconds as whole minutes, half up.</summary>
+    private static string Minutes(long seconds) =>
+        ((seconds + 30) / 60).ToString(CultureInfo.CurrentCulture);
+
+    /// <summary>Spec I-6: the total duration as hours and minutes.</summary>
+    private static string HoursAndMinutes(long seconds)
+    {
+        var minutes = (seconds + 30) / 60;
+        return (minutes / 60).ToString(CultureInfo.CurrentCulture) + ":" + (minutes % 60).ToString("00", CultureInfo.CurrentCulture);
+    }
+
+    /// <summary>The effective query of this page: the validated course id and dates only.</summary>
+    private string Query()
+    {
+        var parts = new List<string>();
+        if (Model.SelectedCourseId is { } courseId)
+        {
+            parts.Add(MeetReportsController.CourseIdParameter + "=" + courseId.ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (Model.From is not null)
+        {
+            parts.Add(MeetReportsController.FromParameter + "=" + IsoDate(Model.From));
+        }
+
+        if (Model.To is not null)
+        {
+            parts.Add(MeetReportsController.ToParameter + "=" + IsoDate(Model.To));
+        }
+
+        return parts.Count == 0 ? string.Empty : "?" + string.Join('&', parts);
+    }
+
+    private string ReportsUrl() => SignInRoutes.MeetReports + Query();
+
+    /// <summary>Spec FR-008: report 4 of the meeting, with the course and the period it was opened from.</summary>
+    private string MeetingUrl(long meetingId) =>
+        SignInRoutes.MeetReports + "/meetings/" + meetingId.ToString(CultureInfo.InvariantCulture) + Query();
+}

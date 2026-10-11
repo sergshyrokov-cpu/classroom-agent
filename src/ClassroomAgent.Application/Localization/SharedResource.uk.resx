@@ -346,4 +346,53 @@
   <data name="MeetCodes.Message.QueryInvalid" xml:space="preserve"><value>Параметри сторінки некоректні. Показано непризначені коди.</value></data>
   <data name="MeetCodes.FieldError.SameCourse" xml:space="preserve"><value>Код уже прив'язано до цього курсу. Оберіть інший курс.</value></data>
   <data name="MeetCodes.FieldError.CourseNotFound" xml:space="preserve"><value>Обраного курсу більше немає. Оберіть інший курс.</value></data>
+  <data name="MeetReports.NavigationEntry" xml:space="preserve"><value>Звіти Meet</value></data>
+  <data name="MeetReports.Title" xml:space="preserve"><value>Звіти Meet</value></data>
+  <data name="MeetReports.Form.Course" xml:space="preserve"><value>Курс</value></data>
+  <data name="MeetReports.Form.From" xml:space="preserve"><value>З</value></data>
+  <data name="MeetReports.Form.To" xml:space="preserve"><value>По</value></data>
+  <data name="MeetReports.Form.Submit" xml:space="preserve"><value>Показати звіти</value></data>
+  <data name="MeetReports.NoCourses" xml:space="preserve"><value>Курсів ще немає: спершу виконайте синхронізацію.</value></data>
+  <data name="MeetReports.DelayNotice" xml:space="preserve"><value>Дані Meet надходять із затримкою до 24 годин.</value></data>
+  <data name="MeetReports.DelayNotice.LoadedUpTo" xml:space="preserve"><value>Зустрічі Meet завантажено до</value></data>
+  <data name="MeetReports.DelayNotice.NotLoaded" xml:space="preserve"><value>Зустрічі Meet ще не завантажено.</value></data>
+  <data name="MeetReports.Summary.Title" xml:space="preserve"><value>Зведення</value></data>
+  <data name="MeetReports.Summary.MeetingCount" xml:space="preserve"><value>Кількість зустрічей</value></data>
+  <data name="MeetReports.Summary.TotalDuration" xml:space="preserve"><value>Загальна тривалість (год:хв)</value></data>
+  <data name="MeetReports.Summary.AverageDuration" xml:space="preserve"><value>Середня тривалість, хв</value></data>
+  <data name="MeetReports.Summary.AverageStudents" xml:space="preserve"><value>Середня кількість студентів курсу на зустрічі</value></data>
+  <data name="MeetReports.Meetings.Title" xml:space="preserve"><value>Список зустрічей</value></data>
+  <data name="MeetReports.Meetings.Date" xml:space="preserve"><value>Дата</value></data>
+  <data name="MeetReports.Meetings.Start" xml:space="preserve"><value>Початок</value></data>
+  <data name="MeetReports.Meetings.End" xml:space="preserve"><value>Кінець</value></data>
+  <data name="MeetReports.Meetings.Duration" xml:space="preserve"><value>Тривалість, хв</value></data>
+  <data name="MeetReports.Meetings.Organizer" xml:space="preserve"><value>Організатор</value></data>
+  <data name="MeetReports.Meetings.CourseTeachers" xml:space="preserve"><value>Викладачі курсу</value></data>
+  <data name="MeetReports.Meetings.CourseStudents" xml:space="preserve"><value>Студенти курсу</value></data>
+  <data name="MeetReports.Meetings.NotOnCourseList" xml:space="preserve"><value>Не в списку курсу</value></data>
+  <data name="MeetReports.Meetings.OtherParticipants" xml:space="preserve"><value>Інші учасники</value></data>
+  <data name="MeetReports.Students.Title" xml:space="preserve"><value>Участь студентів</value></data>
+  <data name="MeetReports.Students.Student" xml:space="preserve"><value>Студент</value></data>
+  <data name="MeetReports.Students.Meetings" xml:space="preserve"><value>Зустрічі</value></data>
+  <data name="MeetReports.Students.Minutes" xml:space="preserve"><value>Хвилини</value></data>
+  <data name="MeetReports.Empty.NoMeetings" xml:space="preserve"><value>Немає зустрічей Meet цього курсу за період.</value></data>
+  <data name="MeetReports.Empty.NoStudents" xml:space="preserve"><value>Немає студентів за цей період.</value></data>
+  <data name="MeetReports.Mark.Organizer" xml:space="preserve"><value>організатор зустрічі</value></data>
+  <data name="MeetReports.Mark.CourseTeacher" xml:space="preserve"><value>викладач курсу</value></data>
+  <data name="MeetReports.Mark.CourseStudent" xml:space="preserve"><value>студент курсу</value></data>
+  <data name="MeetReports.Mark.NotOnCourseList" xml:space="preserve"><value>не в списку курсу</value></data>
+  <data name="MeetReports.Mark.NotCourseTeacher" xml:space="preserve"><value>не викладач цього курсу</value></data>
+  <data name="MeetReports.Person.Unnamed" xml:space="preserve"><value>без імені</value></data>
+  <data name="MeetReports.MinutesOf" xml:space="preserve"><value>{0} з {1} хв</value></data>
+  <data name="MeetReports.Meeting.Title" xml:space="preserve"><value>Зустріч Meet</value></data>
+  <data name="MeetReports.Meeting.Code" xml:space="preserve"><value>Код зустрічі</value></data>
+  <data name="MeetReports.Meeting.OtherParticipants" xml:space="preserve"><value>Інші учасники</value></data>
+  <data name="MeetReports.Meeting.Back" xml:space="preserve"><value>Назад до звітів Meet</value></data>
+  <data name="MeetReports.Meeting.CourseMalformed" xml:space="preserve"><value>Курс не вказано або вказано некоректно. Поверніться до звітів і оберіть курс.</value></data>
+  <data name="MeetReports.Meeting.MeetingNotFound" xml:space="preserve"><value>Зустріч не знайдено в цьому курсі.</value></data>
+  <data name="MeetReports.Validation.CourseMalformed" xml:space="preserve"><value>Оберіть курс зі списку.</value></data>
+  <data name="MeetReports.Validation.CourseUnknown" xml:space="preserve"><value>Цього курсу немає в програмі.</value></data>
+  <data name="MeetReports.Validation.FromMalformed" xml:space="preserve"><value>Некоректна дата початку періоду.</value></data>
+  <data name="MeetReports.Validation.ToMalformed" xml:space="preserve"><value>Некоректна дата кінця періоду.</value></data>
+  <data name="MeetReports.Validation.PeriodInverted" xml:space="preserve"><value>Початок періоду пізніше за його кінець.</value></data>
 </root>

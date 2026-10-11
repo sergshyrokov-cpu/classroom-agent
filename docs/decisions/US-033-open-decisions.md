@@ -1,24 +1,24 @@
 ---
 artifact_type: open_decisions
 story: US-033
-version: 1
+version: 3
 status: DRAFT
 created_at: 2026-10-10T19:39:19Z
-updated_at: 2026-10-10T19:39:19Z
+updated_at: 2026-10-11T00:00:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-033-meet-reports.md
     version: null
   - path: trebovaniya.md
     version: 88
-supersedes: null
+supersedes: 1
 ---
 
 # US-033 Open Decisions — Built-in Meet reports for a course and period
 
-**Ten, all resolved.** All ten come from the Story: the Owner decided them on
-2026-10-10 in discovery, before activation. Writing the Specification raised
-no new one:
+**Twelve, all resolved.** OD-001 … OD-010 come from the Story: the Owner decided them on
+2026-10-10 in discovery, before activation. TEST_WRITING raised OD-011 and OD-012,
+resolved by the Owner the same day. Writing the Specification raised none:
 
 - `trebovaniya.md` v88 (§2, §3, §4 Epic 4) fixes the four reports, their
   columns, the counting rules (v58) and the roster on the meeting's date (v31).
@@ -88,3 +88,50 @@ Impact: FR-004.
 **Resolved (a)**: a "Meet reports" menu item; reports 1–3 on one page; report 4
 opens from a row of report 2. On first opening, the period is the current month.
 Impact: FR-001, FR-003, FR-010.
+
+## OD-011 Compile-only skeleton created at TEST_WRITING
+
+Raised by TEST_WRITING. The tests reference declarations that do not exist yet:
+`IMeetReportSource` and its four records, the two requests, outcomes and
+results, the page DTOs and enums of `US-033-openapi.yaml`, `GetMeetReportsQuery`,
+`GetMeetReportMeetingQuery`, `MeetReportSource`, the policy name
+`ViewMeetReports` and the two route constants. The test-writer may not change
+production code. US-025, US-027, US-031, US-032, US-037, US-039 and US-042
+resolved the same gap the same way.
+
+Options: (a) a compile-only skeleton — declarations only; members throw
+`NotImplementedException`; nothing registered in DI, no migration, no existing
+behaviour changed; IMPLEMENTATION owns and completes it; (b) no skeleton.
+
+**Resolved (a)** — Owner, 2026-10-10.
+
+## OD-012 A person without an email (contract adjustment)
+
+Raised at DB_DESIGN (db-design §7) and recorded by TEST_WRITING.
+`classroom_participant.email` is nullable, and a student without an email is
+still a report-3 row (spec FR-009). `PersonRef.email` in `US-033-openapi.yaml`
+v1 is required.
+
+Options: (a) adjust the contract by this decision: `PersonRef.email` is
+nullable; a person with neither a full name nor an email is shown with the
+translated label `MeetReports.Person.Unnamed`, as the journal does
+(`Journal.Row.Unnamed`). A resolved Open Decision outranks the API design
+(`AGENTS.md`, order of authority), so no loop-back is needed; (b) loop back to
+API_DESIGN for a v2 contract and re-run DB_DESIGN.
+
+**Resolved (a)** — Owner, 2026-10-10. Impact: openapi `PersonRef` (email
+nullable), spec FR-011 (fallback label); the skeleton's `PersonRef(string?
+FullName, string? Email)`.
+
+## OD-013 A host test's period contradicts spec FR-009
+
+Raised by IMPLEMENTATION. `MeetReportsPageTests.WithoutMeetings_ReportTwoIsTheEmptyLine_AndTheStudentsAreStillListed`
+asked for the period 2026-01-01 … 2026-01-31 and expected the seeded students in report 3. The seeded memberships are
+first seen on 2026-09-01, so under spec FR-009 (`FirstSeenAt < end`) they are not students of a January period, and
+`MeetReportsStudentsTests.OnlyStudentsOfThePeriod_AreRows` asserts exactly that. The test's data, not the code, is
+wrong.
+
+Options: (a) change the test's period to 2026-11-02 … 2026-11-30 — the students are on the roster and the course has
+no meeting then, so the test keeps its meaning (AC-012); (b) loop back to TEST_WRITING.
+
+**Resolved (a)** — Owner, 2026-10-11. Impact: one line of the test; no production change.

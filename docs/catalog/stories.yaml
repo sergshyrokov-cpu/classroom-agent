@@ -357,7 +357,7 @@ stories:
   - id: US-033
     epic: EPIC-4
     title: Built-in Meet reports for a course and period
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: >
       Depends on US-032.
     # Story file authored: docs/stories/US-033-meet-reports.md (aligned with v88).
