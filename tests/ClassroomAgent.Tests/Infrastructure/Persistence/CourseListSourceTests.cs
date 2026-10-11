@@ -135,7 +135,7 @@ public sealed class CourseListSourceTests(PostgreSqlFixture database)
         await host.InsertCourseAsync(1, "Історія", ct);
         await host.InsertCourseAsync(2, "Фізика", ct, section: "9-Б клас");
         await host.InsertCourseAsync(3, "Їжак і Ґанок", ct);
-        await host.InsertCourseAsync(4, "Єдність", ct);
+        await host.InsertCourseAsync(4, "Єва", ct);
         await host.InsertCourseAsync(5, "Physics", ct, section: null);
 
         await host.WithCourseListSourceAsync(async source =>
@@ -146,13 +146,13 @@ public sealed class CourseListSourceTests(PostgreSqlFixture database)
             Assert.Equal(["Фізика"], await NamesAsync(source, All(search: "КЛАС"), ct));
             Assert.Equal(["Їжак і Ґанок"], await NamesAsync(source, All(search: "їЖАК"), ct));
             Assert.Equal(["Їжак і Ґанок"], await NamesAsync(source, All(search: "ґанок"), ct));
-            Assert.Equal(["Єдність"], await NamesAsync(source, All(search: "єДН"), ct));
+            Assert.Equal(["Єва"], await NamesAsync(source, All(search: "єВ"), ct));
             Assert.Equal(["Physics"], await NamesAsync(source, All(search: "PHYS"), ct));
 
             // FR-006: no other folding — е is not є, и is not і.
-            Assert.Empty(await NamesAsync(source, All(search: "едн"), ct));
+            Assert.Empty(await NamesAsync(source, All(search: "ев"), ct));
             Assert.Empty(await NamesAsync(source, All(search: "истор"), ct));
-            Assert.Equal(0, await source.CountCoursesAsync(All(search: "едн"), ct));
+            Assert.Equal(0, await source.CountCoursesAsync(All(search: "ев"), ct));
             Assert.Equal(1, await source.CountCoursesAsync(All(search: "ІСТ"), ct));
         });
     }

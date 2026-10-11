@@ -418,4 +418,38 @@
   <data name="MeetExport.Column.Mark" xml:space="preserve"><value>Mark</value></data>
   <data name="MeetExport.Column.OfMeetingMinutes" xml:space="preserve"><value>Of meeting, min</value></data>
   <data name="Export.Validation.MeetingMalformed" xml:space="preserve"><value>The meeting is missing or invalid.</value></data>
+  <data name="Courses.NavigationEntry" xml:space="preserve"><value>Courses</value></data>
+  <data name="Courses.Title" xml:space="preserve"><value>Courses</value></data>
+  <data name="Courses.Form.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Courses.Form.Teacher" xml:space="preserve"><value>Teacher</value></data>
+  <data name="Courses.Form.AllTeachers" xml:space="preserve"><value>All teachers</value></data>
+  <data name="Courses.Form.Search" xml:space="preserve"><value>Search by name or section</value></data>
+  <data name="Courses.Form.Submit" xml:space="preserve"><value>Show</value></data>
+  <data name="Courses.Status.Active" xml:space="preserve"><value>Active</value></data>
+  <data name="Courses.Status.Archived" xml:space="preserve"><value>Archived</value></data>
+  <data name="Courses.Status.Provisioned" xml:space="preserve"><value>Provisioned</value></data>
+  <data name="Courses.Status.Declined" xml:space="preserve"><value>Declined</value></data>
+  <data name="Courses.Status.Suspended" xml:space="preserve"><value>Suspended</value></data>
+  <data name="Courses.Status.All" xml:space="preserve"><value>All</value></data>
+  <data name="Courses.Column.Name" xml:space="preserve"><value>Name and section</value></data>
+  <data name="Courses.Column.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Courses.Column.Teachers" xml:space="preserve"><value>Teachers</value></data>
+  <data name="Courses.Column.Students" xml:space="preserve"><value>Students</value></data>
+  <data name="Courses.Column.UpdatedAt" xml:space="preserve"><value>Updated in Google</value></data>
+  <data name="Courses.Column.Links" xml:space="preserve"><value>Open</value></data>
+  <data name="Courses.Link.Journal" xml:space="preserve"><value>Journal</value></data>
+  <data name="Courses.Link.MeetReports" xml:space="preserve"><value>Meet reports</value></data>
+  <data name="Courses.Teacher.NoName" xml:space="preserve"><value>teacher without a name</value></data>
+  <data name="Courses.Empty.NoCoursesStored" xml:space="preserve"><value>No course has been synchronized yet.</value></data>
+  <data name="Courses.Empty.NoMatch" xml:space="preserve"><value>No course matches the filters.</value></data>
+  <data name="Courses.Paging.Total" xml:space="preserve"><value>Courses found: {0}</value></data>
+  <data name="Courses.Paging.Previous" xml:space="preserve"><value>Previous</value></data>
+  <data name="Courses.Paging.Next" xml:space="preserve"><value>Next</value></data>
+  <data name="Courses.Validation.StatusMalformed" xml:space="preserve"><value>Unknown course status.</value></data>
+  <data name="Courses.Validation.TeacherMalformed" xml:space="preserve"><value>Choose a teacher from the list.</value></data>
+  <data name="Courses.Validation.TeacherUnknown" xml:space="preserve"><value>This teacher is not in the list — choose one from the list.</value></data>
+  <data name="Courses.Validation.SearchRepeated" xml:space="preserve"><value>Enter one search text.</value></data>
+  <data name="Courses.Validation.SearchTooLong" xml:space="preserve"><value>The search text is too long.</value></data>
+  <data name="Courses.Validation.SearchControlCharacter" xml:space="preserve"><value>The search text contains characters that cannot be searched.</value></data>
+  <data name="Courses.Validation.PageMalformed" xml:space="preserve"><value>Invalid page number.</value></data>
 </root>

@@ -418,4 +418,38 @@
   <data name="MeetExport.Column.Mark" xml:space="preserve"><value>Позначка</value></data>
   <data name="MeetExport.Column.OfMeetingMinutes" xml:space="preserve"><value>Тривалість зустрічі, хв</value></data>
   <data name="Export.Validation.MeetingMalformed" xml:space="preserve"><value>Зустріч не вказано або вказано некоректно.</value></data>
+  <data name="Courses.NavigationEntry" xml:space="preserve"><value>Курси</value></data>
+  <data name="Courses.Title" xml:space="preserve"><value>Курси</value></data>
+  <data name="Courses.Form.Status" xml:space="preserve"><value>Статус</value></data>
+  <data name="Courses.Form.Teacher" xml:space="preserve"><value>Викладач</value></data>
+  <data name="Courses.Form.AllTeachers" xml:space="preserve"><value>Усі викладачі</value></data>
+  <data name="Courses.Form.Search" xml:space="preserve"><value>Пошук за назвою або розділом</value></data>
+  <data name="Courses.Form.Submit" xml:space="preserve"><value>Показати</value></data>
+  <data name="Courses.Status.Active" xml:space="preserve"><value>Активний</value></data>
+  <data name="Courses.Status.Archived" xml:space="preserve"><value>Архівний</value></data>
+  <data name="Courses.Status.Provisioned" xml:space="preserve"><value>Підготовлений</value></data>
+  <data name="Courses.Status.Declined" xml:space="preserve"><value>Відхилений</value></data>
+  <data name="Courses.Status.Suspended" xml:space="preserve"><value>Призупинений</value></data>
+  <data name="Courses.Status.All" xml:space="preserve"><value>Усі</value></data>
+  <data name="Courses.Column.Name" xml:space="preserve"><value>Назва та розділ</value></data>
+  <data name="Courses.Column.Status" xml:space="preserve"><value>Статус</value></data>
+  <data name="Courses.Column.Teachers" xml:space="preserve"><value>Викладачі</value></data>
+  <data name="Courses.Column.Students" xml:space="preserve"><value>Студентів</value></data>
+  <data name="Courses.Column.UpdatedAt" xml:space="preserve"><value>Оновлено в Google</value></data>
+  <data name="Courses.Column.Links" xml:space="preserve"><value>Перейти</value></data>
+  <data name="Courses.Link.Journal" xml:space="preserve"><value>Журнал</value></data>
+  <data name="Courses.Link.MeetReports" xml:space="preserve"><value>Звіти Meet</value></data>
+  <data name="Courses.Teacher.NoName" xml:space="preserve"><value>викладач без імені</value></data>
+  <data name="Courses.Empty.NoCoursesStored" xml:space="preserve"><value>Жодного курсу ще не синхронізовано.</value></data>
+  <data name="Courses.Empty.NoMatch" xml:space="preserve"><value>Жоден курс не відповідає фільтрам.</value></data>
+  <data name="Courses.Paging.Total" xml:space="preserve"><value>Знайдено курсів: {0}</value></data>
+  <data name="Courses.Paging.Previous" xml:space="preserve"><value>Попередня</value></data>
+  <data name="Courses.Paging.Next" xml:space="preserve"><value>Наступна</value></data>
+  <data name="Courses.Validation.StatusMalformed" xml:space="preserve"><value>Невідомий статус курсу.</value></data>
+  <data name="Courses.Validation.TeacherMalformed" xml:space="preserve"><value>Оберіть викладача зі списку.</value></data>
+  <data name="Courses.Validation.TeacherUnknown" xml:space="preserve"><value>Цього викладача немає у списку — оберіть викладача зі списку.</value></data>
+  <data name="Courses.Validation.SearchRepeated" xml:space="preserve"><value>Введіть один текст для пошуку.</value></data>
+  <data name="Courses.Validation.SearchTooLong" xml:space="preserve"><value>Текст для пошуку задовгий.</value></data>
+  <data name="Courses.Validation.SearchControlCharacter" xml:space="preserve"><value>Текст для пошуку містить символи, за якими не можна шукати.</value></data>
+  <data name="Courses.Validation.PageMalformed" xml:space="preserve"><value>Неправильний номер сторінки.</value></data>
 </root>

@@ -92,6 +92,13 @@ public static class InstallationSecurityServices
                     InstallationSession.RoleName(AppRole.Admin),
                     InstallationSession.RoleName(AppRole.Dean)));
 
+            // US-020 api-design §2.10: its own matrix row ("Просмотр курсов и участников"), both roles.
+            options.AddPolicy(
+                InstallationPolicies.ViewCourses,
+                policy => policy.RequireAuthenticatedUser().RequireRole(
+                    InstallationSession.RoleName(AppRole.Admin),
+                    InstallationSession.RoleName(AppRole.Dean)));
+
             // US-033 api-design §2.2: its own matrix row ("Просмотр и экспорт статистики Meet-занятий"), both roles.
             options.AddPolicy(
                 InstallationPolicies.ViewMeetReports,

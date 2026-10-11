@@ -134,7 +134,9 @@ public sealed class LandingPageTests(PostgreSqlFixture database)
         Assert.DoesNotContain("securityStamp", page.Body, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("concurrencyStamp", page.Body, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("passwordHash", page.Body, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("course", page.Body, StringComparison.OrdinalIgnoreCase);
+        // US-020 FR-013: the course list's link is navigation, not teaching data; only its address is set aside.
+        var withoutNavigation = page.Body.Replace(@"href=""/workspace/courses""", string.Empty, StringComparison.Ordinal);
+        Assert.DoesNotContain("course", withoutNavigation, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("student", page.Body, StringComparison.OrdinalIgnoreCase);
     }
 

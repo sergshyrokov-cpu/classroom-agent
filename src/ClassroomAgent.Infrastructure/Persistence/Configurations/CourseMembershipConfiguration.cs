@@ -68,6 +68,11 @@ public sealed class CourseMembershipConfiguration : IEntityTypeConfiguration<Cou
         builder.HasIndex(m => m.LastSeenAt)
             .HasFilter("on_roster = false")
             .HasDatabaseName("ix_course_membership_off_roster_last_seen");
+
+        // US-020 db-design §4.1: the course list's teacher choice and teacher filter read current teachers only.
+        builder.HasIndex(m => new { m.ParticipantId, m.CourseId })
+            .HasFilter("role = 'teacher' AND on_roster = true")
+            .HasDatabaseName("ix_course_membership_current_teacher");
     }
 
     private static string RoleCode(ClassroomRole value) => value switch

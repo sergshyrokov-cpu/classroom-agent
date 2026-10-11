@@ -1,0 +1,135 @@
+@using System.Globalization
+@using ClassroomAgent.Application.Models.Dtos
+@using ClassroomAgent.Application.UseCases
+@using ClassroomAgent.Domain.Enums
+@model CourseListPageModel
+@{
+    ViewData["Title"] = T[CoursesTextKeys.Title];
+
+    // Spec FR-009: the language switcher returns to the effective query, never the raw one.
+    ViewData[UiLanguageController.ReturnPathViewDataKey] = Model.ReturnPath;
+}
+
+@foreach (var message in Model.MessageKeys)
+{
+    <p class="form-error">@T[CoursesTextKeys.Validation(message)]</p>
+}
+
+<form id="course-list-form" method="get" action="@SignInRoutes.Courses">
+    <p>
+        <label for="course-list-status">@T[CoursesTextKeys.FormStatus]</label>
+        <select id="course-list-status" name="@CoursesController.StatusParameter">
+            @foreach (var status in Enum.GetValues<CourseStatusFilter>())
+            {
+                <option value="@status.ToString().ToLowerInvariant()" selected="@(status == Model.Status)">@T[CoursesTextKeys.Status(status)]</option>
+            }
+        </select>
+    </p>
+    <p>
+        <label for="course-list-teacher">@T[CoursesTextKeys.FormTeacher]</label>
+        <select id="course-list-teacher" name="@CoursesController.TeacherIdParameter">
+            <option value="">@T[CoursesTextKeys.FormAllTeachers]</option>
+            @foreach (var teacher in Model.TeacherChoice)
+            {
+                <option value="@teacher.ParticipantId.ToString(CultureInfo.InvariantCulture)" selected="@(teacher.ParticipantId == Model.SelectedTeacherId)">@TeacherLabel(teacher)</option>
+            }
+        </select>
+    </p>
+    <p>
+        <label for="course-list-search">@T[CoursesTextKeys.FormSearch]</label>
+        <input id="course-list-search" type="search" name="@CoursesController.SearchParameter" value="@Model.SearchText" maxlength="100" />
+    </p>
+    <button type="submit">@T[CoursesTextKeys.FormSubmit]</button>
+</form>
+
+@if (Model.List is { } list)
+{
+    if (list.EmptyState is { } empty)
+    {
+        <p id="course-list-empty">@T[CoursesTextKeys.Empty(empty)]</p>
+    }
+    else
+    {
+        <p id="course-list-total">@T[CoursesTextKeys.PagingTotal, list.TotalCount]</p>
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">@T[CoursesTextKeys.ColumnName]</th>
+                        <th scope="col">@T[CoursesTextKeys.ColumnStatus]</th>
+                        <th scope="col">@T[CoursesTextKeys.ColumnTeachers]</th>
+                        <th scope="col">@T[CoursesTextKeys.ColumnStudents]</th>
+                        <th scope="col">@T[CoursesTextKeys.ColumnUpdatedAt]</th>
+                        <th scope="col">@T[CoursesTextKeys.ColumnLinks]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in list.Rows)
+                    {
+                        var id = row.CourseId.ToString(CultureInfo.InvariantCulture);
+                        <tr data-course-id="@id">
+                            <td>
+                                @row.Name
+                                @if (row.Section is not null)
+                                {
+                                    <br /><span>@row.Section</span>
+                                }
+                            </td>
+                            <td>@T[CoursesTextKeys.State(row.State)]</td>
+                            <td>
+                                @foreach (var teacher in row.Teachers)
+                                {
+                                    <div>@PersonText(teacher)</div>
+                                }
+                            </td>
+                            <td>@row.StudentCount.ToString(CultureInfo.InvariantCulture)</td>
+                            <td>@row.UpdatedAt?.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern + " HH:mm", CultureInfo.CurrentCulture)</td>
+                            <td>
+                                <a href="@(SignInRoutes.Journal + "?" + JournalController.CourseIdParameter + "=" + id)">@T[CoursesTextKeys.LinkJournal]</a>
+                                <a href="@(SignInRoutes.MeetReports + "?" + MeetReportsController.CourseIdParameter + "=" + id)">@T[CoursesTextKeys.LinkMeetReports]</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    if (list.PageCount > 1)
+    {
+        <nav id="course-list-paging">
+            @if (list.Page > 1)
+            {
+                <a href="@PageUrl(list.Page - 1)">@T[CoursesTextKeys.PagingPrevious]</a>
+            }
+            @for (var n = 1; n <= list.PageCount; n++)
+            {
+                if (n == list.Page)
+                {
+                    <span>@n.ToString(CultureInfo.InvariantCulture)</span>
+                }
+                else
+                {
+                    <a href="@PageUrl(n)">@n.ToString(CultureInfo.InvariantCulture)</a>
+                }
+            }
+            @if (list.Page < list.PageCount)
+            {
+                <a href="@PageUrl(list.Page + 1)">@T[CoursesTextKeys.PagingNext]</a>
+            }
+        </nav>
+    }
+}
+
+@functions {
+    /// <summary>Spec FR-007: the name, or the translated "no name" text; Google data is not translated.</summary>
+    private string PersonText(CourseListPersonName name) =>
+        name.Kind == CourseListPersonNameKind.NoName ? T[CoursesTextKeys.TeacherNoName].Value : name.Text ?? string.Empty;
+
+    /// <summary>Spec FR-005: the name, then the email only when the option needs disambiguating.</summary>
+    private string TeacherLabel(TeacherOption option) =>
+        option.DisambiguatingEmail is null ? PersonText(option.Name) : PersonText(option.Name) + " (" + option.DisambiguatingEmail + ")";
+
+    /// <summary>Spec FR-009: every paging link carries the effective filter.</summary>
+    private string PageUrl(int page) => CourseListUrl.Build(Model.Status, Model.SelectedTeacherId, Model.SearchText, page);
+}

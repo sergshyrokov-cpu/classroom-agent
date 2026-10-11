@@ -17,6 +17,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasAnnotation("Npgsql:CollationDefinition:course_name_uk", "uk-UA,uk-UA,icu,True")
                 .HasAnnotation("ProductVersion", "10.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
@@ -564,6 +565,10 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                     b.HasIndex("CourseId", "ParticipantId")
                         .IsUnique()
                         .HasDatabaseName("uq_course_membership_course_participant");
+
+                    b.HasIndex("ParticipantId", "CourseId")
+                        .HasDatabaseName("ix_course_membership_current_teacher")
+                        .HasFilter("role = 'teacher' AND on_roster = true");
 
                     b.HasIndex("CourseId", "FirstSeenAt", "LastSeenAt")
                         .HasDatabaseName("ix_course_membership_course_seen");

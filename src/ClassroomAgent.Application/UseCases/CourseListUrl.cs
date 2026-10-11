@@ -1,12 +1,12 @@
+using System.Globalization;
 using ClassroomAgent.Application.Models.Dtos;
 
 namespace ClassroomAgent.Application.UseCases;
 
 /// <summary>
 /// Openapi US-020 <c>CourseListUrl</c>: the one rule that builds every URL the course-list page produces — paging links
-/// and the language switcher's return path (spec FR-009, S-05, S-06).
+/// and the language switcher's return path (spec FR-009, S-05, S-06). Only validated values reach it.
 /// </summary>
-/// <remarks>Compile-only skeleton created at TEST_WRITING (US-020 OD-012 a); IMPLEMENTATION completes it.</remarks>
 public static class CourseListUrl
 {
     /// <summary>The page's path; equal to the host's route constant.</summary>
@@ -18,7 +18,30 @@ public static class CourseListUrl
     /// </summary>
     public static string Build(CourseStatusFilter status, long? teacherId, string? searchText, int page)
     {
-        _ = (status, teacherId, searchText, page);
-        throw new NotImplementedException();
+        var parts = new List<string>();
+        if (status != CourseStatusFilter.Active)
+        {
+            parts.Add("status=" + Token(status));
+        }
+
+        if (teacherId is { } teacher)
+        {
+            parts.Add("teacherId=" + teacher.ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (!string.IsNullOrEmpty(searchText))
+        {
+            parts.Add("q=" + Uri.EscapeDataString(searchText));
+        }
+
+        if (page > 1)
+        {
+            parts.Add("page=" + page.ToString(CultureInfo.InvariantCulture));
+        }
+
+        return parts.Count == 0 ? Path : Path + "?" + string.Join('&', parts);
     }
+
+    /// <summary>Api-design §2.2: the lower-case token of a status, as links emit it.</summary>
+    public static string Token(CourseStatusFilter status) => status.ToString().ToLowerInvariant();
 }

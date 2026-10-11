@@ -52,6 +52,9 @@ public sealed class ClassroomAgentDbContext(DbContextOptions<ClassroomAgentDbCon
     /// <summary>US-032 entity model §1: a meeting code linked to a course, or marked "not a course" (db-design §2).</summary>
     public DbSet<MeetingCodeLink> MeetingCodeLinks => Set<MeetingCodeLink>();
 
+    /// <summary>US-020 db-design §2: the collation the course list orders and searches under.</summary>
+    public const string CourseListCollation = "course_name_uk";
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new LegitimacyStateConfiguration());
@@ -70,5 +73,9 @@ public sealed class ClassroomAgentDbContext(DbContextOptions<ClassroomAgentDbCon
         modelBuilder.ApplyConfiguration(new MeetSessionConfiguration());
         modelBuilder.ApplyConfiguration(new MeetParticipationConfiguration());
         modelBuilder.ApplyConfiguration(new MeetingCodeLinkConfiguration());
+
+        // US-020 db-design §2.1: Ukrainian alphabetical order and case folding for the course list's queries only — applied
+        // to no column. Deterministic, because PostgreSQL refuses pattern matching under a non-deterministic collation.
+        modelBuilder.HasCollation(CourseListCollation, locale: "uk-UA", provider: "icu", deterministic: true);
     }
 }
