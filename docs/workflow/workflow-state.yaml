@@ -4,17 +4,31 @@
 version: 1
 story: US-045
 workflow: story-delivery
-current_stage: SPECIFICATION
-previous_stage: null
-last_completed_stage: null
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
-last_result: null
-last_artifacts: []
+last_invoked_skill: spec-writer
+last_result:
+  verdict: PASS
+  stage: SPECIFICATION
+  recorded_at: '2026-10-11T17:46:30Z'
+last_artifacts:
+- type: specification
+  path: docs/specifications/US-045-spec.md
+  version: 1
+- type: open_decisions
+  path: docs/decisions/US-045-open-decisions.md
+  version: 1
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings: []
-started_at: null
-updated_at: '2026-10-11T17:43:28Z'
+non_blocking_findings:
+- 'HUMAN_SPEC_APPROVAL: approved without comment; interpretations I-1…I-6 accepted as written.'
+- 'SPECIFICATION: OD-001…OD-004 carried resolved; no new Open Decision; trebovaniya §7 blocks nothing.'
+- 'SPECIFICATION: marker for an unmatched request set to "(unmatched)" (OD-003); RequestPath keeps its name (OD-002).'
+- 'SPECIFICATION: interpretations I-1…I-6 for the gate — I-1 before routing = marker; I-2 catch-all fallback counts as unmatched; I-3 error-page re-execution names /error/{statusCode}; I-4 RequestPath always present; I-5 template keeps constraint text, leading /; I-6 AC-002 verified via a test-registered log line.'
+- 'SPECIFICATION: SC-10 was not reworded for v89 (it points to DC-10, which restates the rule).'
+started_at: '2026-10-11T17:46:30Z'
+updated_at: '2026-10-11T17:48:13Z'
 completed_at: null
