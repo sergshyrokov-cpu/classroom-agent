@@ -400,6 +400,13 @@ Workflow state lives in files, so clearing loses nothing. Do not invoke
 `security-reviewer` in the same invocation or conversation turn that recorded
 `IMPLEMENTATION → SECURITY_REVIEW`.
 
+**Fresh context before TEST_WRITING.** The same holds when the recorded
+transition ends at `TEST_WRITING`: the Recommended Command is `/clear`, then
+`/so:next`, with a one-line reason — tests are written from the approved
+artifacts, not from the context that designed them. Do not invoke
+`test-writer` in the same invocation or conversation turn that recorded
+`DB_DESIGN → TEST_WRITING`.
+
 ---
 
 # Prohibited Actions
