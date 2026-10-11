@@ -243,7 +243,10 @@ stories:
     title: Course list with filters and search
     state: BACKLOG
     blocked_by: >
-      Depends on US-014.
+      Depends on US-014. Decided in US-020 discovery (OD-001 … OD-011): ACTIVE
+      by default; teacher = anyone teaching in the current roster; search in
+      name and section; 50 per page; links to the journal and the Meet reports;
+      filters in the address; no export.
   - id: US-021
     epic: EPIC-2
     title: Course detail with roster
