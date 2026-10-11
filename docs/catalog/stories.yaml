@@ -366,7 +366,7 @@ stories:
   - id: US-044
     epic: EPIC-4
     title: Export the built-in Meet reports to Excel
-    state: BACKLOG
+    state: IN_PROGRESS
     blocked_by: >
       Depends on US-033. Decided in US-033 discovery (OD-002, OD-003): Excel
       only (Word later with US-029); one workbook per course and period with

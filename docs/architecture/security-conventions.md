@@ -427,7 +427,8 @@ when" — above all, who took personal data out of the system.
   is "wrong password", and a refusal during a lockout is "locked out" (v65).
 - **A row never carries personal data** — SC-10 binds it exactly as it binds
   logs: no names, no email addresses, no grades. An export row records course
-  ids, the period, the template id and the row count, never the file's contents.
+  ids, the period, the template id, the meeting id (export of one Meet meeting,
+  US-044) and the row counts, never the file's contents.
 - **Never updated; deleted only by the retention purge.** An audit row is never
   changed. An installation audit row is deleted only by the retention purge
   (PC-11); a Control Plane audit row is never deleted. No user-facing use case,

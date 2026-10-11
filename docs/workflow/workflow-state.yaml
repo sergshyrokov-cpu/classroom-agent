@@ -2,29 +2,31 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-033
+story: US-044
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
+last_invoked_skill: spec-writer
 last_result:
   verdict: PASS
-  stage: SECURITY_REVIEW
-  recorded_at: '2026-10-11T05:55:25Z'
+  stage: SPECIFICATION
+  recorded_at: '2026-10-11T06:41:39Z'
 last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-033-security-review.md
+- type: specification
+  path: docs/specifications/US-044-spec.md
+  version: 1
+- type: open_decisions
+  path: docs/decisions/US-044-open-decisions.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-- 'SECURITY_REVIEW: 0 critical / 0 major / 0 minor / 3 informational; build 0/0; full suite 4549/4549; story tests 217/217; Web.Security 361/361; no vulnerable packages.'
-- 'INFO-1: MeetReportSource.GetPeopleAsync comment says the name is taken from the lowest id with a membership; code takes the lowest id with a name. No exposure.'
-- 'INFO-2: report 4 checks the course via GetCourseNameAsync, the reports page via the journal course list; keep consistent if courses are ever filtered.'
-- 'INFO-3: two full test runs failed only on Testcontainers PostgreSQL timeouts (33, then 331); third run on fresh Docker 4549/4549. Rerun before treating a red full run as a defect.'
-started_at: '2026-10-10T19:41:38Z'
-updated_at: '2026-10-11T06:09:17Z'
-completed_at: '2026-10-11T06:09:17Z'
+- 'HUMAN_SPEC_APPROVAL: I-1 became OD-013 (b) — name and email in separate columns; I-4 and I-9 confirmed.'
+- 'F-1 done at the gate: SC-11 export row lists the meeting id and row counts (security-conventions.md).'
+- 'F-2 clarified at the gate: export time and Meet delay line in the Meet export only; journal export unchanged.'
+started_at: '2026-10-11T06:41:39Z'
+updated_at: '2026-10-11T07:05:13Z'
+completed_at: null
