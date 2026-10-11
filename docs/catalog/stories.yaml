@@ -241,7 +241,7 @@ stories:
   - id: US-020
     epic: EPIC-2
     title: Course list with filters and search
-    state: BACKLOG
+    state: IN_PROGRESS
     blocked_by: >
       Depends on US-014. Decided in US-020 discovery (OD-001 … OD-011): ACTIVE
       by default; teacher = anyone teaching in the current roster; search in

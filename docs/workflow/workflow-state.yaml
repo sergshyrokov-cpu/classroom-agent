@@ -2,37 +2,32 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-044
+story: US-020
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
+last_invoked_skill: spec-writer
 last_result:
   verdict: PASS
-  stage: SECURITY_REVIEW
-  recorded_at: '2026-10-11T09:33:24Z'
+  stage: SPECIFICATION
+  recorded_at: '2026-10-11T10:25:19Z'
 last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-044-security-review.md
+- type: specification
+  path: docs/specifications/US-020-spec.md
+  version: 1
+- type: open_decisions
+  path: docs/decisions/US-020-open-decisions.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-- 'SECURITY_REVIEW: PASS, 0 Critical/Major/Minor; INFO-1 no upper bound on period or body size (no requirement), INFO-2 controller duplicates journal JSON reader and actor helpers, INFO-3 TC-5 forbidden role structural until Epic 7 roles.'
-- 'SECURITY_REVIEW: build 0 warnings; tests 4893/4893, none skipped; no vulnerable packages; no csproj change.'
-- 'IMPLEMENTATION: full suite 4893/4893, build and format clean; migration 20261011075017_AddMeetExportAudit; 5 pinned audit_event schema tests and 2 test-fixture message defects updated.'
-- 'IMPLEMENTATION: ReportText +22 Meet* members over existing MeetReports.* keys; MeetExportController repeats the journal controller JSON reader and actor helpers (no refactor of US-028).'
-- 'TEST_WRITING: 253 new tests, 245 red for missing implementation, 8 green guards; 25 Meet* cases of JournalExportTranslationTests also red until translations exist; existing suite green.'
-- 'TEST_WRITING: OD-014 (a) compile-only skeleton, Owner 2026-10-11; 25 ReportText Meet* members, MeetExportResult/Field/MessageKey types; registry tests updated for the two new BR-026 declarations.'
-- 'TEST_WRITING: schema tests expect db-design §3.3 CHECK names; log tests assume the orientation is logged as the word landscape.'
-- 'DB_DESIGN: migration AddMeetExportAudit — audit_event gains export_meeting_id, export_meetings, two action codes, export CHECKs rewritten; workbook model additions opt-in (journal file unchanged).'
-- 'API_DESIGN: two operations meet-reports-xlsx / meet-meeting-xlsx; new key Export.Validation.MeetingMalformed; page script — new or shared, journal behaviour must not change.'
-- 'HUMAN_SPEC_APPROVAL: I-1 became OD-013 (b) — name and email in separate columns; I-4 and I-9 confirmed.'
-- 'F-1 done at the gate: SC-11 export row lists the meeting id and row counts (security-conventions.md).'
-- 'F-2 clarified at the gate: export time and Meet delay line in the Meet export only; journal export unchanged.'
-started_at: '2026-10-11T06:41:39Z'
-updated_at: '2026-10-11T09:36:27Z'
-completed_at: '2026-10-11T09:36:27Z'
+- 'HUMAN_SPEC_APPROVAL: approved without comment; interpretations I-1…I-9 accepted as written.'
+- 'SPECIFICATION: OD-001…OD-011 carried resolved (a); no new Open Decision; trebovaniya §7 blocks nothing.'
+- 'SPECIFICATION: interpretations I-1…I-9 for the gate — I-1 home page section is the menu (no layout menu); I-2 full email, FullName unused; I-3 email added to same-name teachers in the choice; I-4 search ≤100 chars, literal, not logged; I-5 pages from 1, past-end shows last; I-6 no JSON endpoint; I-7 one Ukrainian-aware order, DB paging; I-8 empty cell without updateTime; I-9 unknown teacher id refused.'
+- 'SPECIFICATION: new policy ViewCourses for matrix row «Просмотр курсов и участников»; indexes left to DB_DESIGN with migration.'
+started_at: '2026-10-11T10:25:19Z'
+updated_at: '2026-10-11T10:58:55Z'
+completed_at: null
