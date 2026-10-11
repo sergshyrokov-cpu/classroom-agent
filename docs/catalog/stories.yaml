@@ -252,7 +252,10 @@ stories:
     title: Course detail with roster
     state: BACKLOG
     blocked_by: >
-      Depends on US-014.
+      Depends on US-014. Decided in US-021 discovery (OD-001 … OD-012): course
+      details without the Classroom link; owner marked among current teachers;
+      teachers, students and leavers in sections; sorted by name, no paging;
+      linked from the course list; unknown id is 404; no export.
   - id: US-022
     epic: EPIC-2
     title: Teachers and their courses
