@@ -4,30 +4,32 @@
 version: 1
 story: US-020
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-writer
+last_invoked_skill: openapi-designer
 last_result:
   verdict: PASS
-  stage: SPECIFICATION
-  recorded_at: '2026-10-11T10:25:19Z'
+  stage: API_DESIGN
+  recorded_at: '2026-10-11T14:16:30Z'
 last_artifacts:
-- type: specification
-  path: docs/specifications/US-020-spec.md
+- type: openapi
+  path: docs/designs/api/US-020-openapi.yaml
   version: 1
-- type: open_decisions
-  path: docs/decisions/US-020-open-decisions.md
+- type: api_design
+  path: docs/designs/api/US-020-api-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'API_DESIGN: GET /workspace/courses, params status|teacherId|q|page, policy ViewCourses; 400 for any malformed parameter (all reported), 404 TeacherUnknown only when shape passes; q split into SearchRepeated/SearchTooLong/SearchControlCharacter; one CourseListUrl rule for paging links and switcher return path.'
+- 'API_DESIGN: q (free search text) travels in the query string as the spec allows; flagged for SECURITY_REVIEW per US-039 INFO-1.'
 - 'HUMAN_SPEC_APPROVAL: approved without comment; interpretations I-1…I-9 accepted as written.'
 - 'SPECIFICATION: OD-001…OD-011 carried resolved (a); no new Open Decision; trebovaniya §7 blocks nothing.'
 - 'SPECIFICATION: interpretations I-1…I-9 for the gate — I-1 home page section is the menu (no layout menu); I-2 full email, FullName unused; I-3 email added to same-name teachers in the choice; I-4 search ≤100 chars, literal, not logged; I-5 pages from 1, past-end shows last; I-6 no JSON endpoint; I-7 one Ukrainian-aware order, DB paging; I-8 empty cell without updateTime; I-9 unknown teacher id refused.'
 - 'SPECIFICATION: new policy ViewCourses for matrix row «Просмотр курсов и участников»; indexes left to DB_DESIGN with migration.'
 started_at: '2026-10-11T10:25:19Z'
-updated_at: '2026-10-11T10:58:55Z'
+updated_at: '2026-10-11T14:16:30Z'
 completed_at: null

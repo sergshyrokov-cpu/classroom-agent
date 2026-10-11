@@ -1,0 +1,470 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Course list with filters and search (US-020)
+  version: "1"
+  description: >
+    HTTP contract of US-020 on the installation's public port. It adds the list
+    of every synchronized Classroom course, granted to Admin and Dean
+    (`trebovaniya.md` §2 "Просмотр курсов и участников" ✔ ✔; §4 Epic 2), as one
+    server-rendered `GET` page whose filter form submits to itself by `GET`.
+    There is no JSON API (spec I-6). The page only reads: it writes nothing,
+    calls no Google API and reads no secret, in every mode (spec FR-015). The
+    home page's Google Workspace section gains "Courses" as its first link
+    (spec FR-013). The host-wide rules of docs/designs/api/US-008-openapi.yaml
+    apply unchanged. Companion document: docs/designs/api/US-020-api-design.md.
+x-story: US-020
+x-source-specification: docs/specifications/US-020-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-020-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 88
+x-produced-by: openapi-designer
+x-extends:
+  - docs/designs/api/US-008-openapi.yaml
+  - docs/designs/api/US-025-openapi.yaml
+  - docs/designs/api/US-033-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type of
+  the Control Plane channel is added or changed; the page is the installation's
+  own screen (DC-12).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port. Illustrative (US-008 spec FR-001)."
+
+tags:
+  - name: courses
+    description: "The course list (spec FR-001 … FR-018)"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 configured host-wide applies and is not restated: HTTPS and
+    HSTS, deny-by-default fallback policy (SC-4, API-9), the global antiforgery
+    filter (not engaged: the page is a `GET`), the single error page, the
+    anonymous catch-all `404`, the session cookie, the restricted session of a
+    Dean with a temporary password (US-012), the exception handler (API-10), and
+    the host-wide `Cache-Control: no-store` of US-040 (SC-14).
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list of anonymous endpoints gains **nothing**. The US-008
+    endpoint enumeration test passes with `/workspace/courses` classified as
+    protected (spec FR-014, S-01).
+
+  antiforgery-list-unchanged: >
+    The page changes nothing (API-4), so it needs no token and gains no
+    exemption.
+
+  outbound: >
+    Nothing is called outside the process: no Google call, no secret-store read,
+    no Control Plane call (spec FR-015, S-04, S-11).
+
+paths:
+
+  /workspace/courses:
+
+    get:
+      tags: [courses]
+      operationId: getCourseList
+      summary: "The course list with status, teacher and search filters, 50 per page"
+      description: >
+        Always renders the filter form (status, teacher, search) with the
+        effective values. When the query is valid it also renders one page of
+        the matching courses — or one of the two empty-state messages (spec
+        FR-011) — with the total and the paging links (spec FR-008). The form
+        submits by `GET` to this same path and carries no `page`, so a filter
+        change restarts at page 1 (spec FR-009). Evaluation order:
+        authentication (`302`) → restricted session (`302`) → `ViewCourses`
+        → query shape of all four parameters (`400`, every failing parameter
+        reported) → the teacher choice is read → `teacherId` in the choice
+        (`404`) → count, page of courses, teachers and student counts of that
+        page (`200`). No course is read for the list before the query passes
+        (spec FR-012, S-07). On `400` and `404` the teacher choice is still read
+        so the form can be drawn; no course list is computed. Answered by the
+        `Application` query `GetCourseListQuery` returning `CourseListPageModel`
+        (AD-8); the controller only collects the raw query and renders.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewCourses
+      x-permission-matrix-row: "\"Просмотр курсов и участников\" — Admin ✔, Dean ✔"
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: "nothing — no entity, no audit row, no SyncState (spec FR-015, FR-016, S-12)"
+      x-read-only-mode: "allowed — identical behaviour in all three BR-025 causes; IReadOnlyModeGuard not called (spec FR-015)"
+      x-database-round-trips: >
+        a fixed number per request, independent of the number of courses,
+        teachers and students (spec FR-016, AC-020): the teacher choice, the
+        total count, the page of courses, the current teachers of the page's
+        courses, the student counts of the page's courses, and — only when the
+        count is zero — whether any course is stored. DB_DESIGN fixes the exact
+        queries and indexes.
+      x-route-constant: "SignInRoutes.Courses = \"/workspace/courses\""
+      x-spec: [FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-014, FR-015, FR-016, FR-017, FR-018]
+      x-acceptance-criteria: [AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019, AC-020]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/Status"
+        - $ref: "#/components/parameters/TeacherId"
+        - $ref: "#/components/parameters/Q"
+        - $ref: "#/components/parameters/Page"
+      responses:
+        "200":
+          description: >
+            The page. `list` is non-null and is one of: (1) a page of matching
+            courses with the total and paging; (2) `emptyState: NoCoursesStored`
+            when the installation stores no course; (3) `emptyState: NoMatch`
+            when courses are stored but none satisfies the filters. A valid
+            `page` past the last page answers the last page (spec FR-008, I-5);
+            `list.page` is the page actually shown. Read-only mode answers
+            exactly as outside it.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/CourseListPageModel"
+        "302":
+          description: >
+            (1) Not signed in: `Location: /sign-in`. (2) A Dean with a temporary
+            password: `Location: /sign-in/change-password`. Nothing is read.
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: [/sign-in, /sign-in/change-password]
+        "400":
+          description: >
+            One or more parameters are malformed (spec VR-001 … VR-004). **This
+            page** is rendered — not the host's error page — with the form, one
+            message key per failing parameter in the order `status`, `teacherId`,
+            `q`, `page`, and `list` null. Each rejected field shows its default;
+            valid fields keep their values. `teacherId` existence is not checked
+            on this path. One `Warning` log line per failing parameter names the
+            parameter and the rule, never the value (spec FR-018, SC-10).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/CourseListPageModel"
+        "404":
+          description: >
+            Every parameter is well-formed but `teacherId` names no participant of
+            the teacher choice (spec VR-002, I-9). **This page** is rendered with
+            `TeacherUnknown`, the teacher field at "all teachers", and `list`
+            null. No course is read for the list.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/CourseListPageModel"
+        "500":
+          description: "Unexpected failure: the single error page, no detail (AD-9, API-10)."
+          content:
+            text/html: {}
+
+  /:
+    get:
+      operationId: getLanding
+      summary: "Existing US-008 home page — changed additively"
+      description: >
+        Unchanged in behaviour, policy and status codes. The Google Workspace
+        section (`nav#workspace-section`) gains "Courses", linking to
+        `/workspace/courses`, as its **first** link, before "Journal" (spec
+        FR-013, OD-010, I-1), rendered for Admin and Dean and in read-only mode
+        too. The entry is a plain link and enforces nothing; `ViewCourses` does.
+      x-policy: ViewLegitimacyStatus
+      x-change: additive-markup
+      x-acceptance-criteria: [AC-012]
+      responses:
+        "200":
+          description: "The page; see US-008-openapi.yaml for everything else."
+          content:
+            text/html: {}
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: ClassroomAgent.Session
+      description: "The installation's session cookie (US-008); name illustrative."
+
+  parameters:
+
+    Status:
+      name: status
+      in: query
+      required: false
+      description: >
+        The course state filter (spec FR-004, VR-001). Absent or empty means
+        `active`. Otherwise exactly one occurrence of one of the tokens below,
+        compared case-insensitively, untrimmed. Anything else — another word, a
+        number, inner or surrounding spaces, a repeated parameter — is `400`
+        with `StatusMalformed`. Links the page produces use the lower-case token.
+      schema:
+        $ref: "#/components/schemas/CourseStatusFilter"
+      example: archived
+
+    TeacherId:
+      name: teacherId
+      in: query
+      required: false
+      description: >
+        Internal id of a `ClassroomParticipant` from the teacher choice (spec
+        FR-005, VR-002, OD-009) — never an email, Google id or name. Absent or
+        empty means no teacher filter. Otherwise exactly one occurrence of
+        decimal digits forming a positive 64-bit integer; anything else (sign,
+        spaces, letters, zero, overflow, a repeated parameter) is `400` with
+        `TeacherMalformed`. A well-formed id not in the choice is `404` with
+        `TeacherUnknown`.
+      schema:
+        type: string
+        pattern: "^[0-9]{1,19}$"
+      example: "317"
+
+    Q:
+      name: q
+      in: query
+      required: false
+      description: >
+        The search text (spec FR-006, VR-003). Absent, empty or white space only
+        after trimming means no search. Otherwise exactly one occurrence; a
+        repeated parameter is `400` with `SearchRepeated`. After trimming, more
+        than 100 characters (UTF-16 code units of the trimmed string) is `400`
+        with `SearchTooLong`; any Unicode `Cc` character is `400` with
+        `SearchControlCharacter`. Every other character is matched literally, as
+        a case-insensitive substring of the name or the section. Links the page
+        produces carry the trimmed text, percent-encoded as UTF-8. Never logged
+        (spec I-4).
+      schema:
+        type: string
+        maxLength: 100
+      example: "фізика"
+
+    Page:
+      name: page
+      in: query
+      required: false
+      description: >
+        The page number, from 1 (spec FR-008, VR-004, I-5). Absent or empty means
+        1. Otherwise exactly one occurrence of decimal digits forming an integer
+        from 1 to 100000; anything else (zero, sign, spaces, letters, overflow, a
+        repeated parameter) is `400` with `PageMalformed`. A valid number past the
+        last page answers the last page with `200`.
+      schema:
+        type: string
+        pattern: "^[0-9]{1,6}$"
+      example: "2"
+
+  schemas:
+
+    CourseStatusFilter:
+      type: string
+      description: >
+        The five course states of `trebovaniya.md` §3 and `all`, in display order
+        (spec FR-004). Each maps to `Course.State` (`ACTIVE`, `ARCHIVED`,
+        `PROVISIONED`, `DECLINED`, `SUSPENDED`); `all` filters nothing. Labels are
+        translation keys `Courses.Status.<Member>` (`Active`, `Archived`,
+        `Provisioned`, `Declined`, `Suspended`, `All`).
+      enum: [active, archived, provisioned, declined, suspended, all]
+
+    CourseListPageModel:
+      type: object
+      description: >
+        View DTO of the course-list page, mapped in `Application` (AD-8). No
+        entity crosses into it. Strings from Google are rendered HTML-encoded and
+        never translated (spec FR-017, VR-005). A rejected value appears nowhere
+        in it (spec FR-012, S-07).
+      required: [status, teacherChoice, messageKeys, returnPath]
+      properties:
+        status:
+          $ref: "#/components/schemas/CourseStatusFilter"
+          description: "The effective status; `active` when absent or rejected."
+        teacherChoice:
+          type: array
+          description: >
+            Every participant with a current teacher membership in any course
+            (spec FR-005), ordered by `name` (spec FR-008), ties by `participantId`.
+            "All teachers" is not an item: the view renders it first. Empty when
+            no participant qualifies (spec FR-011).
+          items:
+            $ref: "#/components/schemas/TeacherOption"
+        selectedTeacherId:
+          type: [integer, "null"]
+          format: int64
+          description: "The effective teacher; null for \"all teachers\", and when the value was rejected (`400`/`404`)."
+        searchText:
+          type: [string, "null"]
+          description: "The effective, trimmed search text; null when absent or rejected."
+        messageKeys:
+          type: array
+          description: "Validation messages in parameter order; empty on `200`."
+          items:
+            $ref: "#/components/schemas/CourseListMessageKey"
+        list:
+          oneOf:
+            - $ref: "#/components/schemas/CourseListResult"
+            - type: "null"
+          description: "Null on `400` and `404`."
+        returnPath:
+          type: string
+          description: >
+            The language switcher's return-path override
+            (`UiLanguageController.ReturnPathViewDataKey`), rebuilt by the
+            canonical URL rule (`CourseListUrl`) from the effective, validated
+            values — never from the raw query (spec FR-009, S-06). On `200` it
+            includes the page actually shown; on `400`/`404` it omits every
+            rejected parameter and `page`.
+          example: "/workspace/courses?status=archived&q=%D1%84%D1%96%D0%B7%D0%B8%D0%BA%D0%B0"
+
+    CourseListUrl:
+      type: string
+      description: >
+        The one rule that builds every URL the page produces — paging links and
+        `returnPath` (spec FR-009, S-05). Path `SignInRoutes.Courses`; parameters
+        in the order `status`, `teacherId`, `q`, `page`; each omitted when it has
+        its default (`active`, none, none, `1`); `status` as its lower-case token,
+        `teacherId` as the decimal internal id, `q` as the trimmed text
+        percent-encoded as UTF-8. No other parameter is ever emitted (spec VR-005).
+
+    TeacherOption:
+      type: object
+      required: [participantId, name]
+      additionalProperties: false
+      properties:
+        participantId:
+          type: integer
+          format: int64
+          description: "`ClassroomParticipant.Id` — the value of `teacherId`."
+        name:
+          $ref: "#/components/schemas/PersonName"
+        disambiguatingEmail:
+          type: [string, "null"]
+          description: >
+            The participant's stored email, set only when another option has the
+            same rendered label and this participant has an email (spec FR-005,
+            I-3). The view renders it in parentheses after the label.
+
+    PersonName:
+      type: object
+      description: >
+        The name rule of spec FR-007 (OD-004), decided in `Application`. `kind`
+        says which branch applied; `text` is the value to render as stored —
+        never translated, corrected or re-cased.
+      required: [kind]
+      additionalProperties: false
+      properties:
+        kind:
+          type: string
+          enum: [ProfileName, Email, NoName]
+          description: >
+            `ProfileName` — `Surname` and `GivenName` joined by one space, or the
+            one present. `Email` — the full stored email. `NoName` — neither; the
+            view renders the translated `Courses.Teacher.NoName`.
+        text:
+          type: [string, "null"]
+          description: "Null exactly when `kind` is `NoName`."
+
+    CourseListResult:
+      type: object
+      required: [totalCount, page, pageCount, pageSize, rows]
+      additionalProperties: false
+      properties:
+        emptyState:
+          type: [string, "null"]
+          enum: [NoCoursesStored, NoMatch, null]
+          description: >
+            Non-null exactly when `totalCount` is 0 (spec FR-011): `NoCoursesStored`
+            when the installation stores no course, otherwise `NoMatch`. No table
+            is drawn. Messages `Courses.Empty.<member>`.
+        totalCount:
+          type: integer
+          minimum: 0
+          description: "Number of courses matching the filters."
+        page:
+          type: integer
+          minimum: 1
+          description: "The page shown (the requested one, or the last one when it was past the end; 1 when nothing matches)."
+        pageCount:
+          type: integer
+          minimum: 1
+          description: "`max(1, ceil(totalCount / pageSize))`."
+        pageSize:
+          type: integer
+          const: 50
+        rows:
+          type: array
+          maxItems: 50
+          description: >
+            Ordered by `Name` (Ukrainian-aware, spec FR-008, I-7), then `Section`
+            (none first), then `courseId`.
+          items:
+            $ref: "#/components/schemas/CourseListRow"
+
+    CourseListRow:
+      type: object
+      description: "One course (spec FR-003, OD-001). No Classroom link (OD-008)."
+      required: [courseId, name, state, teachers, studentCount]
+      additionalProperties: false
+      properties:
+        courseId:
+          type: integer
+          format: int64
+          description: >
+            Internal `Course.Id`. The view builds the two links from route
+            constants (spec FR-010): `SignInRoutes.Journal?courseId={courseId}`
+            and `SignInRoutes.MeetReports?courseId={courseId}`.
+        name:
+          type: string
+          description: "`Course.Name` as stored."
+        section:
+          type: [string, "null"]
+          description: "`Course.Section` as stored; null when absent."
+        state:
+          type: string
+          enum: [Active, Archived, Provisioned, Declined, Suspended]
+          description: "Rendered as `Courses.Status.<member>`."
+        teachers:
+          type: array
+          description: >
+            Current teachers (`Role = Teacher`, `OnRoster = true`), ordered by
+            label (spec FR-008), ties by participant id. Empty — an empty cell.
+          items:
+            $ref: "#/components/schemas/PersonName"
+        studentCount:
+          type: integer
+          minimum: 0
+          description: "Memberships with `Role = Student` and `OnRoster = true`."
+        updatedAt:
+          type: [string, "null"]
+          format: local-date-time
+          description: >
+            `Course.UpdateTime` converted to the school's time zone
+            (`SchoolTimeZone`, NFR-074), `yyyy-MM-ddTHH:mm`, no offset; the view
+            formats it for the UI language. Null when Google gave none (spec I-8).
+          example: "2026-04-01T01:30"
+
+    CourseListMessageKey:
+      type: string
+      description: >
+        Closed list; each maps to `Courses.Validation.<member>` in both resource
+        files (spec FR-017). Order of appearance: `status`, `teacherId`, `q`,
+        `page`. At most one key per parameter.
+      enum:
+        - StatusMalformed          # VR-001 — "unknown course status"
+        - TeacherMalformed         # VR-002 — "choose a teacher from the list"
+        - TeacherUnknown           # VR-002 — "this teacher is not in the list — choose one from the list" (404)
+        - SearchRepeated           # VR-003 — "enter one search text"
+        - SearchTooLong            # VR-003 — "the search text is too long"
+        - SearchControlCharacter   # VR-003 — "the search text contains characters that cannot be searched"
+        - PageMalformed            # VR-004 — "invalid page number"
+
+x-operations-deliberately-absent:
+
+  api-v1-courses: >
+    There is no `/api/v1` endpoint and no JSON collection (spec I-6, §10). The
+    API-8 "paginated from day one" rule is met by the 50-per-page paging of the
+    page itself.
+
+  course-list-export: >
+    No export of the list (OD-011).
