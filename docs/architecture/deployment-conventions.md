@@ -348,6 +348,11 @@ without long-lived keys (DC-5).
 - Every log line written inside a request carries the request identifier; every
   line written by a synchronization run carries that run's identifier, so one
   run can be read end to end.
+- **A line written inside a request names the route, never the raw path**
+  (`trebovaniya.md` §8, v89): the route template of the matched endpoint
+  (`/workspace/meet-codes/{meetingCode}/link`), never a value taken from the
+  address — a Meet code, a template reference, text typed by hand. A request
+  that matched no endpoint carries one fixed marker and no address. Both hosts.
 - **SC-10 binds every line without exception**: internal identifiers only —
   never a student or teacher name, email or grade; never a key, connection
   string or token; never a raw Google API error object. A log line may say
