@@ -30,8 +30,10 @@ public sealed class GetMeetReportMeetingQuery(IMeetReportSource source, SchoolTi
         long? course = Single(request.CourseId, out var courseText) == Presence.One ? ParseCourseId(courseText) : null;
         var backLink = new MeetReportBackLink(course, BackDate(request.From), BackDate(request.To));
 
-        MeetReportMeetingPageResult Page(MeetReportMeetingOutcome outcome, MeetReportMeetingMessageKey? key, MeetingDetail? detail = null) =>
-            new(outcome, new MeetReportMeetingPageModel(backLink, key, detail));
+        // US-044 spec FR-002: the export action whenever a meeting is shown.
+        MeetReportMeetingPageResult Page(
+            MeetReportMeetingOutcome outcome, MeetReportMeetingMessageKey? key, MeetingDetail? detail = null, MeetMeetingExportAction? export = null) =>
+            new(outcome, new MeetReportMeetingPageModel(backLink, key, detail, export));
 
         if (course is not { } courseId)
         {
@@ -76,7 +78,8 @@ public sealed class GetMeetReportMeetingQuery(IMeetReportSource source, SchoolTi
                 Person(meeting.OrganizerEmail, people),
                 facts.OrganizerNotCourseTeacher,
                 lines,
-                new MeetOtherParticipants(facts.OtherCount, facts.OtherSeconds)));
+                new MeetOtherParticipants(facts.OtherCount, facts.OtherSeconds)),
+            new MeetMeetingExportAction(courseId, meetingId));
     }
 
     /// <summary>api-design §2.4: a date of the link back — kept only when it is one valid date, otherwise dropped.</summary>

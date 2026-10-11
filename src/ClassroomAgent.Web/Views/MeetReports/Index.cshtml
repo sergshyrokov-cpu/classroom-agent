@@ -1,5 +1,7 @@
 @using System.Globalization
 @using ClassroomAgent.Application.Models.Dtos
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery Antiforgery
 @model MeetReportsPageModel
 @{
     ViewData["Title"] = T[MeetReportsTextKeys.Title];
@@ -59,6 +61,27 @@
             <span>@T[MeetReportsTextKeys.DelayNoticeNotLoaded]</span>
         }
     </p>
+
+    @* US-044: the action carries validated values only; a static script posts them as JSON with the antiforgery
+       header. No form submission, no inline script. *@
+    @if (Model.Export is { } export)
+    {
+        <section id="meet-export">
+            <meta name="request-verification-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
+            <fieldset>
+                <legend>@T[JournalExportTextKeys.OrientationCaption]</legend>
+                <label><input type="radio" name="orientation" value="portrait" /> @T[JournalExportTextKeys.OrientationPortrait]</label>
+                <label><input type="radio" name="orientation" value="landscape" checked="checked" /> @T[JournalExportTextKeys.OrientationLandscape]</label>
+            </fieldset>
+            <button type="button" id="meet-export-button"
+                    data-kind="reports"
+                    data-course-id="@export.CourseId.ToString(CultureInfo.InvariantCulture)"
+                    data-from="@export.From.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                    data-to="@export.To.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">@T[JournalExportTextKeys.Action]</button>
+            <p id="meet-export-error" class="form-error" aria-live="polite"></p>
+        </section>
+        <script src="~/js/meet-export.js"></script>
+    }
 
     @* Report 1 (spec FR-007, I-6). *@
     <section id="meet-reports-summary">

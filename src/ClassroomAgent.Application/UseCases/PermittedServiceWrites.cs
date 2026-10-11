@@ -48,5 +48,10 @@ public static class PermittedServiceWrites
             // US-028 spec FR-009, BR-026: exporting already-synced data keeps working in read-only mode, and the export's
             // only write is its audit row. Declared with the skeleton (OD-005), so the rule above stays whole.
             [typeof(ExportJournalCommand)] = PermittedServiceWrite.AuditEvent,
+
+            // US-044 spec FR-012, BR-026: the Meet exports work in read-only mode; their only write is the audit row.
+            // Declared with the skeleton (OD-014).
+            [typeof(ExportMeetReportsCommand)] = PermittedServiceWrite.AuditEvent,
+            [typeof(ExportMeetMeetingCommand)] = PermittedServiceWrite.AuditEvent,
         };
 }

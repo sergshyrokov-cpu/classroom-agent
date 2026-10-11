@@ -179,6 +179,14 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(8)")
                         .HasColumnName("export_format");
 
+                    b.Property<long?>("ExportMeetingId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("export_meeting_id");
+
+                    b.Property<int?>("ExportMeetings")
+                        .HasColumnType("integer")
+                        .HasColumnName("export_meetings");
+
                     b.Property<DateOnly?>("ExportPeriodFrom")
                         .HasColumnType("date")
                         .HasColumnName("export_period_from");
@@ -281,7 +289,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                     b.ToTable("audit_event", null, t =>
                         {
-                            t.HasCheckConstraint("ck_audit_event_action", "action IN ('admin_sign_in', 'workspace_connection_saved', 'access_check_run', 'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', 'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run', 'synchronization_requested', 'report_template_created', 'report_template_changed', 'report_template_deleted', 'journal_exported', 'meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', 'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed')");
+                            t.HasCheckConstraint("ck_audit_event_action", "action IN ('admin_sign_in', 'workspace_connection_saved', 'access_check_run', 'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', 'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run', 'synchronization_requested', 'report_template_created', 'report_template_changed', 'report_template_deleted', 'journal_exported', 'meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', 'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed', 'meet_reports_exported', 'meet_meeting_exported')");
 
                             t.HasCheckConstraint("ck_audit_event_actor_id", "(actor_type = 'app_user') = (actor_id IS NOT NULL)");
 
@@ -293,9 +301,9 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_audit_event_export_columns", "(action = 'journal_exported') = (export_period_from IS NOT NULL AND export_period_to IS NOT NULL AND export_template_built_in IS NOT NULL AND export_rows IS NOT NULL AND export_format IS NOT NULL)");
 
-                            t.HasCheckConstraint("ck_audit_event_export_columns_absent", "action = 'journal_exported' OR (export_period_from IS NULL AND export_period_to IS NULL AND export_template_id IS NULL AND export_template_built_in IS NULL AND export_rows IS NULL AND export_format IS NULL)");
+                            t.HasCheckConstraint("ck_audit_event_export_columns_absent", "action IN ('journal_exported', 'meet_reports_exported', 'meet_meeting_exported') OR (export_period_from IS NULL AND export_period_to IS NULL AND export_template_id IS NULL AND export_template_built_in IS NULL AND export_rows IS NULL AND export_format IS NULL AND export_meeting_id IS NULL AND export_meetings IS NULL)");
 
-                            t.HasCheckConstraint("ck_audit_event_export_shape", "action <> 'journal_exported' OR (actor_type = 'app_user' AND target_type = 'course' AND target_id IS NOT NULL AND outcome = 'succeeded' AND export_period_from <= export_period_to AND export_rows >= 0 AND export_format IN ('xlsx') AND export_template_built_in = (export_template_id IS NULL))");
+                            t.HasCheckConstraint("ck_audit_event_export_shape", "action <> 'journal_exported' OR (actor_type = 'app_user' AND target_type = 'course' AND target_id IS NOT NULL AND outcome = 'succeeded' AND export_period_from <= export_period_to AND export_rows >= 0 AND export_format IN ('xlsx') AND export_template_built_in = (export_template_id IS NULL) AND export_meeting_id IS NULL AND export_meetings IS NULL)");
 
                             t.HasCheckConstraint("ck_audit_event_export_template_id", "export_template_id IS NULL OR export_template_id > 0");
 
@@ -306,6 +314,10 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_audit_event_meet_code_shape", "action NOT IN ('meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', 'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed') OR ( (actor_type = 'system') = (action = 'meet_code_auto_linked') AND (action <> 'meet_code_auto_linked' OR (outcome = 'succeeded' AND request_id IS NULL)) AND (refusal_category IS NULL OR refusal_category = 'read_only_mode') AND (target_type IS NULL OR target_type = 'course') AND (target_type IS NULL) = (target_id IS NULL) AND (outcome = 'succeeded' OR (target_id IS NULL AND meet_previous_course_id IS NULL)) AND (outcome <> 'succeeded' OR (meet_code IS NOT NULL AND (target_id IS NULL) = (action = 'meet_code_marked_not_a_course'))) AND (meet_previous_course_id IS NULL OR action IN ('meet_code_relinked', 'meet_code_marked_not_a_course')) AND (action <> 'meet_code_relinked' OR outcome <> 'succeeded' OR meet_previous_course_id IS NOT NULL))");
 
                             t.HasCheckConstraint("ck_audit_event_meet_code_values", "(meet_code IS NULL OR char_length(meet_code) >= 1) AND (meet_previous_course_id IS NULL OR meet_previous_course_id > 0)");
+
+                            t.HasCheckConstraint("ck_audit_event_meet_meeting_export_shape", "action <> 'meet_meeting_exported' OR (actor_type = 'app_user' AND target_type = 'course' AND target_id IS NOT NULL AND outcome = 'succeeded' AND refusal_category IS NULL AND export_meeting_id IS NOT NULL AND export_meeting_id > 0 AND export_rows IS NOT NULL AND export_rows >= 0 AND export_format = 'xlsx' AND export_period_from IS NULL AND export_period_to IS NULL AND export_meetings IS NULL AND export_template_id IS NULL AND export_template_built_in IS NULL)");
+
+                            t.HasCheckConstraint("ck_audit_event_meet_reports_export_shape", "action <> 'meet_reports_exported' OR (actor_type = 'app_user' AND target_type = 'course' AND target_id IS NOT NULL AND outcome = 'succeeded' AND refusal_category IS NULL AND export_period_from IS NOT NULL AND export_period_to IS NOT NULL AND export_period_from <= export_period_to AND export_rows IS NOT NULL AND export_rows >= 0 AND export_meetings IS NOT NULL AND export_meetings >= 0 AND export_format = 'xlsx' AND export_meeting_id IS NULL AND export_template_id IS NULL AND export_template_built_in IS NULL)");
 
                             t.HasCheckConstraint("ck_audit_event_outcome", "outcome IN ('succeeded', 'refused')");
 

@@ -89,6 +89,12 @@ public sealed class AuditEvent
     /// <summary>US-028 db-design §3.2: file format of the export; null for every other action.</summary>
     public ExportFormat? ExportFormat { get; private set; }
 
+    /// <summary>US-044 db-design §3.2: internal id of the meeting whose report 4 was exported; null for every other action.</summary>
+    public long? ExportMeetingId { get; private set; }
+
+    /// <summary>US-044 db-design §3.2: number of meeting rows of report 2 in the course workbook; null for every other action.</summary>
+    public int? ExportMeetings { get; private set; }
+
     /// <summary>US-032 db-design §3.2: the meeting code of a link change; null for every other action.</summary>
     public string? MeetCode { get; private set; }
 
@@ -786,6 +792,103 @@ public sealed class AuditEvent
             ExportRows = rows,
             ExportFormat = format,
         };
+    }
+
+    /// <summary>
+    /// US-044 spec FR-013 (entity model §1.3): one row per successful export of reports 1–3 of a course and period —
+    /// the student rows of report 3 and the meeting rows of report 2. Ids, the period, counts and the format only.
+    /// </summary>
+    public static AuditEvent MeetReportsExported(
+        long actorId,
+        AppRole actorRole,
+        long courseId,
+        DateOnly from,
+        DateOnly to,
+        int studentRows,
+        int meetingRows,
+        ExportFormat format,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        GuardMeetExport(actorRole, format, courseId);
+        if (from > to)
+        {
+            throw new ArgumentOutOfRangeException(nameof(from), from, "The exported period begins after it ends.");
+        }
+
+        ArgumentOutOfRangeException.ThrowIfNegative(studentRows);
+        ArgumentOutOfRangeException.ThrowIfNegative(meetingRows);
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = actorId,
+            ActorRole = actorRole,
+            Action = AuditAction.MeetReportsExported,
+            TargetType = AuditTargetType.Course,
+            TargetId = courseId,
+            Outcome = AuditOutcome.Succeeded,
+            RefusalCategory = null,
+            RequestId = requestId,
+            ExportPeriodFrom = from,
+            ExportPeriodTo = to,
+            ExportRows = studentRows,
+            ExportMeetings = meetingRows,
+            ExportFormat = format,
+        };
+    }
+
+    /// <summary>
+    /// US-044 spec FR-013 (entity model §1.3): one row per successful export of report 4 of a meeting — the course,
+    /// the meeting's internal id and the identified-person rows. Never a name, email or meeting code.
+    /// </summary>
+    public static AuditEvent MeetMeetingExported(
+        long actorId,
+        AppRole actorRole,
+        long courseId,
+        long meetingId,
+        int personRows,
+        ExportFormat format,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        GuardMeetExport(actorRole, format, courseId);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(meetingId);
+        ArgumentOutOfRangeException.ThrowIfNegative(personRows);
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = actorId,
+            ActorRole = actorRole,
+            Action = AuditAction.MeetMeetingExported,
+            TargetType = AuditTargetType.Course,
+            TargetId = courseId,
+            Outcome = AuditOutcome.Succeeded,
+            RefusalCategory = null,
+            RequestId = requestId,
+            ExportMeetingId = meetingId,
+            ExportRows = personRows,
+            ExportFormat = format,
+        };
+    }
+
+    /// <summary>US-044 entity model §1.3: the guards both Meet export factories share, as <see cref="JournalExported"/>.</summary>
+    private static void GuardMeetExport(AppRole actorRole, ExportFormat format, long courseId)
+    {
+        if (!Enum.IsDefined(actorRole))
+        {
+            throw new ArgumentOutOfRangeException(nameof(actorRole), actorRole, "Not a declared role.");
+        }
+
+        if (!Enum.IsDefined(format))
+        {
+            throw new ArgumentOutOfRangeException(nameof(format), format, "Not a declared export format.");
+        }
+
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(courseId);
     }
 
     /// <summary>

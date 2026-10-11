@@ -33,7 +33,8 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 + "'synchronization_requested', 'report_template_created', 'report_template_changed', "
                 + "'report_template_deleted', 'journal_exported', "
                 + "'meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', "
-                + "'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed')");
+                + "'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed', "
+                + "'meet_reports_exported', 'meet_meeting_exported')");
 
             // US-009 db-design §4.1: a refused action names WHAT was refused without naming a row that was never
             // created, so a target type without an id is now legal. An id without a type — an identifier belonging
@@ -120,15 +121,37 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 + "AND export_template_built_in IS NOT NULL AND export_rows IS NOT NULL AND export_format IS NOT NULL)");
             table.HasCheckConstraint(
                 "ck_audit_event_export_columns_absent",
-                "action = 'journal_exported' OR (export_period_from IS NULL AND export_period_to IS NULL "
+                "action IN ('journal_exported', 'meet_reports_exported', 'meet_meeting_exported') "
+                + "OR (export_period_from IS NULL AND export_period_to IS NULL "
                 + "AND export_template_id IS NULL AND export_template_built_in IS NULL AND export_rows IS NULL "
-                + "AND export_format IS NULL)");
+                + "AND export_format IS NULL AND export_meeting_id IS NULL AND export_meetings IS NULL)");
             table.HasCheckConstraint(
                 "ck_audit_event_export_shape",
                 "action <> 'journal_exported' OR (actor_type = 'app_user' AND target_type = 'course' "
                 + "AND target_id IS NOT NULL AND outcome = 'succeeded' AND export_period_from <= export_period_to "
                 + "AND export_rows >= 0 AND export_format IN ('xlsx') "
-                + "AND export_template_built_in = (export_template_id IS NULL))");
+                + "AND export_template_built_in = (export_template_id IS NULL) "
+                + "AND export_meeting_id IS NULL AND export_meetings IS NULL)");
+            // US-044 db-design §3.3: the two Meet export rows each have exactly their own columns.
+            table.HasCheckConstraint(
+                "ck_audit_event_meet_reports_export_shape",
+                "action <> 'meet_reports_exported' OR (actor_type = 'app_user' AND target_type = 'course' "
+                + "AND target_id IS NOT NULL AND outcome = 'succeeded' AND refusal_category IS NULL "
+                + "AND export_period_from IS NOT NULL AND export_period_to IS NOT NULL "
+                + "AND export_period_from <= export_period_to "
+                + "AND export_rows IS NOT NULL AND export_rows >= 0 "
+                + "AND export_meetings IS NOT NULL AND export_meetings >= 0 "
+                + "AND export_format = 'xlsx' "
+                + "AND export_meeting_id IS NULL AND export_template_id IS NULL AND export_template_built_in IS NULL)");
+            table.HasCheckConstraint(
+                "ck_audit_event_meet_meeting_export_shape",
+                "action <> 'meet_meeting_exported' OR (actor_type = 'app_user' AND target_type = 'course' "
+                + "AND target_id IS NOT NULL AND outcome = 'succeeded' AND refusal_category IS NULL "
+                + "AND export_meeting_id IS NOT NULL AND export_meeting_id > 0 "
+                + "AND export_rows IS NOT NULL AND export_rows >= 0 "
+                + "AND export_format = 'xlsx' "
+                + "AND export_period_from IS NULL AND export_period_to IS NULL AND export_meetings IS NULL "
+                + "AND export_template_id IS NULL AND export_template_built_in IS NULL)");
             table.HasCheckConstraint(
                 "ck_audit_event_export_template_id",
                 "export_template_id IS NULL OR export_template_id > 0");
@@ -210,6 +233,10 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         builder.Property(e => e.ExportPeriodFrom).HasColumnType("date");
         builder.Property(e => e.ExportPeriodTo).HasColumnType("date");
         builder.Property(e => e.ExportTemplateId);
+
+        // US-044 db-design §3.2: a bare meeting id (no foreign key, PC-9, PC-11) and a count of meeting rows.
+        builder.Property(e => e.ExportMeetingId);
+        builder.Property(e => e.ExportMeetings);
         builder.Property(e => e.ExportTemplateBuiltIn);
         builder.Property(e => e.ExportRows);
         builder.Property(e => e.ExportFormat)
@@ -292,6 +319,8 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         AuditAction.MeetCodeRelinked => "meet_code_relinked",
         AuditAction.MeetCodeMarkedNotACourse => "meet_code_marked_not_a_course",
         AuditAction.MeetCodeMarkRemoved => "meet_code_mark_removed",
+        AuditAction.MeetReportsExported => "meet_reports_exported",
+        AuditAction.MeetMeetingExported => "meet_meeting_exported",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -318,6 +347,8 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         "meet_code_relinked" => AuditAction.MeetCodeRelinked,
         "meet_code_marked_not_a_course" => AuditAction.MeetCodeMarkedNotACourse,
         "meet_code_mark_removed" => AuditAction.MeetCodeMarkRemoved,
+        "meet_reports_exported" => AuditAction.MeetReportsExported,
+        "meet_meeting_exported" => AuditAction.MeetMeetingExported,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 

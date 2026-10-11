@@ -196,6 +196,9 @@ public static class InstallationServices
         services.AddScoped<ExportJournalCommand>();
         services.AddSingleton<IReportRenderer, ClosedXmlReportRenderer>();
         services.AddScoped<IReportTexts, LocalizedReportTexts>();
+        // US-044 spec FR-016: the two Meet exports, over the US-033 queries and the US-028 renderer and text port.
+        services.AddScoped<ExportMeetReportsCommand>();
+        services.AddScoped<ExportMeetMeetingCommand>();
 
         // US-017 spec FR-007: the "Last synchronization" block of the connection page. It reads and writes
         // nothing, so it needs no guard and no unit of work.

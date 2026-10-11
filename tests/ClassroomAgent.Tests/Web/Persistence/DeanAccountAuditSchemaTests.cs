@@ -157,7 +157,8 @@ public sealed class DeanAccountAuditSchemaTests(PostgreSqlFixture database)
         // US-028 adds the six export columns of the journal export's row (db-design).
         // US-031 adds the two Meet counts of the purge's row (db-design §5.1).
         // US-032 adds meet_code, meet_previous_course_id and purged_meet_code_links (US-032 db-design §3).
-        Assert.Equal(29, columns.Count);
+        // US-044 adds export_meeting_id and export_meetings (US-044 db-design §3.2).
+        Assert.Equal(31, columns.Count);
     }
 
     private static string Text(Exception exception)

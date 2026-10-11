@@ -8,4 +8,5 @@ public sealed record MeetReportsPageModel(
     DateOnly? From,
     DateOnly? To,
     IReadOnlyList<MeetReportsMessageKey> MessageKeys,
-    MeetReports? Reports);
+    MeetReports? Reports,
+    MeetReportsExportAction? Export = null);

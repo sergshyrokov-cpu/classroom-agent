@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-044
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-10-11T06:39:47Z
-updated_at: 2026-10-11T06:55:00Z
+updated_at: 2026-10-11T07:30:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-044-meet-reports-export.md
@@ -16,7 +16,7 @@ supersedes: null
 
 # US-044 Open Decisions — Export the built-in Meet reports to Excel
 
-**Thirteen, all resolved.** OD-001 … OD-003 were decided by the Owner in US-033
+**Fourteen, all resolved.** OD-001 … OD-003 were decided by the Owner in US-033
 discovery (2026-10-10), OD-004 … OD-012 in US-044 discovery (2026-10-11), all
 before activation. Writing the Specification raised none:
 
@@ -113,3 +113,18 @@ in report 4's header — so that each can be sorted and filtered in Excel.
 **Resolved (b)** — Owner, 2026-10-11: more convenient for the user's later work
 in Excel. Impact: spec FR-003, FR-004, FR-005.2, FR-005.3, FR-006, FR-007
 ("Persons"), FR-015.
+
+## OD-014 Compile-only skeleton created at TEST_WRITING
+
+Raised by TEST_WRITING. The tests reference declarations that do not exist yet:
+the two requests, commands and outcomes, `MeetExportFileName`, the two
+`AuditAction` values and `AuditEvent` factories and properties, the opt-in
+workbook-model members of entity model §3, and the `Export` members of the two
+page models. The test-writer may not change production code. US-025 … US-042
+resolved the same gap the same way.
+
+Options: (a) a compile-only skeleton — declarations only; members throw
+`NotImplementedException`; nothing registered in DI, no migration, no existing
+behaviour changed; IMPLEMENTATION owns and completes it; (b) no skeleton.
+
+**Resolved (a)** — Owner, 2026-10-11.

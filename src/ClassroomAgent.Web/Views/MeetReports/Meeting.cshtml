@@ -1,5 +1,7 @@
 @using System.Globalization
 @using ClassroomAgent.Application.Models.Dtos
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery Antiforgery
 @model MeetReportMeetingPageModel
 @{
     ViewData["Title"] = T[MeetReportsTextKeys.MeetingTitle];
@@ -47,6 +49,26 @@
             </dd>
         </dl>
     </section>
+
+    @* US-044: the action carries validated ids only; a static script posts them as JSON with the antiforgery
+       header. No form submission, no inline script. *@
+    @if (Model.Export is { } export)
+    {
+        <section id="meet-export">
+            <meta name="request-verification-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
+            <fieldset>
+                <legend>@T[JournalExportTextKeys.OrientationCaption]</legend>
+                <label><input type="radio" name="orientation" value="portrait" /> @T[JournalExportTextKeys.OrientationPortrait]</label>
+                <label><input type="radio" name="orientation" value="landscape" checked="checked" /> @T[JournalExportTextKeys.OrientationLandscape]</label>
+            </fieldset>
+            <button type="button" id="meet-export-button"
+                    data-kind="meeting"
+                    data-course-id="@export.CourseId.ToString(CultureInfo.InvariantCulture)"
+                    data-meeting-id="@export.MeetingId.ToString(CultureInfo.InvariantCulture)">@T[JournalExportTextKeys.Action]</button>
+            <p id="meet-export-error" class="form-error" aria-live="polite"></p>
+        </section>
+        <script src="~/js/meet-export.js"></script>
+    }
 
     @* Spec FR-010, I-11: one line per identified person, then one line for the other participants — a count and
        their minutes, never an address or a name. *@

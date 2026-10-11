@@ -38,6 +38,9 @@ public sealed class JournalExportAuditSchemaTests(PostgreSqlFixture database)
             SELECT column_name, data_type, is_nullable, character_maximum_length
             FROM information_schema.columns
             WHERE table_schema = 'public' AND table_name = 'audit_event' AND column_name LIKE 'export\_%'
+              -- US-044 adds export_meeting_id and export_meetings (US-044 db-design §3); they are pinned in
+              -- MeetExportAuditSchemaTests, so this test stays on the six US-028 columns.
+              AND column_name NOT IN ('export_meeting_id', 'export_meetings')
             ORDER BY column_name
             """,
             r => $"{r.GetString(0)} {r.GetString(1)} {r.GetString(2)} {(r.IsDBNull(3) ? "-" : r.GetInt32(3).ToString())}",

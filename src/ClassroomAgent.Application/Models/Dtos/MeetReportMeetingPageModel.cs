@@ -4,4 +4,5 @@ namespace ClassroomAgent.Application.Models.Dtos;
 public sealed record MeetReportMeetingPageModel(
     MeetReportBackLink BackLink,
     MeetReportMeetingMessageKey? MessageKey,
-    MeetingDetail? Meeting);
+    MeetingDetail? Meeting,
+    MeetMeetingExportAction? Export = null);

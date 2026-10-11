@@ -4,31 +4,35 @@
 version: 1
 story: US-044
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: security-reviewer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: '2026-10-11T07:10:42Z'
+  stage: SECURITY_REVIEW
+  recorded_at: '2026-10-11T09:33:24Z'
 last_artifacts:
-- type: database_design
-  path: docs/designs/database/US-044-db-design.md
-  version: 1
-- type: entity_model
-  path: docs/designs/database/US-044-entity-model.md
+- type: security_review
+  path: docs/reviews/security/US-044-security-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'SECURITY_REVIEW: PASS, 0 Critical/Major/Minor; INFO-1 no upper bound on period or body size (no requirement), INFO-2 controller duplicates journal JSON reader and actor helpers, INFO-3 TC-5 forbidden role structural until Epic 7 roles.'
+- 'SECURITY_REVIEW: build 0 warnings; tests 4893/4893, none skipped; no vulnerable packages; no csproj change.'
+- 'IMPLEMENTATION: full suite 4893/4893, build and format clean; migration 20261011075017_AddMeetExportAudit; 5 pinned audit_event schema tests and 2 test-fixture message defects updated.'
+- 'IMPLEMENTATION: ReportText +22 Meet* members over existing MeetReports.* keys; MeetExportController repeats the journal controller JSON reader and actor helpers (no refactor of US-028).'
+- 'TEST_WRITING: 253 new tests, 245 red for missing implementation, 8 green guards; 25 Meet* cases of JournalExportTranslationTests also red until translations exist; existing suite green.'
+- 'TEST_WRITING: OD-014 (a) compile-only skeleton, Owner 2026-10-11; 25 ReportText Meet* members, MeetExportResult/Field/MessageKey types; registry tests updated for the two new BR-026 declarations.'
+- 'TEST_WRITING: schema tests expect db-design §3.3 CHECK names; log tests assume the orientation is logged as the word landscape.'
 - 'DB_DESIGN: migration AddMeetExportAudit — audit_event gains export_meeting_id, export_meetings, two action codes, export CHECKs rewritten; workbook model additions opt-in (journal file unchanged).'
 - 'API_DESIGN: two operations meet-reports-xlsx / meet-meeting-xlsx; new key Export.Validation.MeetingMalformed; page script — new or shared, journal behaviour must not change.'
 - 'HUMAN_SPEC_APPROVAL: I-1 became OD-013 (b) — name and email in separate columns; I-4 and I-9 confirmed.'
 - 'F-1 done at the gate: SC-11 export row lists the meeting id and row counts (security-conventions.md).'
 - 'F-2 clarified at the gate: export time and Meet delay line in the Meet export only; journal export unchanged.'
 started_at: '2026-10-11T06:41:39Z'
-updated_at: '2026-10-11T07:10:42Z'
-completed_at: null
+updated_at: '2026-10-11T09:36:27Z'
+completed_at: '2026-10-11T09:36:27Z'

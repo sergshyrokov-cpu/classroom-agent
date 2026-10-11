@@ -81,8 +81,18 @@ public sealed class GetMeetReportsQuery(
             .ToList();
         var known = course is { } chosen && records.Any(c => c.Id == chosen) ? course : null;
 
+        // US-044 spec FR-002: the export action only beside built reports, with the validated course and the effective
+        // period, so the file equals the screen.
         MeetReportsPageResult Page(MeetReportsPageOutcome outcome, MeetReports? reports = null) =>
-            new(outcome, new MeetReportsPageModel(options, records.Count == 0, known, from, to, messages, reports));
+            new(outcome, new MeetReportsPageModel(
+                options,
+                records.Count == 0,
+                known,
+                from,
+                to,
+                messages,
+                reports,
+                reports is null ? null : new MeetReportsExportAction(known!.Value, from!.Value, to!.Value)));
 
         if (messages.Count > 0)
         {

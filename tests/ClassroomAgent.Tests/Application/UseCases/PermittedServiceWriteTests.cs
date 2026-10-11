@@ -64,7 +64,7 @@ public sealed class PermittedServiceWriteTests(PostgreSqlFixture database)
         // grow (the enum is asserted unchanged above). US-039 added the language choice, which BR-026 also names
         // ("выбор пользователем языка интерфейса"), again as SignInBookkeeping (US-039 spec FR-007). US-037 added the
         // retention purge as RetentionPurge, a member BR-026 has listed since US-007 (spec FR-011, BR-075).
-        // US-028: the export's audit row (BR-026), as AuditEvent.
+        // US-028: the export's audit row (BR-026), as AuditEvent. US-044 (spec FR-012): the two Meet exports, likewise.
         Assert.All(
             PermittedServiceWrites.Declarations,
             entry => Assert.Equal(typeof(GetLegitimacyModeQuery).Namespace, entry.Key.Namespace));
@@ -81,6 +81,8 @@ public sealed class PermittedServiceWriteTests(PostgreSqlFixture database)
                 "CompleteGoogleSignInUseCase",
                 "CompleteTemporaryPasswordChangeUseCase",
                 "ExportJournalCommand",
+                "ExportMeetMeetingCommand",
+                "ExportMeetReportsCommand",
                 "RunRetentionPurgeUseCase",
                 "SignInDeanUseCase",
             },

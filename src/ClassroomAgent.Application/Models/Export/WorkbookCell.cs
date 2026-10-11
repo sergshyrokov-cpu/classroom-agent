@@ -17,6 +17,15 @@ public sealed record WorkbookCell(
 
     private static readonly char[] FormulaLeads = ['=', '+', '-', '@', '\t', '\r'];
 
+    /// <summary>US-044 entity model §3.2: the value of a <see cref="WorkbookCellKind.Time"/> cell.</summary>
+    public TimeOnly? Time { get; init; }
+
+    /// <summary>US-044 entity model §3.2: the value of a <see cref="WorkbookCellKind.DateTime"/> cell — local wall-clock time, kind Unspecified.</summary>
+    public DateTime? LocalDateTime { get; init; }
+
+    /// <summary>US-044 entity model §3.2: the Excel number format of a number cell, e.g. <c>0.0</c>; null is Excel's General.</summary>
+    public string? NumberFormat { get; init; }
+
     public static WorkbookCell Empty() => new(WorkbookCellKind.Empty, null, null, null, false, false);
 
     /// <summary>A text value, cut to <see cref="MaxTextLength"/>; formula-like text keeps its value and gains the quote prefix.</summary>
@@ -31,4 +40,19 @@ public sealed record WorkbookCell(
     public static WorkbookCell OfNumber(decimal number) => new(WorkbookCellKind.Number, null, number, null, false, false);
 
     public static WorkbookCell OfDate(DateOnly date) => new(WorkbookCellKind.Date, null, null, date, false, false);
+
+    /// <summary>US-044 entity model §3.2.</summary>
+    public static WorkbookCell OfTime(TimeOnly time) =>
+        new(WorkbookCellKind.Time, null, null, null, false, false) { Time = time };
+
+    /// <summary>US-044 entity model §3.2.</summary>
+    public static WorkbookCell OfDateTime(DateTime localDateTime) =>
+        new(WorkbookCellKind.DateTime, null, null, null, false, false)
+        {
+            LocalDateTime = DateTime.SpecifyKind(localDateTime, DateTimeKind.Unspecified),
+        };
+
+    /// <summary>US-044 entity model §3.2: a number with its own number format.</summary>
+    public static WorkbookCell OfNumber(decimal number, string? numberFormat) =>
+        OfNumber(number) with { NumberFormat = numberFormat };
 }

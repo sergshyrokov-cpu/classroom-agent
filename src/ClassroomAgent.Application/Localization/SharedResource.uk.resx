@@ -395,4 +395,27 @@
   <data name="MeetReports.Validation.FromMalformed" xml:space="preserve"><value>Некоректна дата початку періоду.</value></data>
   <data name="MeetReports.Validation.ToMalformed" xml:space="preserve"><value>Некоректна дата кінця періоду.</value></data>
   <data name="MeetReports.Validation.PeriodInverted" xml:space="preserve"><value>Початок періоду пізніше за його кінець.</value></data>
+  <data name="MeetExport.Sheet.Summary" xml:space="preserve"><value>Зведення</value></data>
+  <data name="MeetExport.Sheet.Meetings" xml:space="preserve"><value>Зустрічі</value></data>
+  <data name="MeetExport.Sheet.Students" xml:space="preserve"><value>Участь студентів</value></data>
+  <data name="MeetExport.Sheet.Meeting" xml:space="preserve"><value>Зустріч</value></data>
+  <data name="MeetExport.Header.Period" xml:space="preserve"><value>Період</value></data>
+  <data name="MeetExport.Header.Meeting" xml:space="preserve"><value>Зустріч</value></data>
+  <data name="MeetExport.Header.Duration" xml:space="preserve"><value>Тривалість, хв</value></data>
+  <data name="MeetExport.Header.MeetingCode" xml:space="preserve"><value>Код зустрічі</value></data>
+  <data name="MeetExport.Header.Organizer" xml:space="preserve"><value>Організатор</value></data>
+  <data name="MeetExport.Header.Exported" xml:space="preserve"><value>Експортовано</value></data>
+  <data name="MeetExport.Summary.Indicator" xml:space="preserve"><value>Показник</value></data>
+  <data name="MeetExport.Summary.Value" xml:space="preserve"><value>Значення</value></data>
+  <data name="MeetExport.Summary.MeetingCount" xml:space="preserve"><value>Кількість зустрічей</value></data>
+  <data name="MeetExport.Summary.TotalMinutes" xml:space="preserve"><value>Загальна тривалість, хв</value></data>
+  <data name="MeetExport.Summary.AverageMinutes" xml:space="preserve"><value>Середня тривалість, хв</value></data>
+  <data name="MeetExport.Summary.AverageStudents" xml:space="preserve"><value>Середня кількість студентів курсу на зустрічі</value></data>
+  <data name="MeetExport.Column.Email" xml:space="preserve"><value>Ел. пошта</value></data>
+  <data name="MeetExport.Column.OrganizerEmail" xml:space="preserve"><value>Ел. пошта організатора</value></data>
+  <data name="MeetExport.Column.OrganizerMark" xml:space="preserve"><value>Позначка організатора</value></data>
+  <data name="MeetExport.Column.Person" xml:space="preserve"><value>Особа</value></data>
+  <data name="MeetExport.Column.Mark" xml:space="preserve"><value>Позначка</value></data>
+  <data name="MeetExport.Column.OfMeetingMinutes" xml:space="preserve"><value>Тривалість зустрічі, хв</value></data>
+  <data name="Export.Validation.MeetingMalformed" xml:space="preserve"><value>Зустріч не вказано або вказано некоректно.</value></data>
 </root>

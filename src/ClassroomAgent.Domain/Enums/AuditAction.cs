@@ -86,4 +86,10 @@ public enum AuditAction
 
     /// <summary>US-032 spec FR-014: a person picked a course for a marked code, removing the mark.</summary>
     MeetCodeMarkRemoved,
+
+    /// <summary>US-044 spec FR-013: reports 1–3 of one course and period were exported to a file.</summary>
+    MeetReportsExported,
+
+    /// <summary>US-044 spec FR-013: report 4 of one meeting was exported to a file.</summary>
+    MeetMeetingExported,
 }

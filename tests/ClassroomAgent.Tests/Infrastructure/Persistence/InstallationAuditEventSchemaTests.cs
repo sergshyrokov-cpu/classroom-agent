@@ -34,6 +34,10 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
                 "actor_type character varying 16 NO -",
                 "created_at timestamp with time zone - NO -",
                 "export_format character varying 8 YES -",
+
+                // US-044 adds the meeting id and the meetings count of a Meet export (US-044 db-design §3).
+                "export_meeting_id bigint - YES -",
+                "export_meetings integer - YES -",
                 "export_period_from date - YES -",
                 "export_period_to date - YES -",
                 "export_rows integer - YES -",
@@ -108,6 +112,10 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
                 "ck_audit_event_meet_code_absent",
                 "ck_audit_event_meet_code_shape",
                 "ck_audit_event_meet_code_values",
+
+                // US-044 adds two constraints on the Meet export columns (US-044 db-design §3).
+                "ck_audit_event_meet_meeting_export_shape",
+                "ck_audit_event_meet_reports_export_shape",
                 "ck_audit_event_outcome",
                 "ck_audit_event_purge_actor",
                 "ck_audit_event_purge_counts",

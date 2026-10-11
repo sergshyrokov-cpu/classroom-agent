@@ -14,7 +14,17 @@ public static class JournalExportFileName
 
     private const string ForbiddenCharacters = "\\/:*?\"<>|";
 
-    public static string Build(string courseName, DateOnly from, DateOnly to, string fallback)
+    public static string Build(string courseName, DateOnly from, DateOnly to, string fallback) =>
+        string.Create(
+            CultureInfo.InvariantCulture,
+            $"{CoursePart(courseName, fallback)} {from:yyyy-MM-dd}–{to:yyyy-MM-dd}.xlsx");
+
+    /// <summary>
+    /// The course part of an export file name: forbidden characters become <c>_</c>, white space is collapsed, the
+    /// result trimmed and cut to <see cref="MaxCourseLength"/>, the fallback when nothing is left. Shared with
+    /// <see cref="MeetExportFileName"/> (US-044 entity model §2.4) so the two rules cannot drift.
+    /// </summary>
+    internal static string CoursePart(string courseName, string fallback)
     {
         ArgumentNullException.ThrowIfNull(courseName);
         ArgumentNullException.ThrowIfNull(fallback);
@@ -44,13 +54,6 @@ public static class JournalExportFileName
             course = course[..MaxCourseLength].Trim(' ', '.');
         }
 
-        if (course.Length == 0)
-        {
-            course = fallback;
-        }
-
-        return string.Create(
-            CultureInfo.InvariantCulture,
-            $"{course} {from:yyyy-MM-dd}–{to:yyyy-MM-dd}.xlsx");
+        return course.Length == 0 ? fallback : course;
     }
 }

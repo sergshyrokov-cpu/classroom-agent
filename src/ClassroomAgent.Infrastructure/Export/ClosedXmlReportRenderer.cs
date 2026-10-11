@@ -39,8 +39,16 @@ public sealed class ClosedXmlReportRenderer : IReportRenderer
             var cells = sheet.Rows[r].Cells;
             for (var c = 0; c < cells.Count; c++)
             {
-                Write(target.Cell(r + 1, c + 1), cells[c], workbook.DateFormat);
+                Write(target.Cell(r + 1, c + 1), cells[c], workbook);
             }
+        }
+
+        // US-044 entity model §3.3: the filter runs from the header row to the last table row, over the header's columns.
+        if (sheet.AutoFilter && sheet.TableHeaderRowIndex is { } filterHeader)
+        {
+            var lastRow = (sheet.TableLastRowIndex ?? sheet.Rows.Count - 1) + 1;
+            var lastColumn = sheet.Rows[filterHeader].Cells.Count;
+            target.Range(filterHeader + 1, 1, lastRow, lastColumn).SetAutoFilter();
         }
 
         // Spec FR-004.8: the chosen orientation, one page wide and as many pages tall as needed.
@@ -69,7 +77,7 @@ public sealed class ClosedXmlReportRenderer : IReportRenderer
         target.ColumnsUsed().AdjustToContents(MinColumnWidth, MaxColumnWidth);
     }
 
-    private static void Write(IXLCell target, WorkbookCell cell, string dateFormat)
+    private static void Write(IXLCell target, WorkbookCell cell, Workbook workbook)
     {
         switch (cell.Kind)
         {
@@ -95,10 +103,25 @@ public sealed class ClosedXmlReportRenderer : IReportRenderer
                 break;
             case WorkbookCellKind.Number when cell.Number is { } number:
                 target.SetValue(number);
+                if (cell.NumberFormat is not null)
+                {
+                    target.Style.NumberFormat.Format = cell.NumberFormat;
+                }
+
                 break;
             case WorkbookCellKind.Date when cell.Date is { } date:
                 target.SetValue(date.ToDateTime(TimeOnly.MinValue));
-                target.Style.NumberFormat.Format = dateFormat;
+                target.Style.NumberFormat.Format = workbook.DateFormat;
+                break;
+            case WorkbookCellKind.Time when cell.Time is { } time:
+                target.SetValue(time.ToTimeSpan());
+                target.Style.NumberFormat.Format = workbook.TimeFormat
+                    ?? throw new InvalidOperationException("A time cell needs the workbook's time format.");
+                break;
+            case WorkbookCellKind.DateTime when cell.LocalDateTime is { } dateTime:
+                target.SetValue(dateTime);
+                target.Style.NumberFormat.Format = workbook.DateTimeFormat
+                    ?? throw new InvalidOperationException("A date-time cell needs the workbook's date-time format.");
                 break;
         }
     }

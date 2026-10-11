@@ -155,7 +155,8 @@ public sealed class AccessCheckAuditSchemaTests(PostgreSqlFixture database)
                 "action", "actor_id", "actor_role", "actor_type", "created_at",
 
                 // US-028 db-design: the six columns of the journal export's row.
-                "export_format", "export_period_from", "export_period_to", "export_rows",
+                // US-044 db-design §3.2: the meeting id and the meeting count of the Meet export rows.
+                "export_format", "export_meeting_id", "export_meetings", "export_period_from", "export_period_to", "export_rows",
                 "export_template_built_in", "export_template_id",
                 "id",
 
