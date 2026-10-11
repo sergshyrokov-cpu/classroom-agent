@@ -1,0 +1,542 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Export the built-in Meet reports to Excel (US-044)
+  version: "1"
+  description: >
+    HTTP contract of US-044 on the installation's public port. The Meet reports
+    page and the page of one meeting (US-033) each gain an "Export to Excel"
+    action. The actions call two new `/api/v1` export operations of the API-3
+    shape, beside US-028's `POST /api/v1/exports/journal-xlsx`:
+    `POST /api/v1/exports/meet-reports-xlsx` (reports 1–3 of one course and
+    period) and `POST /api/v1/exports/meet-meeting-xlsx` (report 4 of one
+    meeting). Each builds the page's own report through the same `Application`
+    query, maps it to the workbook model, renders `.xlsx` in memory, writes one
+    audit row and returns the file (spec FR-001 … FR-016). No operation calls
+    Google or reads a secret, in any mode. The host-wide `/api/v1` rules
+    completed by US-028 apply unchanged. Companion document:
+    docs/designs/api/US-044-api-design.md.
+x-story: US-044
+x-source-specification: docs/specifications/US-044-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-044-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 88
+x-produced-by: openapi-designer
+x-extends:
+  - docs/designs/api/US-028-openapi.yaml
+  - docs/designs/api/US-033-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type of
+  the Control Plane channel is added or changed (DC-12).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port. Illustrative."
+
+tags:
+  - name: export
+    description: "Meet report export (spec FR-001, FR-003 … FR-016)"
+  - name: meet-reports
+    description: "The US-033 pages — changed: the export action (spec FR-002)"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008, US-028, US-033 and US-040 configured applies and is not
+    restated: HTTPS and HSTS, deny-by-default (SC-4, API-9), the global
+    antiforgery filter, the session cookie, the exception handler (API-10), the
+    host-wide `Cache-Control: no-store` (US-040, SC-14), and the `/api/v1`
+    error mapping of US-028 `x-host-wide-rules.api-v1-error-body` — 401
+    `Api.Error.SignInRequired`, 403 `Api.Error.PasswordChangeRequired` /
+    `Error.Forbidden`, 400 `Error.PageExpired` for the token, 404/405
+    `Error.NotFound`, 500 `Error.Unexpected`.
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list of anonymous endpoints gains nothing; the endpoint
+    enumeration test classifies both new paths as protected (spec FR-011, S-01).
+
+  antiforgery-api: >
+    API-7, as US-028: the token travels in the `RequestVerificationToken` header,
+    taken by the page script from `<meta name="request-verification-token">`.
+
+  outbound: >
+    No operation calls anything outside the process (spec FR-012, S-04, S-13).
+
+paths:
+
+  /api/v1/exports/meet-reports-xlsx:
+
+    post:
+      tags: [export]
+      operationId: exportMeetReportsXlsx
+      summary: "Export reports 1–3 of one course and period as an Excel file"
+      description: >
+        Runs `GetMeetReportsQuery` — the reports page's own query — for the course
+        and period (spec FR-003), maps the result in `Application` into the
+        workbook model with three sheets, Summary, Meetings and Student
+        participation (spec FR-004, FR-005, FR-007), renders it through
+        `IReportRenderer` in memory, writes and commits one `AuditEvent` (spec
+        FR-013), then returns the file. Evaluation order: authentication (`401`)
+        → restricted session (`403`) → `ViewMeetReports` (`403`) → antiforgery
+        (`400`) → `Content-Type` (`415`) → body syntax (`400`,
+        `RequestMalformed`) → field validation (`400`, every failing field) →
+        course existence (`404`) → build → map → render → audit write and commit
+        → `200`. Nothing is read for the report before field validation passes
+        (spec FR-009, S-05). If rendering or the audit write fails, no file is
+        returned (`500`). Not paginated (API-8). Not reachable by `GET` (`405`).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewMeetReports
+      x-permission-matrix-row: "\"Просмотр и экспорт статистики Meet-занятий\" — Admin ✔, Dean ✔"
+      x-antiforgery: required (header `RequestVerificationToken`)
+      x-calls-google: false
+      x-writes: "one AuditEvent `MeetReportsExported`, Outcome `Succeeded`, on success only; nothing else"
+      x-read-only-mode: "allowed — identical in all three BR-025 causes; IReadOnlyModeGuard not called; the audit row is written (BR-026)"
+      x-database-round-trips: "those of GetMeetReportsQuery plus the audit write"
+      x-file-storage: "in memory only (spec FR-008, S-07)"
+      x-spec: [FR-001, FR-003, FR-004, FR-005, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014]
+      x-acceptance-criteria: [AC-002, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-016, AC-017]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/RequestVerificationToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetReportsExportRequest"
+            example:
+              courseId: "42"
+              from: "2026-09-01"
+              to: "2026-09-30"
+              orientation: landscape
+      responses:
+        "200":
+          description: >
+            The workbook (spec FR-005). Three worksheets in the exporting user's UI
+            language. No meeting or no student is a `200` with the empty-state
+            lines (spec FR-005.2, FR-005.3). Read-only mode answers exactly as
+            outside it.
+          headers:
+            Content-Disposition:
+              description: >
+                `attachment; filename="<ASCII fallback>"; filename*=UTF-8''<percent-encoded name>`
+                (RFC 6266, `SetHttpFileName`). The name is spec FR-008.1 —
+                `Meet <course> <from>–<to>.xlsx`, dates `yyyy-MM-dd`. No person's
+                name or email, no meeting code (S-09).
+              schema:
+                type: string
+              example: "attachment; filename=\"Meet ______ 7-_ 2026-09-01_2026-09-30.xlsx\"; filename*=UTF-8''Meet%20%D0%90%D0%BB%D0%B3%D0%B5%D0%B1%D1%80%D0%B0%207-%D0%90%202026-09-01%E2%80%932026-09-30.xlsx"
+            Cache-Control:
+              description: "`no-store`, by the host-wide rule of US-040 (SC-14; spec AC-016)."
+              schema:
+                type: string
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                contentMediaType: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+        "400":
+          description: >
+            One of: (a) missing or invalid antiforgery token — `Error.PageExpired`,
+            no `fieldErrors`; (b) the body is not a JSON object, has a duplicate
+            member or a member of the wrong JSON type —
+            `Export.Validation.RequestMalformed`, no `fieldErrors`; (c) field
+            validation (spec VR-001, VR-003) — one `fieldErrors` entry per failing
+            field in the order `courseId`, `from`, `to`, the period pair (field
+            `to`), `orientation`; `message` is the first entry's text. The rejected
+            value is never echoed, logged or audited. No file, no audit row.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              example:
+                timestamp: "2026-10-12T09:15:30Z"
+                status: 400
+                error: bad_request
+                message: "The start of the period is after its end."
+                path: /api/v1/exports/meet-reports-xlsx
+                fieldErrors:
+                  - field: to
+                    message: "The start of the period is after its end."
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: >
+            The body is valid but the course does not exist (`CourseUnknown`). No
+            report data read beyond the existence lookup; no file; no audit row.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              example:
+                timestamp: "2026-10-12T09:15:30Z"
+                status: 404
+                error: not_found
+                message: "This course is not in the program — choose one from the list."
+                path: /api/v1/exports/meet-reports-xlsx
+                fieldErrors:
+                  - field: courseId
+                    message: "This course is not in the program — choose one from the list."
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "415":
+          $ref: "#/components/responses/UnsupportedMediaType"
+        "500":
+          $ref: "#/components/responses/Unexpected"
+
+  /api/v1/exports/meet-meeting-xlsx:
+
+    post:
+      tags: [export]
+      operationId: exportMeetMeetingXlsx
+      summary: "Export report 4 of one meeting of a course as an Excel file"
+      description: >
+        Runs `GetMeetReportMeetingQuery` — the meeting page's own query — for the
+        course and meeting (spec FR-003), maps the result in `Application` into
+        the workbook model with one sheet, Meeting (spec FR-004, FR-006, FR-007),
+        renders it in memory, writes and commits one `AuditEvent` (spec FR-013),
+        then returns the file. Evaluation order as `exportMeetReportsXlsx`, with
+        existence: course (`404` `CourseUnknown`), then the meeting of that
+        course (`404` `MeetingNotFound`; checked only when the course exists).
+        No period is taken (spec FR-001, I-10).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewMeetReports
+      x-permission-matrix-row: "\"Просмотр и экспорт статистики Meet-занятий\" — Admin ✔, Dean ✔"
+      x-antiforgery: required (header `RequestVerificationToken`)
+      x-calls-google: false
+      x-writes: "one AuditEvent `MeetMeetingExported`, Outcome `Succeeded`, on success only; nothing else"
+      x-read-only-mode: "allowed — identical in all three BR-025 causes; IReadOnlyModeGuard not called; the audit row is written (BR-026)"
+      x-database-round-trips: "those of GetMeetReportMeetingQuery plus the delay-line read and the audit write"
+      x-file-storage: "in memory only (spec FR-008, S-07)"
+      x-spec: [FR-001, FR-003, FR-004, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014]
+      x-acceptance-criteria: [AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-016]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/RequestVerificationToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetMeetingExportRequest"
+            example:
+              courseId: "42"
+              meetingId: "1307"
+              orientation: portrait
+      responses:
+        "200":
+          description: >
+            The workbook (spec FR-006): one worksheet with the header block, the
+            persons table and the "Other participants" line.
+          headers:
+            Content-Disposition:
+              description: >
+                RFC 6266 as above. The name is spec FR-008.1 —
+                `Meet <course> <yyyy-MM-dd> <HH-mm>.xlsx`, the meeting's start in
+                the school's time zone. No person's name or email, no meeting code.
+              schema:
+                type: string
+            Cache-Control:
+              description: "`no-store` (SC-14)."
+              schema:
+                type: string
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                contentMediaType: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+        "400":
+          description: >
+            As `exportMeetReportsXlsx` (a) and (b); (c) field validation (spec
+            VR-002, VR-003) — `fieldErrors` in the order `courseId`, `meetingId`,
+            `orientation`. No file, no audit row.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: >
+            The course does not exist (`CourseUnknown`, field `courseId`), or the
+            meeting does not exist or is not a meeting of that course
+            (`MeetingNotFound`, field `meetingId`) — the two are not told apart
+            (US-033 FR-013). No file; no audit row.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              example:
+                timestamp: "2026-10-12T09:15:30Z"
+                status: 404
+                error: not_found
+                message: "The meeting was not found in this course."
+                path: /api/v1/exports/meet-meeting-xlsx
+                fieldErrors:
+                  - field: meetingId
+                    message: "The meeting was not found in this course."
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "415":
+          $ref: "#/components/responses/UnsupportedMediaType"
+        "500":
+          $ref: "#/components/responses/Unexpected"
+
+  /workspace/meet-reports:
+
+    get:
+      tags: [meet-reports]
+      operationId: getMeetReports
+      summary: "The Meet reports page — changed: the export action and the token meta tag"
+      description: >
+        US-033 `getMeetReports` with one additive change (spec FR-002). When
+        `reports` is non-null (a course chosen and valid, empty states included),
+        `MeetReportsPageModel.export` carries the validated course id and the
+        **effective** period, and the page renders the "Export to Excel" button,
+        the orientation radio pair (`landscape` pre-selected, `portrait`) and
+        `<meta name="request-verification-token">`. On the form-only state and on
+        `400`/`404`, `export` is null and nothing is rendered. A static script
+        posts `MeetReportsExportRequest` (API-3), saves a `200` under the
+        server's file name, and shows `ApiError.message` and each
+        `fieldErrors[].message` in an `aria-live` region. No inline script.
+        Viewing still writes nothing. Unchanged otherwise.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewMeetReports
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: "nothing"
+      x-read-only-mode: "allowed — the action is shown in all three BR-025 causes; showing it is not enforcement"
+      x-spec: [FR-002]
+      x-acceptance-criteria: [AC-001]
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: "As US-033, plus `export` when reports are shown."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/MeetReportsPageModelChange"
+
+  /workspace/meet-reports/meetings/{meetingId}:
+
+    get:
+      tags: [meet-reports]
+      operationId: getMeetReportMeeting
+      summary: "The page of one meeting — changed: the export action and the token meta tag"
+      description: >
+        US-033 `getMeetReportMeeting` with one additive change (spec FR-002).
+        When `meeting` is non-null, `MeetReportMeetingPageModel.export` carries
+        the validated course id and meeting id, and the page renders the button,
+        the orientation pair (`landscape` pre-selected) and the meta tag; the
+        script posts `MeetMeetingExportRequest`. On `400`/`404` (the "meeting not
+        found" page) `export` is null. The period of the back link is not sent.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewMeetReports
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: "nothing"
+      x-read-only-mode: "allowed — as above"
+      x-spec: [FR-002]
+      x-acceptance-criteria: [AC-001, AC-003]
+      security:
+        - installationSession: []
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema: {type: string, pattern: "^[0-9]+$"}
+      responses:
+        "200":
+          description: "As US-033, plus `export` when a meeting is shown."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/MeetReportMeetingPageModelChange"
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: __Host-ca-session
+      description: "The installation session cookie (US-008, API-7)."
+
+  parameters:
+    RequestVerificationToken:
+      name: RequestVerificationToken
+      in: header
+      required: true
+      description: "The antiforgery token (API-7)."
+      schema:
+        type: string
+
+  responses:
+    Unauthorized:
+      description: "No session, or it expired — `Api.Error.SignInRequired` (US-028 host-wide rule (1)). Nothing is read."
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ApiError"}
+    Forbidden:
+      description: "A Dean on the forced password change (`Api.Error.PasswordChangeRequired`), or a session the policy denies (`Error.Forbidden`). Nothing is read."
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ApiError"}
+    MethodNotAllowed:
+      description: "Any method other than `POST`, `GET` included (spec S-03). `Error.NotFound`."
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ApiError"}
+    UnsupportedMediaType:
+      description: "`Content-Type` is not `application/json`. `Export.Validation.RequestMalformed`. Checked after antiforgery."
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ApiError"}
+    Unexpected:
+      description: "Rendering or the audit write failed, or any unmapped exception. No file; nothing audited as succeeded; `Error.Unexpected`, no detail (AD-9, API-10, spec FR-013)."
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ApiError"}
+
+  schemas:
+
+    MeetReportsExportRequest:
+      type: object
+      description: >
+        Request DTO (AD-8), members bound as JSON strings and validated in
+        `Application` by the reports page's own parsers (spec VR-001). Absent,
+        JSON `null` and `""` are "absent". Unlisted members are ignored and never
+        echoed. Ids, dates and a token only — no personal data (S-09).
+      additionalProperties: true
+      properties:
+        courseId:
+          type: [string, "null"]
+          pattern: "^[0-9]{1,19}$"
+          description: "Required. Absent or malformed → `400` `CourseMalformed`; unknown → `404` `CourseUnknown`."
+        from:
+          type: [string, "null"]
+          format: date
+          description: "Required, `yyyy-MM-dd`, a real date in 2000–2100. Absent or malformed → `400` `FromMalformed`."
+        to:
+          type: [string, "null"]
+          format: date
+          description: >
+            Required, as `from`. Absent or malformed → `400` `ToMalformed`.
+            `from` > `to` → `400` `PeriodInverted` (field `to`), checked only when
+            both are well-formed.
+        orientation:
+          $ref: "#/components/schemas/Orientation"
+
+    MeetMeetingExportRequest:
+      type: object
+      description: "Request DTO (AD-8), as `MeetReportsExportRequest` (spec VR-002)."
+      additionalProperties: true
+      properties:
+        courseId:
+          type: [string, "null"]
+          pattern: "^[0-9]{1,19}$"
+          description: "Required. Absent or malformed → `400` `CourseMalformed`; unknown → `404` `CourseUnknown`."
+        meetingId:
+          type: [string, "null"]
+          pattern: "^[0-9]{1,19}$"
+          description: >
+            Required; decimal digits parsing to a positive 64-bit integer. Absent
+            or malformed → `400` `MeetingMalformed`; unknown or not of the course →
+            `404` `MeetingNotFound`.
+        orientation:
+          $ref: "#/components/schemas/Orientation"
+
+    Orientation:
+      type: [string, "null"]
+      description: >
+        Page orientation of every sheet (spec FR-007, OD-009). Absent →
+        `landscape`. Exactly `portrait` or `landscape`, case-sensitive, untrimmed;
+        anything else → `400` `OrientationInvalid`. Stored nowhere.
+      enum: [portrait, landscape, null]
+
+    MeetExportMessageKey:
+      type: string
+      description: >
+        Closed list of `fieldErrors` causes; `message` carries the translated text,
+        never the key. Reused: `CourseMalformed`, `CourseUnknown`, `FromMalformed`,
+        `ToMalformed`, `PeriodInverted` → `MeetReports.Validation.<member>`
+        (US-033); `MeetingNotFound` → `MeetReports.Meeting.MeetingNotFound`
+        (US-033); `OrientationInvalid` → `Export.Validation.OrientationInvalid`
+        (US-028). New: `MeetingMalformed` →
+        `Export.Validation.MeetingMalformed`.
+      enum: [CourseMalformed, CourseUnknown, FromMalformed, ToMalformed, PeriodInverted, MeetingMalformed, MeetingNotFound, OrientationInvalid]
+
+    ApiError:
+      type: object
+      description: "The API-6 error body, unchanged (US-008, US-028)."
+      required: [timestamp, status, error, message, path]
+      properties:
+        timestamp: {type: string, format: date-time}
+        status: {type: integer}
+        error: {type: string}
+        message:
+          type: string
+          description: "Translated, safe to show. Never a rejected value, stack trace, type name or secret."
+        path: {type: string}
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field:
+                type: string
+                enum: [courseId, from, to, meetingId, orientation]
+              message: {type: string}
+
+    MeetReportsPageModelChange:
+      type: object
+      description: "The one member `MeetReportsPageModel` (US-033) gains. View DTO mapped in `Application` (AD-8)."
+      properties:
+        export:
+          oneOf:
+            - $ref: "#/components/schemas/MeetReportsExportAction"
+            - type: "null"
+
+    MeetReportsExportAction:
+      type: object
+      description: "Validated values only; `from`/`to` are the effective period after the US-033 defaults (spec FR-002)."
+      required: [courseId, from, to]
+      additionalProperties: false
+      properties:
+        courseId: {type: integer, format: int64}
+        from: {type: string, format: date}
+        to: {type: string, format: date}
+
+    MeetReportMeetingPageModelChange:
+      type: object
+      description: "The one member `MeetReportMeetingPageModel` (US-033) gains."
+      properties:
+        export:
+          oneOf:
+            - $ref: "#/components/schemas/MeetMeetingExportAction"
+            - type: "null"
+
+    MeetMeetingExportAction:
+      type: object
+      required: [courseId, meetingId]
+      additionalProperties: false
+      properties:
+        courseId: {type: integer, format: int64}
+        meetingId: {type: integer, format: int64}

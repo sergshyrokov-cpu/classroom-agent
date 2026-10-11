@@ -4,29 +4,31 @@
 version: 1
 story: US-044
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-writer
+last_invoked_skill: db-designer
 last_result:
   verdict: PASS
-  stage: SPECIFICATION
-  recorded_at: '2026-10-11T06:41:39Z'
+  stage: DB_DESIGN
+  recorded_at: '2026-10-11T07:10:42Z'
 last_artifacts:
-- type: specification
-  path: docs/specifications/US-044-spec.md
+- type: database_design
+  path: docs/designs/database/US-044-db-design.md
   version: 1
-- type: open_decisions
-  path: docs/decisions/US-044-open-decisions.md
+- type: entity_model
+  path: docs/designs/database/US-044-entity-model.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'DB_DESIGN: migration AddMeetExportAudit — audit_event gains export_meeting_id, export_meetings, two action codes, export CHECKs rewritten; workbook model additions opt-in (journal file unchanged).'
+- 'API_DESIGN: two operations meet-reports-xlsx / meet-meeting-xlsx; new key Export.Validation.MeetingMalformed; page script — new or shared, journal behaviour must not change.'
 - 'HUMAN_SPEC_APPROVAL: I-1 became OD-013 (b) — name and email in separate columns; I-4 and I-9 confirmed.'
 - 'F-1 done at the gate: SC-11 export row lists the meeting id and row counts (security-conventions.md).'
 - 'F-2 clarified at the gate: export time and Meet delay line in the Meet export only; journal export unchanged.'
 started_at: '2026-10-11T06:41:39Z'
-updated_at: '2026-10-11T07:05:13Z'
+updated_at: '2026-10-11T07:10:42Z'
 completed_at: null
