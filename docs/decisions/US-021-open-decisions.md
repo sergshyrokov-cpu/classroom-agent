@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-021
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-10-11T16:02:42Z
-updated_at: 2026-10-11T16:02:42Z
+updated_at: 2026-10-11T16:30:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-021-course-detail.md
@@ -97,3 +97,22 @@ Owner, 2026-10-11.
 
 **Resolution:** (a) — no last-synchronization time on the card.
 Owner, 2026-10-11.
+
+## Raised at TEST_WRITING
+
+### OD-013 Compile-only skeleton created at TEST_WRITING
+
+Raised by TEST_WRITING. The tests reference declarations that do not exist yet:
+`ICourseCardSource` and its two records, `CourseCardRequest`,
+`CourseCardOutcome`, `CourseCardResult`, the card DTOs of `US-021-openapi.yaml`,
+`GetCourseCardQuery` and `CourseCardSource`. The test-writer may not change
+production code. US-020 (OD-012) and the Stories before it resolved the same gap
+the same way.
+
+Options: (a) a compile-only skeleton — declarations only, exactly as the entity
+model §2, §3, §5 names them; members throw `NotImplementedException`; nothing
+registered in DI, no route, no view, no migration, no existing behaviour
+changed; IMPLEMENTATION owns and completes it; (b) no skeleton — the tests do
+not compile until IMPLEMENTATION and the red phase cannot be verified.
+
+**Resolution:** (a) — Owner, 2026-10-11.

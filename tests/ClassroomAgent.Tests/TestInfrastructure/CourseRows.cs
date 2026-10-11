@@ -21,7 +21,9 @@ public static class CourseRows
         DateTimeOffset? creationTime = null,
         DateTimeOffset? updateTime = null,
         string? section = null,
-        string? description = null)
+        string? description = null,
+        string? room = null,
+        string? descriptionHeading = null)
     {
         var stamp = host.Time.GetUtcNow();
         var id = await host.ScalarAsync<long>(
@@ -29,7 +31,7 @@ public static class CourseRows
             INSERT INTO course (google_id, name, section, description_heading, description, room,
                                 owner_google_id, creation_time, update_time, course_state, alternate_link,
                                 teacher_folder_id, teacher_folder_title, calendar_id, created_at, updated_at)
-            VALUES (@googleId, @name, @section, NULL, @description, NULL,
+            VALUES (@googleId, @name, @section, @descriptionHeading, @description, @room,
                     @ownerGoogleId, @creationTime, @updateTime, @state, NULL,
                     NULL, NULL, NULL, @stamp, @stamp)
             RETURNING id
@@ -39,6 +41,8 @@ public static class CourseRows
             ("name", name ?? CourseTestData.CourseName(1)),
             ("section", section),
             ("description", description),
+            ("descriptionHeading", descriptionHeading),
+            ("room", room),
             ("ownerGoogleId", ownerGoogleId),
             ("creationTime", creationTime),
             ("updateTime", updateTime),

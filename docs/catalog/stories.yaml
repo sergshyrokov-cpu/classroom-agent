@@ -250,7 +250,7 @@ stories:
   - id: US-021
     epic: EPIC-2
     title: Course detail with roster
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: >
       Depends on US-014. Decided in US-021 discovery (OD-001 … OD-012): course
       details without the Classroom link; owner marked among current teachers;

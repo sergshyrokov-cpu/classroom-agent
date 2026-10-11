@@ -1,0 +1,167 @@
+@using System.Globalization
+@using ClassroomAgent.Application.Models.Dtos
+@model CourseCardPageModel
+@{
+    var course = Model.Course;
+    var id = course.CourseId.ToString(CultureInfo.InvariantCulture);
+    ViewData["Title"] = T[CoursesTextKeys.CardTitle];
+
+    // US-021 spec FR-010: the language switcher returns to the card rebuilt from the parsed id, never the raw path.
+    ViewData[UiLanguageController.ReturnPathViewDataKey] = Model.ReturnPath;
+}
+
+<h2 data-field="name">@course.Name</h2>
+
+<dl id="course-card-details">
+    @if (course.Section is not null)
+    {
+        <dt>@T[CoursesTextKeys.CardFieldSection]</dt>
+        <dd data-field="section">@course.Section</dd>
+    }
+    <dt>@T[CoursesTextKeys.CardFieldStatus]</dt>
+    <dd data-field="status">@T[CoursesTextKeys.State(course.State)]</dd>
+    @if (course.Room is not null)
+    {
+        <dt>@T[CoursesTextKeys.CardFieldRoom]</dt>
+        <dd data-field="room">@course.Room</dd>
+    }
+    @if (course.DescriptionHeading is not null)
+    {
+        <dt>@T[CoursesTextKeys.CardFieldDescriptionHeading]</dt>
+        <dd data-field="description-heading">@course.DescriptionHeading</dd>
+    }
+    @if (course.Description is not null)
+    {
+        <dt>@T[CoursesTextKeys.CardFieldDescription]</dt>
+        <dd class="course-card-description" data-field="description">@course.Description</dd>
+    }
+    @if (course.CreatedAt is { } createdAt)
+    {
+        <dt>@T[CoursesTextKeys.CardFieldCreatedAt]</dt>
+        <dd data-field="created-at">@DateTimeText(createdAt)</dd>
+    }
+    @if (course.UpdatedAt is { } updatedAt)
+    {
+        <dt>@T[CoursesTextKeys.CardFieldUpdatedAt]</dt>
+        <dd data-field="updated-at">@DateTimeText(updatedAt)</dd>
+    }
+</dl>
+
+<p id="course-card-links">
+    <a href="@(SignInRoutes.Journal + "?" + JournalController.CourseIdParameter + "=" + id)">@T[CoursesTextKeys.CardLinkJournal]</a>
+    <a href="@(SignInRoutes.MeetReports + "?" + MeetReportsController.CourseIdParameter + "=" + id)">@T[CoursesTextKeys.CardLinkMeetReports]</a>
+    <a href="@SignInRoutes.Courses">@T[CoursesTextKeys.CardLinkCourses]</a>
+</p>
+
+<section id="course-card-teachers">
+    <h3>@T[CoursesTextKeys.CardSectionTeachers]</h3>
+    <p>@T[CoursesTextKeys.CardCount] <span data-count>@Model.Teachers.Count.ToString(CultureInfo.InvariantCulture)</span></p>
+    @if (Model.Teachers.Count == 0)
+    {
+        <p data-empty>@T[CoursesTextKeys.CardEmptyTeachers]</p>
+    }
+    else
+    {
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>@T[CoursesTextKeys.CardColumnName]</th>
+                        <th>@T[CoursesTextKeys.CardColumnEmail]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var teacher in Model.Teachers)
+                    {
+                        <tr data-person>
+                            <td>
+                                @PersonText(teacher.Name)
+                                @if (teacher.IsOwner)
+                                {
+                                    <span data-owner>@T[CoursesTextKeys.CardOwner]</span>
+                                }
+                            </td>
+                            <td>@teacher.Email</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+<section id="course-card-students">
+    <h3>@T[CoursesTextKeys.CardSectionStudents]</h3>
+    <p>@T[CoursesTextKeys.CardCount] <span data-count>@Model.Students.Count.ToString(CultureInfo.InvariantCulture)</span></p>
+    @if (Model.Students.Count == 0)
+    {
+        <p data-empty>@T[CoursesTextKeys.CardEmptyStudents]</p>
+    }
+    else
+    {
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>@T[CoursesTextKeys.CardColumnName]</th>
+                        <th>@T[CoursesTextKeys.CardColumnEmail]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var student in Model.Students)
+                    {
+                        <tr data-person>
+                            <td>@PersonText(student.Name)</td>
+                            <td>@student.Email</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+<section id="course-card-leavers">
+    <h3>@T[CoursesTextKeys.CardSectionLeavers]</h3>
+    <p>@T[CoursesTextKeys.CardCount] <span data-count>@Model.Leavers.Count.ToString(CultureInfo.InvariantCulture)</span></p>
+    @if (Model.Leavers.Count == 0)
+    {
+        <p data-empty>@T[CoursesTextKeys.CardEmptyLeavers]</p>
+    }
+    else
+    {
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>@T[CoursesTextKeys.CardColumnName]</th>
+                        <th>@T[CoursesTextKeys.CardColumnEmail]</th>
+                        <th>@T[CoursesTextKeys.CardColumnRole]</th>
+                        <th>@T[CoursesTextKeys.CardColumnLastSeen]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var leaver in Model.Leavers)
+                    {
+                        <tr data-person>
+                            <td>@PersonText(leaver.Name)</td>
+                            <td>@leaver.Email</td>
+                            <td>@T[CoursesTextKeys.CardRole(leaver.Role)]</td>
+                            <td>@leaver.LastSeenOn.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern, CultureInfo.CurrentCulture)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+@functions {
+    /// <summary>US-021 spec FR-005, I-2: the name, or the translated role-neutral "no name"; Google data is not translated.</summary>
+    private string PersonText(CourseListPersonName name) =>
+        name.Kind == CourseListPersonNameKind.NoName ? T[CoursesTextKeys.CardNoName].Value : name.Text ?? string.Empty;
+
+    /// <summary>US-021 spec FR-002: the school-local time to the minute, formatted for the UI language (as the course list).</summary>
+    private static string DateTimeText(DateTime value) =>
+        value.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern + " HH:mm", CultureInfo.CurrentCulture);
+}

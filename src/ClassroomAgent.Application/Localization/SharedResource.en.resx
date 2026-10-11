@@ -452,4 +452,30 @@
   <data name="Courses.Validation.SearchTooLong" xml:space="preserve"><value>The search text is too long.</value></data>
   <data name="Courses.Validation.SearchControlCharacter" xml:space="preserve"><value>The search text contains characters that cannot be searched.</value></data>
   <data name="Courses.Validation.PageMalformed" xml:space="preserve"><value>Invalid page number.</value></data>
+  <data name="Courses.Card.Title" xml:space="preserve"><value>Course card</value></data>
+  <data name="Courses.Card.Field.Section" xml:space="preserve"><value>Section</value></data>
+  <data name="Courses.Card.Field.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Courses.Card.Field.Room" xml:space="preserve"><value>Room</value></data>
+  <data name="Courses.Card.Field.DescriptionHeading" xml:space="preserve"><value>Description heading</value></data>
+  <data name="Courses.Card.Field.Description" xml:space="preserve"><value>Description</value></data>
+  <data name="Courses.Card.Field.CreatedAt" xml:space="preserve"><value>Created in Google</value></data>
+  <data name="Courses.Card.Field.UpdatedAt" xml:space="preserve"><value>Last updated in Google</value></data>
+  <data name="Courses.Card.Section.Teachers" xml:space="preserve"><value>Teachers</value></data>
+  <data name="Courses.Card.Section.Students" xml:space="preserve"><value>Students</value></data>
+  <data name="Courses.Card.Section.Leavers" xml:space="preserve"><value>Left the course</value></data>
+  <data name="Courses.Card.Count" xml:space="preserve"><value>Count:</value></data>
+  <data name="Courses.Card.Column.Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Courses.Card.Column.Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Courses.Card.Column.Role" xml:space="preserve"><value>Role</value></data>
+  <data name="Courses.Card.Column.LastSeen" xml:space="preserve"><value>Last seen in the roster</value></data>
+  <data name="Courses.Card.Owner" xml:space="preserve"><value>owner</value></data>
+  <data name="Courses.Card.Role.Teacher" xml:space="preserve"><value>Teacher</value></data>
+  <data name="Courses.Card.Role.Student" xml:space="preserve"><value>Student</value></data>
+  <data name="Courses.Card.NoName" xml:space="preserve"><value>no name</value></data>
+  <data name="Courses.Card.Empty.Teachers" xml:space="preserve"><value>There are no teachers in the roster.</value></data>
+  <data name="Courses.Card.Empty.Students" xml:space="preserve"><value>There are no students in the roster.</value></data>
+  <data name="Courses.Card.Empty.Leavers" xml:space="preserve"><value>No one has left the course.</value></data>
+  <data name="Courses.Card.Link.Journal" xml:space="preserve"><value>Course journal</value></data>
+  <data name="Courses.Card.Link.MeetReports" xml:space="preserve"><value>Course Meet reports</value></data>
+  <data name="Courses.Card.Link.Courses" xml:space="preserve"><value>All courses</value></data>
 </root>

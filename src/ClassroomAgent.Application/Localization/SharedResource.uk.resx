@@ -452,4 +452,30 @@
   <data name="Courses.Validation.SearchTooLong" xml:space="preserve"><value>Текст для пошуку задовгий.</value></data>
   <data name="Courses.Validation.SearchControlCharacter" xml:space="preserve"><value>Текст для пошуку містить символи, за якими не можна шукати.</value></data>
   <data name="Courses.Validation.PageMalformed" xml:space="preserve"><value>Неправильний номер сторінки.</value></data>
+  <data name="Courses.Card.Title" xml:space="preserve"><value>Картка курсу</value></data>
+  <data name="Courses.Card.Field.Section" xml:space="preserve"><value>Розділ</value></data>
+  <data name="Courses.Card.Field.Status" xml:space="preserve"><value>Статус</value></data>
+  <data name="Courses.Card.Field.Room" xml:space="preserve"><value>Аудиторія</value></data>
+  <data name="Courses.Card.Field.DescriptionHeading" xml:space="preserve"><value>Заголовок опису</value></data>
+  <data name="Courses.Card.Field.Description" xml:space="preserve"><value>Опис</value></data>
+  <data name="Courses.Card.Field.CreatedAt" xml:space="preserve"><value>Створено в Google</value></data>
+  <data name="Courses.Card.Field.UpdatedAt" xml:space="preserve"><value>Оновлено в Google</value></data>
+  <data name="Courses.Card.Section.Teachers" xml:space="preserve"><value>Викладачі</value></data>
+  <data name="Courses.Card.Section.Students" xml:space="preserve"><value>Студенти</value></data>
+  <data name="Courses.Card.Section.Leavers" xml:space="preserve"><value>Вибули з курсу</value></data>
+  <data name="Courses.Card.Count" xml:space="preserve"><value>Кількість:</value></data>
+  <data name="Courses.Card.Column.Name" xml:space="preserve"><value>Ім'я</value></data>
+  <data name="Courses.Card.Column.Email" xml:space="preserve"><value>Електронна пошта</value></data>
+  <data name="Courses.Card.Column.Role" xml:space="preserve"><value>Роль</value></data>
+  <data name="Courses.Card.Column.LastSeen" xml:space="preserve"><value>Востаннє в ростері</value></data>
+  <data name="Courses.Card.Owner" xml:space="preserve"><value>власник</value></data>
+  <data name="Courses.Card.Role.Teacher" xml:space="preserve"><value>Викладач</value></data>
+  <data name="Courses.Card.Role.Student" xml:space="preserve"><value>Студент</value></data>
+  <data name="Courses.Card.NoName" xml:space="preserve"><value>без імені</value></data>
+  <data name="Courses.Card.Empty.Teachers" xml:space="preserve"><value>У ростері немає викладачів.</value></data>
+  <data name="Courses.Card.Empty.Students" xml:space="preserve"><value>У ростері немає студентів.</value></data>
+  <data name="Courses.Card.Empty.Leavers" xml:space="preserve"><value>Ніхто не вибув з курсу.</value></data>
+  <data name="Courses.Card.Link.Journal" xml:space="preserve"><value>Журнал курсу</value></data>
+  <data name="Courses.Card.Link.MeetReports" xml:space="preserve"><value>Звіти Meet курсу</value></data>
+  <data name="Courses.Card.Link.Courses" xml:space="preserve"><value>Усі курси</value></data>
 </root>

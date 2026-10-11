@@ -43,6 +43,16 @@ public static class SignInRoutes
     /// <summary>US-020 api-design §2.1: the course list with its filters, 50 per page. GET only; the form submits to it.</summary>
     public const string Courses = "/workspace/courses";
 
+    /// <summary>
+    /// US-021 api-design §2.1, §2.2: the card of one course, under the course list, by internal id of 1 … 19 ASCII
+    /// digits — <c>^[0-9]{1,19}$</c> written as a digit regex plus a length constraint, so the template holds no
+    /// escaped braces. GET only.
+    /// </summary>
+    public const string CourseCard = "/workspace/courses/{" + CourseCardIdParameter + ":regex(^[[0-9]]+$):length(1,19)}";
+
+    /// <summary>US-021 openapi: the name of the card's path parameter.</summary>
+    public const string CourseCardIdParameter = "courseId";
+
     /// <summary>US-033 api-design §2.1: reports 1–3 of one course for a period. GET only.</summary>
     public const string MeetReports = "/workspace/meet-reports";
 

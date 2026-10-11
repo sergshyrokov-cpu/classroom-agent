@@ -55,3 +55,6 @@ button {
     padding: 0.25rem 0.5rem;
     vertical-align: top;
 }
+
+/* US-021 spec FR-002, NFR-070: the course description keeps its line breaks as text and wraps. */
+.course-card-description { white-space: pre-line; overflow-wrap: anywhere; }

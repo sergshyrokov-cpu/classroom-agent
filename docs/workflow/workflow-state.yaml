@@ -4,26 +4,34 @@
 version: 1
 story: US-021
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: security-reviewer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: '2026-10-11T16:12:31Z'
+  stage: SECURITY_REVIEW
+  recorded_at: '2026-10-11T17:17:43Z'
 last_artifacts:
-- type: database_design
-  path: docs/designs/database/US-021-db-design.md
-  version: 1
-- type: entity_model
-  path: docs/designs/database/US-021-entity-model.md
+- type: security_review
+  path: docs/reviews/security/US-021-security-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'HUMAN_PR_APPROVAL: approved without comment.'
+- 'SECURITY_REVIEW: PASS, 0 Critical / 0 Major / 0 Minor; independent re-run build 0 warnings, suite 5 201/5 201 green, no vulnerable packages, no csproj change.'
+- 'SECURITY_REVIEW INFO-1: host-wide RequestPath still logs other path values (Meet codes, meeting ids) — pre-existing; the planned technical Story (route template instead of raw path) covers it.'
+- 'SECURITY_REVIEW INFO-2: RefusedValueRedaction keys on EventId 5463; guarded by CourseCardLoggingTests; to be replaced by the RequestPath technical Story.'
+- 'SECURITY_REVIEW INFO-3: card DTOs carry the internal ParticipantId, not rendered; no action.'
+- 'IMPLEMENTATION: build 0 warnings; full suite 5 201/5 201 green; format clean. No schema change, no package, no new policy.'
+- 'IMPLEMENTATION D-1: route constraint spelled regex(^[[0-9]]+$):length(1,19) — same values as ^[0-9]{1,19}$; doubled braces broke the test endpoint normaliser.'
+- 'IMPLEMENTATION D-2 (for SECURITY_REVIEW): ASP.NET request scope adds RequestPath to every log event; RefusedValueRedaction removes it from CourseCardRefused (5463) only. Other path values (Meet codes, meeting ids) still reach logs via RequestPath — host-wide, out of scope.'
+- 'TEST_WRITING: red phase verified — US-021 classes 108 tests, 2 pass by design (constructor shape; restricted-session redirect), 106 fail for missing behaviour; full suite 5 201, no regression (2 Npgsql timeouts in unrelated classes, green on re-run).'
+- 'TEST_WRITING: OD-013 compile-only skeleton raised and resolved (a) by the Owner; open-decisions v2. Markup hooks (data-field, section ids, data-count, data-person, data-owner, data-empty) and 26 Courses.Card.* keys are binding on IMPLEMENTATION.'
+- 'TEST_WRITING: 404 tests carry a control request (card 200 first) so they cannot pass vacuously on a missing route; CourseRows.InsertCourseAsync gained optional room/descriptionHeading.'
 - 'DB_DESIGN: no schema change, no migration; two untracked queries (course by pk; all memberships+participants of the course ordered by label under course_name_uk, email none-first, id; is_owner computed in SQL so no Google id leaves Infrastructure); existing uq_course_membership_course_participant serves.'
 - 'DB_DESIGN: supporting refactor — GetCourseListQuery.NameOf extracted to internal static CoursePersonNameRule, shared with GetCourseCardQuery; entity-model skeleton compiled (0 warnings).'
 - 'API_DESIGN: GET /workspace/courses/{courseId}, route constraint ^[0-9]{1,19}$, policy ViewCourses (reused); every bad value is the host 404 (no 400) — no-route, CourseMalformed (0/overflow), CourseUnknown; Warning log names courseId and outcome only.'
@@ -33,5 +41,5 @@ non_blocking_findings:
 - 'SPECIFICATION: interpretations I-1…I-9 for the gate — I-1 blank = not given; I-2 neutral "no name" label (submitter-only students have no name/email); I-3 nameless rows last; I-4 leavers section also counted; I-5 leavers show date only; I-6 leading zeros accepted (007 → 7); I-7 owner as current student not marked; I-8 no JSON endpoint; I-9 purged course is 404.'
 - 'SPECIFICATION: reuses policy ViewCourses; route indicative /workspace/courses/{courseId}; malformed and unknown id answer the same 404 via /error/404; indexes left to DB_DESIGN.'
 started_at: '2026-10-11T16:04:43Z'
-updated_at: '2026-10-11T16:12:31Z'
-completed_at: null
+updated_at: '2026-10-11T17:21:56Z'
+completed_at: '2026-10-11T17:21:56Z'

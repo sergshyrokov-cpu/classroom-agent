@@ -223,18 +223,8 @@ public sealed class GetCourseListQuery(ICourseListSource source, SchoolTimeZone 
     }
 
     /// <summary>Spec FR-007, entity model §4: profile name, else the full email, else no name — as stored.</summary>
-    private static CourseListPersonName NameOf(CourseListPersonRecord person)
-    {
-        var parts = new[] { person.Surname, person.GivenName }.Where(p => !string.IsNullOrEmpty(p)).ToList();
-        if (parts.Count > 0)
-        {
-            return new CourseListPersonName(CourseListPersonNameKind.ProfileName, string.Join(' ', parts));
-        }
-
-        return string.IsNullOrEmpty(person.Email)
-            ? new CourseListPersonName(CourseListPersonNameKind.NoName, null)
-            : new CourseListPersonName(CourseListPersonNameKind.Email, person.Email);
-    }
+    private static CourseListPersonName NameOf(CourseListPersonRecord person) =>
+        CoursePersonNameRule.NameOf(person.Surname, person.GivenName, person.Email);
 
     /// <summary>Spec FR-003, api-design §2.8: the school's local time, to the minute; null stays null (I-8).</summary>
     private DateTime? LocalTime(DateTimeOffset? instant)

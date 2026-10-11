@@ -27,6 +27,7 @@ public static class InstallationLogging
             .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
             .MinimumLevel.Override("System.Net.Http", LogEventLevel.Warning)
             .Enrich.FromLogContext()
+            .Enrich.With<RefusedValueRedaction>()
             .WriteTo.File(
                 new CompactJsonFormatter(),
                 Path.Combine(directory, FileName),

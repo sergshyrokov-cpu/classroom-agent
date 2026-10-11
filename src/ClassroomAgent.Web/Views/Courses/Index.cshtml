@@ -69,7 +69,7 @@
                         var id = row.CourseId.ToString(CultureInfo.InvariantCulture);
                         <tr data-course-id="@id">
                             <td>
-                                @row.Name
+                                <a href="@(SignInRoutes.Courses + "/" + id)">@row.Name</a>
                                 @if (row.Section is not null)
                                 {
                                     <br /><span>@row.Section</span>

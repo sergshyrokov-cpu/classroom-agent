@@ -22,7 +22,10 @@ namespace ClassroomAgent.Web.Controllers;
 /// Nothing is written and nothing is guarded: viewing is permitted in read-only mode (spec FR-015).
 /// </remarks>
 [Authorize(Policy = InstallationPolicies.ViewCourses)]
-public sealed class CoursesController(GetCourseListQuery courses, ILogger<CoursesController> logger) : Controller
+public sealed class CoursesController(
+    GetCourseListQuery courses,
+    GetCourseCardQuery card,
+    ILogger<CoursesController> logger) : Controller
 {
     public const string StatusParameter = "status";
 
@@ -69,6 +72,27 @@ public sealed class CoursesController(GetCourseListQuery courses, ILogger<Course
                 break;
         }
 
+        return View(page);
+    }
+
+    /// <summary>
+    /// The course card (US-021 openapi <c>GET /workspace/courses/{courseId}</c>). The raw path value goes to the query,
+    /// which parses it (api-design §2.3); a malformed or unknown id is the host's ordinary 404 page with no body of its
+    /// own (api-design §2.4). Query parameters are not read. Nothing is written and nothing is guarded (spec FR-014).
+    /// </summary>
+    [HttpGet(SignInRoutes.CourseCard)]
+    public async Task<IActionResult> Card(string courseId, CancellationToken cancellationToken)
+    {
+        var result = await card.ExecuteAsync(new CourseCardRequest(courseId), cancellationToken);
+        if (result.Outcome != CourseCardOutcome.Shown || result.Page is not { } page)
+        {
+            CourseCardLog.Refused(
+                logger, HttpContext.TraceIdentifier, SignInRoutes.CourseCardIdParameter, result.Outcome.ToString());
+            return NotFound();
+        }
+
+        CourseCardLog.Shown(
+            logger, ActorId(), page.Course.CourseId, page.Teachers.Count, page.Students.Count, page.Leavers.Count);
         return View(page);
     }
 
