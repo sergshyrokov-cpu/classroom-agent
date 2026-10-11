@@ -40,6 +40,9 @@ public static class SignInRoutes
     /// </summary>
     public const string Journal = "/workspace/journal";
 
+    /// <summary>US-020 api-design §2.1: the course list with its filters, 50 per page. GET only; the form submits to it.</summary>
+    public const string Courses = "/workspace/courses";
+
     /// <summary>US-033 api-design §2.1: reports 1–3 of one course for a period. GET only.</summary>
     public const string MeetReports = "/workspace/meet-reports";
 

@@ -49,6 +49,9 @@ public static class CourseTestData
         /// <summary>US-037 db-design §3: the partial index the leaver purge reads.</summary>
         public const string MembershipOffRosterLastSeen = "ix_course_membership_off_roster_last_seen";
 
+        /// <summary>US-020 db-design §4.1: the partial index of current teachers, (participant, course).</summary>
+        public const string MembershipCurrentTeacher = "ix_course_membership_current_teacher";
+
         public const string MembershipRole = "ck_course_membership_role";
 
         public const string MembershipSeenOrder = "ck_course_membership_seen_order";

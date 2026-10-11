@@ -4,26 +4,34 @@
 version: 1
 story: US-020
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: IMPLEMENTATION
+previous_stage: TEST_WRITING
+last_completed_stage: TEST_WRITING
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: test-writer
 last_result:
   verdict: PASS
-  stage: API_DESIGN
-  recorded_at: '2026-10-11T14:16:30Z'
+  stage: TEST_WRITING
+  recorded_at: '2026-10-11T16:40:00Z'
 last_artifacts:
-- type: openapi
-  path: docs/designs/api/US-020-openapi.yaml
+- type: test_strategy
+  path: docs/tests/US-020-test-strategy.md
   version: 1
-- type: api_design
-  path: docs/designs/api/US-020-api-design.md
+- type: ac_test_matrix
+  path: docs/tests/US-020-ac-test-matrix.md
+  version: 1
+- type: test_generation_report
+  path: docs/evidence/US-020-test-generation-report.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'TEST_WRITING: OD-012 (compile-only skeleton) raised and resolved (a) by the Owner; openapi PersonName is C# CourseListPersonName (name collision with US-027 PersonName).'
+- 'TEST_WRITING: red phase verified — full suite 5093 tests, 197 failed (all US-020: 196 new + modified CourseMembershipSchemaTests.TheRequiredIndexes_Exist), 0 regressions; markup hooks and 34 Courses.* keys fixed in test strategy §4, §6.'
+- 'TEST_WRITING: TheSearchText_IsNeverLogged waits for any Information event (weaker wait, test strategy §8).'
+- 'DB_DESIGN: no table/column change; migration AddCourseListSupport adds ICU collation course_name_uk (uk-UA, deterministic) and partial index ix_course_membership_current_teacher; no new index on course (substring search, 750-char name vs B-tree limit, few thousand rows).'
+- 'DB_DESIGN: verified on postgres:17-alpine — Ukrainian order correct, Cyrillic sorts BEFORE Latin; lower() folds Cyrillic only under the ICU collation. Deployment needs PostgreSQL built with ICU.'
 - 'API_DESIGN: GET /workspace/courses, params status|teacherId|q|page, policy ViewCourses; 400 for any malformed parameter (all reported), 404 TeacherUnknown only when shape passes; q split into SearchRepeated/SearchTooLong/SearchControlCharacter; one CourseListUrl rule for paging links and switcher return path.'
 - 'API_DESIGN: q (free search text) travels in the query string as the spec allows; flagged for SECURITY_REVIEW per US-039 INFO-1.'
 - 'HUMAN_SPEC_APPROVAL: approved without comment; interpretations I-1…I-9 accepted as written.'
@@ -31,5 +39,5 @@ non_blocking_findings:
 - 'SPECIFICATION: interpretations I-1…I-9 for the gate — I-1 home page section is the menu (no layout menu); I-2 full email, FullName unused; I-3 email added to same-name teachers in the choice; I-4 search ≤100 chars, literal, not logged; I-5 pages from 1, past-end shows last; I-6 no JSON endpoint; I-7 one Ukrainian-aware order, DB paging; I-8 empty cell without updateTime; I-9 unknown teacher id refused.'
 - 'SPECIFICATION: new policy ViewCourses for matrix row «Просмотр курсов и участников»; indexes left to DB_DESIGN with migration.'
 started_at: '2026-10-11T10:25:19Z'
-updated_at: '2026-10-11T14:16:30Z'
+updated_at: '2026-10-11T16:40:00Z'
 completed_at: null

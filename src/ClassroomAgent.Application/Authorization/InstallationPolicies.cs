@@ -62,6 +62,12 @@ public static class InstallationPolicies
     public const string ViewMeetReports = nameof(ViewMeetReports);
 
     /// <summary>
+    /// "Просмотр курсов и участников" — ✔ Admin, ✔ Dean (<c>trebovaniya.md</c> §2; US-020 spec FR-014, api-design
+    /// §2.10): the course list; the course card and the teacher view reuse it.
+    /// </summary>
+    public const string ViewCourses = nameof(ViewCourses);
+
+    /// <summary>
     /// "Привязка кода встречи Meet к курсу" — ✔ Admin, ✔ Dean (<c>trebovaniya.md</c> §2; US-032 spec §7): the
     /// course-choice form and the three link writes.
     /// </summary>

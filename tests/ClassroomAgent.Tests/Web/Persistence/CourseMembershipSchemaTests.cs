@@ -217,7 +217,7 @@ public sealed class CourseMembershipSchemaTests(PostgreSqlFixture database)
     /// <summary>
     /// db-design §5.3, PC-7: the roster-on-a-date composite exists — the unique index cannot serve it, because it
     /// has no date column — and the second foreign key has its own index. US-037 db-design §3 adds the partial
-    /// index of the leaver purge.
+    /// index of the leaver purge; US-020 db-design §4.1 the partial index of current teachers.
     /// </summary>
     [Fact]
     public async Task TheRequiredIndexes_Exist()
@@ -233,6 +233,7 @@ public sealed class CourseMembershipSchemaTests(PostgreSqlFixture database)
                 CourseTestData.Constraints.MembershipCourseSeen,
                 CourseTestData.Constraints.MembershipParticipant,
                 CourseTestData.Constraints.MembershipOffRosterLastSeen,
+                CourseTestData.Constraints.MembershipCurrentTeacher,
                 CourseTestData.Constraints.MembershipPrimaryKey,
                 CourseTestData.Constraints.MembershipCourseParticipant,
             }.Order(StringComparer.Ordinal),

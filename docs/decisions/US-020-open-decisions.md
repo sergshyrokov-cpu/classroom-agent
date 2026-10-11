@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-020
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-10-11T10:23:09Z
-updated_at: 2026-10-11T10:23:09Z
+updated_at: 2026-10-11T16:00:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-020-course-list.md
@@ -21,7 +21,8 @@ Eleven decisions (OD-001 … OD-011) were written into the Story by the author a
 each as option (a). They are carried here with their ids and resolutions
 unchanged.
 
-Writing the Specification raised **no new Open Decision**. The choices the
+Writing the Specification raised **no new Open Decision**. TEST_WRITING raised
+OD-012, resolved by the Owner the same day. The choices the
 Story and `trebovaniya.md` leave open are stated as interpretations I-1 … I-9
 in `docs/specifications/US-020-spec.md` §11; each can be corrected at
 `HUMAN_SPEC_APPROVAL`, and any of them may be turned into an Open Decision
@@ -90,3 +91,27 @@ the home page's Google Workspace section.)
 ### OD-011 Export
 
 **Resolution:** (a) — no export of the list in this Story. Owner, 2026-10-11.
+
+---
+
+## Raised at TEST_WRITING
+
+### OD-012 Compile-only skeleton created at TEST_WRITING
+
+Raised by TEST_WRITING. The tests reference declarations that do not exist yet:
+`ICourseListSource` and its five records, `CourseListRequest`, the outcome and
+result, the page DTOs and enums of `US-020-openapi.yaml`, `GetCourseListQuery`,
+`CourseListUrl`, `CourseListSource`, the policy name `ViewCourses` and the route
+constant `SignInRoutes.Courses`. The test-writer may not change production code.
+US-025 … US-044 resolved the same gap the same way.
+
+Options: (a) a compile-only skeleton — declarations only; members throw
+`NotImplementedException`; nothing registered in DI, no migration, no existing
+behaviour changed; IMPLEMENTATION owns and completes it; (b) no skeleton.
+
+**Resolution:** (a) — Owner, 2026-10-11.
+
+Naming note: the openapi schema `PersonName` is the C# record
+`CourseListPersonName` (with `CourseListPersonNameKind`), because US-027's
+`PersonName` already exists in `Application.Models.Dtos` with a different shape.
+Fields and meaning are the contract's.
