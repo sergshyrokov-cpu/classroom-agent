@@ -151,6 +151,15 @@ stories:
     title: An unknown file-like address answers 404 to anyone
     state: COMPLETED
     blocked_by: null
+  - id: US-045
+    epic: EPIC-6
+    title: Log lines name the route, never the raw request path
+    state: BACKLOG
+    blocked_by: null
+    # OD-001 … OD-004 resolved by the Owner on 2026-10-11; the rule went into
+    # trebovaniya.md v89 (section 8) first, as OD-004 required.
+    # Story file authored: docs/stories/US-045-route-template-in-logs.md
+    # (aligned with v88). Origin: US-021 security review INFO-1, INFO-2.
 
   # --- EPIC-1: Synchronization ---------------------------------------------
   - id: US-013
