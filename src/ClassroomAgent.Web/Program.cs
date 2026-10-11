@@ -48,7 +48,8 @@ public sealed class Program
         }
 
         builder.Services.AddSerilog(
-            (_, logger) => InstallationLogging.Configure(logger, logDirectory, isDevelopment),
+            (services, logger) => InstallationLogging.Configure(
+                logger, logDirectory, isDevelopment, services.GetRequiredService<IHttpContextAccessor>()),
             preserveStaticLogger: true);
 
         // A second endpoint for the private port, plain HTTP (DC-6), bound to the configured address only
@@ -59,6 +60,8 @@ public sealed class Program
             string.Create(CultureInfo.InvariantCulture, $"http://{settings.PrivateAddress}:{settings.PrivatePort}"),
         ]);
 
+        // US-045: the log enricher reads the endpoint of the request in progress.
+        builder.Services.AddHttpContextAccessor();
         builder.Services.AddSingleton(secretStore);
         builder.Services.AddInstallation(settings);
         builder.Services.AddInstallationSecurity(settings);
@@ -150,7 +153,8 @@ public sealed class Program
                 context.Response.StatusCode = StatusCodes.Status404NotFound;
                 return Task.CompletedTask;
             })
-            .AllowAnonymous();
+            .AllowAnonymous()
+            .WithMetadata(new UnmatchedRequestMetadata());
 
         app.Run();
     }

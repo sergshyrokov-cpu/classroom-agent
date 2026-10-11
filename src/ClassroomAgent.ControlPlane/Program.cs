@@ -23,7 +23,8 @@ var keyDirectory = RequiredSetting(configuration, "DataProtection:KeyDirectory")
 var logDirectory = RequiredSetting(configuration, "LogFile:Directory");
 var compatibilityPolicy = CompatibilityPolicy.FromConfiguration(configuration);
 
-// DC-10: one JSON object per line, a file per day, 30 days, size cap; request id from the log scope.
+// DC-10: one JSON object per line, a file per day, 30 days, size cap; request id from the log scope, and the route of
+// the request in place of its path (US-045).
 builder.Services.AddSerilog(
     (services, logger) =>
     {
@@ -32,6 +33,7 @@ builder.Services.AddSerilog(
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
             .Enrich.FromLogContext()
+            .Enrich.With(new RequestRouteEnricher(services.GetRequiredService<IHttpContextAccessor>()))
             .WriteTo.File(
                 new CompactJsonFormatter(),
                 Path.Combine(logDirectory, "control-plane-.log"),
@@ -46,6 +48,8 @@ builder.Services.AddSerilog(
     },
     preserveStaticLogger: true);
 
+// US-045: the log enricher reads the endpoint of the request in progress.
+builder.Services.AddHttpContextAccessor();
 builder.Services.TryAddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<TimestampInterceptor>();
 builder.Services.AddDbContext<ControlPlaneDbContext>((services, options) =>
@@ -115,7 +119,7 @@ app.MapFallback("{*path}", context =>
         return Task.CompletedTask;
     })
     .AllowAnonymous()
-    .WithMetadata(new SetupGateExemptAttribute());
+    .WithMetadata(new SetupGateExemptAttribute(), new UnmatchedRequestMetadata());
 
 app.Run();
 

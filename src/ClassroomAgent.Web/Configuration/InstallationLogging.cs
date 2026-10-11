@@ -6,7 +6,7 @@ namespace ClassroomAgent.Web.Configuration;
 
 /// <summary>
 /// DC-10 logging of the installation: one JSON object per line, a file per day, 30 days, a size cap; the
-/// request id from the log scope; the console only in development. The same file receives the refusal to
+/// request id from the log scope, and the route of the request in place of its path (US-045); the console only in development. The same file receives the refusal to
 /// start when a setting is wrong (US-005 spec FR-001).
 /// </summary>
 public static class InstallationLogging
@@ -19,7 +19,11 @@ public static class InstallationLogging
     public static string Directory(IConfiguration configuration) =>
         configuration[DirectoryKey] is { Length: > 0 } directory ? directory : Path.Combine(AppContext.BaseDirectory, "logs");
 
-    public static LoggerConfiguration Configure(LoggerConfiguration logger, string directory, bool isDevelopment)
+    public static LoggerConfiguration Configure(
+        LoggerConfiguration logger,
+        string directory,
+        bool isDevelopment,
+        IHttpContextAccessor httpContextAccessor)
     {
         logger
             .MinimumLevel.Information()
@@ -27,7 +31,7 @@ public static class InstallationLogging
             .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
             .MinimumLevel.Override("System.Net.Http", LogEventLevel.Warning)
             .Enrich.FromLogContext()
-            .Enrich.With<RefusedValueRedaction>()
+            .Enrich.With(new RequestRouteEnricher(httpContextAccessor))
             .WriteTo.File(
                 new CompactJsonFormatter(),
                 Path.Combine(directory, FileName),
@@ -46,7 +50,8 @@ public static class InstallationLogging
     /// <summary>Writes the refusal to start — the setting and the rule, never the value — and flushes the file.</summary>
     public static void WriteStartupRefusal(string directory, InstallationSettingException exception, bool isDevelopment)
     {
-        using var logger = Configure(new LoggerConfiguration(), directory, isDevelopment).CreateLogger();
+        // Written before the host exists: outside any request, so no line carries a request path.
+        using var logger = Configure(new LoggerConfiguration(), directory, isDevelopment, new HttpContextAccessor()).CreateLogger();
         logger.Fatal("The installation does not start: {Reason}", exception.Message);
     }
 }

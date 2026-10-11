@@ -6,7 +6,7 @@ namespace ClassroomAgent.Web.Security;
 /// </summary>
 public static partial class CourseCardLog
 {
-    /// <summary>The event id of <see cref="Refused"/>; its request path holds the refused value (see <c>RefusedValueRedaction</c>).</summary>
+    /// <summary>The event id of <see cref="Refused"/>; its line names the route, never the refused value in the path (US-045).</summary>
     public const int RefusedEventId = 5463;
 
     [LoggerMessage(
