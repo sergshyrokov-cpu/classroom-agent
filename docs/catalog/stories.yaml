@@ -236,6 +236,10 @@ stories:
     state: BACKLOG
     blocked_by: >
       Depends on US-014.
+    # US-014 COMPLETED. Story file authored:
+    # docs/stories/US-018-incremental-sync.md (aligned with v90: skip unchanged
+    # ARCHIVED courses, weekly full run). OD-001 and OD-002 resolved by the
+    # Owner on 2026-10-12, before activation.
   - id: US-019
     epic: EPIC-1
     title: Trigger a synchronization from the UI
