@@ -272,7 +272,7 @@ stories:
   - id: US-022
     epic: EPIC-2
     title: Teachers and their courses
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: >
       Depends on US-014. Decided in US-022 discovery (OD-001 … OD-009): one
       teacher list linking to the course list filtered by teacher; current
