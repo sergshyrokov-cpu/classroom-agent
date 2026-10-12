@@ -232,8 +232,11 @@ request. *(§5)*
 **BR-041** Synchronization is idempotent: repeated runs upsert on the Google-side
 identifier and never duplicate rows. *(Epic 1)*
 
-**BR-042** Synchronization is incremental — already-known participants are not
-refetched. *(Epic 1)*
+**BR-042** Synchronization is incremental: an `ARCHIVED` course whose Google
+`updateTime` equals the one stored at its last complete read is not re-read.
+Courses in any other state are read in full every run, and once a week a run
+reads every course in full. A manual run follows the same rules; the number of
+skipped courses goes to the run's log only. *(Epic 1, v90)*
 
 **BR-043** Transient Google failures (`429`, `5xx`, timeout, dropped connection)
 are retried with exponential backoff: at most 4 attempts, pauses of about 2 s, 8 s

@@ -182,7 +182,10 @@ resulting migration must both match them.
 - Every sync writes through an upsert keyed on the Google-side identifier
   (PC-3). Re-running a sync must not create duplicates
   (`trebovaniya.md` Epic 1).
-- Incremental behavior: already-known participants are not re-fetched.
+- Incremental behavior (BR-042, v90): an `ARCHIVED` course whose Google
+  `updateTime` equals the one stored at its last complete read is skipped;
+  every other course is read in full; a weekly run reads all courses.
+  `SyncState` holds the time of the last full run.
 - A course not yet in the database whose last activity in Google — the course,
   its `CourseWork`, its `Submission` rows — is already more than N years ago is
   not imported, so the purge and the next sync never undo each other. A course
