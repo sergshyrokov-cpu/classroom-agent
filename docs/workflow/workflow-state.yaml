@@ -4,30 +4,31 @@
 version: 1
 story: US-022
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: '2026-10-12T09:00:03Z'
+  verdict: PASS
+  stage: API_DESIGN
+  recorded_at: '2026-10-12T09:02:27Z'
 last_artifacts:
-- type: specification
-  path: docs/specifications/US-022-spec.md
+- type: openapi
+  path: docs/designs/api/US-022-openapi.yaml
   version: 1
-- type: open_decisions
-  path: docs/decisions/US-022-open-decisions.md
+- type: api_design
+  path: docs/designs/api/US-022-api-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'API_DESIGN: PASS — new GET /workspace/teachers (SignInRoutes.Teachers), policy ViewCourses, params status+page with the course-list rules and tokens, 200/400/302, no 404; row link built by CourseListUrl in Application; TeacherListUrl for paging/return path; one empty state (isEmpty); message keys reuse Courses.Validation.*; home page gains Teachers second; course list unchanged.'
 - 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-12T09:00:03Z, no comment; interpretations I-1…I-7 accepted as written.'
 - 'SPECIFICATION: OD-001 … OD-009 carried resolved; no new Open Decision; trebovaniya §7 (v90) blocks nothing.'
 - 'SPECIFICATION: interpretations I-1…I-7 for the gate — I-1 home-page Google Workspace section is the menu ("Teachers" after "Courses"); I-2 one empty message (no separate "nothing synchronized"); I-3 email may show twice when no name; I-4 total count shown; I-5 count is of courses; I-6 link opens course list page 1, no search; I-7 "all" count = sum over five states.'
 - 'SPECIFICATION: derived AC-013 (invalid status/page), AC-014 (Ukrainian order, no-name last), AC-015 (bounded queries), AC-016 (count agrees with the course list).'
 started_at: '2026-10-12T08:58:14Z'
-updated_at: '2026-10-12T09:00:03Z'
+updated_at: '2026-10-12T09:02:27Z'
 completed_at: null

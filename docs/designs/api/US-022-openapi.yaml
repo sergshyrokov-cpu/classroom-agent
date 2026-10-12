@@ -1,0 +1,388 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Teachers and their courses (US-022)
+  version: "1"
+  description: >
+    HTTP contract of US-022 on the installation's public port. It adds the list
+    of the school's current teachers, granted to Admin and Dean
+    (`trebovaniya.md` §2 "Просмотр курсов и участников" ✔ ✔; §4 Epic 2), as one
+    server-rendered `GET` page whose status form submits to itself by `GET`.
+    Each row links to the US-020 course list filtered by the teacher and the
+    status. There is no JSON API (US-020 spec I-6). The page only reads: it
+    writes nothing, calls no Google API and reads no secret, in every mode (spec
+    FR-013). The home page's Google Workspace section gains "Teachers" as its
+    second link (spec FR-011). The host-wide rules of
+    docs/designs/api/US-008-openapi.yaml apply unchanged. Companion document:
+    docs/designs/api/US-022-api-design.md.
+x-story: US-022
+x-source-specification: docs/specifications/US-022-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-022-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 90
+x-produced-by: openapi-designer
+x-extends:
+  - docs/designs/api/US-008-openapi.yaml
+  - docs/designs/api/US-020-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type of
+  the Control Plane channel is added or changed; the page is the installation's
+  own screen (DC-12).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port. Illustrative (US-008 spec FR-001)."
+
+tags:
+  - name: teachers
+    description: "The teacher list (spec FR-001 … FR-016)"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 configured host-wide applies and is not restated: HTTPS and
+    HSTS, deny-by-default fallback policy (SC-4, API-9), the global antiforgery
+    filter (not engaged: the page is a `GET`), the single error page, the
+    anonymous catch-all `404`, the session cookie, the restricted session of a
+    Dean with a temporary password (US-012), the exception handler (API-10), and
+    the host-wide `Cache-Control: no-store` of US-040 (SC-14).
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list of anonymous endpoints gains **nothing**. The US-008
+    endpoint enumeration test passes with `/workspace/teachers` classified as
+    protected (spec FR-012, S-01).
+
+  antiforgery-list-unchanged: >
+    The page changes nothing (API-4), so it needs no token and gains no
+    exemption.
+
+  outbound: >
+    Nothing is called outside the process: no Google call, no secret-store read,
+    no Control Plane call (spec FR-013, S-04, S-11).
+
+paths:
+
+  /workspace/teachers:
+
+    get:
+      tags: [teachers]
+      operationId: getTeacherList
+      summary: "The current teachers with their course count, by status, 50 per page"
+      description: >
+        Always renders the status form with the effective status. When the query
+        is valid it also renders one page of the listed teachers — or the empty
+        message (spec FR-008) — with the total and the paging links (spec
+        FR-006). The form submits by `GET` to this same path and carries no
+        `page`, so a status change restarts at page 1 (spec FR-009). Evaluation
+        order: authentication (`302`) → restricted session (`302`) →
+        `ViewCourses` → query shape of `status` and `page` (`400`, every failing
+        parameter reported) → total count, page of teachers with their course
+        counts (`200`). Nothing is read for the list before the query passes
+        (spec FR-010, S-07). Any other query parameter — `teacherId` and `q`
+        included — is ignored and never echoed (spec VR-003). Answered by the
+        `Application` query `GetTeacherListQuery` returning `TeacherListPageModel`
+        (AD-8); the controller only collects the raw query and renders.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewCourses
+      x-permission-matrix-row: "\"Просмотр курсов и участников\" — Admin ✔, Dean ✔"
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: "nothing — no entity, no audit row, no SyncState (spec FR-013, FR-014, S-12)"
+      x-read-only-mode: "allowed — identical behaviour in all three BR-025 causes; IReadOnlyModeGuard not called (spec FR-013)"
+      x-database-round-trips: >
+        a fixed number per request, independent of the number of teachers,
+        courses and memberships (spec FR-014, AC-015): the total number of listed
+        teachers and the page of teachers with their course counts. DB_DESIGN
+        fixes the exact queries and indexes.
+      x-route-constant: "SignInRoutes.Teachers = \"/workspace/teachers\""
+      x-spec: [FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-012, FR-013, FR-014, FR-015, FR-016]
+      x-acceptance-criteria: [AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/Status"
+        - $ref: "#/components/parameters/Page"
+      responses:
+        "200":
+          description: >
+            The page. `list` is non-null: either a page of teachers with the
+            total and paging, or `isEmpty: true` when nobody teaches a course of
+            the chosen status — including an installation that stores nothing
+            yet (spec FR-008, I-2). A valid `page` past the last page answers
+            the last page (spec FR-006); `list.page` is the page actually shown.
+            Read-only mode answers exactly as outside it.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/TeacherListPageModel"
+        "302":
+          description: >
+            (1) Not signed in: `Location: /sign-in`. (2) A Dean with a temporary
+            password: `Location: /sign-in/change-password`. Nothing is read.
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: [/sign-in, /sign-in/change-password]
+        "400":
+          description: >
+            `status`, `page` or both are malformed (spec VR-001, VR-002). **This
+            page** is rendered — not the host's error page — with the form, one
+            message key per failing parameter in the order `status`, `page`, and
+            `list` null. A rejected field shows its default; a valid field keeps
+            its value. One `Warning` log line per failing parameter names the
+            parameter and the rule, never the value (spec FR-016, SC-10).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/TeacherListPageModel"
+        "500":
+          description: "Unexpected failure: the single error page, no detail (AD-9, API-10)."
+          content:
+            text/html: {}
+
+  /:
+    get:
+      operationId: getLanding
+      summary: "Existing US-008 home page — changed additively"
+      description: >
+        Unchanged in behaviour, policy and status codes. The Google Workspace
+        section (`nav#workspace-section`) gains "Teachers", linking to
+        `/workspace/teachers`, as its **second** link — after "Courses", before
+        "Journal" (spec FR-011, OD-007, I-1) — rendered for Admin and Dean and in
+        read-only mode too. The entry is a plain link and enforces nothing;
+        `ViewCourses` does.
+      x-policy: ViewLegitimacyStatus
+      x-change: additive-markup
+      x-acceptance-criteria: [AC-007]
+      responses:
+        "200":
+          description: "The page; see US-008-openapi.yaml for everything else."
+          content:
+            text/html: {}
+
+  /workspace/courses:
+    get:
+      operationId: getCourseList
+      summary: "Existing US-020 course list — unchanged, the target of every row link"
+      description: >
+        Not changed in any way (spec FR-007, OD-008). Each teacher row links here
+        with `teacherId` = the row's `participantId` and `status` = the teacher
+        list's effective status, page 1, no `q`, built by the existing
+        `CourseListUrl` rule. Every listed participant is in this page's teacher
+        choice, so the link answers `200`, never `404` (spec FR-007, AC-016).
+      x-policy: ViewCourses
+      x-change: none
+      x-acceptance-criteria: [AC-004, AC-016]
+      responses:
+        "200":
+          description: "See US-020-openapi.yaml."
+          content:
+            text/html: {}
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: ClassroomAgent.Session
+      description: "The installation's session cookie (US-008); name illustrative."
+
+  parameters:
+
+    Status:
+      name: status
+      in: query
+      required: false
+      description: >
+        The course state filter (spec FR-005, VR-001) — the US-020 `status`
+        parameter, same tokens, same rule. Absent or empty means `active`.
+        Otherwise exactly one occurrence of one of the tokens below, compared
+        case-insensitively, untrimmed. Anything else — another word, a number,
+        inner or surrounding spaces, a repeated parameter — is `400` with
+        `StatusMalformed`. Links the page produces use the lower-case token.
+      schema:
+        $ref: "#/components/schemas/CourseStatusFilter"
+      example: archived
+
+    Page:
+      name: page
+      in: query
+      required: false
+      description: >
+        The page number, from 1 (spec FR-006, VR-002) — the US-020 `page` rule.
+        Absent or empty means 1. Otherwise exactly one occurrence of decimal
+        digits forming an integer from 1 to 100000; anything else (zero, sign,
+        spaces, letters, overflow, a repeated parameter) is `400` with
+        `PageMalformed`. A valid number past the last page answers the last page
+        with `200`.
+      schema:
+        type: string
+        pattern: "^[0-9]{1,6}$"
+      example: "2"
+
+  schemas:
+
+    CourseStatusFilter:
+      type: string
+      description: >
+        Reused from US-020 unchanged: the five course states of `trebovaniya.md`
+        §3 and `all`, in display order. Labels are the existing translation keys
+        `Courses.Status.<Member>`.
+      enum: [active, archived, provisioned, declined, suspended, all]
+
+    TeacherListPageModel:
+      type: object
+      description: >
+        View DTO of the teacher-list page, mapped in `Application` (AD-8). No
+        entity crosses into it. Names and emails are rendered HTML-encoded and
+        never translated (spec FR-015, VR-003). A rejected value appears nowhere
+        in it (spec FR-010, S-07).
+      required: [status, messageKeys, returnPath]
+      additionalProperties: false
+      properties:
+        status:
+          $ref: "#/components/schemas/CourseStatusFilter"
+          description: "The effective status; `active` when absent or rejected."
+        messageKeys:
+          type: array
+          description: "Validation messages in parameter order (`status`, `page`); empty on `200`."
+          items:
+            $ref: "#/components/schemas/TeacherListMessageKey"
+        list:
+          oneOf:
+            - $ref: "#/components/schemas/TeacherListResult"
+            - type: "null"
+          description: "Null on `400`."
+        returnPath:
+          type: string
+          description: >
+            The language switcher's return-path override
+            (`UiLanguageController.ReturnPathViewDataKey`), built by
+            `TeacherListUrl` from the effective, validated values — never from the
+            raw query (spec FR-009, S-06). On `200` it includes the page actually
+            shown; on `400` it omits a rejected `status` and always omits `page`.
+          example: "/workspace/teachers?status=archived&page=2"
+
+    TeacherListUrl:
+      type: string
+      description: >
+        The one rule in `Application` that builds every teacher-list URL — paging
+        links and `returnPath` (spec FR-009, S-05). Path `SignInRoutes.Teachers`;
+        parameters in the order `status`, `page`; each omitted at its default
+        (`active`, `1`); `status` as its lower-case token. No other parameter is
+        ever emitted.
+
+    TeacherListResult:
+      type: object
+      required: [isEmpty, totalCount, page, pageCount, pageSize, rows]
+      additionalProperties: false
+      properties:
+        isEmpty:
+          type: boolean
+          description: >
+            True exactly when `totalCount` is 0 (spec FR-008): the view shows
+            `Teachers.Empty` and draws no table and no paging.
+        totalCount:
+          type: integer
+          minimum: 0
+          description: "Number of listed teachers (spec FR-006, I-4)."
+        page:
+          type: integer
+          minimum: 1
+          description: "The page shown (the requested one, or the last one when it was past the end; 1 when nobody is listed)."
+        pageCount:
+          type: integer
+          minimum: 1
+          description: "`max(1, ceil(totalCount / pageSize))`."
+        pageSize:
+          type: integer
+          const: 50
+        rows:
+          type: array
+          maxItems: 50
+          description: >
+            Ordered by the US-020 label key (profile name, else email) under the
+            collation `course_name_uk`, participants with neither last, ties by
+            `participantId` (spec FR-006).
+          items:
+            $ref: "#/components/schemas/TeacherListRow"
+
+    TeacherListRow:
+      type: object
+      description: "One participant (spec FR-003, OD-004)."
+      required: [participantId, name, courseCount, coursesUrl]
+      additionalProperties: false
+      properties:
+        participantId:
+          type: integer
+          format: int64
+          description: >
+            Internal `ClassroomParticipant.Id`. Not rendered as text; used only in
+            `coursesUrl`.
+        name:
+          $ref: "#/components/schemas/PersonName"
+        email:
+          type: [string, "null"]
+          description: "`ClassroomParticipant.Email` as stored; null (an empty cell) when absent or empty."
+        courseCount:
+          type: integer
+          minimum: 1
+          description: >
+            Distinct courses of the chosen status (any for `all`) in which the
+            participant has a membership with `Role = Teacher` and
+            `OnRoster = true` (spec FR-002, FR-003, I-5).
+        coursesUrl:
+          type: string
+          description: >
+            The row's link, built in `Application` by the existing `CourseListUrl`
+            rule with the effective status, `teacherId` = `participantId`, no
+            search, page 1 (spec FR-007). Contains no name, email or Google id
+            (S-05). Link text `Teachers.CoursesLink`.
+          example: "/workspace/courses?status=archived&teacherId=317"
+
+    PersonName:
+      type: object
+      description: >
+        Reused from US-020 unchanged — the name rule of spec FR-004
+        (`CoursePersonNameRule`). `NoName` renders the existing
+        `Courses.Teacher.NoName`.
+      required: [kind]
+      additionalProperties: false
+      properties:
+        kind:
+          type: string
+          enum: [ProfileName, Email, NoName]
+        text:
+          type: [string, "null"]
+          description: "Null exactly when `kind` is `NoName`."
+
+    TeacherListMessageKey:
+      type: string
+      description: >
+        Closed list; the same members and messages as the course list's
+        (spec FR-010, FR-015). Each renders the existing
+        `Courses.Validation.<member>` text. At most one key per parameter.
+      enum:
+        - StatusMalformed   # VR-001 — "unknown course status"
+        - PageMalformed     # VR-002 — "invalid page number"
+
+x-operations-deliberately-absent:
+
+  api-v1-teachers: >
+    There is no `/api/v1` endpoint and no JSON collection (US-020 spec I-6,
+    spec §10). The API-8 "paginated from day one" rule is met by the
+    50-per-page paging of the page itself.
+
+  teacher-card: >
+    No `/workspace/teachers/{id}` page (OD-001).
+
+  teacher-search: >
+    No name or email parameter (OD-005).
+
+  teacher-list-export: >
+    No export (OD-009).
