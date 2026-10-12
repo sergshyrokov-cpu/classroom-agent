@@ -322,3 +322,4 @@
 {"timestamp":"2026-10-11T19:48:00Z","story":"US-045","from_stage":"IMPLEMENTATION","to_stage":"SECURITY_REVIEW","skill":"dotnet-implementor","verdict":"PASS","artifacts":["docs/evidence/US-045-implementation-report.md"],"attempt":1}
 {"timestamp":"2026-10-11T20:21:00Z","story":"US-045","from_stage":"SECURITY_REVIEW","to_stage":"HUMAN_PR_APPROVAL","skill":"security-reviewer","verdict":"PASS","artifacts":["docs/reviews/security/US-045-security-review.md"],"attempt":1}
 {"timestamp":"2026-10-11T20:35:00Z","story":"US-045","from_stage":"HUMAN_PR_APPROVAL","to_stage":"COMPLETED","skill":null,"verdict":"HUMAN_APPROVED","artifacts":["docs/evidence/US-045-implementation-report.md","docs/reviews/security/US-045-security-review.md"],"attempt":1}
+{"timestamp":"2026-10-12T05:59:08Z","story":"US-018","from_stage":null,"to_stage":"SPECIFICATION","skill":null,"verdict":"ACTIVATED","artifacts":[],"attempt":1}

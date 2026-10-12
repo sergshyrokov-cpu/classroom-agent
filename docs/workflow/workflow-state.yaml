@@ -2,40 +2,19 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-045
+story: US-018
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: SPECIFICATION
+previous_stage: null
+last_completed_stage: null
+status: IN_PROGRESS
 attempt: 1
 last_invoked_skill: null
-last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_PR_APPROVAL
-  recorded_at: '2026-10-11T20:35:00Z'
-last_artifacts:
-- type: implementation_report
-  path: docs/evidence/US-045-implementation-report.md
-  version: 1
-- type: security_review
-  path: docs/reviews/security/US-045-security-review.md
-  version: 1
+last_result: null
+last_artifacts: []
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings:
-- 'HUMAN_PR_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-11T20:35:00Z, no comment.'
-- 'SECURITY_REVIEW: PASS, 0 critical / 0 major / 0 minor; build 0/0, suite 5212/5212, no vulnerable packages. INFO-1 OOM excluded from fail-closed catch; INFO-2 relies on scope props preceding root enrichers (file tests guard it); INFO-3 enricher duplicated per host; INFO-4 API-6 bodies and exception text out of scope.'
-- 'IMPLEMENTATION: build 0/0; full suite 5212/5212; format clean. Enricher per host; Control Plane copy in ControlPlane.Security (no Configuration namespace); relies on scope properties preceding root enrichers (as the removed point fix did); §8 fail-closed catch for SECURITY_REVIEW to read.'
-- 'TEST_WRITING: 11 new tests RED for the expected reason (raw path in RequestPath; RefusedValueRedaction present); full suite 5212 total, 5201 green, 0 skipped.'
-- 'TEST_WRITING: spec §8 fallback (lookup failure -> marker) not testable from outside; left to SECURITY_REVIEW by code reading.'
-- 'DB_DESIGN: NOT_APPLICABLE — spec §1, §10: no schema, table, migration or query change; logging configuration only; no entity-model file by design.'
-- 'API_DESIGN: NOT_APPLICABLE — spec §1, §7, §10: no endpoint, page, policy or response change; no openapi file by design (US-007/013/014 precedent).'
-- 'HUMAN_SPEC_APPROVAL: approved without comment; interpretations I-1…I-6 accepted as written.'
-- 'SPECIFICATION: OD-001…OD-004 carried resolved; no new Open Decision; trebovaniya §7 blocks nothing.'
-- 'SPECIFICATION: marker for an unmatched request set to "(unmatched)" (OD-003); RequestPath keeps its name (OD-002).'
-- 'SPECIFICATION: interpretations I-1…I-6 for the gate — I-1 before routing = marker; I-2 catch-all fallback counts as unmatched; I-3 error-page re-execution names /error/{statusCode}; I-4 RequestPath always present; I-5 template keeps constraint text, leading /; I-6 AC-002 verified via a test-registered log line.'
-- 'SPECIFICATION: SC-10 was not reworded for v89 (it points to DC-10, which restates the rule).'
-started_at: '2026-10-11T17:46:30Z'
-updated_at: '2026-10-11T20:35:00Z'
-completed_at: '2026-10-11T20:35:00Z'
+non_blocking_findings: []
+started_at: null
+updated_at: '2026-10-12T05:59:08Z'
+completed_at: null
