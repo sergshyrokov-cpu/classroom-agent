@@ -325,3 +325,5 @@
 {"timestamp":"2026-10-12T05:59:08Z","story":"US-018","from_stage":null,"to_stage":"SPECIFICATION","skill":null,"verdict":"ACTIVATED","artifacts":[],"attempt":1}
 {"timestamp":"2026-10-12T06:04:04Z","story":"US-018","from_stage":"SPECIFICATION","to_stage":"HUMAN_SPEC_APPROVAL","skill":"spec-writer","verdict":"PASS","artifacts":["docs/specifications/US-018-spec.md","docs/decisions/US-018-open-decisions.md"],"attempt":1}
 {"timestamp":"2026-10-12T06:06:15Z","story":"US-018","from_stage":"HUMAN_SPEC_APPROVAL","to_stage":"API_DESIGN","skill":null,"verdict":"HUMAN_APPROVED","artifacts":["docs/specifications/US-018-spec.md"],"attempt":1}
+{"timestamp":"2026-10-12T06:08:00Z","story":"US-018","from_stage":"API_DESIGN","to_stage":"DB_DESIGN","skill":"openapi-designer","verdict":"NOT_APPLICABLE","artifacts":[],"attempt":1}
+{"timestamp":"2026-10-12T06:11:12Z","story":"US-018","from_stage":"DB_DESIGN","to_stage":"TEST_WRITING","skill":"db-designer","verdict":"PASS","artifacts":["docs/designs/database/US-018-db-design.md","docs/designs/database/US-018-entity-model.md"],"attempt":1}

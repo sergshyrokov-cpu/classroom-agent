@@ -4,30 +4,32 @@
 version: 1
 story: US-018
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: db-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: '2026-10-12T06:06:15Z'
+  verdict: PASS
+  stage: DB_DESIGN
+  recorded_at: '2026-10-12T06:11:12Z'
 last_artifacts:
-- type: specification
-  path: docs/specifications/US-018-spec.md
+- type: database_design
+  path: docs/designs/database/US-018-db-design.md
   version: 1
-- type: open_decisions
-  path: docs/decisions/US-018-open-decisions.md
+- type: entity_model
+  path: docs/designs/database/US-018-entity-model.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'DB_DESIGN: dedicated nullable course.complete_read_update_time (not the mirror update_time, which the list, card and purge read as Google fact); sync_state.last_full_run_at + ck_sync_state_last_full_run_at; migration AddIncrementalSync, no backfill; values truncated to microseconds before storing and comparing (VR-001); CompleteRun gains bool fullRun = false; ICourseRepository.GetCompleteReadUpdateTimeAsync (untracked). Rule signatures compiled in a scratch project.'
+- 'API_DESIGN: NOT_APPLICABLE — spec §1, §7, §10: no endpoint, page, policy or response change; the button run (US-019) keeps its contract; no openapi file by design (US-045 precedent).'
 - 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-12T06:06:15Z, no comment; interpretations I-1…I-6 accepted as written.'
 - 'SPECIFICATION: OD-001, OD-002 carried resolved (a); no new Open Decision; trebovaniya §7 blocks nothing.'
 - 'SPECIFICATION: interpretations I-1…I-6 for the gate — I-1 skipped courses not in ProcessedCount; I-2 failed-run log line also carries the skipped count; I-3 full-run time = run start; I-4 updateTime equality at storage precision (microseconds); I-5 future full-run time makes the run full; I-6 7 days is a constant, not a setting.'
 - 'SPECIFICATION: Story Note is inaccurate — the Course row (with updateTime) is already written inside the course transaction after all reads, not before them; where the remembered value lives stays DB_DESIGN.'
 started_at: '2026-10-12T06:04:04Z'
-updated_at: '2026-10-12T06:06:15Z'
+updated_at: '2026-10-12T06:11:12Z'
 completed_at: null
