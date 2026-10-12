@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-022
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-10-12T08:58:14Z
-updated_at: 2026-10-12T08:58:14Z
+updated_at: 2026-10-12T09:30:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-022-teachers-and-their-courses.md
@@ -88,3 +88,25 @@ text. Owner, 2026-10-12.
 ## Raised by the Specification
 
 None.
+
+---
+
+## Raised by TEST_WRITING
+
+### OD-010 Compile-only skeleton created at TEST_WRITING
+
+Raised by TEST_WRITING. The tests reference declarations that do not exist yet:
+`ITeacherListSource`, `TeacherListRecord`, `TeacherListRequest`,
+`GetTeacherListQuery`, `TeacherListPageResult`, `TeacherListPageOutcome`,
+`TeacherListUrl`, the DTOs `TeacherListPageModel`, `TeacherListResult`,
+`TeacherListRow`, `TeacherListMessageKey` (entity model §2–§4), and the
+`Infrastructure` class `TeacherListSource`. The test-writer may not change
+production code. US-020 … US-044 resolved the same gap the same way.
+
+Options: (a) a compile-only skeleton — declarations only; members that would do
+work throw `NotImplementedException`; nothing registered in DI, no route, no
+migration, no existing behaviour changed; IMPLEMENTATION owns and completes it;
+(b) no skeleton — the tests do not compile until IMPLEMENTATION and the red
+phase cannot be verified.
+
+**Resolved (a)** — Owner, 2026-10-12.

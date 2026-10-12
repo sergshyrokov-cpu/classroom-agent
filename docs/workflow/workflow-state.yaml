@@ -4,26 +4,33 @@
 version: 1
 story: US-022
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
+current_stage: IMPLEMENTATION
+previous_stage: TEST_WRITING
+last_completed_stage: TEST_WRITING
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: test-writer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: '2026-10-12T09:10:48Z'
+  stage: TEST_WRITING
+  recorded_at: '2026-10-12T10:00:00Z'
 last_artifacts:
-- type: database_design
-  path: docs/designs/database/US-022-db-design.md
+- type: test_strategy
+  path: docs/tests/US-022-test-strategy.md
   version: 1
-- type: entity_model
-  path: docs/designs/database/US-022-entity-model.md
+- type: ac_test_matrix
+  path: docs/tests/US-022-ac-test-matrix.md
   version: 1
+- type: test_generation_report
+  path: docs/evidence/US-022-test-generation-report.md
+  version: 1
+- type: open_decisions
+  path: docs/decisions/US-022-open-decisions.md
+  version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'TEST_WRITING: PASS — red phase verified: 5411 tests, 5309 passed, 102 failed, all 102 new US-022 tests failing for missing behaviour (skeleton NotImplementedException, route 404, keys and DI absent); no regression. Two new tests pass legitimately (path constant; forced-password redirect). OD-010 compile-only skeleton resolved (a) by the Owner. HTTP classes delegated to a cheap-worker.'
 - 'DB_DESIGN: PASS — no schema change, no migration; two read queries (T1 count, T2 page with course counts) served by the existing partial ix_course_membership_current_teacher; label-key order shared with the course list teacher choice; new port ITeacherListSource (ICourseListSource unchanged); skeleton signatures compiled in a scratch project (0 warnings).'
 - 'API_DESIGN: PASS — new GET /workspace/teachers (SignInRoutes.Teachers), policy ViewCourses, params status+page with the course-list rules and tokens, 200/400/302, no 404; row link built by CourseListUrl in Application; TeacherListUrl for paging/return path; one empty state (isEmpty); message keys reuse Courses.Validation.*; home page gains Teachers second; course list unchanged.'
 - 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-12T09:00:03Z, no comment; interpretations I-1…I-7 accepted as written.'
@@ -31,5 +38,5 @@ non_blocking_findings:
 - 'SPECIFICATION: interpretations I-1…I-7 for the gate — I-1 home-page Google Workspace section is the menu ("Teachers" after "Courses"); I-2 one empty message (no separate "nothing synchronized"); I-3 email may show twice when no name; I-4 total count shown; I-5 count is of courses; I-6 link opens course list page 1, no search; I-7 "all" count = sum over five states.'
 - 'SPECIFICATION: derived AC-013 (invalid status/page), AC-014 (Ukrainian order, no-name last), AC-015 (bounded queries), AC-016 (count agrees with the course list).'
 started_at: '2026-10-12T08:58:14Z'
-updated_at: '2026-10-12T09:10:48Z'
+updated_at: '2026-10-12T10:00:00Z'
 completed_at: null
