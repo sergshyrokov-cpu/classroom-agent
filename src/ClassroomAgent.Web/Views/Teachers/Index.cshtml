@@ -1,0 +1,97 @@
+@using System.Globalization
+@using ClassroomAgent.Application.Models.Dtos
+@using ClassroomAgent.Application.UseCases
+@model TeacherListPageModel
+@{
+    ViewData["Title"] = T[TeachersTextKeys.Title];
+
+    // Spec FR-009: the language switcher returns to the effective query, never the raw one.
+    ViewData[UiLanguageController.ReturnPathViewDataKey] = Model.ReturnPath;
+}
+
+@foreach (var message in Model.MessageKeys)
+{
+    <p class="form-error">@T[TeachersTextKeys.Validation(message)]</p>
+}
+
+<form id="teacher-list-form" method="get" action="@SignInRoutes.Teachers">
+    <p>
+        <label for="teacher-list-status">@T[CoursesTextKeys.FormStatus]</label>
+        <select id="teacher-list-status" name="@TeachersController.StatusParameter">
+            @foreach (var status in Enum.GetValues<CourseStatusFilter>())
+            {
+                <option value="@CourseListUrl.Token(status)" selected="@(status == Model.Status)">@T[CoursesTextKeys.Status(status)]</option>
+            }
+        </select>
+    </p>
+    <button type="submit">@T[CoursesTextKeys.FormSubmit]</button>
+</form>
+
+@if (Model.List is { } list)
+{
+    if (list.IsEmpty)
+    {
+        <p id="teacher-list-empty">@T[TeachersTextKeys.Empty]</p>
+    }
+    else
+    {
+        <p id="teacher-list-total">@T[TeachersTextKeys.PagingTotal, list.TotalCount]</p>
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">@T[TeachersTextKeys.ColumnName]</th>
+                        <th scope="col">@T[TeachersTextKeys.ColumnEmail]</th>
+                        <th scope="col">@T[TeachersTextKeys.ColumnCourses]</th>
+                        <th scope="col">@T[TeachersTextKeys.ColumnLink]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in list.Rows)
+                    {
+                        <tr data-participant-id="@row.ParticipantId.ToString(CultureInfo.InvariantCulture)">
+                            <td>@PersonText(row.Name)</td>
+                            <td>@row.Email</td>
+                            <td>@row.CourseCount.ToString(CultureInfo.InvariantCulture)</td>
+                            <td><a href="@row.CoursesUrl">@T[TeachersTextKeys.CoursesLink]</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        if (list.PageCount > 1)
+        {
+            <nav id="teacher-list-paging">
+                @if (list.Page > 1)
+                {
+                    <a href="@PageUrl(list.Page - 1)">@T[CoursesTextKeys.PagingPrevious]</a>
+                }
+                @for (var n = 1; n <= list.PageCount; n++)
+                {
+                    if (n == list.Page)
+                    {
+                        <span>@n.ToString(CultureInfo.InvariantCulture)</span>
+                    }
+                    else
+                    {
+                        <a href="@PageUrl(n)">@n.ToString(CultureInfo.InvariantCulture)</a>
+                    }
+                }
+                @if (list.Page < list.PageCount)
+                {
+                    <a href="@PageUrl(list.Page + 1)">@T[CoursesTextKeys.PagingNext]</a>
+                }
+            </nav>
+        }
+    }
+}
+
+@functions {
+    /// <summary>Spec FR-004: the name, or the translated "no name" text; Google data is not translated.</summary>
+    private string PersonText(CourseListPersonName name) =>
+        name.Kind == CourseListPersonNameKind.NoName ? T[CoursesTextKeys.TeacherNoName].Value : name.Text ?? string.Empty;
+
+    /// <summary>Spec FR-009: every paging link carries the effective status.</summary>
+    private string PageUrl(int page) => TeacherListUrl.Build(Model.Status, page);
+}

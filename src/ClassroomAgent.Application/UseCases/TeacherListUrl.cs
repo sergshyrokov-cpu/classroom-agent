@@ -1,3 +1,4 @@
+using System.Globalization;
 using ClassroomAgent.Application.Models.Dtos;
 
 namespace ClassroomAgent.Application.UseCases;
@@ -12,6 +13,19 @@ public static class TeacherListUrl
     public const string Path = "/workspace/teachers";
 
     /// <summary>The path with <c>status</c>, <c>page</c> in that order, each omitted at its default (<c>active</c>, 1).</summary>
-    public static string Build(CourseStatusFilter status, int page) =>
-        throw new NotImplementedException("US-022 skeleton (OD-010): completed at IMPLEMENTATION.");
+    public static string Build(CourseStatusFilter status, int page)
+    {
+        var parts = new List<string>();
+        if (status != CourseStatusFilter.Active)
+        {
+            parts.Add("status=" + CourseListUrl.Token(status));
+        }
+
+        if (page > 1)
+        {
+            parts.Add("page=" + page.ToString(CultureInfo.InvariantCulture));
+        }
+
+        return parts.Count == 0 ? Path : Path + "?" + string.Join('&', parts);
+    }
 }

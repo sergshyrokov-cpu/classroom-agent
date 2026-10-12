@@ -194,6 +194,9 @@ public static class InstallationServices
         // US-021 entity model §2: the course card's read port and its query; read only (spec FR-014).
         services.AddScoped<ICourseCardSource, CourseCardSource>();
         services.AddScoped<GetCourseCardQuery>();
+        // US-022 entity model §2, §5: the teacher list's read port and its query; read only (spec FR-013).
+        services.AddScoped<ITeacherListSource, TeacherListSource>();
+        services.AddScoped<GetTeacherListQuery>();
         // US-033 spec FR-017, entity model §6: the Meet reports' read port and the two queries; both read only (FR-015).
         services.AddScoped<IMeetReportSource, MeetReportSource>();
         services.AddScoped<GetMeetReportsQuery>();

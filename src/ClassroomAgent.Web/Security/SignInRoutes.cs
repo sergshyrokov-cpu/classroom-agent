@@ -43,6 +43,9 @@ public static class SignInRoutes
     /// <summary>US-020 api-design §2.1: the course list with its filters, 50 per page. GET only; the form submits to it.</summary>
     public const string Courses = "/workspace/courses";
 
+    /// <summary>US-022 api-design §2.1: the teacher list with its status filter, 50 per page. GET only; the form submits to it.</summary>
+    public const string Teachers = "/workspace/teachers";
+
     /// <summary>
     /// US-021 api-design §2.1, §2.2: the card of one course, under the course list, by internal id of 1 … 19 ASCII
     /// digits — <c>^[0-9]{1,19}$</c> written as a digit regex plus a length constraint, so the template holds no

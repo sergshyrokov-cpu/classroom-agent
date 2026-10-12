@@ -9,7 +9,8 @@ namespace ClassroomAgent.Infrastructure.Persistence;
 /// <summary>
 /// ICourseListSource over the database (US-020 db-design §3, entity model §2): untracked reads, one command each, no
 /// transaction, no write, nothing logged (SC-10). Order and search run under the collation <c>course_name_uk</c>
-/// (db-design §2); the search text is a bound parameter matched literally (S-09).
+/// (db-design §2); the search text is a bound parameter matched literally (S-09). The teacher choice orders by
+/// <see cref="ParticipantLabel"/>, shared with the teacher list (US-022 db-design §3.3).
 /// </summary>
 public sealed class CourseListSource(ClassroomAgentDbContext db) : ICourseListSource
 {
@@ -20,26 +21,9 @@ public sealed class CourseListSource(ClassroomAgentDbContext db) : ICourseListSo
             .AsNoTracking()
             .Where(p => db.CourseMemberships.Any(m =>
                 m.ParticipantId == p.Id && m.Role == ClassroomRole.Teacher && m.OnRoster))
-            .Select(p => new
-            {
-                ParticipantId = p.Id,
-                p.Surname,
-                p.GivenName,
-                p.Email,
-                Label = p.Surname != null && p.Surname != string.Empty && p.GivenName != null && p.GivenName != string.Empty
-                    ? p.Surname + " " + p.GivenName
-                    : p.Surname != null && p.Surname != string.Empty
-                        ? p.Surname
-                        : p.GivenName != null && p.GivenName != string.Empty
-                            ? p.GivenName
-                            : p.Email != null && p.Email != string.Empty
-                                ? p.Email
-                                : null,
-            })
-            .OrderBy(x => x.Label == null ? 1 : 0)
-            .ThenBy(x => EF.Functions.Collate(x.Label, Collation))
-            .ThenBy(x => x.ParticipantId)
-            .Select(x => new CourseListPersonRecord(x.ParticipantId, x.Surname, x.GivenName, x.Email))
+            .Select(ParticipantLabel.Projection)
+            .OrderByLabel()
+            .Select(x => new CourseListPersonRecord(x.Id, x.Surname, x.GivenName, x.Email))
             .ToListAsync(cancellationToken);
 
     public Task<int> CountCoursesAsync(CourseListFilter filter, CancellationToken cancellationToken) =>

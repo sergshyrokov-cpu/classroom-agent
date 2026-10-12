@@ -26,9 +26,6 @@ public sealed class GetCourseListQuery(ICourseListSource source, SchoolTimeZone 
     /// <summary>Spec VR-003, I-4: characters of the trimmed search text.</summary>
     private const int MaxSearchLength = 100;
 
-    /// <summary>Spec VR-004, I-5: the largest page number accepted.</summary>
-    private const int MaxPage = 100_000;
-
     public async Task<CourseListPageResult> ExecuteAsync(CourseListRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -65,7 +62,7 @@ public sealed class GetCourseListQuery(ICourseListSource source, SchoolTimeZone 
                     CourseListUrl.Build(status, null, search, 1)));
         }
 
-        var filter = new CourseListFilter(StateOf(status), teacher, search);
+        var filter = new CourseListFilter(CourseListQueryRules.StateOf(status), teacher, search);
         var total = await source.CountCoursesAsync(filter, cancellationToken);
         CourseListResult list;
         if (total == 0)
@@ -105,27 +102,15 @@ public sealed class GetCourseListQuery(ICourseListSource source, SchoolTimeZone 
                 status, choice, teacher, search, [], list, CourseListUrl.Build(status, teacher, search, list.Page)));
     }
 
-    /// <summary>Spec VR-001: absent is ACTIVE; one exact token, case-insensitive, untrimmed.</summary>
+    /// <summary>Spec VR-001 (shared with US-022, <see cref="CourseListQueryRules"/>).</summary>
     private static CourseStatusFilter ReadStatus(IReadOnlyList<string?> values, List<CourseListMessageKey> messages)
     {
-        switch (Single(values, out var text))
+        if (!CourseListQueryRules.TryReadStatus(values, out var status))
         {
-            case Presence.Absent:
-                return CourseStatusFilter.Active;
-            case Presence.One:
-                foreach (var candidate in Enum.GetValues<CourseStatusFilter>())
-                {
-                    if (string.Equals(text, CourseListUrl.Token(candidate), StringComparison.OrdinalIgnoreCase))
-                    {
-                        return candidate;
-                    }
-                }
-
-                break;
+            messages.Add(CourseListMessageKey.StatusMalformed);
         }
 
-        messages.Add(CourseListMessageKey.StatusMalformed);
-        return CourseStatusFilter.Active;
+        return status;
     }
 
     /// <summary>Spec VR-002: absent is no filter; one positive 64-bit integer of ASCII digits.</summary>
@@ -173,34 +158,16 @@ public sealed class GetCourseListQuery(ICourseListSource source, SchoolTimeZone 
         return text;
     }
 
-    /// <summary>Spec VR-004: absent is 1; one integer of ASCII digits from 1 to 100 000.</summary>
+    /// <summary>Spec VR-004 (shared with US-022, <see cref="CourseListQueryRules"/>).</summary>
     private static int ReadPage(IReadOnlyList<string?> values, List<CourseListMessageKey> messages)
     {
-        switch (Single(values, out var text))
+        if (!CourseListQueryRules.TryReadPage(values, out var page))
         {
-            case Presence.Absent:
-                return 1;
-            case Presence.One
-                when text.Length <= 6
-                     && text.All(char.IsAsciiDigit)
-                     && int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var page)
-                     && page is >= 1 and <= MaxPage:
-                return page;
-            default:
-                messages.Add(CourseListMessageKey.PageMalformed);
-                return 1;
+            messages.Add(CourseListMessageKey.PageMalformed);
         }
-    }
 
-    private static CourseState? StateOf(CourseStatusFilter status) => status switch
-    {
-        CourseStatusFilter.Active => CourseState.Active,
-        CourseStatusFilter.Archived => CourseState.Archived,
-        CourseStatusFilter.Provisioned => CourseState.Provisioned,
-        CourseStatusFilter.Declined => CourseState.Declined,
-        CourseStatusFilter.Suspended => CourseState.Suspended,
-        _ => null,
-    };
+        return page;
+    }
 
     /// <summary>Spec FR-005, I-3: the choice in the port's order; same labels carry their emails.</summary>
     private static List<TeacherOption> Choice(IReadOnlyList<CourseListPersonRecord> people)

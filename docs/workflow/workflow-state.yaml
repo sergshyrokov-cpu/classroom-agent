@@ -4,32 +4,24 @@
 version: 1
 story: US-022
 workflow: story-delivery
-current_stage: IMPLEMENTATION
-previous_stage: TEST_WRITING
-last_completed_stage: TEST_WRITING
+current_stage: SECURITY_REVIEW
+previous_stage: IMPLEMENTATION
+last_completed_stage: IMPLEMENTATION
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: test-writer
+last_invoked_skill: dotnet-implementor
 last_result:
   verdict: PASS
-  stage: TEST_WRITING
-  recorded_at: '2026-10-12T10:00:00Z'
+  stage: IMPLEMENTATION
+  recorded_at: '2026-10-12T10:15:49Z'
 last_artifacts:
-- type: test_strategy
-  path: docs/tests/US-022-test-strategy.md
+- type: implementation_report
+  path: docs/evidence/US-022-implementation-report.md
   version: 1
-- type: ac_test_matrix
-  path: docs/tests/US-022-ac-test-matrix.md
-  version: 1
-- type: test_generation_report
-  path: docs/evidence/US-022-test-generation-report.md
-  version: 1
-- type: open_decisions
-  path: docs/decisions/US-022-open-decisions.md
-  version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'IMPLEMENTATION: PASS — GET /workspace/teachers implemented (ViewCourses), no schema change; build 0 warnings, full suite 5411/5411 green, format clean; 102 red-phase tests now pass. Supporting refactor: course list parsing and teacher-choice label key moved to shared helpers (CourseListQueryRules, ParticipantLabel), behaviour unchanged. Translation texts chosen at implementation. All dotnet runs delegated to cheap-worker.'
 - 'TEST_WRITING: PASS — red phase verified: 5411 tests, 5309 passed, 102 failed, all 102 new US-022 tests failing for missing behaviour (skeleton NotImplementedException, route 404, keys and DI absent); no regression. Two new tests pass legitimately (path constant; forced-password redirect). OD-010 compile-only skeleton resolved (a) by the Owner. HTTP classes delegated to a cheap-worker.'
 - 'DB_DESIGN: PASS — no schema change, no migration; two read queries (T1 count, T2 page with course counts) served by the existing partial ix_course_membership_current_teacher; label-key order shared with the course list teacher choice; new port ITeacherListSource (ICourseListSource unchanged); skeleton signatures compiled in a scratch project (0 warnings).'
 - 'API_DESIGN: PASS — new GET /workspace/teachers (SignInRoutes.Teachers), policy ViewCourses, params status+page with the course-list rules and tokens, 200/400/302, no 404; row link built by CourseListUrl in Application; TeacherListUrl for paging/return path; one empty state (isEmpty); message keys reuse Courses.Validation.*; home page gains Teachers second; course list unchanged.'
@@ -38,5 +30,5 @@ non_blocking_findings:
 - 'SPECIFICATION: interpretations I-1…I-7 for the gate — I-1 home-page Google Workspace section is the menu ("Teachers" after "Courses"); I-2 one empty message (no separate "nothing synchronized"); I-3 email may show twice when no name; I-4 total count shown; I-5 count is of courses; I-6 link opens course list page 1, no search; I-7 "all" count = sum over five states.'
 - 'SPECIFICATION: derived AC-013 (invalid status/page), AC-014 (Ukrainian order, no-name last), AC-015 (bounded queries), AC-016 (count agrees with the course list).'
 started_at: '2026-10-12T08:58:14Z'
-updated_at: '2026-10-12T10:00:00Z'
+updated_at: '2026-10-12T10:15:49Z'
 completed_at: null

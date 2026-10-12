@@ -478,4 +478,13 @@
   <data name="Courses.Card.Link.Journal" xml:space="preserve"><value>Course journal</value></data>
   <data name="Courses.Card.Link.MeetReports" xml:space="preserve"><value>Course Meet reports</value></data>
   <data name="Courses.Card.Link.Courses" xml:space="preserve"><value>All courses</value></data>
+  <data name="Teachers.NavigationEntry" xml:space="preserve"><value>Teachers</value></data>
+  <data name="Teachers.Title" xml:space="preserve"><value>Teachers</value></data>
+  <data name="Teachers.Column.Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Teachers.Column.Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Teachers.Column.Courses" xml:space="preserve"><value>Number of courses</value></data>
+  <data name="Teachers.Column.Link" xml:space="preserve"><value>Link</value></data>
+  <data name="Teachers.CoursesLink" xml:space="preserve"><value>Teacher's courses</value></data>
+  <data name="Teachers.Paging.Total" xml:space="preserve"><value>Teachers found: {0}</value></data>
+  <data name="Teachers.Empty" xml:space="preserve"><value>No teacher teaches a course of the chosen status.</value></data>
 </root>
