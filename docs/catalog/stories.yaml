@@ -274,7 +274,13 @@ stories:
     title: Teachers and their courses
     state: BACKLOG
     blocked_by: >
-      Depends on US-014.
+      Depends on US-014. Decided in US-022 discovery (OD-001 … OD-009): one
+      teacher list linking to the course list filtered by teacher; current
+      teachers only; status filter ACTIVE by default; name, email, course count;
+      no name search; sorted by name, 50 per page; second menu entry; no export.
+  # Story file authored: docs/stories/US-022-teachers-and-their-courses.md
+  # (aligned with v90). OD-001 … OD-009 resolved by the Owner on 2026-10-12,
+  # before activation.
 
   # --- EPIC-5: Database management -----------------------------------------
   - id: US-024
