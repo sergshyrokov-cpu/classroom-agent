@@ -4,17 +4,30 @@
 version: 1
 story: US-018
 workflow: story-delivery
-current_stage: SPECIFICATION
-previous_stage: null
-last_completed_stage: null
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
 status: IN_PROGRESS
 attempt: 1
 last_invoked_skill: null
-last_result: null
-last_artifacts: []
+last_result:
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: '2026-10-12T06:06:15Z'
+last_artifacts:
+- type: specification
+  path: docs/specifications/US-018-spec.md
+  version: 1
+- type: open_decisions
+  path: docs/decisions/US-018-open-decisions.md
+  version: 1
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings: []
-started_at: null
-updated_at: '2026-10-12T05:59:08Z'
+non_blocking_findings:
+- 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-12T06:06:15Z, no comment; interpretations I-1…I-6 accepted as written.'
+- 'SPECIFICATION: OD-001, OD-002 carried resolved (a); no new Open Decision; trebovaniya §7 blocks nothing.'
+- 'SPECIFICATION: interpretations I-1…I-6 for the gate — I-1 skipped courses not in ProcessedCount; I-2 failed-run log line also carries the skipped count; I-3 full-run time = run start; I-4 updateTime equality at storage precision (microseconds); I-5 future full-run time makes the run full; I-6 7 days is a constant, not a setting.'
+- 'SPECIFICATION: Story Note is inaccurate — the Course row (with updateTime) is already written inside the course transaction after all reads, not before them; where the remembered value lives stays DB_DESIGN.'
+started_at: '2026-10-12T06:04:04Z'
+updated_at: '2026-10-12T06:06:15Z'
 completed_at: null
