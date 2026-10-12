@@ -2,38 +2,32 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-018
+story: US-022
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
 last_invoked_skill: null
 last_result:
   verdict: HUMAN_APPROVED
-  stage: HUMAN_PR_APPROVAL
-  recorded_at: '2026-10-12T08:39:48Z'
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: '2026-10-12T09:00:03Z'
 last_artifacts:
-- type: implementation_report
-  path: docs/evidence/US-018-implementation-report.md
+- type: specification
+  path: docs/specifications/US-022-spec.md
   version: 1
-- type: security_review
-  path: docs/reviews/security/US-018-security-review.md
+- type: open_decisions
+  path: docs/decisions/US-022-open-decisions.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-- 'HUMAN_PR_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-12T08:39:48Z, no comment.'
-- 'SECURITY_REVIEW: PASS — 0 Critical/Major/Minor; INFO-1 Course.cs UpdateFrom XML summary now sits on RecordCompleteRead; INFO-2 snapshot check-constraint text follows working-copy line endings (pre-existing); INFO-3 archived roster may lag up to 7 days if Google keeps updateTime on roster-only changes (approved by v90). Build 0 warnings, no vulnerable packages, filtered run 398/398.'
-- 'IMPLEMENTATION: PASS — build 0 warnings, format clean, full suite 5307 (274 environmental Npgsql timeouts, all 32 affected classes rerun green 465/465); AFullRunTimeInTheFuture assertion corrected with the Owner''s agreement (US-031 watermark stops a run started after the clock moved back); db-design §3 "rewrites both" inaccurate for that case; matrix v2.'
-- 'TEST_WRITING: 95 new tests, 87 red for the expected reason, 8 guards green; OD-003 compile-only skeleton resolved (a) by the Owner; host log property name SkippedUnchanged is binding (report §2 note 2); three schema tests updated to 18/14 columns and 18 migrations; full run saturated PostgreSQL (479 Npgsql timeouts, US-033 INFO-3) — the 44 affected classes rerun green apart from the 3 updated schema tests.'
-- 'DB_DESIGN: dedicated nullable course.complete_read_update_time (not the mirror update_time, which the list, card and purge read as Google fact); sync_state.last_full_run_at + ck_sync_state_last_full_run_at; migration AddIncrementalSync, no backfill; values truncated to microseconds before storing and comparing (VR-001); CompleteRun gains bool fullRun = false; ICourseRepository.GetCompleteReadUpdateTimeAsync (untracked). Rule signatures compiled in a scratch project.'
-- 'API_DESIGN: NOT_APPLICABLE — spec §1, §7, §10: no endpoint, page, policy or response change; the button run (US-019) keeps its contract; no openapi file by design (US-045 precedent).'
-- 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-12T06:06:15Z, no comment; interpretations I-1…I-6 accepted as written.'
-- 'SPECIFICATION: OD-001, OD-002 carried resolved (a); no new Open Decision; trebovaniya §7 blocks nothing.'
-- 'SPECIFICATION: interpretations I-1…I-6 for the gate — I-1 skipped courses not in ProcessedCount; I-2 failed-run log line also carries the skipped count; I-3 full-run time = run start; I-4 updateTime equality at storage precision (microseconds); I-5 future full-run time makes the run full; I-6 7 days is a constant, not a setting.'
-- 'SPECIFICATION: Story Note is inaccurate — the Course row (with updateTime) is already written inside the course transaction after all reads, not before them; where the remembered value lives stays DB_DESIGN.'
-started_at: '2026-10-12T06:04:04Z'
-updated_at: '2026-10-12T08:39:48Z'
-completed_at: '2026-10-12T08:39:48Z'
+- 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-12T09:00:03Z, no comment; interpretations I-1…I-7 accepted as written.'
+- 'SPECIFICATION: OD-001 … OD-009 carried resolved; no new Open Decision; trebovaniya §7 (v90) blocks nothing.'
+- 'SPECIFICATION: interpretations I-1…I-7 for the gate — I-1 home-page Google Workspace section is the menu ("Teachers" after "Courses"); I-2 one empty message (no separate "nothing synchronized"); I-3 email may show twice when no name; I-4 total count shown; I-5 count is of courses; I-6 link opens course list page 1, no search; I-7 "all" count = sum over five states.'
+- 'SPECIFICATION: derived AC-013 (invalid status/page), AC-014 (Ukrainian order, no-name last), AC-015 (bounded queries), AC-016 (count agrees with the course list).'
+started_at: '2026-10-12T08:58:14Z'
+updated_at: '2026-10-12T09:00:03Z'
+completed_at: null
