@@ -288,7 +288,15 @@ stories:
     title: Database statistics and last synchronization view
     state: BACKLOG
     blocked_by: >
-      Depends on US-013 (SyncState).
+      Depends on US-013 (SyncState) and US-019 (the request a button sends).
+      Decided in US-024 discovery (OD-001 … OD-010): a separate Database page;
+      courses by status, teachers, students, coursework, submissions, Meet
+      meetings, undecided Meet codes; sync times and state for both roles, no
+      processed counter, no diagnosis; a Synchronize button as in US-019; no
+      auto-refresh, no disk size, no export.
+  # Story file authored: docs/stories/US-024-database-statistics.md
+  # (aligned with v90). OD-001 … OD-010 resolved by the Owner on 2026-10-12,
+  # before activation.
   # US-037 purges teaching data only; purging Meet data is added later by US-031
   # (meetings by their own date) and US-032 (code links and linked meetings), so
   # this Story does not wait for EPIC-4.
