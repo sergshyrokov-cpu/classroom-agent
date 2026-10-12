@@ -1,0 +1,377 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Database statistics and last synchronization (US-024)
+  version: "1"
+  description: >
+    HTTP contract of US-024 on the installation's public port. It adds the
+    "Database" page, granted to Admin and Dean (`trebovaniya.md` §2 "Раздел
+    "Управление БД" (статистика)" ✔ ✔; §4 Epic 5), as one server-rendered `GET`
+    with no query parameters, and a form `POST` on the same page that requests a
+    synchronization through the US-019 use case (§2 "Запуск синхронизации" ✔ ✔)
+    and always returns to the Database page (spec FR-007, OD-011 a). Viewing
+    writes nothing, calls no Google API and reads no secret, in every mode (spec
+    FR-008). The home page gains a "Database" section (spec FR-009). There is no
+    JSON API. The host-wide rules of docs/designs/api/US-008-openapi.yaml apply
+    unchanged; the US-019 operation is reused, not changed. Companion document:
+    docs/designs/api/US-024-api-design.md.
+x-story: US-024
+x-source-specification: docs/specifications/US-024-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-024-open-decisions.md
+x-source-open-decisions-version: 2
+x-requirements-version: 90
+x-produced-by: openapi-designer
+x-extends:
+  - docs/designs/api/US-008-openapi.yaml
+  - docs/designs/api/US-019-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type of
+  the Control Plane channel is added or changed; the page is the installation's
+  own screen (DC-12).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port. Illustrative (US-008 spec FR-001)."
+
+tags:
+  - name: database
+    description: "The Database page: statistics, last synchronization, the button (spec FR-001 … FR-013)"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 configured host-wide applies and is not restated: HTTPS and
+    HSTS, the deny-by-default fallback policy (SC-4, API-9), the global
+    antiforgery filter, the single error page, the anonymous catch-all `404`, the
+    session cookie, the restricted session of a Dean with a temporary password
+    (US-012), and the exception handler that turns a `ReadOnlyModeException` into
+    `409` — the translated error page naming the reason (US-008 spec FR-014).
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list of anonymous endpoints gains **nothing**; the US-008
+    endpoint enumeration test passes with both new operations classified as
+    protected (spec FR-010, S-01).
+
+  antiforgery-list-unchanged: >
+    The `POST` is covered by the global antiforgery rule and gains no exemption
+    (spec S-06, API-7).
+
+  outbound: >
+    Neither operation calls anything outside the process: no Google call, no
+    secret-store read, no Control Plane call (spec FR-008, S-04, S-12). A run the
+    `POST` requests is performed later by the background service (US-013 …
+    US-018).
+
+  logging: >
+    Request-scope log lines name the route template, never the raw address
+    (`trebovaniya.md` v89). Neither operation has a path or query value to log.
+
+paths:
+
+  /database:
+
+    get:
+      tags: [database]
+      operationId: getDatabaseStatistics
+      summary: "The Database page"
+      description: >
+        Runs the `Application` query `GetDatabaseStatisticsQuery` (name per
+        api-design §2.4) for the signed-in role and renders
+        `DatabaseStatisticsPageModel` (AD-8). The page binds **no parameter**: any
+        query string is ignored and never echoed into the page, its links, its form
+        or the language switcher's return path (spec FR-001, VR-001, AC-019). A
+        one-time `SynchronizationMessageKey` left in TempData by an accepted press
+        (below) is read and shown once. The page does not refresh itself (OD-008).
+        Works unchanged in read-only mode; the query calls no read-only guard and
+        writes nothing (spec FR-008).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewDatabaseStatistics
+      x-policy-new: true
+      x-permission-matrix-row: "\"Раздел \"Управление БД\" (статистика)\" — Admin ✔, Dean ✔"
+      x-calls-google: false
+      x-writes: nothing
+      x-spec: [FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-008, FR-010, FR-011, FR-012, FR-013]
+      x-acceptance-criteria: [AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-009, AC-010, AC-011, AC-013, AC-014, AC-015, AC-017, AC-018, AC-019]
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: "The page."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/DatabaseStatisticsPageModel"
+        "302":
+          description: >
+            (1) Not signed in: `Location: /sign-in`. (2) A Dean with a temporary
+            password: `Location: /sign-in/change-password` (US-012).
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: [/sign-in, /sign-in/change-password]
+        "500":
+          description: >
+            Unexpected failure, including a stored `SyncState.Status` outside the
+            three known values (spec VR-003): the single error page, no detail
+            (AD-9, API-10).
+          content:
+            text/html: {}
+
+  /database/synchronization-requests:
+
+    post:
+      tags: [database]
+      operationId: requestSynchronizationFromDatabasePage
+      summary: "Request a synchronization run from the Database page"
+      description: >
+        The Database page's own entry to the **unchanged** US-019 use case
+        `RequestSynchronizationUseCase` (OD-011 a): read-only guard → connection
+        state → enqueue through `ISynchronizationRequests` → one audit row
+        `SynchronizationRequested`. Same outcomes, refusal categories and message
+        codes as `POST /synchronization/requests`. The only difference is the page
+        the user lands on: **always `/database`**, fixed by this endpoint, never
+        taken from the request (spec VR-002, S-07). The body carries nothing but
+        the antiforgery token.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: StartSynchronization
+      x-permission-matrix-row: "\"Запуск синхронизации\" — Admin ✔, Dean ✔"
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: "one AuditEvent row per press, accepted or refused, exactly as US-019 (spec FR-007); nothing else"
+      x-enqueues: "one out-of-schedule request on the US-013 SyncRunCoordinator, only when accepted"
+      x-return-page: /database
+      x-reuses-use-case: RequestSynchronizationUseCase
+      x-spec: [FR-007, FR-008, FR-010, FR-013]
+      x-acceptance-criteria: [AC-008, AC-009, AC-010, AC-012, AC-016]
+      security:
+        - installationSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/DatabaseSynchronizationRequestForm"
+      responses:
+        "302":
+          description: >
+            One of three cases, told apart by `Location`:
+            (1) **Accepted** — enqueued; one audit row `Succeeded`.
+            `Location: /database`; the one-time `SynchronizationMessageKey`
+            (`Requested` or `RequestedAfterCurrentWork`) is carried in TempData under
+            the US-019 key `SynchronizationMessage` and shown once by the page.
+            (2) **Not signed in** — `Location: /sign-in`; nothing enqueued or written.
+            (3) **A Dean with a temporary password** — `Location:
+            /sign-in/change-password`; nothing enqueued or written.
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: [/database, /sign-in, /sign-in/change-password]
+        "400":
+          description: >
+            Missing or invalid antiforgery token: the translated error page under the
+            global rule (API-7). Nothing enqueued, no audit row.
+          content:
+            text/html: {}
+        "409":
+          description: >
+            The installation's state refuses the request (API-5). **Nothing is
+            enqueued**; one audit row `Refused` is written by the use case.
+            (1) Read-only mode, any BR-025 cause: category `ReadOnlyMode`; the
+            host-wide handler renders the translated error page naming the reason
+            (spec FR-008, AC-009).
+            (2) No usable connection (`NotConfigured`, `DomainMismatch`): category
+            `ConnectionNotUsable`; **the Database page** is re-rendered with
+            `synchronizationMessageKey` = `ConnectionNotUsableAdmin` for an Admin or
+            `ConnectionNotUsableDean` for a Dean (spec FR-007, AC-016).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/DatabaseStatisticsPageModel"
+        "500":
+          description: "Unexpected failure: the single error page, no detail (AD-9, API-10)."
+          content:
+            text/html: {}
+
+  /:
+    get:
+      operationId: getLanding
+      summary: "Existing US-008 home page — changed additively"
+      description: >
+        Unchanged in behaviour, policy and status codes. The page gains a
+        "Database" section (`<nav id="database-section">`) with one link to
+        `/database`, for Admin and Dean, in read-only mode too, placed after the
+        "Reports and templates" section and before the Admin-only settings section
+        (spec FR-009, AC-001). The view model gains nothing — the link is static,
+        as the other sections' links are. The Dean's US-019 button stays where it is.
+      x-policy: ViewLegitimacyStatus
+      x-change: additive-markup
+      x-acceptance-criteria: [AC-001, AC-011]
+      responses:
+        "200":
+          description: "The page; see US-008-openapi.yaml for everything else."
+          content:
+            text/html: {}
+
+x-operations-deliberately-absent:
+
+  us019-endpoint-change: >
+    `POST /synchronization/requests` is **not** changed: no origin field, no new
+    return page (OD-011 a, options b and c rejected). Its return pages stay
+    role-based.
+
+  json-api: >
+    No `/api/v1` path for the statistics; no export (OD-010).
+
+  get-that-requests: >
+    No `GET` requests a run (API-4, US-019).
+
+  diagnosis: >
+    No operation of this Story returns the diagnosis, the failed step or the
+    error of a run (OD-005, spec S-08); that stays on
+    `GET /settings/workspace-connection` (Admin, US-017).
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: __Host-ca-session
+      description: "The installation's own session cookie (US-008 spec FR-015)."
+
+  schemas:
+
+    DatabaseSynchronizationRequestForm:
+      type: object
+      additionalProperties: true
+      description: >
+        The body carries **no field this Story reads**: only the antiforgery token
+        the global filter validates. The action binds nothing, so a `returnUrl`,
+        a role or anything else submitted is ignored (spec VR-002, VR-004).
+      properties:
+        __RequestVerificationToken:
+          type: string
+          description: "The antiforgery token (API-7)."
+
+    SynchronizationMessageKey:
+      description: "Reused unchanged from US-019."
+      $ref: "US-019-openapi.yaml#/components/schemas/SynchronizationMessageKey"
+
+    DatabaseStatisticsPageModel:
+      type: object
+      description: >
+        View DTO of the Database page, mapped in `Application` (AD-8). Carries
+        counts, the synchronization block and display flags only — no name, email,
+        meeting code, Google id, diagnosis, failed step or processed counter
+        (spec S-08, S-09).
+      required: [courses, teachers, students, courseWorkItems, submissions, meetMeetings, meetCodesAwaitingDecision, synchronization, failureGuidance, synchronizationMessageKey]
+      properties:
+        courses:
+          $ref: "#/components/schemas/CourseCounts"
+        teachers:
+          type: integer
+          format: int32
+          minimum: 0
+          description: "Distinct participants with a current teacher membership in a course of any state (spec FR-003)."
+        students:
+          type: integer
+          format: int32
+          minimum: 0
+          description: "Distinct participants with a current student membership in a course of any state (spec FR-003)."
+        courseWorkItems:
+          type: integer
+          format: int32
+          minimum: 0
+          description: "Stored coursework rows (spec FR-004, I-4)."
+        submissions:
+          type: integer
+          format: int32
+          minimum: 0
+          description: "Stored submission rows (spec FR-004, I-4)."
+        meetMeetings:
+          type: integer
+          format: int32
+          minimum: 0
+          description: "Stored Meet meeting rows (spec FR-004)."
+        meetCodesAwaitingDecision:
+          type: integer
+          format: int32
+          minimum: 0
+          description: >
+            Distinct meeting codes of stored meetings with no link row — the Meet
+            codes page's Unassigned count (spec FR-004, AC-018).
+        synchronization:
+          $ref: "#/components/schemas/SynchronizationBlock"
+        failureGuidance:
+          $ref: "#/components/schemas/FailureGuidance"
+        synchronizationMessageKey:
+          description: >
+            `Requested` / `RequestedAfterCurrentWork` once after an accepted press
+            (from TempData), `ConnectionNotUsableAdmin` / `ConnectionNotUsableDean`
+            on the `409` re-render, else null.
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/SynchronizationMessageKey"
+
+    CourseCounts:
+      type: object
+      description: "Courses per state of §3 and their sum; every state always present (spec FR-002)."
+      required: [active, archived, provisioned, declined, suspended, total]
+      properties:
+        active: {type: integer, format: int32, minimum: 0}
+        archived: {type: integer, format: int32, minimum: 0}
+        provisioned: {type: integer, format: int32, minimum: 0}
+        declined: {type: integer, format: int32, minimum: 0}
+        suspended: {type: integer, format: int32, minimum: 0}
+        total:
+          type: integer
+          format: int32
+          minimum: 0
+          description: "active + archived + provisioned + declined + suspended (spec I-3)."
+
+    SynchronizationBlock:
+      type: object
+      description: >
+        From the single `SyncState` row (spec FR-005). Times are already converted
+        to the school's time zone in `Application` (wall-clock date and time, no
+        offset); null renders "not yet". The view does no time-zone arithmetic.
+      required: [state, lastSuccessfulRunAt, lastFullRunAt, meetLoadedUpTo]
+      properties:
+        state:
+          $ref: "#/components/schemas/SynchronizationDisplayState"
+        lastSuccessfulRunAt:
+          type: [string, "null"]
+          format: date-time
+          description: "`LastSuccessfulRunAt` in the school's zone; null → \"not yet\"."
+        lastFullRunAt:
+          type: [string, "null"]
+          format: date-time
+          description: "`LastFullRunAt` (v90) in the school's zone; null → \"not yet\"."
+        meetLoadedUpTo:
+          type: [string, "null"]
+          format: date-time
+          description: "`MeetLoadedUpTo` (v87) in the school's zone; null → \"not yet\"."
+
+    SynchronizationDisplayState:
+      type: string
+      description: >
+        `NotYet` when no `SyncState` row exists (spec I-2); otherwise the stored
+        status: Running → `InProgress`, Completed → `Completed`, Failed → `Failed`.
+      enum: [NotYet, InProgress, Completed, Failed]
+
+    FailureGuidance:
+      type: string
+      description: >
+        What the page shows next to "failed" (spec FR-006, I-7). `None` unless the
+        state is `Failed`; then `AskAdmin` for a Dean (a hint, no link) and
+        `ConnectionPageLink` for an Admin (a link to
+        `/settings/workspace-connection`). Chosen in `Application` from the
+        session's role, never from the request.
+      enum: [None, AskAdmin, ConnectionPageLink]

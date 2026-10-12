@@ -2,35 +2,33 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-022
+story: US-024
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
+last_invoked_skill: openapi-designer
 last_result:
   verdict: PASS
-  stage: SECURITY_REVIEW
-  recorded_at: '2026-10-12T10:47:30Z'
+  stage: API_DESIGN
+  recorded_at: '2026-10-12T12:53:45Z'
 last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-022-security-review.md
+- type: openapi
+  path: docs/designs/api/US-024-openapi.yaml
+  version: 1
+- type: api_design
+  path: docs/designs/api/US-024-api-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-- 'HUMAN_PR_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-12T10:52:10Z, no comment.'
-- 'SECURITY_REVIEW: PASS — 0 critical, 0 major, 0 minor; build 0 warnings and full suite 5411/5411 re-run independently, 104 TeacherList tests green, no vulnerable packages. INFO-1 internal participant id in data attribute and course-list link (same id as US-020, not personal data). INFO-2 language switcher falls back to the raw query when a page sets no return path; this page always sets it.'
-- 'IMPLEMENTATION: PASS — GET /workspace/teachers implemented (ViewCourses), no schema change; build 0 warnings, full suite 5411/5411 green, format clean; 102 red-phase tests now pass. Supporting refactor: course list parsing and teacher-choice label key moved to shared helpers (CourseListQueryRules, ParticipantLabel), behaviour unchanged. Translation texts chosen at implementation. All dotnet runs delegated to cheap-worker.'
-- 'TEST_WRITING: PASS — red phase verified: 5411 tests, 5309 passed, 102 failed, all 102 new US-022 tests failing for missing behaviour (skeleton NotImplementedException, route 404, keys and DI absent); no regression. Two new tests pass legitimately (path constant; forced-password redirect). OD-010 compile-only skeleton resolved (a) by the Owner. HTTP classes delegated to a cheap-worker.'
-- 'DB_DESIGN: PASS — no schema change, no migration; two read queries (T1 count, T2 page with course counts) served by the existing partial ix_course_membership_current_teacher; label-key order shared with the course list teacher choice; new port ITeacherListSource (ICourseListSource unchanged); skeleton signatures compiled in a scratch project (0 warnings).'
-- 'API_DESIGN: PASS — new GET /workspace/teachers (SignInRoutes.Teachers), policy ViewCourses, params status+page with the course-list rules and tokens, 200/400/302, no 404; row link built by CourseListUrl in Application; TeacherListUrl for paging/return path; one empty state (isEmpty); message keys reuse Courses.Validation.*; home page gains Teachers second; course list unchanged.'
-- 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-12T09:00:03Z, no comment; interpretations I-1…I-7 accepted as written.'
-- 'SPECIFICATION: OD-001 … OD-009 carried resolved; no new Open Decision; trebovaniya §7 (v90) blocks nothing.'
-- 'SPECIFICATION: interpretations I-1…I-7 for the gate — I-1 home-page Google Workspace section is the menu ("Teachers" after "Courses"); I-2 one empty message (no separate "nothing synchronized"); I-3 email may show twice when no name; I-4 total count shown; I-5 count is of courses; I-6 link opens course list page 1, no search; I-7 "all" count = sum over five states.'
-- 'SPECIFICATION: derived AC-013 (invalid status/page), AC-014 (Ukrainian order, no-name last), AC-015 (bounded queries), AC-016 (count agrees with the course list).'
-started_at: '2026-10-12T08:58:14Z'
-updated_at: '2026-10-12T10:52:10Z'
-completed_at: '2026-10-12T10:52:10Z'
+- 'API_DESIGN: PASS — new GET /database (new policy ViewDatabaseStatistics, Admin+Dean, no query parameters, 200/302/500) and POST /database/synchronization-requests (StartSynchronization, reuses RequestSynchronizationUseCase unchanged, 302 /database with US-019 TempData message, 409 read-only via host handler, 409 connection re-renders /database, 400 antiforgery); US-019 endpoint untouched (OD-011 a); home page gains database-section markup only; DTO DatabaseStatisticsPageModel with CourseCounts, SynchronizationBlock (NotYet/InProgress/Completed/Failed, times in school zone), FailureGuidance (None/AskAdmin/ConnectionPageLink) — no diagnosis field.'
+- 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-12T12:51:16Z, comment "OD-011: a" — OD-011 resolved (a): a second POST endpoint on the Database page, policy StartSynchronization, same RequestSynchronizationUseCase, always returns to the Database page; US-019 endpoint unchanged. Recorded in spec (APPROVED) and open-decisions v2; interpretations I-1…I-8 accepted as written.'
+- 'SPECIFICATION: OD-001 … OD-010 carried resolved; OD-011 raised (how the press returns to the Database page — US-019 fixes the return page by role; options a second endpoint (recommended) / origin field on US-019 / keep US-019 return). Blocks API_DESIGN; resolve at HUMAN_SPEC_APPROVAL. trebovaniya §7 (v90) blocks nothing.'
+- 'SPECIFICATION: interpretations I-1…I-8 for the gate — I-1 users = teachers and students; I-2 state reads "not yet" before first run; I-3 total = sum of five states; I-4 coursework/submissions/meetings counted as stored; I-5 no snapshot across counters; I-6 times in school time zone; I-7 hint/link only for failed; I-8 section heading wording at translation.'
+- 'SPECIFICATION: new policy for §2 "Управление БД (статистика)" (ViewDatabaseStatistics, indicative); derived AC-013 (no diagnosis), AC-014 (time zone), AC-015 (distinct people), AC-016 (connection refusal), AC-017 (bounded queries), AC-018 (agrees with Meet codes Unassigned), AC-019 (parameters ignored).'
+started_at: '2026-10-12T12:38:47Z'
+updated_at: '2026-10-12T12:53:45Z'
+completed_at: null

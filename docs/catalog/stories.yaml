@@ -286,7 +286,7 @@ stories:
   - id: US-024
     epic: EPIC-5
     title: Database statistics and last synchronization view
-    state: BACKLOG
+    state: IN_PROGRESS
     blocked_by: >
       Depends on US-013 (SyncState) and US-019 (the request a button sends).
       Decided in US-024 discovery (OD-001 … OD-010): a separate Database page;
