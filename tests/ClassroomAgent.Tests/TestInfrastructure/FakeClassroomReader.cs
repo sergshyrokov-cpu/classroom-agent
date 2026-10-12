@@ -25,6 +25,15 @@ public sealed class FakeClassroomReader : IClassroomReader
     /// <summary>The impersonation address every call was made with (BR-015).</summary>
     public List<string> ImpersonatedAs { get; } = [];
 
+    /// <summary>US-018 AC-007: the Google course ids whose roster was asked for, across runs, in order.</summary>
+    public List<string> RostersRead { get; } = [];
+
+    /// <summary>US-018 AC-007: the Google course ids whose coursework and materials were asked for, across runs.</summary>
+    public List<string> CourseWorkRead { get; } = [];
+
+    /// <summary>US-018 AC-007: the Google course ids whose submissions were asked for, across runs.</summary>
+    public List<string> SubmissionsRead { get; } = [];
+
     /// <summary>Seeds one course and its roster, as <see cref="SyncWorld.ClassroomReader"/> does.</summary>
     public FakeClassroomReader WithCourse(
         string googleId,
@@ -32,12 +41,13 @@ public sealed class FakeClassroomReader : IClassroomReader
         string state = CourseTestData.States.Active,
         IEnumerable<RosterEntry>? teachers = null,
         IEnumerable<RosterEntry>? students = null,
-        string? description = null)
+        string? description = null,
+        DateTimeOffset? updateTime = null)
     {
         _courses.Add(new CourseSnapshot(
             googleId,
             state,
-            new CourseDetails(name, null, null, description, null, null, null, null, null, null, null, null)));
+            new CourseDetails(name, null, null, description, null, null, null, updateTime, null, null, null, null)));
         _rosters[googleId] = new CourseRoster((teachers ?? []).ToList(), (students ?? []).ToList());
         return this;
     }
@@ -118,6 +128,7 @@ public sealed class FakeClassroomReader : IClassroomReader
         CancellationToken cancellationToken)
     {
         ImpersonatedAs.Add(impersonationUser);
+        RostersRead.Add(courseGoogleId);
         return Task.FromResult(_rosters.TryGetValue(courseGoogleId, out var roster)
             ? roster
             : new CourseRoster([], []));
@@ -129,6 +140,7 @@ public sealed class FakeClassroomReader : IClassroomReader
         CancellationToken cancellationToken)
     {
         ImpersonatedAs.Add(impersonationUser);
+        CourseWorkRead.Add(courseGoogleId);
         return Task.FromResult(new CourseWorkPage(
             _courseWork.TryGetValue(courseGoogleId, out var items) ? items : []));
     }
@@ -139,6 +151,7 @@ public sealed class FakeClassroomReader : IClassroomReader
         CancellationToken cancellationToken)
     {
         ImpersonatedAs.Add(impersonationUser);
+        SubmissionsRead.Add(courseGoogleId);
         return Task.FromResult<IReadOnlyList<SubmissionSnapshot>>(
             _submissions.TryGetValue(courseGoogleId, out var items) ? items : []);
     }

@@ -233,7 +233,7 @@ stories:
   - id: US-018
     epic: EPIC-1
     title: Incremental synchronization
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: >
       Depends on US-014.
     # US-014 COMPLETED. Story file authored:

@@ -86,8 +86,8 @@ public sealed class RunSynchronizationUseCase(
             return SynchronizationRunOutcome.SkippedConnection(connection.State);
         }
 
-        var state = await BeginAsync(runId, cancellationToken);
-        var import = new ImportProgress();
+        var (state, fullRun) = await BeginAsync(runId, cancellationToken);
+        var import = new ImportProgress { FullRun = fullRun };
         var meetPull = new MeetProgress();
         var step = SyncStep.Classroom;
         try
@@ -104,7 +104,8 @@ public sealed class RunSynchronizationUseCase(
             var linked = linking is null ? null : await linking.ExecuteAsync(unitOfWork, cancellationToken);
 
             // FR-007: the watermark moves only here, once every page is read and written and the run completes.
-            state.CompleteRun(timeProvider.GetUtcNow(), import.ProcessedCount, meetPull.WindowTo);
+            // US-018 spec FR-006, OD-002 a: only a full run that completes records its start as the last full run.
+            state.CompleteRun(timeProvider.GetUtcNow(), import.ProcessedCount, meetPull.WindowTo, fullRun);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return SynchronizationRunOutcome.Ran(
                 runId,
@@ -117,7 +118,8 @@ public sealed class RunSynchronizationUseCase(
                 import.CoursesGone,
                 import.CoursesWithBlankName,
                 meetPull.ToCounts(),
-                linked);
+                linked,
+                import.CoursesSkippedUnchanged);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -143,7 +145,8 @@ public sealed class RunSynchronizationUseCase(
                 import.CoursesGone,
                 import.CoursesWithBlankName,
                 step,
-                step is SyncStep.Meet or SyncStep.Linking ? meetPull.ToCounts() : null);
+                step is SyncStep.Meet or SyncStep.Linking ? meetPull.ToCounts() : null,
+                import.CoursesSkippedUnchanged);
         }
     }
 
@@ -355,10 +358,15 @@ public sealed class RunSynchronizationUseCase(
     /// progress (US-013 spec FR-006). The first run of an installation creates the row; its absence until then is
     /// what "never synchronized" means (US-013 spec I-2).
     /// </summary>
-    private async Task<SyncState> BeginAsync(Guid runId, CancellationToken cancellationToken)
+    /// <remarks>
+    /// US-018 spec FR-005, entity model §5 step 1: whether this run is the weekly full run is decided here, once, from
+    /// the stored full-run time and the run's own start, and does not change during the run.
+    /// </remarks>
+    private async Task<(SyncState State, bool FullRun)> BeginAsync(Guid runId, CancellationToken cancellationToken)
     {
         var startedAt = timeProvider.GetUtcNow();
         var state = await syncStates.GetAsync(cancellationToken);
+        var fullRun = IncrementalSyncRule.IsFullRunDue(state?.LastFullRunAt, startedAt);
         if (state is null)
         {
             state = SyncState.BeginFirstRun(runId, startedAt);
@@ -370,7 +378,7 @@ public sealed class RunSynchronizationUseCase(
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return state;
+        return (state, fullRun);
     }
 
     /// <summary>
@@ -404,6 +412,19 @@ public sealed class RunSynchronizationUseCase(
                 // US-017 spec FR-012: skipped before its reads and its transaction, so nothing of it is written and
                 // a stored course keeps the name it has. Not counted (I-5).
                 progress.CoursesWithBlankName.Add(snapshot.GoogleId);
+                continue;
+            }
+
+            // US-018 spec FR-001, FR-004: after the checks above, an archived course listed with the updateTime
+            // remembered at its last complete read cannot have changed — no read, no transaction, nothing written,
+            // and not counted as processed (I-1). Never in the weekly full run (FR-005).
+            if (!progress.FullRun
+                && IncrementalSyncRule.IsUnchangedArchive(
+                    state,
+                    snapshot.Details.UpdateTime,
+                    await courses.GetCompleteReadUpdateTimeAsync(snapshot.GoogleId, cancellationToken)))
+            {
+                progress.CoursesSkippedUnchanged++;
                 continue;
             }
 
@@ -546,6 +567,10 @@ public sealed class RunSynchronizationUseCase(
             stored,
             observedAt,
             cancellationToken);
+
+        // US-018 spec FR-002: staged with the transaction's last write, so the remembered value advances only when the
+        // course commits and a rollback leaves the previous one.
+        course.RecordCompleteRead();
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new CourseResult(false, marked, unrecognised);
@@ -779,6 +804,12 @@ public sealed class RunSynchronizationUseCase(
     private sealed class ImportProgress
     {
         public int ProcessedCount { get; set; }
+
+        /// <summary>US-018 spec FR-005: whether this run is the weekly full run, decided once at its start.</summary>
+        public bool FullRun { get; init; }
+
+        /// <summary>US-018 spec FR-008: archived courses skipped as unchanged, reported whether the run completed or stopped.</summary>
+        public int CoursesSkippedUnchanged { get; set; }
 
         public int MembershipsMarkedOffRoster { get; set; }
 

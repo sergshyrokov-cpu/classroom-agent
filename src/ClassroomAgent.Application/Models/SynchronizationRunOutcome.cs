@@ -35,7 +35,8 @@ public sealed class SynchronizationRunOutcome
         IReadOnlyList<string>? coursesWithBlankName = null,
         SyncStep? failedStep = null,
         MeetPullCounts? meet = null,
-        MeetLinkingCounts? linking = null)
+        MeetLinkingCounts? linking = null,
+        int coursesSkippedUnchanged = 0)
     {
         RunId = runId;
         ProcessedCount = processedCount;
@@ -53,6 +54,7 @@ public sealed class SynchronizationRunOutcome
         FailedStep = failedStep;
         Meet = meet;
         Linking = linking;
+        CoursesSkippedUnchanged = coursesSkippedUnchanged;
     }
 
     public Guid? RunId { get; }
@@ -108,6 +110,12 @@ public sealed class SynchronizationRunOutcome
     /// <summary>US-031 spec FR-010: the step that stopped a failed run; null otherwise.</summary>
     public SyncStep? FailedStep { get; }
 
+    /// <summary>
+    /// US-018 spec FR-008, FR-009, I-2: how many archived courses this run skipped as unchanged, for the host's
+    /// completion and failure lines — a count only (SC-10).
+    /// </summary>
+    public int CoursesSkippedUnchanged { get; }
+
     public bool Failed => Error is not null;
 
     public static SynchronizationRunOutcome Ran(
@@ -121,7 +129,8 @@ public sealed class SynchronizationRunOutcome
         IReadOnlyList<string>? coursesGone = null,
         IReadOnlyList<string>? coursesWithBlankName = null,
         MeetPullCounts? meet = null,
-        MeetLinkingCounts? linking = null) =>
+        MeetLinkingCounts? linking = null,
+        int coursesSkippedUnchanged = 0) =>
         new(
             runId,
             processedCount,
@@ -138,7 +147,8 @@ public sealed class SynchronizationRunOutcome
             coursesWithBlankName,
             null,
             meet,
-            linking);
+            linking,
+            coursesSkippedUnchanged);
 
     /// <summary>
     /// A run that stopped with a diagnosis (US-017 spec FR-005, FR-006): <see cref="Error"/> is the diagnosis name,
@@ -154,7 +164,8 @@ public sealed class SynchronizationRunOutcome
         IReadOnlyList<string>? coursesGone = null,
         IReadOnlyList<string>? coursesWithBlankName = null,
         SyncStep? failedStep = null,
-        MeetPullCounts? meet = null) =>
+        MeetPullCounts? meet = null,
+        int coursesSkippedUnchanged = 0) =>
         new(
             runId,
             processedCount,
@@ -170,7 +181,9 @@ public sealed class SynchronizationRunOutcome
             coursesGone,
             coursesWithBlankName,
             failedStep,
-            meet);
+            meet,
+            null,
+            coursesSkippedUnchanged);
 
     public static SynchronizationRunOutcome SkippedReadOnly(LegitimacyModeReason reason) =>
         new(null, null, null, reason, null);

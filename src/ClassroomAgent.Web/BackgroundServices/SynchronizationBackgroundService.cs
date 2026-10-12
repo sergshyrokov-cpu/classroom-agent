@@ -233,7 +233,12 @@ public sealed partial class SynchronizationBackgroundService(
                 LogLinkingStepCompleted(logger, runId, linking.CodesScored, linking.LinksCreated);
             }
 
-            LogRunCompleted(logger, runId, outcome.ProcessedCount ?? 0, outcome.MembershipsMarkedOffRoster);
+            LogRunCompleted(
+                logger,
+                runId,
+                outcome.ProcessedCount ?? 0,
+                outcome.MembershipsMarkedOffRoster,
+                outcome.CoursesSkippedUnchanged);
         }
     }
 
@@ -299,7 +304,8 @@ public sealed partial class SynchronizationBackgroundService(
             runId,
             diagnosis.ToString(),
             outcome.FailedStep?.ToString() ?? "none",
-            diagnosis == SyncDiagnosis.Unexpected ? outcome.UnexpectedExceptionType ?? "unknown" : "none");
+            diagnosis == SyncDiagnosis.Unexpected ? outcome.UnexpectedExceptionType ?? "unknown" : "none",
+            outcome.CoursesSkippedUnchanged);
     }
 
     [LoggerMessage(
@@ -347,12 +353,13 @@ public sealed partial class SynchronizationBackgroundService(
         EventId = 5122,
         EventName = "SyncRunCompleted",
         Level = LogLevel.Information,
-        Message = "Synchronization run {RunId} completed, {ProcessedCount} processed, {MarkedOffRoster} off a roster")]
+        Message = "Synchronization run {RunId} completed, {ProcessedCount} processed, {MarkedOffRoster} off a roster, {SkippedUnchanged} skipped as unchanged")]
     private static partial void LogRunCompleted(
         ILogger logger,
         Guid runId,
         int processedCount,
-        int markedOffRoster);
+        int markedOffRoster,
+        int skippedUnchanged);
 
     [LoggerMessage(
         EventId = 5127,
@@ -388,14 +395,15 @@ public sealed partial class SynchronizationBackgroundService(
     [LoggerMessage(
         EventId = 5123,
         EventName = "SyncRunFailed",
-        Message = "Synchronization run {RunId} failed: {Diagnosis} at step {Step}, exception type {ExceptionType}")]
+        Message = "Synchronization run {RunId} failed: {Diagnosis} at step {Step}, exception type {ExceptionType}, {SkippedUnchanged} skipped as unchanged")]
     private static partial void LogRunFailed(
         ILogger logger,
         LogLevel level,
         Guid runId,
         string diagnosis,
         string step,
-        string exceptionType);
+        string exceptionType,
+        int skippedUnchanged);
 
     [LoggerMessage(
         EventId = 5130,

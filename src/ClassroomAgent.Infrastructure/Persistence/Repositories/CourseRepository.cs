@@ -14,4 +14,15 @@ public sealed class CourseRepository(ClassroomAgentDbContext db) : ICourseReposi
         db.Courses.SingleOrDefaultAsync(c => c.GoogleId == googleId, cancellationToken);
 
     public void Add(Course course) => db.Courses.Add(course);
+
+    /// <summary>
+    /// US-018 entity model §4, db-design §6: one column, untracked, so the tracked load inside the course's
+    /// transaction is unaffected. Null for an unknown course and for a course with no value alike.
+    /// </summary>
+    public Task<DateTimeOffset?> GetCompleteReadUpdateTimeAsync(string googleId, CancellationToken cancellationToken) =>
+        db.Courses
+            .AsNoTracking()
+            .Where(c => c.GoogleId == googleId)
+            .Select(c => c.CompleteReadUpdateTime)
+            .SingleOrDefaultAsync(cancellationToken);
 }

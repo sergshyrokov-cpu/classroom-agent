@@ -1,4 +1,5 @@
 using ClassroomAgent.Domain.Enums;
+using ClassroomAgent.Domain.Rules;
 
 namespace ClassroomAgent.Domain.Entities;
 
@@ -77,6 +78,13 @@ public sealed class Course
     /// <summary>Google's.</summary>
     public DateTimeOffset? UpdateTime { get; private set; }
 
+    /// <summary>
+    /// US-018 spec FR-002: the listed <see cref="UpdateTime"/> remembered at the course's last complete read, at
+    /// storage precision; null until a complete read since US-018, or when Google sent none. Bookkeeping, not
+    /// mirror: <see cref="Import"/> and <see cref="UpdateFrom"/> never touch it (db-design §1).
+    /// </summary>
+    public DateTimeOffset? CompleteReadUpdateTime { get; private set; }
+
     /// <summary>Closed enum (§2).</summary>
     public CourseState State { get; private set; }
 
@@ -108,6 +116,13 @@ public sealed class Course
     /// The upsert's update half. The surrogate identity and <see cref="GoogleId"/> are untouched, so every
     /// reference to the course survives (FR-008).
     /// </summary>
+    /// <summary>
+    /// US-018 entity model §2: the course has just been read completely in this transaction — remembers the
+    /// <see cref="UpdateTime"/> this run's listing applied. Takes no argument, so it cannot remember anything else.
+    /// </summary>
+    public void RecordCompleteRead() =>
+        CompleteReadUpdateTime = UpdateTime is { } listed ? IncrementalSyncRule.ToStoragePrecision(listed) : null;
+
     public void UpdateFrom(CourseState state, CourseDetails details)
     {
         ArgumentNullException.ThrowIfNull(details);

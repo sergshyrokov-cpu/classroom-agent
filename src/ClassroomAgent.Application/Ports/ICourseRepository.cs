@@ -12,4 +12,10 @@ public interface ICourseRepository
     Task<Course?> GetByGoogleIdAsync(string googleId, CancellationToken cancellationToken);
 
     void Add(Course course);
+
+    /// <summary>
+    /// US-018 entity model §4: the remembered complete-read updateTime of the course with this Google id, read
+    /// untracked; null when the course is unknown or has no value (db-design §6, spec FR-001 (c)).
+    /// </summary>
+    Task<DateTimeOffset?> GetCompleteReadUpdateTimeAsync(string googleId, CancellationToken cancellationToken);
 }

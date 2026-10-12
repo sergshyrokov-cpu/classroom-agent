@@ -427,6 +427,10 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(256)")
                         .HasColumnName("calendar_id");
 
+                    b.Property<DateTimeOffset?>("CompleteReadUpdateTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("complete_read_update_time");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -1249,6 +1253,10 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(512)")
                         .HasColumnName("last_error");
 
+                    b.Property<DateTimeOffset?>("LastFullRunAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_full_run_at");
+
                     b.Property<DateTimeOffset?>("LastSuccessfulRunAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_successful_run_at");
@@ -1302,13 +1310,15 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_sync_state_finished_after_started", "finished_at IS NULL OR finished_at >= started_at");
 
+                            t.HasCheckConstraint("ck_sync_state_last_full_run_at", "last_full_run_at IS NULL OR (last_successful_run_at IS NOT NULL AND last_full_run_at <= last_successful_run_at)");
+
                             t.HasCheckConstraint("ck_sync_state_meet_loaded_up_to", "meet_loaded_up_to IS NULL OR last_successful_run_at IS NOT NULL");
 
                             t.HasCheckConstraint("ck_sync_state_singleton", "singleton");
 
                             t.HasCheckConstraint("ck_sync_state_status", "status IN ('running', 'completed', 'failed')");
 
-                            t.HasCheckConstraint("ck_sync_state_terminal_fields", "(status = 'running' AND finished_at IS NULL AND last_error IS NULL)\r\nOR (status = 'completed' AND finished_at IS NOT NULL AND last_error IS NULL)\r\nOR (status = 'failed' AND finished_at IS NOT NULL AND last_error IS NOT NULL)");
+                            t.HasCheckConstraint("ck_sync_state_terminal_fields", "(status = 'running' AND finished_at IS NULL AND last_error IS NULL)\nOR (status = 'completed' AND finished_at IS NOT NULL AND last_error IS NULL)\nOR (status = 'failed' AND finished_at IS NOT NULL AND last_error IS NOT NULL)");
                         });
                 });
 

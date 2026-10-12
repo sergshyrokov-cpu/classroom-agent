@@ -496,6 +496,15 @@ public sealed class SyncWorld
             Stored[course.GoogleId] = course;
             Added.Add(course);
         }
+
+        /// <summary>The Google ids whose remembered complete-read updateTime was asked for, in order (US-018 entity model §4).</summary>
+        public List<string> CompleteReadLookups { get; } = [];
+
+        public Task<DateTimeOffset?> GetCompleteReadUpdateTimeAsync(string googleId, CancellationToken cancellationToken)
+        {
+            CompleteReadLookups.Add(googleId);
+            return Task.FromResult(Stored.TryGetValue(googleId, out var course) ? course.CompleteReadUpdateTime : null);
+        }
     }
 
     /// <summary>The participants, in memory, keyed on the Google user id (spec FR-006).</summary>

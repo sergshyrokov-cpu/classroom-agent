@@ -50,6 +50,11 @@ public sealed class SyncStateConfiguration : IEntityTypeConfiguration<SyncState>
             table.HasCheckConstraint(
                 "ck_sync_state_meet_loaded_up_to",
                 "meet_loaded_up_to IS NULL OR last_successful_run_at IS NOT NULL");
+
+            // US-018 db-design §3: a full-run time is written only by a completed run, as its start (spec FR-006, I-3).
+            table.HasCheckConstraint(
+                "ck_sync_state_last_full_run_at",
+                "last_full_run_at IS NULL OR (last_successful_run_at IS NOT NULL AND last_full_run_at <= last_successful_run_at)");
         });
 
         builder.HasKey(s => s.Id).HasName("pk_sync_state");
@@ -66,6 +71,7 @@ public sealed class SyncStateConfiguration : IEntityTypeConfiguration<SyncState>
         builder.Property(s => s.LastError).HasMaxLength(SyncState.MaxErrorLength);
         builder.Property(s => s.LastSuccessfulRunAt);
         builder.Property(s => s.MeetLoadedUpTo);
+        builder.Property(s => s.LastFullRunAt);
         builder.Property(s => s.FailedStep)
             .HasMaxLength(16)
             .HasConversion(new ValueConverter<SyncStep, string>(v => StepCode(v), code => StepFromCode(code)));

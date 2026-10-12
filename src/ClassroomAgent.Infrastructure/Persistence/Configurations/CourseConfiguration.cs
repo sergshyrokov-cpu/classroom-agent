@@ -34,6 +34,9 @@ public sealed class CourseConfiguration : IEntityTypeConfiguration<Course>
         builder.Property(c => c.OwnerGoogleId).HasMaxLength(Course.MaxOwnerGoogleIdLength);
         builder.Property(c => c.CreationTime);
         builder.Property(c => c.UpdateTime);
+
+        // US-018 db-design §2: sync bookkeeping beside the mirror, nullable, no index (uq_course_google_id serves it).
+        builder.Property(c => c.CompleteReadUpdateTime);
         builder.Property(c => c.State)
             .HasColumnName("course_state")
             .HasMaxLength(16)

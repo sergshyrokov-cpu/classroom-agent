@@ -56,6 +56,12 @@ public sealed class SyncState
     /// <summary>US-031 spec FR-010, I-5: the step that stopped a failed run; null otherwise and on pre-Story rows.</summary>
     public SyncStep? FailedStep { get; private set; }
 
+    /// <summary>
+    /// US-018 spec FR-006, I-3: the start of the last successful weekly full run; null = never. Written by
+    /// <see cref="CompleteRun"/> alone, so a failed or cancelled full run leaves it and the next run is full again.
+    /// </summary>
+    public DateTimeOffset? LastFullRunAt { get; private set; }
+
     /// <summary>The first row of an installation that has never synchronized (spec I-2).</summary>
     public static SyncState BeginFirstRun(Guid runId, DateTimeOffset startedAt)
     {
@@ -72,7 +78,8 @@ public sealed class SyncState
     /// (US-031 spec FR-007): a completed run is one whose Meet step finished. The watermark is never later than the
     /// finish and never earlier than the stored one (VR-002); a refused value leaves the row unchanged.
     /// </summary>
-    public void CompleteRun(DateTimeOffset finishedAt, int processedCount, DateTimeOffset meetLoadedUpTo)
+    /// <remarks>US-018 entity model §3: a full run also records its start as <see cref="LastFullRunAt"/>.</remarks>
+    public void CompleteRun(DateTimeOffset finishedAt, int processedCount, DateTimeOffset meetLoadedUpTo, bool fullRun = false)
     {
         if (meetLoadedUpTo > finishedAt || (MeetLoadedUpTo is { } stored && meetLoadedUpTo < stored))
         {
@@ -85,6 +92,10 @@ public sealed class SyncState
         FailedStep = null;
         LastSuccessfulRunAt = finishedAt;
         MeetLoadedUpTo = meetLoadedUpTo;
+        if (fullRun)
+        {
+            LastFullRunAt = StartedAt;
+        }
     }
 
     /// <summary>

@@ -1,22 +1,23 @@
 ---
 artifact_type: open_decisions
 story: US-018
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-10-12T06:04:04Z
-updated_at: 2026-10-12T06:04:04Z
+updated_at: 2026-10-12T06:30:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-018-incremental-sync.md
     version: null
   - path: trebovaniya.md
     version: 90
-supersedes: null
+supersedes: 1
 ---
 
 # US-018 Open Decisions — Incremental synchronization
 
-**Two, both resolved** by the Owner on 2026-10-12, before activation. Writing
+**Three, all resolved.** OD-001 and OD-002 by the Owner on 2026-10-12, before
+activation; OD-003 raised by TEST_WRITING and resolved by the Owner the same day. Writing
 the Specification raised none; `trebovaniya.md` §7 has no open item on
 incremental synchronization. Choices the wording leaves open are
 interpretations I-1 … I-6 in `docs/specifications/US-018-spec.md` §11.
@@ -40,3 +41,24 @@ full run, so a failed one is not repeated until next week.
 
 **Resolved**: (a).
 Impact: FR-006, I-3.
+
+## OD-003 Compile-only skeleton created at TEST_WRITING
+
+Raised by TEST_WRITING. The tests reference declarations that do not exist
+yet: `IncrementalSyncRule` (entity model §1), `Course.CompleteReadUpdateTime`
+and `Course.RecordCompleteRead()` (§2), `SyncState.LastFullRunAt` and the
+`fullRun` parameter of `CompleteRun` (§3),
+`ICourseRepository.GetCompleteReadUpdateTimeAsync` (§4), and the skipped-as-
+unchanged count the outcome carries for the host (§5 step 4), named
+`SynchronizationRunOutcome.CoursesSkippedUnchanged`. The test-writer may not
+change production code; US-017 … US-045 resolved the same gap the same way.
+
+Options: (a) a compile-only skeleton — declarations only; new members throw
+`NotImplementedException` (new properties get-only and throwing, so EF does not
+map them before the migration); `CompleteRun` gains the parameter and ignores
+it; no EF mapping, no migration, no existing behaviour changed; IMPLEMENTATION
+owns and completes it; (b) no skeleton — tests that do not compile until
+IMPLEMENTATION.
+
+**Resolved**: (a) — Owner, 2026-10-12.
+Impact: test generation report §2.
