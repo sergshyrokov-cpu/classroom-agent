@@ -4,29 +4,27 @@
 version: 1
 story: US-046
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-writer
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: PASS
-  stage: SPECIFICATION
-  recorded_at: '2026-10-13T17:43:27Z'
+  verdict: NOT_APPLICABLE
+  stage: API_DESIGN
+  recorded_at: '2026-10-13T17:46:26Z'
 last_artifacts:
-- type: specification
-  path: docs/specifications/US-046-spec.md
+- type: api_design
+  path: docs/designs/api/US-046-api-design.md
   version: 1
-- type: open_decisions
-  path: docs/decisions/US-046-open-decisions.md
-  version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'API_DESIGN: NOT_APPLICABLE — spec §1/FR-009/VR-001/S-01: presentation only, no route, status code, policy or input change; no openapi.yaml by design. api-design fixes the binding markup hook <p id="page-search-hint" class="page-search-hint" data-variant="ordinary|course-list|paged-list">, first body element after the layout h1 (Meet codes: after its own h1, OD-002 a), absent elsewhere incl. Control Plane; rendering mechanism left to implementation.'
 - 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-13T17:44:49Z, comment "OD-002: a" — OD-002 resolved (a): on the Meet codes page the hint goes directly under the page''s own (second) title; no title changes. Recorded in spec (APPROVED) and open-decisions v2; interpretations I-1…I-5 accepted as written.'
 - 'SPECIFICATION: OD-001 carried resolved (a, no hint on the Meet code course-choice page). OD-002 raised (Meet codes page renders its title twice — layout h1 + own h1; where the hint goes: a under the own title (recommended) / b under the layout title / c remove the duplicate, out of scope). Blocks API_DESIGN; resolve at HUMAN_SPEC_APPROVAL. trebovaniya §7 (v91) blocks nothing.'
 - 'SPECIFICATION: interpretations I-1…I-5 for the gate — I-1 page title = layout title (except OD-002); I-2 single meeting page = Meet reports, ordinary hint; I-3 small text via a stylesheet class, no exact size; I-4 hint in every state the page renders, not on the error page; I-5 ⌘ is text. Derived AC-008 (exactly one hint, right variant), AC-009 (hint precedes other content). No new input (VR-001), presentation only.'
 started_at: '2026-10-13T17:40:58Z'
-updated_at: '2026-10-13T17:44:49Z'
+updated_at: '2026-10-13T17:46:26Z'
 completed_at: null
