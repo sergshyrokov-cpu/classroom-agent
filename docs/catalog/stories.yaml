@@ -357,10 +357,15 @@ stories:
   - id: US-043
     epic: EPIC-3
     title: Fill a school's own Excel layout file with a template report
-    state: BACKLOG
+    state: READY
     blocked_by: >
       Depends on US-028. Split out of US-028 by its OD-002 (trebovaniya.md §3,
       §8: the Excel layout file attached to a template at export).
+    # US-028 COMPLETED. Story file authored:
+    # docs/stories/US-043-school-excel-layout.md (aligned with v91).
+    # OD-001 … OD-005 resolved by the Owner on 2026-10-13, before activation
+    # (all a: layout stored with the template, cell markers, school templates
+    # only, .xlsx up to 1 MB, no new requirements version).
   - id: US-029
     epic: EPIC-3
     title: Export a journal to Word
