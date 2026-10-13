@@ -160,6 +160,15 @@ stories:
     # trebovaniya.md v89 (section 8) first, as OD-004 required.
     # Story file authored: docs/stories/US-045-route-template-in-logs.md
     # (aligned with v88). Origin: US-021 security review INFO-1, INFO-2.
+  - id: US-046
+    epic: EPIC-6
+    title: Page-search hint on teaching-data pages
+    state: READY
+    blocked_by: null
+    # OD-001 resolved by the Owner on 2026-10-13: a) no hint on the Meet code
+    # course-choice page.
+    # Story file authored: docs/stories/US-046-page-search-hint.md
+    # (aligned with v91, NFR-075). The one exception to the frozen pilot scope.
 
   # --- EPIC-1: Synchronization ---------------------------------------------
   - id: US-013
