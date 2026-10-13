@@ -10,6 +10,8 @@
     ViewData[UiLanguageController.ReturnPathViewDataKey] = Model.ReturnPath;
 }
 
+@await Html.PartialAsync("_PageSearchHint", PageSearchHintTextKeys.CourseList)
+
 @foreach (var message in Model.MessageKeys)
 {
     <p class="form-error">@T[CoursesTextKeys.Validation(message)]</p>

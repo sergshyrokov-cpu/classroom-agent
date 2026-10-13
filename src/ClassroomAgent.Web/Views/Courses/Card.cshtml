@@ -10,6 +10,8 @@
     ViewData[UiLanguageController.ReturnPathViewDataKey] = Model.ReturnPath;
 }
 
+@await Html.PartialAsync("_PageSearchHint", PageSearchHintTextKeys.Ordinary)
+
 <h2 data-field="name">@course.Name</h2>
 
 <dl id="course-card-details">

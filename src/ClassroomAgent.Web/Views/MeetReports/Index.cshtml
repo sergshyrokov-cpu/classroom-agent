@@ -12,6 +12,8 @@
     var culture = CultureInfo.CurrentCulture;
 }
 
+@await Html.PartialAsync("_PageSearchHint", PageSearchHintTextKeys.Ordinary)
+
 @* Spec FR-013: every message the query found, in parameter order; a malformed value is never echoed. *@
 @foreach (var message in Model.MessageKeys)
 {

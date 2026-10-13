@@ -13,6 +13,8 @@
     var culture = CultureInfo.CurrentCulture;
 }
 
+@await Html.PartialAsync("_PageSearchHint", PageSearchHintTextKeys.Ordinary)
+
 @* api-design §5: a refusal is this page with its message and the way back; a rejected value is never echoed. *@
 @if (Model.MessageKey is { } message)
 {

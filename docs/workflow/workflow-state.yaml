@@ -4,27 +4,32 @@
 version: 1
 story: US-046
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: security-reviewer
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: '2026-10-13T17:46:26Z'
+  verdict: PASS
+  stage: SECURITY_REVIEW
+  recorded_at: '2026-10-13T18:42:00Z'
 last_artifacts:
-- type: api_design
-  path: docs/designs/api/US-046-api-design.md
+- type: security_review
+  path: docs/reviews/security/US-046-security-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'HUMAN_PR_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-13T18:50:00Z, no comment; reviewed implementation-report v1 and security-review v1 (PASS).'
+- 'SECURITY_REVIEW: PASS — 0 critical/major/minor, 2 informational. Presentation only: no route, input, write, cookie, log, audit or outbound call; hint text HTML-encoded via IStringLocalizer, variant from constants only. Re-run: build 0 warnings; full suite 5561/5561 (closes the "not re-run" gap from IMPLEMENTATION); no vulnerable packages. INFO-1 PageSearchHintTextKeys sits in Web/Security like the other *TextKeys; INFO-2 TextKey throws on an unknown variant — unreachable from input today.'
+- 'IMPLEMENTATION: PASS — shared partial _PageSearchHint (api-design §3 hook) called by the nine FR-001 views (Meet codes after own h1), 3 keys × uk/en, .page-search-hint rule in site.css. Build 0 warnings; full suite 5560/5561 then the one failure fixed; US-046 64/64; format clean. Deviation: test allowed-cookie list widened by the TempData cookie the Database page already sets (US-019/US-024) — Owner OK at IMPLEMENTATION; full suite not re-run after that one-line test fix.'
+- 'TEST_WRITING: PASS — 16 test methods (64 cases) in PageSearchHintTests, PageSearchHintTranslationTests + PageSearchHintTestData; red phase: 60 fail only for the missing hint/resx entries/site.css rule, 4 absence/source guards pass (explained in report). Full suite 5561: 5501 pass, the 60 failures are all US-046; build 0 warnings. Visual size and phone wrapping left to human review.'
+- 'DB_DESIGN: NOT_APPLICABLE — spec §1/FR-007/§9: no entity, table, query, migration or stored state; no entity-model by design; model snapshot must stay unchanged.'
 - 'API_DESIGN: NOT_APPLICABLE — spec §1/FR-009/VR-001/S-01: presentation only, no route, status code, policy or input change; no openapi.yaml by design. api-design fixes the binding markup hook <p id="page-search-hint" class="page-search-hint" data-variant="ordinary|course-list|paged-list">, first body element after the layout h1 (Meet codes: after its own h1, OD-002 a), absent elsewhere incl. Control Plane; rendering mechanism left to implementation.'
 - 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-13T17:44:49Z, comment "OD-002: a" — OD-002 resolved (a): on the Meet codes page the hint goes directly under the page''s own (second) title; no title changes. Recorded in spec (APPROVED) and open-decisions v2; interpretations I-1…I-5 accepted as written.'
 - 'SPECIFICATION: OD-001 carried resolved (a, no hint on the Meet code course-choice page). OD-002 raised (Meet codes page renders its title twice — layout h1 + own h1; where the hint goes: a under the own title (recommended) / b under the layout title / c remove the duplicate, out of scope). Blocks API_DESIGN; resolve at HUMAN_SPEC_APPROVAL. trebovaniya §7 (v91) blocks nothing.'
 - 'SPECIFICATION: interpretations I-1…I-5 for the gate — I-1 page title = layout title (except OD-002); I-2 single meeting page = Meet reports, ordinary hint; I-3 small text via a stylesheet class, no exact size; I-4 hint in every state the page renders, not on the error page; I-5 ⌘ is text. Derived AC-008 (exactly one hint, right variant), AC-009 (hint precedes other content). No new input (VR-001), presentation only.'
 started_at: '2026-10-13T17:40:58Z'
-updated_at: '2026-10-13T17:46:26Z'
-completed_at: null
+updated_at: '2026-10-13T18:50:00Z'
+completed_at: '2026-10-13T18:50:00Z'

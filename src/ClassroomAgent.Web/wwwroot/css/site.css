@@ -58,3 +58,10 @@ button {
 
 /* US-021 spec FR-002, NFR-070: the course description keeps its line breaks as text and wraps. */
 .course-card-description { white-space: pre-line; overflow-wrap: anywhere; }
+
+/* US-046 spec FR-002, I-3: the page-search hint is one small, unobtrusive line under the title. */
+.page-search-hint {
+    font-size: 0.875rem;
+    opacity: 0.75;
+    margin: 0 0 1rem;
+}

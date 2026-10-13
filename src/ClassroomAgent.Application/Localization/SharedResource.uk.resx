@@ -507,4 +507,7 @@
   <data name="Database.Sync.NotYet" xml:space="preserve"><value>ще не було</value></data>
   <data name="Database.Failure.AskAdmin" xml:space="preserve"><value>Подробиці знає адміністратор.</value></data>
   <data name="Database.Failure.ConnectionPageLink" xml:space="preserve"><value>Подробиці — на сторінці підключення</value></data>
+  <data name="PageSearchHint.Ordinary" xml:space="preserve"><value>Пошук на сторінці: Ctrl+F (на Mac — ⌘F), на телефоні — меню браузера → «Знайти на сторінці».</value></data>
+  <data name="PageSearchHint.CourseList" xml:space="preserve"><value>Курс шукайте в полі «Пошук за назвою або розділом» нижче — воно шукає в усьому списку; Ctrl+F (на Mac — ⌘F) знаходить лише показані рядки.</value></data>
+  <data name="PageSearchHint.PagedList" xml:space="preserve"><value>Ctrl+F (на Mac — ⌘F; на телефоні — меню браузера → «Знайти на сторінці») шукає лише серед показаних рядків; решта — на наступних сторінках списку (кнопки внизу).</value></data>
 </root>

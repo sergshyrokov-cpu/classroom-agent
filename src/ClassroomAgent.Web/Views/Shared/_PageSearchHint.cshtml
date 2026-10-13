@@ -1,0 +1,3 @@
+@model string
+@* US-046 api-design §3: one leaf line, its text from the translation files and HTML-encoded (spec FR-008, S-03). *@
+<p id="page-search-hint" class="page-search-hint" data-variant="@Model">@T[PageSearchHintTextKeys.TextKey(Model)]</p>

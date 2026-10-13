@@ -13,6 +13,8 @@
     var sync = statistics.Synchronization;
 }
 
+@await Html.PartialAsync("_PageSearchHint", PageSearchHintTextKeys.Ordinary)
+
 @* US-024 spec FR-002 … FR-004: counts of what is stored; each number alone in its element (test strategy §4). *@
 <section id="database-counters">
     <dl>

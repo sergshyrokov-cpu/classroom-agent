@@ -507,4 +507,7 @@
   <data name="Database.Sync.NotYet" xml:space="preserve"><value>not yet</value></data>
   <data name="Database.Failure.AskAdmin" xml:space="preserve"><value>The administrator has the details.</value></data>
   <data name="Database.Failure.ConnectionPageLink" xml:space="preserve"><value>Details are on the connection page</value></data>
+  <data name="PageSearchHint.Ordinary" xml:space="preserve"><value>Search this page: Ctrl+F (⌘F on Mac); on a phone — browser menu → "Find in page".</value></data>
+  <data name="PageSearchHint.CourseList" xml:space="preserve"><value>Find a course in the "Search by name or section" field below — it searches the whole list; Ctrl+F (⌘F on Mac) finds only the rows shown.</value></data>
+  <data name="PageSearchHint.PagedList" xml:space="preserve"><value>Ctrl+F (⌘F on Mac; on a phone — browser menu → "Find in page") searches only the rows shown; the rest are on the next pages of the list (buttons below).</value></data>
 </root>
