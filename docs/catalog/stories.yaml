@@ -163,7 +163,7 @@ stories:
   - id: US-046
     epic: EPIC-6
     title: Page-search hint on teaching-data pages
-    state: READY
+    state: IN_PROGRESS
     blocked_by: null
     # OD-001 resolved by the Owner on 2026-10-13: a) no hint on the Meet code
     # course-choice page.

@@ -2,35 +2,31 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-024
+story: US-046
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
+last_invoked_skill: spec-writer
 last_result:
   verdict: PASS
-  stage: SECURITY_REVIEW
-  recorded_at: '2026-10-13T14:20:00Z'
+  stage: SPECIFICATION
+  recorded_at: '2026-10-13T17:43:27Z'
 last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-024-security-review.md
+- type: specification
+  path: docs/specifications/US-046-spec.md
   version: 1
+- type: open_decisions
+  path: docs/decisions/US-046-open-decisions.md
+  version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-- 'HUMAN_PR_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-13T14:22:38Z, no comment.'
-- 'SECURITY_REVIEW: PASS — 0 Critical/Major/Minor; build 0 warnings, suite 5497/5497 re-run green, no vulnerable packages. INFO-1 TempData message key rendered via T[] (sealed cookie, as US-019); INFO-2 raw constant SQL in DatabaseStatisticsReadSource must stay parameterized on edit; INFO-3 forbidden-role test is anonymous/forced-change only (both v1 roles allowed) — add one when Epic 7 roles arrive.'
-- 'IMPLEMENTATION: PASS — GET /database (ViewDatabaseStatistics) and POST /database/synchronization-requests (StartSynchronization, US-019 use case unchanged, 302 /database); Q1 one SQL statement via DatabaseStatisticsReadSource, Q2 ISyncStateRepository; no migration; 20 keys uk/en. Build 0 warnings; final full suite 5497/5497 green; format clean. D-1: test marker "Архів" changed to "Архів " on the Owner''s instruction (it collided with the required status label "Архівний"). D-2: MeetingCodeLinkRepositoryTests.AMark_RoundTrips failed once, passed 3 reruns + final run (flaky, unrelated). D-3: one full run lost 11 other-Story tests to a Testcontainers/Npgsql stall; next run green.'
-- 'TEST_WRITING: PASS — red phase verified: build 0 warnings; full suite 5497, 5417 passed, 80 failed — all US-024 (45 x 404, 26 x NotImplementedException from the skeleton, 4 x no database-section, 4 x query not in DI, 1 x missing key); no regression. 86 new cases in 8 classes; 6 pass by design (US-019 regression x2, forced-password redirect x2, structural x2). OD-012 compile-only skeleton resolved (a) by the Owner 2026-10-13. Markup hooks and translation keys in strategy §4–§5 are binding. Docker Desktop had to be restarted (engine down) before the run.'
-- 'DB_DESIGN: PASS — no schema change, no migration, no new index; two round trips per page: Q1 one SQL statement with eleven scalar count sub-queries (new port IDatabaseStatisticsSource / DatabaseStatisticsReadSource, checked bigint→int) and Q2 existing ISyncStateRepository.GetForReadAsync; codes-awaiting-decision is the SQL form of MeetCodesReadSource Unassigned (equality test required, AC-018); times converted in GetDatabaseStatisticsQuery; skeleton signatures compiled in a scratch project (0 warnings).'
-- 'API_DESIGN: PASS — new GET /database (new policy ViewDatabaseStatistics, Admin+Dean, no query parameters, 200/302/500) and POST /database/synchronization-requests (StartSynchronization, reuses RequestSynchronizationUseCase unchanged, 302 /database with US-019 TempData message, 409 read-only via host handler, 409 connection re-renders /database, 400 antiforgery); US-019 endpoint untouched (OD-011 a); home page gains database-section markup only; DTO DatabaseStatisticsPageModel with CourseCounts, SynchronizationBlock (NotYet/InProgress/Completed/Failed, times in school zone), FailureGuidance (None/AskAdmin/ConnectionPageLink) — no diagnosis field.'
-- 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-12T12:51:16Z, comment "OD-011: a" — OD-011 resolved (a): a second POST endpoint on the Database page, policy StartSynchronization, same RequestSynchronizationUseCase, always returns to the Database page; US-019 endpoint unchanged. Recorded in spec (APPROVED) and open-decisions v2; interpretations I-1…I-8 accepted as written.'
-- 'SPECIFICATION: OD-001 … OD-010 carried resolved; OD-011 raised (how the press returns to the Database page — US-019 fixes the return page by role; options a second endpoint (recommended) / origin field on US-019 / keep US-019 return). Blocks API_DESIGN; resolve at HUMAN_SPEC_APPROVAL. trebovaniya §7 (v90) blocks nothing.'
-- 'SPECIFICATION: interpretations I-1…I-8 for the gate — I-1 users = teachers and students; I-2 state reads "not yet" before first run; I-3 total = sum of five states; I-4 coursework/submissions/meetings counted as stored; I-5 no snapshot across counters; I-6 times in school time zone; I-7 hint/link only for failed; I-8 section heading wording at translation.'
-- 'SPECIFICATION: new policy for §2 "Управление БД (статистика)" (ViewDatabaseStatistics, indicative); derived AC-013 (no diagnosis), AC-014 (time zone), AC-015 (distinct people), AC-016 (connection refusal), AC-017 (bounded queries), AC-018 (agrees with Meet codes Unassigned), AC-019 (parameters ignored).'
-started_at: '2026-10-12T12:38:47Z'
-updated_at: '2026-10-13T14:22:38Z'
-completed_at: '2026-10-13T14:22:38Z'
+- 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-13T17:44:49Z, comment "OD-002: a" — OD-002 resolved (a): on the Meet codes page the hint goes directly under the page''s own (second) title; no title changes. Recorded in spec (APPROVED) and open-decisions v2; interpretations I-1…I-5 accepted as written.'
+- 'SPECIFICATION: OD-001 carried resolved (a, no hint on the Meet code course-choice page). OD-002 raised (Meet codes page renders its title twice — layout h1 + own h1; where the hint goes: a under the own title (recommended) / b under the layout title / c remove the duplicate, out of scope). Blocks API_DESIGN; resolve at HUMAN_SPEC_APPROVAL. trebovaniya §7 (v91) blocks nothing.'
+- 'SPECIFICATION: interpretations I-1…I-5 for the gate — I-1 page title = layout title (except OD-002); I-2 single meeting page = Meet reports, ordinary hint; I-3 small text via a stylesheet class, no exact size; I-4 hint in every state the page renders, not on the error page; I-5 ⌘ is text. Derived AC-008 (exactly one hint, right variant), AC-009 (hint precedes other content). No new input (VR-001), presentation only.'
+started_at: '2026-10-13T17:40:58Z'
+updated_at: '2026-10-13T17:44:49Z'
+completed_at: null
