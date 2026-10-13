@@ -56,6 +56,15 @@ public static class SignInRoutes
     /// <summary>US-021 openapi: the name of the card's path parameter.</summary>
     public const string CourseCardIdParameter = "courseId";
 
+    /// <summary>
+    /// US-024 api-design §2.1: the Database page, a top-level path of its own — both roles open it, so it is not under
+    /// <c>/settings</c>. GET only; no query parameter.
+    /// </summary>
+    public const string Database = "/database";
+
+    /// <summary>US-024 api-design §2.3 (OD-011 a): the Database page's own synchronization press. POST only.</summary>
+    public const string DatabaseSynchronizationRequests = "/database/synchronization-requests";
+
     /// <summary>US-033 api-design §2.1: reports 1–3 of one course for a period. GET only.</summary>
     public const string MeetReports = "/workspace/meet-reports";
 

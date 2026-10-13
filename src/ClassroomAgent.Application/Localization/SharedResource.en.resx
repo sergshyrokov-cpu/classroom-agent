@@ -487,4 +487,24 @@
   <data name="Teachers.CoursesLink" xml:space="preserve"><value>Teacher's courses</value></data>
   <data name="Teachers.Paging.Total" xml:space="preserve"><value>Teachers found: {0}</value></data>
   <data name="Teachers.Empty" xml:space="preserve"><value>No teacher teaches a course of the chosen status.</value></data>
+  <data name="Database.Title" xml:space="preserve"><value>Database</value></data>
+  <data name="Database.Section" xml:space="preserve"><value>Database</value></data>
+  <data name="Database.NavigationEntry" xml:space="preserve"><value>Statistics and synchronization</value></data>
+  <data name="Database.Counter.Total" xml:space="preserve"><value>Total courses</value></data>
+  <data name="Database.Counter.Teachers" xml:space="preserve"><value>Teachers</value></data>
+  <data name="Database.Counter.Students" xml:space="preserve"><value>Students</value></data>
+  <data name="Database.Counter.CourseWorkItems" xml:space="preserve"><value>Coursework items</value></data>
+  <data name="Database.Counter.Submissions" xml:space="preserve"><value>Submissions</value></data>
+  <data name="Database.Counter.MeetMeetings" xml:space="preserve"><value>Meet meetings</value></data>
+  <data name="Database.Counter.MeetCodesAwaitingDecision" xml:space="preserve"><value>Meet codes awaiting a decision</value></data>
+  <data name="Database.Sync.LastSuccessfulRun" xml:space="preserve"><value>Last successful synchronization</value></data>
+  <data name="Database.Sync.State" xml:space="preserve"><value>Current state</value></data>
+  <data name="Database.Sync.LastFullRun" xml:space="preserve"><value>Last full synchronization</value></data>
+  <data name="Database.Sync.MeetLoadedUpTo" xml:space="preserve"><value>Meet meetings loaded up to</value></data>
+  <data name="Database.Sync.InProgress" xml:space="preserve"><value>in progress</value></data>
+  <data name="Database.Sync.Completed" xml:space="preserve"><value>completed</value></data>
+  <data name="Database.Sync.Failed" xml:space="preserve"><value>failed</value></data>
+  <data name="Database.Sync.NotYet" xml:space="preserve"><value>not yet</value></data>
+  <data name="Database.Failure.AskAdmin" xml:space="preserve"><value>The administrator has the details.</value></data>
+  <data name="Database.Failure.ConnectionPageLink" xml:space="preserve"><value>Details are on the connection page</value></data>
 </root>

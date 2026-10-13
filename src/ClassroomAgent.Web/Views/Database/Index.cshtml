@@ -1,0 +1,88 @@
+@using System.Globalization
+@using ClassroomAgent.Application.Models.Dtos
+@using ClassroomAgent.Domain.Enums
+@model DatabaseStatisticsPageModel
+@{
+    ViewData["Title"] = T[DatabaseTextKeys.Title];
+
+    // Spec VR-001, S-09: the language switcher returns to the fixed page, never the raw query or the press's path.
+    ViewData[UiLanguageController.ReturnPathViewDataKey] = SignInRoutes.Database;
+
+    var statistics = Model.Statistics;
+    var courses = statistics.Courses;
+    var sync = statistics.Synchronization;
+}
+
+@* US-024 spec FR-002 … FR-004: counts of what is stored; each number alone in its element (test strategy §4). *@
+<section id="database-counters">
+    <dl>
+        <dt>@T[CoursesTextKeys.State(CourseState.Active)]</dt>
+        <dd data-counter="courses-active">@Count(courses.Active)</dd>
+        <dt>@T[CoursesTextKeys.State(CourseState.Archived)]</dt>
+        <dd data-counter="courses-archived">@Count(courses.Archived)</dd>
+        <dt>@T[CoursesTextKeys.State(CourseState.Provisioned)]</dt>
+        <dd data-counter="courses-provisioned">@Count(courses.Provisioned)</dd>
+        <dt>@T[CoursesTextKeys.State(CourseState.Declined)]</dt>
+        <dd data-counter="courses-declined">@Count(courses.Declined)</dd>
+        <dt>@T[CoursesTextKeys.State(CourseState.Suspended)]</dt>
+        <dd data-counter="courses-suspended">@Count(courses.Suspended)</dd>
+        <dt>@T[DatabaseTextKeys.CounterTotal]</dt>
+        <dd data-counter="courses-total">@Count(courses.Total)</dd>
+    </dl>
+    <dl>
+        <dt>@T[DatabaseTextKeys.CounterTeachers]</dt>
+        <dd data-counter="teachers">@Count(statistics.Teachers)</dd>
+        <dt>@T[DatabaseTextKeys.CounterStudents]</dt>
+        <dd data-counter="students">@Count(statistics.Students)</dd>
+        <dt>@T[DatabaseTextKeys.CounterCourseWorkItems]</dt>
+        <dd data-counter="course-work-items">@Count(statistics.CourseWorkItems)</dd>
+        <dt>@T[DatabaseTextKeys.CounterSubmissions]</dt>
+        <dd data-counter="submissions">@Count(statistics.Submissions)</dd>
+        <dt>@T[DatabaseTextKeys.CounterMeetMeetings]</dt>
+        <dd data-counter="meet-meetings">@Count(statistics.MeetMeetings)</dd>
+        <dt>@T[DatabaseTextKeys.CounterMeetCodesAwaitingDecision]</dt>
+        <dd data-counter="meet-codes-awaiting-decision">@Count(statistics.MeetCodesAwaitingDecision)</dd>
+    </dl>
+</section>
+
+@* US-024 spec FR-005, FR-006: the same block for both roles; a failed run has no cause here (S-08). *@
+<section id="database-synchronization">
+    <dl>
+        <dt>@T[DatabaseTextKeys.SyncLastSuccessfulRun]</dt>
+        <dd data-sync-line="last-successful-run">@Time(sync.LastSuccessfulRunAt)</dd>
+        <dt>@T[DatabaseTextKeys.SyncState]</dt>
+        <dd data-sync-line="state">@T[DatabaseTextKeys.State(sync.State)]</dd>
+        <dt>@T[DatabaseTextKeys.SyncLastFullRun]</dt>
+        <dd data-sync-line="last-full-run">@Time(sync.LastFullRunAt)</dd>
+        <dt>@T[DatabaseTextKeys.SyncMeetLoadedUpTo]</dt>
+        <dd data-sync-line="meet-loaded-up-to">@Time(sync.MeetLoadedUpTo)</dd>
+    </dl>
+    @if (statistics.FailureGuidance == FailureGuidance.AskAdmin)
+    {
+        <p id="database-failure-hint">@T[DatabaseTextKeys.FailureAskAdmin]</p>
+    }
+    else if (statistics.FailureGuidance == FailureGuidance.ConnectionPageLink)
+    {
+        <p><a id="database-connection-link" href="@SignInRoutes.WorkspaceConnection">@T[DatabaseTextKeys.FailureConnectionPageLink]</a></p>
+    }
+</section>
+
+@* US-024 spec FR-007, FR-008: the button for both roles, in read-only mode too; enforcement is the US-019 use case's. *@
+@if (Model.SynchronizationMessageKey is { } synchronizationMessage)
+{
+    <p id="synchronization-request-message" class="form-message">@T[synchronizationMessage]</p>
+}
+<form id="database-synchronization-form" method="post" action="@SignInRoutes.DatabaseSynchronizationRequests">
+    @Html.AntiForgeryToken()
+    <button type="submit">@T[SynchronizationRequestTextKeys.Button]</button>
+</form>
+
+@functions {
+    private static string Count(int value) => value.ToString(CultureInfo.InvariantCulture);
+
+    /// <summary>Spec FR-005: wall-clock time of the school's zone, as the connection page shows it; absent reads "not yet".</summary>
+    private string Time(DateTime? value) =>
+        value is { } local
+            ? local.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern + " HH:mm", CultureInfo.CurrentCulture)
+            : T[DatabaseTextKeys.NotYet];
+}

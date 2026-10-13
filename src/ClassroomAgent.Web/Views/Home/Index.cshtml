@@ -56,6 +56,13 @@ else
     <a href="@SignInRoutes.ReportTemplates">@T[ReportTemplateTextKeys.NavigationEntry]</a>
 </nav>
 
+@* US-024 spec FR-009, OD-001: the Database section, last among the sections both roles see, in read-only mode too. A
+   plain link, not enforcement — the ViewDatabaseStatistics policy is. *@
+<nav id="database-section">
+    <h2>@T[DatabaseTextKeys.Section]</h2>
+    <a href="@SignInRoutes.Database">@T[DatabaseTextKeys.NavigationEntry]</a>
+</nav>
+
 @if (User.IsInRole("Admin"))
 {
     <nav id="admin-settings">

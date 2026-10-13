@@ -68,6 +68,13 @@ public static class InstallationPolicies
     public const string ViewCourses = nameof(ViewCourses);
 
     /// <summary>
+    /// "Раздел "Управление БД" (статистика)" — ✔ Admin, ✔ Dean (<c>trebovaniya.md</c> §2; US-024 spec FR-010,
+    /// api-design §2.5): the Database page. Its own policy for its own matrix row; the page's press reuses
+    /// <see cref="StartSynchronization"/>.
+    /// </summary>
+    public const string ViewDatabaseStatistics = nameof(ViewDatabaseStatistics);
+
+    /// <summary>
     /// "Привязка кода встречи Meet к курсу" — ✔ Admin, ✔ Dean (<c>trebovaniya.md</c> §2; US-032 spec §7): the
     /// course-choice form and the three link writes.
     /// </summary>

@@ -213,6 +213,11 @@ public static class InstallationServices
         // nothing, so it needs no guard and no unit of work.
         services.AddScoped<GetLastSynchronizationQuery>();
 
+        // US-024 entity model §2, §3, §6: the Database page's counters port and its query; read only — no guard, no
+        // unit of work, no Google port (spec FR-008).
+        services.AddScoped<IDatabaseStatisticsSource, DatabaseStatisticsReadSource>();
+        services.AddScoped<GetDatabaseStatisticsQuery>();
+
         // US-037: the daily retention purge, its store — the only set-based deletes of the installation (db-design
         // §6) — and its background service, which shares SyncRunCoordinator with synchronization (spec FR-014).
         services.AddScoped<IRetentionPurgeStore, RetentionPurgeStore>();

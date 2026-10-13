@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-024
-version: 2
+version: 3
 status: DRAFT
 created_at: 2026-10-12T12:42:03Z
-updated_at: 2026-10-12T12:51:16Z
+updated_at: 2026-10-13T10:00:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-024-database-statistics.md
@@ -127,3 +127,22 @@ until this is resolved. Affects FR-007, VR-002, AC-008, AC-016, S-07.
 policy `StartSynchronization`, calling the same `RequestSynchronizationUseCase`
 and always returning to the Database page; the US-019 endpoint is unchanged.
 Owner (Serhii SHYROKOV), via `/so:approve` comment "OD-011: a", 2026-10-12T12:51:16Z.
+
+### OD-012 Compile-only skeleton created at TEST_WRITING
+
+Raised by TEST_WRITING. The tests reference declarations that do not exist yet:
+`IDatabaseStatisticsSource`, `DatabaseCounts`, `GetDatabaseStatisticsQuery`, the
+DTOs `CourseCounts`, `SynchronizationBlock`, `DatabaseStatisticsView`,
+`SynchronizationDisplayState`, `FailureGuidance` (entity model §2–§4), and the
+`Infrastructure` class `DatabaseStatisticsReadSource` (entity model §6). The
+test-writer may not change production code. US-020 … US-044 resolved the same gap
+the same way.
+
+Options: (a) a compile-only skeleton — declarations only; members that would do
+work throw `NotImplementedException`; nothing registered in DI, no route, no view,
+no translation, no migration, no existing behaviour changed; IMPLEMENTATION owns
+and completes it; (b) no skeleton — the tests do not compile until
+IMPLEMENTATION and the red phase cannot be verified.
+
+**Resolved (a)** — Owner (Serhii SHYROKOV), in the conversation at TEST_WRITING,
+2026-10-13.

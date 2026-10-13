@@ -487,4 +487,24 @@
   <data name="Teachers.CoursesLink" xml:space="preserve"><value>Курси викладача</value></data>
   <data name="Teachers.Paging.Total" xml:space="preserve"><value>Знайдено викладачів: {0}</value></data>
   <data name="Teachers.Empty" xml:space="preserve"><value>Жоден викладач не викладає курс обраного статусу.</value></data>
+  <data name="Database.Title" xml:space="preserve"><value>База даних</value></data>
+  <data name="Database.Section" xml:space="preserve"><value>База даних</value></data>
+  <data name="Database.NavigationEntry" xml:space="preserve"><value>Статистика і синхронізація</value></data>
+  <data name="Database.Counter.Total" xml:space="preserve"><value>Усього курсів</value></data>
+  <data name="Database.Counter.Teachers" xml:space="preserve"><value>Викладачі</value></data>
+  <data name="Database.Counter.Students" xml:space="preserve"><value>Студенти</value></data>
+  <data name="Database.Counter.CourseWorkItems" xml:space="preserve"><value>Завдання курсів</value></data>
+  <data name="Database.Counter.Submissions" xml:space="preserve"><value>Здані роботи</value></data>
+  <data name="Database.Counter.MeetMeetings" xml:space="preserve"><value>Зустрічі Meet</value></data>
+  <data name="Database.Counter.MeetCodesAwaitingDecision" xml:space="preserve"><value>Коди Meet, що чекають рішення</value></data>
+  <data name="Database.Sync.LastSuccessfulRun" xml:space="preserve"><value>Остання успішна синхронізація</value></data>
+  <data name="Database.Sync.State" xml:space="preserve"><value>Поточний стан</value></data>
+  <data name="Database.Sync.LastFullRun" xml:space="preserve"><value>Остання повна синхронізація</value></data>
+  <data name="Database.Sync.MeetLoadedUpTo" xml:space="preserve"><value>Зустрічі Meet завантажено до</value></data>
+  <data name="Database.Sync.InProgress" xml:space="preserve"><value>виконується</value></data>
+  <data name="Database.Sync.Completed" xml:space="preserve"><value>завершено</value></data>
+  <data name="Database.Sync.Failed" xml:space="preserve"><value>не вдалася</value></data>
+  <data name="Database.Sync.NotYet" xml:space="preserve"><value>ще не було</value></data>
+  <data name="Database.Failure.AskAdmin" xml:space="preserve"><value>Подробиці знає адміністратор.</value></data>
+  <data name="Database.Failure.ConnectionPageLink" xml:space="preserve"><value>Подробиці — на сторінці підключення</value></data>
 </root>
