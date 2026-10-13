@@ -202,3 +202,16 @@ Owner at deployment; an installation without it does not start. All time is
 stored in UTC; dates are shown, and the day boundaries of a selected period are
 set, in the school's time zone. Due dates are compared as exact UTC instants.
 *(§5, v40, `persistence-conventions.md` PC-6, `deployment-conventions.md` DC-3)*
+
+**NFR-075** Every page with teaching data — the course list, course card,
+teacher list, journal, template report, Meet reports, Meet codes and the
+database page — shows a one-line page-search hint in small text at the top,
+directly under the page title. It is always visible, cannot be dismissed,
+stores nothing and does not detect the device: the text names both the computer
+shortcuts and the phone browser menu path. The text comes from translation files
+and has three variants, worded in `trebovaniya.md` section 5: an ordinary page;
+the course list, which points to its own search field by that field's label;
+and the paged lists without a search field (teachers, Meet codes), which warn
+that browser search finds only the rows shown. Sign-in, password and settings
+forms, the Admin's service pages, the error page and the Control Plane have no
+hint. *(§5, v91)*
