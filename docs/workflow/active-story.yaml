@@ -3,10 +3,10 @@
 # Writer: story-orchestrator (on activation). Stories are authored by a human
 # in docs/stories/ — there is no backlog-sync stage in this workflow variant.
 version: 1
-active_story: US-046
-story_path: docs/stories/US-046-page-search-hint.md
+active_story: US-043
+story_path: docs/stories/US-043-school-excel-layout.md
 source:
   type: authored
-activated_at: 2026-10-13T17:40:58Z
+activated_at: 2026-10-13T18:51:41Z
 activated_by: Serhii SHYROKOV (/so:start)
-status: COMPLETED
+status: IN_PROGRESS

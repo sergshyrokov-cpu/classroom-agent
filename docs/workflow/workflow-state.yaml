@@ -2,34 +2,31 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-046
+story: US-043
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
-attempt: 1
-last_invoked_skill: security-reviewer
+current_stage: SPECIFICATION
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: SPECIFICATION
+status: IN_PROGRESS
+attempt: 2
+last_invoked_skill: spec-writer
 last_result:
   verdict: PASS
-  stage: SECURITY_REVIEW
-  recorded_at: '2026-10-13T18:42:00Z'
+  stage: SPECIFICATION
+  recorded_at: '2026-10-13T18:57:59Z'
 last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-046-security-review.md
+- type: specification
+  path: docs/specifications/US-043-spec.md
+  version: 1
+- type: open_decisions
+  path: docs/decisions/US-043-open-decisions.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-- 'HUMAN_PR_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-13T18:50:00Z, no comment; reviewed implementation-report v1 and security-review v1 (PASS).'
-- 'SECURITY_REVIEW: PASS — 0 critical/major/minor, 2 informational. Presentation only: no route, input, write, cookie, log, audit or outbound call; hint text HTML-encoded via IStringLocalizer, variant from constants only. Re-run: build 0 warnings; full suite 5561/5561 (closes the "not re-run" gap from IMPLEMENTATION); no vulnerable packages. INFO-1 PageSearchHintTextKeys sits in Web/Security like the other *TextKeys; INFO-2 TextKey throws on an unknown variant — unreachable from input today.'
-- 'IMPLEMENTATION: PASS — shared partial _PageSearchHint (api-design §3 hook) called by the nine FR-001 views (Meet codes after own h1), 3 keys × uk/en, .page-search-hint rule in site.css. Build 0 warnings; full suite 5560/5561 then the one failure fixed; US-046 64/64; format clean. Deviation: test allowed-cookie list widened by the TempData cookie the Database page already sets (US-019/US-024) — Owner OK at IMPLEMENTATION; full suite not re-run after that one-line test fix.'
-- 'TEST_WRITING: PASS — 16 test methods (64 cases) in PageSearchHintTests, PageSearchHintTranslationTests + PageSearchHintTestData; red phase: 60 fail only for the missing hint/resx entries/site.css rule, 4 absence/source guards pass (explained in report). Full suite 5561: 5501 pass, the 60 failures are all US-046; build 0 warnings. Visual size and phone wrapping left to human review.'
-- 'DB_DESIGN: NOT_APPLICABLE — spec §1/FR-007/§9: no entity, table, query, migration or stored state; no entity-model by design; model snapshot must stay unchanged.'
-- 'API_DESIGN: NOT_APPLICABLE — spec §1/FR-009/VR-001/S-01: presentation only, no route, status code, policy or input change; no openapi.yaml by design. api-design fixes the binding markup hook <p id="page-search-hint" class="page-search-hint" data-variant="ordinary|course-list|paged-list">, first body element after the layout h1 (Meet codes: after its own h1, OD-002 a), absent elsewhere incl. Control Plane; rendering mechanism left to implementation.'
-- 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-13T17:44:49Z, comment "OD-002: a" — OD-002 resolved (a): on the Meet codes page the hint goes directly under the page''s own (second) title; no title changes. Recorded in spec (APPROVED) and open-decisions v2; interpretations I-1…I-5 accepted as written.'
-- 'SPECIFICATION: OD-001 carried resolved (a, no hint on the Meet code course-choice page). OD-002 raised (Meet codes page renders its title twice — layout h1 + own h1; where the hint goes: a under the own title (recommended) / b under the layout title / c remove the duplicate, out of scope). Blocks API_DESIGN; resolve at HUMAN_SPEC_APPROVAL. trebovaniya §7 (v91) blocks nothing.'
-- 'SPECIFICATION: interpretations I-1…I-5 for the gate — I-1 page title = layout title (except OD-002); I-2 single meeting page = Meet reports, ordinary hint; I-3 small text via a stylesheet class, no exact size; I-4 hint in every state the page renders, not on the error page; I-5 ⌘ is text. Derived AC-008 (exactly one hint, right variant), AC-009 (hint precedes other content). No new input (VR-001), presentation only.'
-started_at: '2026-10-13T17:40:58Z'
-updated_at: '2026-10-13T18:50:00Z'
-completed_at: '2026-10-13T18:50:00Z'
+- 'HUMAN_SPEC_APPROVAL: rejected by Serhii SHYROKOV (/so:reject) at 2026-10-13T22:28:34Z, comment "история переписана Владельцем 2026-10-14: без загрузки файла школы, поставляемый «Бланк для групових занять», заполнение по экземплярам (OD-006…OD-010 решены); спецификацию v1 заменить на v2". Story re-authored (title: Fill the group-lessons blank form with a template report); spec v1 (upload of a school file) to be superseded by v2; open-decisions v1 OD-001…005 superseded, OD-006…OD-010 resolved in the Story.'
+- 'SPECIFICATION: OD-001…OD-005 carried resolved (all a). OD-006 raised — more students/lessons than the layout has rows/columns: a fill the school''s drawn table first (end found by its border lines), then insert formatted rows/columns (recommended) / b always insert from one prepared row/column / c as a with an explicit end marker / d overwrite downward (contradicts AC-003). Corrected after the Owner''s check: the school form has 30 student rows × 24 lesson columns and 23 topic rows, not ~1000. Blocks API_DESIGN; resolve at HUMAN_SPEC_APPROVAL. trebovaniya §7 (v91) blocks nothing.'
+- 'SPECIFICATION: interpretations I-1…I-26 for the gate — notably I-3 a copy does not carry the layout, I-4 no download of the stored layout, I-7 20 MB unpacked limit, I-9 case-insensitive markers, I-11 extra {{lesson.title}} marker, I-16 orientation hidden/not applied with a layout, I-20 audit as ReportTemplateChanged (no new action). Adds SC-15 Uploaded files to security-conventions.md (OD-005 a). 13 markers: course, period, teachers; student.no/name, lesson.date/title, grade; topic.no/date/hours/title/teacher.'
+started_at: '2026-10-13T18:57:59Z'
+updated_at: '2026-10-13T22:28:34Z'
+completed_at: null

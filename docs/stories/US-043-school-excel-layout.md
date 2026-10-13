@@ -1,7 +1,7 @@
 ---
 id: US-043
 epic: EPIC-3
-title: Fill a school's own Excel layout file with a template report
+title: Fill the group-lessons blank form with a template report
 slug: school-excel-layout
 priority: MEDIUM
 source:
@@ -9,36 +9,60 @@ source:
 # Lifecycle status is owned by docs/catalog/stories.yaml (not this file).
 # Aligned with trebovaniya.md v91.
 # Split out of US-028 by its OD-002 (resolved by the Owner on 2026-10-05).
-# OD-001 … OD-005 resolved by the Owner on 2026-10-13, before activation.
+# Re-authored by the Owner on 2026-10-14 during HUMAN_SPEC_APPROVAL of spec v1:
+# no upload of a school's file; the program ships the printed form
+# "Бланк для групових занять" and fills it copy by copy (OD-006 … OD-010,
+# all resolved by the Owner on 2026-10-14).
+# The slug and file name are kept so the workflow's story path stays valid.
 ---
 
 # User Story
 
 As a **Dean** or an **Admin**
 
-I want to attach the school's own Excel journal file to a report template and
-get the export filled into that file
+I want to export a report into the school's printed academic-journal form,
+"Бланк для групових занять", filled the way a teacher fills printed forms by
+hand — a set number of students and lessons on each copy, the rest on the next
+copy
 
-So that the exported journal looks exactly like the paper journal the school
-already prints, without copying the program's output into the school's file by
-hand.
+So that the school prints its approved paper journal pages straight from the
+program, without copying the data into the form by hand.
 
 ---
 
 # Business Value
 
 `trebovaniya.md` §3 (`ReportTemplate`, v84): "Excel-вёрстка (файл) подключается
-к шаблону при экспорте". §8: "сохранить поддержку Excel (в т.ч. по существующим
-шаблонам школы)"; templates are "конфигурируемый ресурс, а не хардкод в коде (как
-было в прототипе)". §2 gives creating and editing report templates to both Admin
-and Dean.
+к шаблону при экспорте". §6: "сохранить поддержку Excel (в т.ч. по существующим
+шаблонам школы); шаблоны — конфигурируемый ресурс, а не хардкод в коде (как было
+в прототипе)". §2: viewing and exporting the journal — Admin and Dean.
 
-US-028 exports a report into a layout the program produces itself; a school with
-its own journal form — headers, column widths, borders, signatures, merged title
-cells — still has to move the data across by hand. The Python prototype filled
-one fixed file (`docs/product/report-templates/school-journal-full.xlsx`) at
-hard-coded cell positions; that is the defect §8 names, and this Story replaces
-it with a layout file any school can supply.
+A school's academic journal is kept on an approved printed form — a page of
+fixed lines and printed headings. The form in
+`docs/product/report-templates/school-journal-full.xlsx` suits almost every
+school: a sheet "Оцінювання" with 30 student rows and 24 lesson columns, and a
+sheet "Теми занять" with 23 topic rows. US-028 exports the report in the
+program's own layout, which does not look like this form. The prototype filled
+this form at hard-coded cells and wrote downward past its lines; this Story
+fills it like a stack of printed forms, and keeps the positions of the fields
+in the form file, not in code.
+
+In this Story the program knows **one** form and **one** way to fill it. A
+form for individual lessons and further ways of filling (the second data
+stream), or another printed form a school orders, are separate Stories.
+
+---
+
+# Terms
+
+- **Journal** — the data: the mirror of one or, later, two data streams.
+- **Template** — how values are shown: view, marks, scale, hours (US-027).
+- **Blank form** ("бланк") — the approved printed page the data is written into,
+  with its lines and printed text; shipped with the program.
+- **Copy** — one filled instance of the form: one "Оцінювання" sheet, or one
+  "Теми занять" sheet.
+- **Fill method** — the rules that lay the data out over copies of a form. One
+  method in this Story; more will be added for the same form later.
 
 ---
 
@@ -46,227 +70,232 @@ it with a layout file any school can supply.
 
 ## In scope
 
-- **Attach a layout file to a template** (OD-001, OD-003): on a template's
-  page, a Dean or Admin uploads an Excel file as that template's layout,
-  replaces it with another file, or removes it. One layout per template.
-- **Where the data goes** (OD-002): the school marks in its own file which cell
-  receives which field of the report; the program fills those places and leaves
-  every other cell, format, width, border, merge and print setting of the file
-  as the school made it.
-- **Fields the layout can take** — the fields of the report (US-027), not tables
-  of the Google mirror (§3): course name, period, the course's teachers, the
-  student list (row number and name), the lesson dates as column headers, the
-  grade cells, and the lesson-topics table (row number, date, hours, topic,
-  teacher). The Specification fixes the exact list.
-- **Upload checks** (OD-004): the file is accepted only if it is an Excel
-  workbook of the allowed type and size, opens as a workbook, and marks at least
-  one field; a file that fails any check is refused with a message naming the
-  problem, and nothing is stored.
-- **Export with the layout**: when the chosen template has a layout, the US-028
-  export fills that layout; without one, it produces the program's own layout
-  exactly as today. The cells carry exactly what the on-screen report shows for
-  the same template, course, period and name source — built from the same
-  report, not computed again.
-- **Rows and columns grow with the data**: a course with more students or more
-  lessons than the layout has rows or columns still exports completely; what
-  the school placed below or to the right of the filled area (for example
-  signature lines) is kept, not overwritten.
-- **Language**: the school's own text in the layout stays as written. Values the
-  program writes — marks of the built-in template, the "not assigned" dash —
-  follow US-028 (NFR-073).
-- **Read-only mode** (BR-025, BR-026): uploading, replacing and removing a
-  layout are refused in `Application`; export with an already attached layout
-  keeps working, with the export audit row as its only write.
-- **Audit** (§5, SC-11): attaching, replacing and removing a layout is a change
-  of the template and writes an audit row with the template id only — never the
-  file or its name. The export audit row is unchanged from US-028.
-- **Authorization**: Admin and Dean only (§2); deny by default (SC-4); an
-  allowed-role and a forbidden-role test for every endpoint (TC-5).
-- **No caching** (US-040): every response, including a downloaded layout if the
-  Specification adds one, carries `Cache-Control: no-store`.
+- **The shipped form** (OD-008, OD-009): the program ships "Бланк для групових
+  занять" — the form of `school-journal-full.xlsx` with field markers typed
+  into its cells. The program finds where each field goes from the markers; no
+  cell address of the form is written in code (§6). Its lines, printed text,
+  column widths, row heights and print settings are never changed.
+- **Choice at export** (OD-007): next to "Export to Excel" on the report page
+  the user chooses "Program layout" (US-028, unchanged) or "Бланк для групових
+  занять". With the form chosen, two more inputs appear: **students per copy**
+  (1–30, default 30) and **lessons per copy** (1–23, default 23). Nothing is
+  stored — not in the template, not on the account. Any template, the built-in
+  one included, can be exported either way.
+- **What a copy holds** (OD-006):
+  - "Оцінювання": the course (discipline) name in the row above the printed
+    caption "(назва навчальної дисципліни/предмета)"; up to N students — row
+    number and name; up to M lessons — the lesson date as the column heading;
+    the grade cells. The 24th lesson column stays empty — it is kept for one
+    final grade, which the second data stream fills later.
+  - "Теми занять": the teachers next to "ПІБ Викладача", joined with ", "; one
+    row per lesson of the block — lesson number, date, hours, topic. The columns
+    "Самостійна робота студента" and "Підпис викладача" stay empty.
+  - The course name and the teachers are written without wrapping: the text
+    runs over the empty cells to its right; column widths stay as they are.
+  - "Кількість годин на ___ семестр" stays empty.
+  - The lesson dates of "Оцінювання" are the dates of "Теми занять".
+- **Copies and their order** (OD-006): students are split into groups of N,
+  lessons into blocks of M. For every lesson block, one "Оцінювання" copy per
+  student group, then one "Теми занять" copy for that block. Example — 25
+  students by 10, 30 lessons by 23:
+
+  | Sheet | Content |
+  |---|---|
+  | Оцінювання 1 | students 1–10, lessons 1–23 |
+  | Оцінювання 2 | students 11–20, lessons 1–23 |
+  | Оцінювання 3 | students 21–25, lessons 1–23 |
+  | Теми занять 1 | lessons 1–23 |
+  | Оцінювання 4 | students 1–10, lessons 24–30 |
+  | Оцінювання 5 | students 11–20, lessons 24–30 |
+  | Оцінювання 6 | students 21–25, lessons 24–30 |
+  | Теми занять 2 | lessons 24–30 |
+
+  All copies are sheets of **one** file. Sheet names are "Оцінювання 1",
+  "Оцінювання 2" … and "Теми занять 1" …; with a single copy, without the
+  number.
+- **Numbering**: student numbers and lesson numbers continue across copies
+  (students 11–20 on the second copy). In rows of a copy that hold no student or
+  no lesson, the form's row numbers are cleared; the lines stay.
+- **Materials** are never written into the form, whatever the template's
+  setting, so that the dates on both sheets match.
+- **One source of content**: every value is what the on-screen report shows for
+  the same template, course, period and name source (US-027, US-042) — built
+  from the same report, not computed again. Grades are typed as in US-028 (a
+  whole-number grade alone is a number Excel can calculate with).
+- **Language**: the form's printed text stays as it is (it is the school's
+  approved Ukrainian form). Program values written into it — marks of cell
+  states, the "not assigned" dash — follow US-028 (NFR-073).
+- **Fill method** (OD-010): "Базовий" / "Basic" — stored as a choice from a
+  list with one item; not shown to the user while there is only one. Later
+  methods fill page by page too and differ after the last lesson column of
+  "Оцінювання".
+- **Read-only mode** (BR-026): the export with the form works; its only write is
+  the export audit row.
+- **Audit**: the US-028 export audit row (§5, SC-11); the Specification decides
+  whether its format value distinguishes the form from the program layout. No
+  personal data, no file content.
+- **Authorization**: as the US-028 export — Admin and Dean (§2); deny by
+  default (SC-4); allowed-role and forbidden-role tests (TC-5).
+- **No caching** (US-040): the file response carries `Cache-Control: no-store`.
 
 ## Out of scope
 
-- Word layouts — US-029; assembling several templates or courses into one file —
-  US-030.
-- AI help with mapping fields of an uploaded file (§4, a later edition).
-- Any change to how the report is built (US-027), to names (US-042) or to the
-  program's own layout (US-028).
-- Layouts for the Meet reports (US-044).
-- Formulas the program writes: the program writes values only; formulas the
-  school put in its file stay as they are.
+- Uploading a school's own Excel file; any other printed form (a separate Story
+  per form a school orders); the "individual lessons" form (second data stream).
+- Further fill methods; the final grade in the 24th column (second data stream).
+- Word (US-029); several courses or templates in one file (US-030).
+- Any change to the report (US-027), names (US-042), the program's own layout
+  (US-028), or the template settings.
+- Formulas the program writes: the program writes values only.
 
 ---
 
 # Acceptance Criteria
 
-## AC-001 Attach a layout
+## AC-001 One copy
 
-**Given** a signed-in Dean or Admin and a template created in the school
+**Given** a course with at most 30 students and at most 23 lessons in the
+period, and the defaults 30 / 23
 
-**When** they upload a valid layout file to it
+**When** the report is exported to "Бланк для групових занять"
 
-**Then** the template shows that it has a layout, and an audit row records the
-change with the template id only.
+**Then** the file has the sheets "Оцінювання" and "Теми занять"; the course
+name, teachers, students, lesson dates, grades and topics are in their places;
+every value equals the screen for the same inputs; a whole-number grade is a
+number; the 24th lesson column, the hours-per-semester line, "Самостійна
+робота" and "Підпис" are empty; the form's lines, printed text, widths, heights
+and print settings are unchanged.
 
-## AC-002 Export fills the school's file
+## AC-002 Several copies
 
-**Given** a template with a layout, a course and a period with graded work,
-ungraded work and materials
+**Given** 25 students, 30 lessons, 10 students and 23 lessons per copy
 
-**When** the report is exported to Excel
+**Then** the file holds the eight sheets of the Scope example, in that order and
+with those names; numbering continues across copies; every student and every
+lesson is present exactly once per lesson block.
 
-**Then** the file is the school's layout with the marked places filled; every
-filled cell holds what the on-screen report shows for the same inputs, a grade
-is a number Excel can calculate with, and every unmarked cell, format, merge and
-print setting of the layout is unchanged.
+## AC-003 Partly filled copy
 
-## AC-003 More data than the layout has room for
+**Then** on a copy with fewer students or lessons than its places, the unused
+rows and columns are empty — no row number, no value — and their lines remain.
 
-**Given** a layout with fewer prepared rows than the course has students and
-fewer prepared columns than the period has lessons
+## AC-004 Program layout unchanged
 
-**Then** every student and every lesson is in the file, and the cells the school
-placed below and to the right of the filled area are kept.
+**When** "Program layout" is chosen
 
-## AC-004 Template without a layout
+**Then** the file is exactly that of US-028.
 
-**Then** export produces the program's own layout exactly as in US-028.
+## AC-005 Copy sizes validated
 
-## AC-005 Replace and remove
+**Given** students per copy outside 1–30, lessons per copy outside 1–23, or not
+a whole number
 
-**When** a layout is replaced or removed
+**Then** the export is refused with a translated message naming the field; no
+file; no audit row; the value is not logged (SC-10).
 
-**Then** the next export uses the new layout or the program's own layout; each
-change writes its audit row.
+## AC-006 Materials and template settings
 
-## AC-006 Refused files
+**Given** a template that shows materials
 
-**Given** a file of a disallowed type, too large, not an Excel workbook, or with
-no field marked (and any further case OD-002 and OD-004 settle)
+**Then** no material appears in the form; marks, scale, view and late marks of
+the template apply to the grade cells exactly as on screen.
 
-**Then** it is refused with a message naming the problem, nothing is stored, no
-audit row is written, and neither the file nor its name is written to the log
-(SC-10).
+## AC-007 Empty report
 
-## AC-007 Read-only mode
+**Given** no lesson or no student in the period
 
-**Given** an installation in read-only mode (any reason, BR-025)
+**Then** the export succeeds with one copy of each sheet holding the course
+name and teachers and nothing else that does not exist; it is audited.
 
-**Then** uploading, replacing and removing a layout are refused, and export with
-an attached layout works and writes its audit row.
+## AC-008 Read-only mode
 
-## AC-008 Only Admin and Dean
+**Then** the export with the form works and writes its audit row.
 
-Anonymous requests are refused; every endpoint has an allowed-role and a
-forbidden-role test (TC-5).
+## AC-009 Only Admin and Dean
 
-## AC-009 Nothing executes
+Anonymous requests are refused; allowed-role and forbidden-role tests (TC-5).
 
-**Given** report values that Excel would read as a formula (a leading `=`, `+`,
-`-`, `@`)
+## AC-010 Nothing executes
 
-**Then** they are written as text exactly as US-028 writes them.
+Report values Excel would read as a formula (a leading `=`, `+`, `-`, `@`) are
+written as text exactly as US-028 writes them.
 
-## AC-010 Tests never reach Google
+## AC-011 Tests never reach Google
 
-Every test builds data synthetically in PostgreSQL (TC-2, TC-4); layouts used in
-tests are synthetic files made by the tests, and file contents are checked by
-reading the produced workbook, not by comparing bytes.
+Data built synthetically in PostgreSQL (TC-2, TC-4); the produced workbook is
+checked by reading its sheets and cells, not by comparing bytes.
 
 ---
 
 # Open Decisions
 
-## OD-001 Where the layout lives
+## OD-001 … OD-005 (superseded)
 
-§3 says the layout "подключается к шаблону при экспорте" — it can be read as
-"stored with the template and used at export" or as "supplied at each export".
+Resolved on 2026-10-13 for a Story that uploaded a school's own file (where the
+layout lives, markers, which templates, accepted files, requirements version).
+Superseded on 2026-10-14 when the Owner re-authored the Story: nothing is
+uploaded. Kept in `docs/decisions/US-043-open-decisions.md` for history.
 
-Options:
-(a) **(recommended)** stored with the template in the installation database —
-uploaded once, used by every export of that template, covered by the database
-backups (DC-13), deleted with the template;
-(b) supplied with each export and never stored — nothing to keep, but the user
-picks the file every time, and two Deans may export the same template
-differently.
+## OD-006 How the form is filled
 
-**Resolution:** (a) stored with the template in the installation database, by the Owner on 2026-10-13.
+**Resolution:** like printed forms filled by hand — a set number of students
+and lessons per copy, overflow to the next copy in the order of the Scope; all
+copies in one file; numbering continues; unused rows cleared; materials never
+written; A5–E5 empty; the 24th column kept for a future final grade. By the
+Owner on 2026-10-14.
 
-## OD-002 How the program knows where each field goes
+## OD-007 Where the form is chosen
 
-Options:
-(a) **(recommended)** markers typed into cells of the school's file, for
-example `{{course}}`, `{{students}}`, `{{grades}}`, `{{topics}}` — the Dean
-prepares the file in Excel, and the program fills the places the markers stand;
-the Specification fixes the marker list and the help text that lists them;
-(b) a form on the template page where the user names the sheet and starting
-cell for each field — no change to the file, but the form is larger work and
-easy to get wrong;
-(c) fixed positions, as the prototype did — fits only
-`school-journal-full.xlsx`, which §8 rules out.
+Options: (a) at export, next to "Export", with students and lessons per copy
+(defaults 30 / 23), stored nowhere; (b) as a template setting.
 
-**Resolution:** (a) markers typed into cells of the school's file, by the Owner on 2026-10-13.
+**Resolution:** (a), by the Owner on 2026-10-14.
 
-## OD-003 Which templates can carry a layout
+## OD-008 Where field positions live
 
-The built-in "Academic journal" cannot be changed (§3); attaching a layout
-changes a template.
+Options: (a) field markers typed into the shipped form file; the code knows the
+markers, not the cells (§6 "не хардкод"); (b) cell addresses in code — needs a
+new version of `trebovaniya.md`.
 
-Options:
-(a) **(recommended)** only templates created in the school, copies of the
-built-in one included — a school that wants its own file on the built-in
-template makes a copy;
-(b) the built-in template too, as a separate per-school setting — more work,
-and it blurs "the built-in template cannot be changed".
+**Resolution:** (a), by the Owner on 2026-10-14.
 
-**Resolution:** (a) only templates created in the school, copies of the built-in one included, by the Owner on 2026-10-13.
+## OD-009 Where the marked form file is kept
 
-## OD-004 Which files are accepted
+The marked form is a versioned `.xlsx`. `AGENTS.md` allows versioned
+spreadsheets only in `docs/product/report-templates/` (and `.gitignore`
+re-includes only that folder).
 
-Options:
-(a) **(recommended)** `.xlsx` only, at most 1 MB; `.xls`, `.xlsm` (macros) and
-anything else are refused; the file must open as a workbook and mark at least
-one field;
-(b) also accept `.xlsm` and `.xls` — `.xlsm` carries macros the program would
-hand back to every user who exports, and `.xls` needs another library.
+Options: (a) **(recommended)** a new file in `docs/product/report-templates/`
+(name indicative `group-lessons-blank.xlsx`) — the school form with markers,
+no student data — built into the program from there; `school-journal-full.xlsx`
+stays untouched as the reference; (b) a file inside `src/` — needs an exception
+to the `AGENTS.md` rule.
 
-**Resolution:** (a) `.xlsx` only, at most 1 MB, by the Owner on 2026-10-13.
+**Resolution:** (a) a new file in `docs/product/report-templates/` (name
+indicative `group-lessons-blank.xlsx`), by the Owner on 2026-10-14.
 
-## OD-005 Is a new version of the requirements needed first
+## OD-010 Name of the fill method
 
-The Story adds the first file a user uploads into an installation and stores.
-`security-conventions.md` has no rule for uploaded files yet.
+Not shown in the UI while it is the only one; named now so later methods sit
+beside it. Every method fills page by page; they will differ in what follows
+the last lesson column on "Оцінювання" (for example a final grade, an exam).
 
-Options:
-(a) **(recommended)** no: §3 and §8 already require the layout, and the
-resolutions of OD-001 … OD-004 are the authority for the Specification
-(AGENTS.md, order of authority 4), as US-028 did for its library and layout;
-the Specification derives the upload rule, and `security-conventions.md` gets it
-in this Story;
-(b) yes: write the upload rules into a new version of `trebovaniya.md` (§3, §8)
-in its own commit before activation.
-
-**Resolution:** (a) no new version of the requirements; the Story's resolutions are the authority, by the Owner on 2026-10-13.
+**Resolution:** "Базовий" / "Basic", by the Owner on 2026-10-14.
 
 ---
 
 # Notes
 
-- The layout is meant to be an empty form. A Dean could upload a file that
-  already holds student names or grades; the program cannot tell. The upload
-  page says, in text from translation files, that the file must be an empty
-  form; the stored file is never shown to anyone but Admin and Dean, and is
-  deleted with its template.
-- The file's name is the user's text and may contain a person's name; it is
-  never written to the log or the audit row (SC-10, SC-11).
+- The prototype's `exports.py` filled this form at fixed cells (`A2`, `D1`, row
+  8, row 9, column 3) and wrote past the form's lines; it is the reference for
+  what the form is, not for how to fill it.
 - The exported file holds students' personal data and grades; as in US-028 it is
   built in memory and streamed, never written to disk.
-- The prototype's `exports.py` is the reference for what a school's journal file
-  looks like, not for how to fill it: its fixed positions (row 8, row 9,
-  column 3, `A2`, `D1`) are the hard-code §8 forbids.
 - The report of US-027 stays the single source of the file's content; if the
-  file and the on-screen report ever disagree, the screen is right.
-- ClosedXML (US-028 OD-001) opens and saves the school's file; no new package is
-  expected. If the Specification finds one is needed, that is a new Open
-  Decision.
+  file and the screen disagree, the screen is right.
+- ClosedXML (US-028 OD-001) fills the form; no new package is expected. If the
+  Specification finds one is needed, that is a new Open Decision.
+- No new version of `trebovaniya.md` is expected: §3 ("Excel-вёрстка
+  подключается к шаблону при экспорте") and §6 ("по существующим шаблонам
+  школы", "не хардкод") are met by a shipped form whose field positions live in
+  the file.

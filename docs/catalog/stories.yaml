@@ -356,8 +356,8 @@ stories:
     # Owner on 2026-10-05, before activation.
   - id: US-043
     epic: EPIC-3
-    title: Fill a school's own Excel layout file with a template report
-    state: READY
+    title: Fill the group-lessons blank form with a template report
+    state: IN_PROGRESS
     blocked_by: >
       Depends on US-028. Split out of US-028 by its OD-002 (trebovaniya.md §3,
       §8: the Excel layout file attached to a template at export).
@@ -366,6 +366,8 @@ stories:
     # OD-001 … OD-005 resolved by the Owner on 2026-10-13, before activation
     # (all a: layout stored with the template, cell markers, school templates
     # only, .xlsx up to 1 MB, no new requirements version).
+    # Re-authored 2026-10-14 at HUMAN_SPEC_APPROVAL: no upload; the shipped
+    # "Бланк для групових занять" filled copy by copy (OD-006 … OD-010).
   - id: US-029
     epic: EPIC-3
     title: Export a journal to Word
