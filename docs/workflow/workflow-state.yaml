@@ -4,31 +4,32 @@
 version: 1
 story: US-024
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: PASS
-  stage: API_DESIGN
-  recorded_at: '2026-10-12T12:53:45Z'
+  stage: DB_DESIGN
+  recorded_at: '2026-10-12T12:56:53Z'
 last_artifacts:
-- type: openapi
-  path: docs/designs/api/US-024-openapi.yaml
+- type: database_design
+  path: docs/designs/database/US-024-db-design.md
   version: 1
-- type: api_design
-  path: docs/designs/api/US-024-api-design.md
+- type: entity_model
+  path: docs/designs/database/US-024-entity-model.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'DB_DESIGN: PASS — no schema change, no migration, no new index; two round trips per page: Q1 one SQL statement with eleven scalar count sub-queries (new port IDatabaseStatisticsSource / DatabaseStatisticsReadSource, checked bigint→int) and Q2 existing ISyncStateRepository.GetForReadAsync; codes-awaiting-decision is the SQL form of MeetCodesReadSource Unassigned (equality test required, AC-018); times converted in GetDatabaseStatisticsQuery; skeleton signatures compiled in a scratch project (0 warnings).'
 - 'API_DESIGN: PASS — new GET /database (new policy ViewDatabaseStatistics, Admin+Dean, no query parameters, 200/302/500) and POST /database/synchronization-requests (StartSynchronization, reuses RequestSynchronizationUseCase unchanged, 302 /database with US-019 TempData message, 409 read-only via host handler, 409 connection re-renders /database, 400 antiforgery); US-019 endpoint untouched (OD-011 a); home page gains database-section markup only; DTO DatabaseStatisticsPageModel with CourseCounts, SynchronizationBlock (NotYet/InProgress/Completed/Failed, times in school zone), FailureGuidance (None/AskAdmin/ConnectionPageLink) — no diagnosis field.'
 - 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-12T12:51:16Z, comment "OD-011: a" — OD-011 resolved (a): a second POST endpoint on the Database page, policy StartSynchronization, same RequestSynchronizationUseCase, always returns to the Database page; US-019 endpoint unchanged. Recorded in spec (APPROVED) and open-decisions v2; interpretations I-1…I-8 accepted as written.'
 - 'SPECIFICATION: OD-001 … OD-010 carried resolved; OD-011 raised (how the press returns to the Database page — US-019 fixes the return page by role; options a second endpoint (recommended) / origin field on US-019 / keep US-019 return). Blocks API_DESIGN; resolve at HUMAN_SPEC_APPROVAL. trebovaniya §7 (v90) blocks nothing.'
 - 'SPECIFICATION: interpretations I-1…I-8 for the gate — I-1 users = teachers and students; I-2 state reads "not yet" before first run; I-3 total = sum of five states; I-4 coursework/submissions/meetings counted as stored; I-5 no snapshot across counters; I-6 times in school time zone; I-7 hint/link only for failed; I-8 section heading wording at translation.'
 - 'SPECIFICATION: new policy for §2 "Управление БД (статистика)" (ViewDatabaseStatistics, indicative); derived AC-013 (no diagnosis), AC-014 (time zone), AC-015 (distinct people), AC-016 (connection refusal), AC-017 (bounded queries), AC-018 (agrees with Meet codes Unassigned), AC-019 (parameters ignored).'
 started_at: '2026-10-12T12:38:47Z'
-updated_at: '2026-10-12T12:53:45Z'
+updated_at: '2026-10-12T12:56:53Z'
 completed_at: null
