@@ -374,3 +374,4 @@
 {"timestamp":"2026-10-14T12:22:56Z","story":"US-047","from_stage":"SPECIFICATION","to_stage":"HUMAN_SPEC_APPROVAL","skill":"spec-writer","verdict":"PASS","artifacts":["docs/specifications/US-047-spec.md","docs/decisions/US-047-open-decisions.md"],"attempt":1}
 {"timestamp":"2026-10-14T12:24:36Z","story":"US-047","from_stage":"HUMAN_SPEC_APPROVAL","to_stage":"API_DESIGN","skill":null,"verdict":"HUMAN_APPROVED","artifacts":["docs/specifications/US-047-spec.md"],"attempt":1}
 {"timestamp":"2026-10-14T12:26:20Z","story":"US-047","from_stage":"API_DESIGN","to_stage":"DB_DESIGN","skill":"openapi-designer","verdict":"NOT_APPLICABLE","artifacts":["docs/designs/api/US-047-api-design.md"],"attempt":1}
+{"timestamp":"2026-10-14T12:29:31Z","story":"US-047","from_stage":"DB_DESIGN","to_stage":"TEST_WRITING","skill":"db-designer","verdict":"NOT_APPLICABLE","artifacts":["docs/designs/database/US-047-db-design.md"],"attempt":1}

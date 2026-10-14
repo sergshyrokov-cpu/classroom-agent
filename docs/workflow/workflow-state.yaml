@@ -4,26 +4,27 @@
 version: 1
 story: US-047
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: '2026-10-14T12:26:20Z'
+  stage: DB_DESIGN
+  recorded_at: '2026-10-14T12:29:31Z'
 last_artifacts:
-- type: api_design
-  path: docs/designs/api/US-047-api-design.md
+- type: database_design
+  path: docs/designs/database/US-047-db-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'DB_DESIGN: NOT_APPLICABLE — spec v1 §1, §10, §12: no entity, column, constraint, index, enum value or migration in either database; no entity model by design; both model snapshots must stay unchanged.'
 - 'API_DESIGN: NOT_APPLICABLE — spec v1 §1, §6, §7, §10, §12: no endpoint, request, response, status code, policy or SC-4 entry changes; no openapi.yaml by design. DB_DESIGN expected NOT_APPLICABLE (no persistence change).'
 - 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-14T12:24:36Z, no comment; spec v1 and open-decisions v1 APPROVED (I-1…I-6 accepted as written).'
 - 'SPECIFICATION v1: OD-001 a) and OD-002 a) carried resolved from the Story; no new Open Decision; trebovaniya §7 (v92) blocks nothing. Interpretations for the gate: I-1 test seam for service detection (not a setting/env/arg), I-2 content root = application folder only in service mode, I-3 Control Plane as a service with no Owner keeps today''s behaviour (no refusal, no log hint), I-4 the package''s default Event Log provider must not receive events (Serilog replaces the factory), I-5 C:logs and \logs count as relative, I-6 default shutdown timeout kept. API_DESIGN and DB_DESIGN expected NOT_APPLICABLE.'
 started_at: '2026-10-14T12:22:56Z'
-updated_at: '2026-10-14T12:26:20Z'
+updated_at: '2026-10-14T12:29:31Z'
 completed_at: null
