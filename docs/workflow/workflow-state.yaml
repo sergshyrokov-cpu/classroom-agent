@@ -4,31 +4,29 @@
 version: 1
 story: US-043
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
-  verdict: PASS
-  stage: API_DESIGN
-  recorded_at: '2026-10-14T06:02:10Z'
+  verdict: NOT_APPLICABLE
+  stage: DB_DESIGN
+  recorded_at: '2026-10-14T06:04:27Z'
 last_artifacts:
-- type: openapi
-  path: docs/designs/api/US-043-openapi.yaml
-  version: 1
-- type: api_design
-  path: docs/designs/api/US-043-api-design.md
+- type: database_design
+  path: docs/designs/database/US-043-db-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'DB_DESIGN: NOT_APPLICABLE — spec v2 §1, FR-001, FR-004, FR-010/I-11: no stored setting, no schema change, ExportFormat stays xlsx; no entity model by design; model snapshot must stay unchanged.'
 - 'API_DESIGN: same endpoint POST /api/v1/exports/journal-xlsx + optional members layout (program|group-lessons-blank), studentsPerCopy, lessonsPerCopy (any wrong JSON value is a field error, unlike US-028 string members); TooManySheets 400 without fieldErrors after the 404 lookups and report build; broken embedded form 500; ExportAction gains blankForm (30/30/23/23). DB_DESIGN expected NOT_APPLICABLE (no schema change, audit format stays xlsx).'
 - 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-14T05:59:11Z, no comment; spec v2 and open-decisions v2 APPROVED (OD-011 a, OD-012 resolved at the gate).'
 - 'HUMAN_SPEC_APPROVAL (attempt 1): spec v1 rejected by Serhii SHYROKOV (/so:reject) at 2026-10-13T22:28:34Z — Story re-authored 2026-10-14 (no upload; shipped "Бланк для групових занять", filled copy by copy; OD-006…OD-010 resolved). v1 is in git history (0236ace).'
 - 'SPECIFICATION v2: OD-001…OD-005 superseded; OD-006…OD-010 carried resolved. OD-011 raised (sheet limit) and resolved at the gate by the Owner 2026-10-14: (a) 100 sheets. OD-012 raised and resolved by the Owner at the gate: copy number in the page footer — Оцінювання bottom right, Теми занять bottom left, digits, 1 for a single copy (Story amended; spec FR-006.1, AC-015, I-13, I-14). No open decision remains. trebovaniya §7 (v91) blocks nothing.'
 - 'SPECIFICATION v2: interpretations I-1…I-12 for the gate — notably I-1 form embedded as a resource of Infrastructure from docs/product/report-templates/group-lessons-blank.xlsx, I-4 date format dd.mm.yyyy set in the shipped file, I-6/I-7 copy counts and per-kind sheet numbering, I-10 program layout ignores new members, I-11 audit format stays xlsx (no migration). 10 markers at A2, A9, B9, C8, C9 (Оцінювання) and D1, A4..D4 (Теми занять); capacities 30 / 24 (23 + final grade) / 23.'
 started_at: '2026-10-13T18:57:59Z'
-updated_at: '2026-10-14T06:02:10Z'
+updated_at: '2026-10-14T06:04:27Z'
 completed_at: null
