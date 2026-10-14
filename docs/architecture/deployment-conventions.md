@@ -44,7 +44,9 @@ the previous one — the dependency is real, not stylistic
 2. Owner first-run setup: the Control Plane prints a one-time setup code to the
    server console, and the single Owner account is claimed once with it
    (`docs/stories/US-001-owner-first-run-setup.md`). Until it exists nothing
-   else is configurable.
+   else is configurable. A Windows service has no console, so this first run is
+   started by hand from the server console; only after the Owner account exists
+   is the Control Plane stopped and registered as a service (DC-14, v92).
 3. Owner creates the school's service account in the Owner's Cloud project, which
    lives outside every school's domain (DC-5). In the same project the Owner also
    creates that school's **OAuth web client** for the Admin sign-in (SC-7, v78):
@@ -230,7 +232,13 @@ the previous one — the dependency is real, not stylistic
   public port only: on the private port they would break the push.
 - **The whole Control Plane is private**, the Owner UI included: the Owner
   reaches it through a VPN or tunnel, never from the public internet
-  (`trebovaniya.md` §9, v35).
+  (`trebovaniya.md` §9, v35). Working at the server itself is equally private
+  when the Control Plane listens only on the server's own address
+  (`127.0.0.1`): the interface is then unreachable from the internet and from
+  the local network alike (v92).
+- **Control Plane and installation on one server** (v92): the service channel
+  runs over `127.0.0.1` — the Control Plane and the installation's private port
+  listen only on it, so neither is reachable from outside the server.
 - **The Control Plane is served over HTTPS as well**, inside the private network,
   with a certificate from the Owner's internal certificate authority or from
   Let's Encrypt via a DNS challenge; installations trust that certificate. A VPN
@@ -464,3 +472,23 @@ most critical one: losing it sends every school to read-only after 7 days.
 - **Decommissioning deletes that school's backups immediately**, without waiting
   for the 30-day window to roll over, and its Data Protection key directory with
   the database (DC-8, v65).
+
+## DC-14 Running as a Windows service
+
+Decided in `trebovaniya.md` §9 (v92).
+
+- On a Windows server of the Owner, the Control Plane and every installation run
+  as **Windows services**: they start with the server, before anyone signs in,
+  and do not depend on who is signed in to Windows.
+- **Restart after a failure** is the service's recovery setting, configured at
+  deployment — not application code.
+- **Stopping the service is an ordinary application shutdown**: a running
+  synchronization is cancelled the same way as on any other stop.
+- The application detects whether it runs as a service; outside one —
+  development, first-run setup — it runs as an ordinary console application. The
+  mechanism is the Microsoft package
+  `Microsoft.Extensions.Hosting.WindowsServices`, approved by v92.
+- **First-run setup comes before service registration** (DC-2 step 2): a service
+  has no console to show the one-time setup code on.
+- Running on Linux or in a container is not defined here; it needs its own
+  decision.
