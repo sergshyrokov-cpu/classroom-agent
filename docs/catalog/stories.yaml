@@ -71,6 +71,15 @@ stories:
     # Depended on US-005 (COMPLETED), whose LegitimacyState decides read-only
     # mode; this Story enforces it. OD-001 resolved before activation: the
     # refusal stops at Application, the HTTP 409 mapping arrives with US-008.
+  - id: US-047
+    epic: EPIC-8
+    title: Run the Control Plane and the installation as Windows services
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-047-windows-service.md (aligned with
+    # v92, DC-14). Needed for the pilot server; an exception to the frozen pilot
+    # scope, like US-046. OD-001 a) and OD-002 a) resolved by the Owner on
+    # 2026-10-14.
 
   # --- EPIC-6: Program settings / Admin panel ------------------------------
   - id: US-008
