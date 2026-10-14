@@ -467,8 +467,7 @@ stories:
   - id: US-038
     epic: EPIC-10
     title: Erase all data of one participant on request
-    state: BACKLOG
-    blocked_by: >
-      trebovaniya.md section 2 — no permission-matrix cell for who may trigger
-      erasure. Section 4, Epic 10 also requires deciding how synchronization is
-      kept from re-importing a person who is still in Google.
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-038-erase-participant.md (aligned
+    # with v93). Decisions 1a, 2a, 2b-a, 3a, 4a, 5a by the Owner on 2026-10-14.
