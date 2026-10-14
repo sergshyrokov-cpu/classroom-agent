@@ -1,0 +1,373 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Fill the group-lessons blank form (US-043)
+  version: "1"
+  description: >
+    HTTP contract of US-043 on the installation's public port. The US-028 export
+    operation `POST /api/v1/exports/journal-xlsx` gains three optional body
+    members — `layout`, `studentsPerCopy`, `lessonsPerCopy` — and one more `400`
+    cause (more than 100 sheets). With `layout` absent or `program` the
+    operation is exactly US-028's. With `group-lessons-blank` it returns the
+    shipped form "Бланк для групових занять" filled copy by copy (spec FR-004 …
+    FR-007). The report page's export action gains the layout choice and the two
+    per-copy inputs. No new path, no new policy, no Google call. Only the changed
+    parts are stated; everything else is docs/designs/api/US-028-openapi.yaml.
+    Companion document: docs/designs/api/US-043-api-design.md.
+x-story: US-043
+x-source-specification: docs/specifications/US-043-spec.md
+x-source-specification-version: 2
+x-source-open-decisions: docs/decisions/US-043-open-decisions.md
+x-source-open-decisions-version: 2
+x-requirements-version: 91
+x-produced-by: openapi-designer
+x-extends:
+  - docs/designs/api/US-028-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type of
+  the Control Plane channel is added or changed (DC-12).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port. Illustrative (US-008 spec FR-001)."
+
+tags:
+  - name: export
+    description: "Journal export — changed: the blank-form layout (spec FR-004 … FR-011)"
+  - name: report
+    description: "The report page — changed: the layout choice (spec FR-004)"
+
+x-host-wide-rules:
+  inherited: >
+    Everything of US-028 `x-host-wide-rules` applies unchanged: the `/api/v1`
+    error body and its causes (401, 403, 400 antiforgery, 404, 405, 415, 500),
+    the antiforgery header, deny by default, the host-wide
+    `Cache-Control: no-store` (US-040, SC-14). The SC-4 anonymous list gains
+    nothing; no new route is mapped.
+  outbound: >
+    No operation calls anything outside the process: no Google call, no secret
+    read, no Control Plane call (spec FR-009, S-04, S-12). The form is read from
+    an embedded resource of `ClassroomAgent.Infrastructure` (spec FR-001).
+
+paths:
+
+  /api/v1/exports/journal-xlsx:
+
+    post:
+      tags: [export]
+      operationId: exportJournalXlsx
+      summary: "Export the report — changed: optionally into the group-lessons blank form"
+      description: >
+        US-028 `exportJournalXlsx` with additive changes. Evaluation order:
+        authentication (`401`) → restricted session (`403`) → `UseReportTemplates`
+        (`403`) → antiforgery (`400`) → `Content-Type` (`415`) → body syntax
+        (`400`, `RequestMalformed`) → field validation of the US-028 members and,
+        with `layout` = `group-lessons-blank`, of `studentsPerCopy` and
+        `lessonsPerCopy` (`400`, every failing field) → template and course
+        existence (`404`) → build the report → **with the form:** plan the copies
+        and check the sheet limit (`400`, `TooManySheets`) → map → render → audit
+        write and commit → `200`. With `layout` absent or `program`, the per-copy
+        members are ignored (not validated) and every step is US-028's (spec
+        FR-007, I-10). The form's `orientation` is validated as US-028 but not
+        applied (spec FR-007, I-8). A missing or broken embedded form is a
+        program defect → `500` (spec FR-003, I-2).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: UseReportTemplates
+      x-permission-matrix-row: "\"Использование шаблонов отчётов\" / \"Просмотр и экспорт журнала успеваемости\" — Admin ✔, Dean ✔"
+      x-antiforgery: required (header `RequestVerificationToken`)
+      x-calls-google: false
+      x-writes: "one AuditEvent `JournalExported` (format `xlsx` for both layouts), Outcome `Succeeded`, on success only; nothing else (spec FR-010, I-11)"
+      x-read-only-mode: "allowed — identical in all three BR-025 causes; IReadOnlyModeGuard not called; the audit row is written (BR-026, spec FR-009)"
+      x-database-round-trips: "those of the report query (US-027 FR-004) plus the audit write — unchanged"
+      x-file-storage: "in memory only; the form is opened from the embedded resource per request; nothing written to disk or stored (spec FR-001, FR-007, S-07)"
+      x-spec: [FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012]
+      x-acceptance-criteria: [AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-012, AC-014, AC-015]
+      security:
+        - installationSession: []
+      parameters:
+        - name: RequestVerificationToken
+          in: header
+          required: true
+          description: "The antiforgery token (API-7), as US-028."
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JournalExportRequest"
+            examples:
+              blankForm:
+                summary: "The group-lessons blank form, 10 students and 23 lessons per copy"
+                value:
+                  template: academic-journal
+                  courseId: "42"
+                  from: "2026-09-01"
+                  to: "2026-12-31"
+                  names: profile
+                  layout: group-lessons-blank
+                  studentsPerCopy: 10
+                  lessonsPerCopy: 23
+              programLayout:
+                summary: "The program layout — exactly the US-028 request"
+                value:
+                  template: academic-journal
+                  courseId: "42"
+                  from: "2026-09-01"
+                  to: "2026-09-30"
+                  names: profile
+                  orientation: portrait
+      responses:
+        "200":
+          description: >
+            With `program`: the US-028 workbook, byte-for-byte the same rules
+            (AC-004). With `group-lessons-blank`: one workbook whose sheets are the
+            filled copies of the form in the order of spec FR-006 — "Оцінювання N"
+            / "Теми занять N", no number for a kind with a single copy — each with
+            its copy number in the page footer (spec FR-006.1). An empty report is
+            a `200` (spec FR-005.7). Same `Content-Type`, `Content-Disposition`
+            (US-028 FR-006.1 file name, both layouts, spec I-9) and
+            `Cache-Control: no-store` as US-028.
+          headers:
+            Content-Disposition:
+              description: "As US-028 — `<course name> <from>–<to>.xlsx`, RFC 6266."
+              schema:
+                type: string
+            Cache-Control:
+              description: "`no-store`, by the host-wide rule (SC-14, spec AC-012)."
+              schema:
+                type: string
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                contentMediaType: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+        "400":
+          description: >
+            US-028's causes, plus: (c′) field validation gains `layout`
+            (`LayoutInvalid`), and — only when `layout` is `group-lessons-blank` —
+            `studentsPerCopy` (`StudentsPerCopyInvalid`) and `lessonsPerCopy`
+            (`LessonsPerCopyInvalid`), appended to US-028's field order in that
+            order; `message` is the text of the first entry. (d) the sheet limit
+            (spec VR-002, OD-011 a): the copies of the report would need more than
+            100 sheets — `message` `Export.Validation.TooManySheets` (names
+            students per copy and lessons per copy, suggests a shorter period), no
+            `fieldErrors`; checked after the `404` lookups and the report build.
+            The rejected value is never echoed, logged or audited (SC-10). No
+            file, no audit row.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              examples:
+                perCopy:
+                  value:
+                    timestamp: "2026-10-14T09:15:30Z"
+                    status: 400
+                    error: bad_request
+                    message: "Students per copy must be a whole number from 1 to 30."
+                    path: /api/v1/exports/journal-xlsx
+                    fieldErrors:
+                      - field: studentsPerCopy
+                        message: "Students per copy must be a whole number from 1 to 30."
+                tooManySheets:
+                  value:
+                    timestamp: "2026-10-14T09:15:30Z"
+                    status: 400
+                    error: bad_request
+                    message: "The file would have more than 100 sheets. Increase students or lessons per copy, or choose a shorter period."
+                    path: /api/v1/exports/journal-xlsx
+        "401":
+          description: "As US-028."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: "As US-028 (forced password change; policy denied)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: "As US-028 (`TemplateNotFound`, `CourseUnknown`). Checked before the sheet limit."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "405":
+          description: "As US-028."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "415":
+          description: "As US-028."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
+          description: >
+            As US-028, plus: the embedded form is missing, cannot be opened or its
+            markers break spec FR-002 (a program defect, spec FR-003). No file; no
+            audit row; `message` `Error.Unexpected`, no detail.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /reports:
+
+    get:
+      tags: [report]
+      operationId: getReport
+      summary: "The report — changed: the layout choice in the export action"
+      description: >
+        US-028 `getReport` with one additive change (spec FR-004). The export
+        action gains a radio group **"Layout"** — `program` ("Program layout",
+        pre-selected) and `group-lessons-blank` ("Бланк для групових занять" /
+        "Group lessons blank form") — and two number inputs, "Students per copy"
+        and "Lessons per copy", whose `min`, `max` and default come from
+        `ExportAction.blankForm` (no number written in the view, AD-3). The inputs
+        are shown only with the form chosen; the orientation radio pair only with
+        the program layout. `wwwroot/js/report-export.js` adds `layout` to the
+        body and, with the form, `studentsPerCopy` and `lessonsPerCopy` as JSON
+        numbers (the input's value parsed; a value the browser cannot parse is
+        sent as the raw string, so the server names the field); with the program
+        layout it sends exactly the US-028 body plus `layout: "program"`. Errors
+        are shown as US-028 does. Nothing is stored; each page load starts with
+        the program layout and the defaults (spec FR-004, OD-007 a).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: UseReportTemplates
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: "nothing"
+      x-read-only-mode: "allowed — the choice is shown in all three BR-025 causes"
+      x-spec: [FR-004, FR-012]
+      x-acceptance-criteria: [AC-004, AC-005]
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: "As US-028, with `export.blankForm`."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ExportActionChange"
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: __Host-ca-session
+      description: "The installation session cookie (US-008, API-7)."
+
+  schemas:
+
+    JournalExportRequest:
+      type: object
+      description: >
+        US-028 `JournalExportRequest` (members `template`, `courseId`, `from`,
+        `to`, `names`, `orientation` unchanged) plus three optional members.
+        Request DTO (AD-8), validated in `Application` (spec VR-001).
+      additionalProperties: true
+      properties:
+        template: {type: [string, "null"], description: "As US-028."}
+        courseId: {type: [string, "null"], description: "As US-028."}
+        from: {type: [string, "null"], format: date, description: "As US-028."}
+        to: {type: [string, "null"], format: date, description: "As US-028."}
+        names: {type: [string, "null"], enum: [profile, email, null], description: "As US-028."}
+        orientation:
+          type: [string, "null"]
+          enum: [portrait, landscape, null]
+          description: "As US-028. With `group-lessons-blank` validated but not applied (spec I-8)."
+        layout:
+          type: [string, "null"]
+          enum: [program, group-lessons-blank, null]
+          description: >
+            Absent, JSON `null` or `""` → `program`. Exactly `program` or
+            `group-lessons-blank`, case-sensitive, untrimmed (as `orientation`);
+            any other string → `400` `LayoutInvalid`. A non-string JSON value is a
+            syntax failure (`RequestMalformed`), as for every US-028 member.
+        studentsPerCopy:
+          description: >
+            Read only when `layout` is `group-lessons-blank`; ignored otherwise.
+            Absent or JSON `null` → 30. Valid: a JSON number whose value is a whole
+            number 1 … 30. **Any** other JSON value — a fraction, a number out of
+            range, a string (also `"10"`), a boolean, an array, an object — →
+            `400` `StudentsPerCopyInvalid` naming the field (spec VR-001: the
+            field is named, so unlike the US-028 members a wrong JSON type is a
+            field error, not `RequestMalformed`).
+          oneOf:
+            - type: integer
+              minimum: 1
+              maximum: 30
+            - type: "null"
+        lessonsPerCopy:
+          description: >
+            As `studentsPerCopy`, range 1 … 23, absent → 23, invalid → `400`
+            `LessonsPerCopyInvalid`.
+          oneOf:
+            - type: integer
+              minimum: 1
+              maximum: 23
+            - type: "null"
+
+    ExportMessageKey:
+      type: string
+      description: >
+        US-028's closed list plus four. `LayoutInvalid` →
+        `Export.Validation.LayoutInvalid`; `StudentsPerCopyInvalid` →
+        `Export.Validation.StudentsPerCopyInvalid`; `LessonsPerCopyInvalid` →
+        `Export.Validation.LessonsPerCopyInvalid`; `TooManySheets` →
+        `Export.Validation.TooManySheets` (the only one without a `fieldErrors`
+        entry). Translated in uk and en (spec FR-012).
+      enum: [TemplateMalformed, TemplateNotFound, CourseMalformed, CourseUnknown, FromMalformed, ToMalformed, PeriodInverted, NameSourceMalformed, OrientationInvalid, LayoutInvalid, StudentsPerCopyInvalid, LessonsPerCopyInvalid, TooManySheets]
+
+    ApiError:
+      type: object
+      description: "The API-6 body, unchanged; `fieldErrors[].field` gains three values."
+      required: [timestamp, status, error, message, path]
+      properties:
+        timestamp: {type: string, format: date-time}
+        status: {type: integer}
+        error: {type: string}
+        message: {type: string}
+        path: {type: string}
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field:
+                type: string
+                enum: [template, courseId, from, to, names, orientation, layout, studentsPerCopy, lessonsPerCopy]
+              message: {type: string}
+
+    ExportActionChange:
+      type: object
+      description: >
+        The one member US-028's `ExportAction` view DTO gains. Mapped in
+        `Application` (AD-8) from the form's capacities (spec FR-003, VR-001).
+      properties:
+        blankForm:
+          $ref: "#/components/schemas/BlankFormInputs"
+
+    BlankFormInputs:
+      type: object
+      required: [studentsPerCopyDefault, studentsPerCopyMax, lessonsPerCopyDefault, lessonsPerCopyMax]
+      additionalProperties: false
+      properties:
+        studentsPerCopyDefault: {type: integer, const: 30}
+        studentsPerCopyMax: {type: integer, const: 30}
+        lessonsPerCopyDefault: {type: integer, const: 23}
+        lessonsPerCopyMax: {type: integer, const: 23}
