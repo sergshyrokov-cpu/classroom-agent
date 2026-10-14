@@ -90,15 +90,16 @@ public static class InstallationSettingsReader
     /// <summary>US-013 spec VR-001: a day is the longest interval the setting accepts.</summary>
     public const int MaximumSyncIntervalMinutes = 1440;
 
+    /// <param name="contentRoot">The host's content root; a relative key directory resolves against it (US-047 FR-004).</param>
     /// <exception cref="InstallationSettingException">A setting is missing or breaks its rule.</exception>
-    public static InstallationSettings Read(IConfiguration configuration, ISecretStore secretStore) =>
+    public static InstallationSettings Read(IConfiguration configuration, ISecretStore secretStore, string contentRoot) =>
         new(
             InstallationId(configuration),
             ControlPlaneAddress(configuration),
             PrivatePort(configuration),
             PrivateAddress(configuration),
             Required(configuration, ConnectionStringKey),
-            KeyDirectory(configuration),
+            KeyDirectory(configuration, contentRoot),
             PublicBaseAddress(configuration),
             Required(configuration, OAuthClientIdKey).Trim(),
             OAuthClientSecret(configuration, secretStore),
@@ -160,11 +161,24 @@ public static class InstallationSettingsReader
 
     /// <summary>
     /// VR-003: a path the process can create if absent and write to. A file where a directory belongs, or a path
-    /// the process cannot create, stops the start.
+    /// the process cannot create, stops the start. A relative value resolves against the content root first (US-047
+    /// FR-004), so the rule applies to the resolved directory.
     /// </summary>
-    private static string KeyDirectory(IConfiguration configuration)
+    private static string KeyDirectory(IConfiguration configuration, string contentRoot)
     {
-        var directory = Required(configuration, DataProtectionKeyDirectoryKey).Trim();
+        var configured = Required(configuration, DataProtectionKeyDirectoryKey).Trim();
+        string directory;
+        try
+        {
+            directory = ConfiguredDirectory.Resolve(configured, contentRoot);
+        }
+        catch (Exception failure) when (failure is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            throw InstallationSettingException.Invalid(
+                DataProtectionKeyDirectoryKey,
+                "expected a directory path the process can create and write to");
+        }
+
         if (File.Exists(directory))
         {
             throw InstallationSettingException.Invalid(

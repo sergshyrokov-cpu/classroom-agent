@@ -8,6 +8,7 @@ using ClassroomAgent.Web.Configuration;
 using ClassroomAgent.Web.Exceptions;
 using ClassroomAgent.Web.Security;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.Extensions.WebEncoders;
 using Serilog;
 
@@ -27,10 +28,23 @@ public sealed class Program
     {
     }
 
-    public static void Main(string[] args)
+    /// <summary>
+    /// US-047 spec FR-001: the process decides once, at start-up, whether the Windows Service Control Manager started
+    /// it — no setting, variable or argument selects the mode (VR-002).
+    /// </summary>
+    public static void Main(string[] args) =>
+        BuildApplication(args, WindowsServiceHelpers.IsWindowsService()).Run();
+
+    /// <summary>
+    /// Builds the installation host without running it (US-047 spec FR-001 … FR-004, I-1). <paramref name="runsAsService"/>
+    /// is the detection result of FR-001, passed in so a test can drive either branch; it is never a setting, an
+    /// environment variable or an argument (VR-002).
+    /// </summary>
+    public static WebApplication BuildApplication(string[] args, bool runsAsService)
     {
-        var builder = WebApplication.CreateBuilder(args);
-        var logDirectory = InstallationLogging.Directory(builder.Configuration);
+        var builder = WindowsServiceHosting.CreateBuilder(args, runsAsService);
+        var contentRoot = builder.Environment.ContentRootPath;
+        var logDirectory = InstallationLogging.Directory(builder.Configuration, contentRoot);
         var isDevelopment = builder.Environment.IsDevelopment();
 
         // OD-004: the OAuth client secret is resolved from the configured store before anything else needs it.
@@ -39,7 +53,7 @@ public sealed class Program
         InstallationSettings settings;
         try
         {
-            settings = InstallationSettingsReader.Read(builder.Configuration, secretStore);
+            settings = InstallationSettingsReader.Read(builder.Configuration, secretStore, contentRoot);
         }
         catch (InstallationSettingException exception)
         {
@@ -156,6 +170,6 @@ public sealed class Program
             .AllowAnonymous()
             .WithMetadata(new UnmatchedRequestMetadata());
 
-        app.Run();
+        return app;
     }
 }

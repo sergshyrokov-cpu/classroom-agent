@@ -74,7 +74,7 @@ stories:
   - id: US-047
     epic: EPIC-8
     title: Run the Control Plane and the installation as Windows services
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: null
     # Story file authored: docs/stories/US-047-windows-service.md (aligned with
     # v92, DC-14). Needed for the pilot server; an exception to the frozen pilot

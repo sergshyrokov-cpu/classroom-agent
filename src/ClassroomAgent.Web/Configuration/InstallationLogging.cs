@@ -15,9 +15,14 @@ public static class InstallationLogging
 
     private const string FileName = "installation-.log";
 
-    /// <summary>The configured log directory, or <c>logs</c> next to the application when unset.</summary>
-    public static string Directory(IConfiguration configuration) =>
-        configuration[DirectoryKey] is { Length: > 0 } directory ? directory : Path.Combine(AppContext.BaseDirectory, "logs");
+    /// <summary>
+    /// The configured log directory, a relative value resolved against the content root (US-047 FR-004), or
+    /// <c>logs</c> next to the application when unset.
+    /// </summary>
+    public static string Directory(IConfiguration configuration, string contentRoot) =>
+        configuration[DirectoryKey] is { Length: > 0 } directory
+            ? ConfiguredDirectory.Resolve(directory, contentRoot)
+            : Path.Combine(AppContext.BaseDirectory, "logs");
 
     public static LoggerConfiguration Configure(
         LoggerConfiguration logger,

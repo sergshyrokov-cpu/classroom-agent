@@ -322,7 +322,8 @@ public sealed class ControlPlaneTestHost : IAsyncDisposable
         return host;
     }
 
-    private static async Task MigrateAsync(string connectionString, CancellationToken cancellationToken)
+    /// <summary>Applies the Control Plane migrations to a database — also used by US-047 service-mode tests.</summary>
+    public static async Task MigrateAsync(string connectionString, CancellationToken cancellationToken)
     {
         // Migrations carry explicit table and column names, so the provider alone applies
         // them. Drift between the model and the migrations is asserted by MigrationTests.

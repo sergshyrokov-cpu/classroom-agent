@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-047
-version: 1
+version: 2
 status: APPROVED
 created_at: 2026-10-14T12:19:55Z
-updated_at: 2026-10-14T12:24:36Z
+updated_at: 2026-10-14T12:43:32Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-047-windows-service.md
@@ -67,3 +67,27 @@ server during this Story, falling back to b) if the service does not see them.
 Impact: operational only — no code. Spec FR-009 (the manual verification of
 AC-001 records whether the service saw the account's variables, and which
 option was used).
+
+---
+
+## Raised by TEST_WRITING
+
+### OD-003 Compile-only skeleton created at TEST_WRITING
+
+Raised by TEST_WRITING. Spec I-1 needs a point where a test supplies the
+service-detection result, and it must not be a setting, an environment variable
+or an argument (VR-002). The tests call
+`Program.BuildApplication(string[] args, bool runsAsService)` on both hosts
+(`ClassroomAgent.Web.Program` and the Control Plane's `Program`): it builds the
+host without running it; the entry point then calls it with the real detection
+result and runs the returned application. The method does not exist yet, and
+the test-writer may not change production code. US-020 … US-044 resolved the
+same gap the same way.
+
+Options: (a) a compile-only skeleton — the two method declarations only, each
+throwing `NotImplementedException`; `Main` / the entry point, the package
+references and every existing behaviour unchanged; IMPLEMENTATION owns and
+completes it; (b) no skeleton — the tests do not compile until IMPLEMENTATION
+and the red phase cannot be verified.
+
+**Resolution (Owner, 2026-10-14): a)**.
