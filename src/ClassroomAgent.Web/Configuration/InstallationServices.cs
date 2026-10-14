@@ -204,6 +204,8 @@ public static class InstallationServices
         // US-028: the journal export (spec FR-011): the renderer in Infrastructure, the text port in Web.
         services.AddScoped<ExportJournalCommand>();
         services.AddSingleton<IReportRenderer, ClosedXmlReportRenderer>();
+        // US-043 spec FR-001, FR-005: the shipped form's renderer in Infrastructure.
+        services.AddSingleton<IBlankFormRenderer, ClosedXmlBlankFormRenderer>();
         services.AddScoped<IReportTexts, LocalizedReportTexts>();
         // US-044 spec FR-016: the two Meet exports, over the US-033 queries and the US-028 renderer and text port.
         services.AddScoped<ExportMeetReportsCommand>();

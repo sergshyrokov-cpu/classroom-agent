@@ -107,7 +107,8 @@ public sealed class GetReportQuery(
 
         // US-028 spec FR-002: the export carries the validated values the page was built from, with the effective name
         // source of the switch, so the file never differs from the screen.
-        var export = new ExportAction(selected, courseId, report.Header.From, report.Header.To, report.NameSource);
+        var export = new ExportAction(
+            selected, courseId, report.Header.From, report.Header.To, report.NameSource, GroupLessonsBlankMapper.Inputs);
         return Page(ReportPageOutcome.Shown, report, nameSwitch, export);
     }
 

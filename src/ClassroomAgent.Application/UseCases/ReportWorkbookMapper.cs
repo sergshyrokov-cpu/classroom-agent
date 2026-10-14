@@ -25,15 +25,29 @@ public static partial class ReportWorkbookMapper
         ArgumentNullException.ThrowIfNull(texts);
         ArgumentNullException.ThrowIfNull(uiCulture);
 
-        var teachers = string.Join(
-            ", ",
-            report.Header.Teachers.Select(t => t.NameKind == ReportNameKind.Unnamed ? texts.Get(ReportText.TeacherUnnamed) : t.DisplayName));
+        var teachers = TeachersText(report.Header, texts);
 
         return new Workbook(
             [Grading(report, texts, uiCulture, teachers), LessonTopics(report, texts, uiCulture, teachers)],
             orientation,
             DateFormat(uiCulture));
     }
+
+    /// <summary>Spec FR-004.2: the teachers as the header shows them, joined with ", " (also US-043 spec FR-005.4).</summary>
+    internal static string TeachersText(ReportHeader header, IReportTexts texts) =>
+        string.Join(
+            ", ",
+            header.Teachers.Select(t => t.NameKind == ReportNameKind.Unnamed ? texts.Get(ReportText.TeacherUnnamed) : t.DisplayName));
+
+    /// <summary>Spec FR-004.2: the course name and section as the header shows them (also US-043 spec FR-005.2).</summary>
+    internal static string CourseText(ReportHeader header) =>
+        string.IsNullOrEmpty(header.CourseSection) ? header.CourseName : header.CourseName + " — " + header.CourseSection;
+
+    /// <summary>Spec FR-004.4: a student's displayed name (also US-043 spec FR-005.2).</summary>
+    internal static string StudentText(PersonName student, IReportTexts texts) =>
+        student.NameKind == ReportNameKind.Unnamed
+            ? texts.Get(ReportText.StudentUnnamed)
+            : student.DisplayName ?? string.Empty;
 
     /// <summary>Entity model §2.2: the UI culture's short date pattern with Excel's month letter.</summary>
     private static string DateFormat(CultureInfo culture) => culture.DateTimeFormat.ShortDatePattern.Replace('M', 'm');
@@ -65,9 +79,7 @@ public static partial class ReportWorkbookMapper
         {
             var cells = new List<WorkbookCell>
             {
-                WorkbookCell.OfText(row.Student.NameKind == ReportNameKind.Unnamed
-                    ? texts.Get(ReportText.StudentUnnamed)
-                    : row.Student.DisplayName ?? string.Empty),
+                WorkbookCell.OfText(StudentText(row.Student, texts)),
             };
             cells.AddRange(row.Cells.Select(c => GradingCell(c, texts, culture)));
             rows.Add(new WorksheetRow(cells));
@@ -115,7 +127,7 @@ public static partial class ReportWorkbookMapper
     private static List<WorksheetRow> HeaderBlock(ReportHeader header, IReportTexts texts, CultureInfo culture, string teachers)
     {
         var template = header.TemplateIsBuiltIn ? texts.Get(ReportText.BuiltInTemplateName) : header.TemplateName ?? string.Empty;
-        var course = string.IsNullOrEmpty(header.CourseSection) ? header.CourseName : header.CourseName + " — " + header.CourseSection;
+        var course = CourseText(header);
         var period = header.From.ToString("d", culture) + " – " + header.To.ToString("d", culture);
 
         return
@@ -137,7 +149,7 @@ public static partial class ReportWorkbookMapper
     /// Spec FR-004.5, OD-003 a: a whole-number scale label alone is a number; an empty cell with nothing beside it is
     /// empty; anything else is the screen's text — main part, draft, late mark, turn-in date — one part per line.
     /// </summary>
-    private static WorkbookCell GradingCell(ReportCell cell, IReportTexts texts, CultureInfo culture)
+    internal static WorkbookCell GradingCell(ReportCell cell, IReportTexts texts, CultureInfo culture)
     {
         var alone = cell.DraftGrade is null && cell.Late is null && cell.TurnedInOn is null;
         if (alone && cell.Content == ReportCellContent.Empty)

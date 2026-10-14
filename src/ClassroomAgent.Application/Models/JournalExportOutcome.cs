@@ -6,4 +6,7 @@ public enum JournalExportOutcome
     Exported,
     Invalid,
     NotFound,
+
+    /// <summary>US-043 spec VR-002 (OD-011 a): the form would need more sheets than one file may have.</summary>
+    TooManySheets,
 }

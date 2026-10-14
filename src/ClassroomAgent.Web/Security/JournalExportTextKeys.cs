@@ -32,6 +32,29 @@ public static class JournalExportTextKeys
 
     public const string RequestMalformed = "Export.Validation.RequestMalformed";
 
+    // US-043 api-design §5, spec FR-012: the layout choice, the per-copy inputs and their messages.
+    public const string LayoutCaption = "Report.Export.Layout";
+
+    public const string LayoutProgram = "Report.Export.Layout.Program";
+
+    /// <summary>The name of the shipped form, "Бланк для групових занять".</summary>
+    public const string LayoutGroupLessonsBlank = "Report.Export.Layout.GroupLessonsBlank";
+
+    public const string StudentsPerCopy = "Report.Export.StudentsPerCopy";
+
+    public const string LessonsPerCopy = "Report.Export.LessonsPerCopy";
+
+    /// <summary>OD-010: the one fill method; not shown while it is the only one (spec I-3).</summary>
+    public const string FillMethodBasic = "Report.Export.FillMethod.Basic";
+
+    public const string LayoutInvalid = "Export.Validation.LayoutInvalid";
+
+    public const string StudentsPerCopyInvalid = "Export.Validation.StudentsPerCopyInvalid";
+
+    public const string LessonsPerCopyInvalid = "Export.Validation.LessonsPerCopyInvalid";
+
+    public const string TooManySheets = "Export.Validation.TooManySheets";
+
     public const string SignInRequired = "Api.Error.SignInRequired";
 
     public const string PasswordChangeRequired = "Api.Error.PasswordChangeRequired";

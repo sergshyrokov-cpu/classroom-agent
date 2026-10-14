@@ -31,7 +31,7 @@ public sealed class JournalExportWorld
     public ScopeRecordingUnitOfWork Work { get; }
 
     public ExportJournalCommand Command =>
-        new(Report.Fields, Report.Templates, Report.Zone, Report.Time, Texts, Renderer, Report.Audit, Work, Report.WriteScope);
+        new(Report.Fields, Report.Templates, Report.Zone, Report.Time, Texts, Renderer, Report.Audit, Work, Report.WriteScope, new ClassroomAgent.Infrastructure.Export.ClosedXmlBlankFormRenderer());
 
     /// <summary>A course with one graded lesson in September and one student who has a submission graded 9 of 10.</summary>
     public long SeedCourse(string name = "Test Course One", string? section = "Test Section A")

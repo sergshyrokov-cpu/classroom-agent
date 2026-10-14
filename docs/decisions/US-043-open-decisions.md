@@ -4,7 +4,7 @@ story: US-043
 version: 2
 status: APPROVED
 created_at: 2026-10-13T18:55:00Z
-updated_at: 2026-10-14T05:59:11Z
+updated_at: 2026-10-14T07:55:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-043-school-excel-layout.md
@@ -270,3 +270,27 @@ table), a single copy (print 1 / nothing), the look (digits / with a caption).
 (3 on "Оцінювання 3"), digits only, in the page footer: bottom right on
 "Оцінювання", bottom left on "Теми занять"; a kind with a single copy prints 1.
 Story amended; spec v2 FR-006.1, AC-015.
+
+## OD-013 Three story-level tests contradict the approved artifacts
+
+Raised at `IMPLEMENTATION` (implementation report v1, §7): T-1 `AssertFooter`
+reads `GetText(XLHFOccurrence.AllPages)`, which ClosedXML 0.105.1 never fills
+on load, so it can neither see a copy number nor prove a section empty; T-2
+the seed of `ATemplateShowingMaterials_…` never marks a submission late, so
+the test fails before the form is read; T-3
+`StudentsWithoutLessons_AreStillSplitIntoGroups` expects the course roster in
+three copies when no lesson is in the period, while the report then carries no
+student and Story AC-007 asks for one copy of each sheet with the course and
+teachers only.
+
+Options:
+
+- **(a) (Рекомендую)** Fix the three tests: T-1 read `OddPages`; T-2 a seed
+  that reaches a late mark; T-3 expect one copy of each sheet with empty
+  student areas (Story AC-007).
+- (b) Write the roster without lessons — a spec change and a change to the
+  US-027 report builder.
+
+**Resolution:** (a), by the Owner on 2026-10-14 — the procedural exception to
+change story-level tests at `IMPLEMENTATION` is authorised for these three
+fixes only.

@@ -10,7 +10,7 @@ public static partial class JournalExportLog
         EventId = 5270,
         EventName = "JournalExported",
         Level = LogLevel.Information,
-        Message = "Journal of template {Template} for course {CourseId} for {From}..{To} exported by account {AppUserId}: names from {NameSource} chosen by {NameSourceOrigin}, {RowCount} rows, {TopicCount} topics, {FileBytes} bytes")]
+        Message = "Journal of template {Template} for course {CourseId} for {From}..{To} exported by account {AppUserId}: names from {NameSource} chosen by {NameSourceOrigin}, {RowCount} rows, {TopicCount} topics, {FileBytes} bytes, layout {Layout}")]
     public static partial void Exported(
         ILogger logger,
         string template,
@@ -22,7 +22,8 @@ public static partial class JournalExportLog
         string nameSourceOrigin,
         int rowCount,
         int topicCount,
-        int fileBytes);
+        int fileBytes,
+        string layout);
 
     /// <summary>Spec FR-012: the field and the rule of each failure — never the value.</summary>
     [LoggerMessage(

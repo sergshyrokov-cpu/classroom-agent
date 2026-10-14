@@ -25,4 +25,9 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- US-043 spec FR-001, I-1: the shipped form, embedded from its one versioned copy. -->
+    <EmbeddedResource Include="..\..\docs\product\report-templates\group-lessons-blank.xlsx" LogicalName="ClassroomAgent.Infrastructure.Export.group-lessons-blank.xlsx" />
+  </ItemGroup>
+
 </Project>

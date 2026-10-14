@@ -1,4 +1,5 @@
 // US-028: the journal export button on the report page (api-design §2.6, §2.7).
+// US-043 api-design §2.7: the layout choice; with the blank form the two per-copy inputs replace the orientation.
 //
 // Posts the validated values the server rendered into data attributes as JSON, with the antiforgery token in the
 // RequestVerificationToken header, and saves the answer under the name in Content-Disposition. A static file, so
@@ -17,6 +18,41 @@
     function showErrors(messages) {
         errors.textContent = messages.join(" ");
     }
+
+    var blankInputs = document.getElementById("report-export-blank");
+    var orientationInputs = document.getElementById("report-export-orientation");
+    var studentsInput = document.getElementById("report-export-students");
+    var lessonsInput = document.getElementById("report-export-lessons");
+
+    function selectedLayout() {
+        var checked = document.querySelector("input[name='layout']:checked");
+        return checked === null ? "program" : checked.value;
+    }
+
+    function showLayout() {
+        var blank = selectedLayout() === "group-lessons-blank";
+        if (blankInputs !== null) {
+            blankInputs.hidden = !blank;
+        }
+        if (orientationInputs !== null) {
+            orientationInputs.hidden = blank;
+        }
+    }
+
+    // A value the browser parses is sent as a JSON number; anything else as the raw string, so the server names the field.
+    function perCopy(input) {
+        if (input === null) {
+            return null;
+        }
+        var raw = input.value;
+        var number = Number(raw);
+        return raw.trim() !== "" && isFinite(number) ? number : raw;
+    }
+
+    document.querySelectorAll("input[name='layout']").forEach(function (radio) {
+        radio.addEventListener("change", showLayout);
+    });
+    showLayout();
 
     function selectedOrientation() {
         var checked = document.querySelector("input[name='orientation']:checked");
@@ -78,8 +114,13 @@
             from: button.getAttribute("data-from"),
             to: button.getAttribute("data-to"),
             names: button.getAttribute("data-names"),
-            orientation: selectedOrientation()
+            orientation: selectedOrientation(),
+            layout: selectedLayout()
         };
+        if (payload.layout === "group-lessons-blank") {
+            payload.studentsPerCopy = perCopy(studentsInput);
+            payload.lessonsPerCopy = perCopy(lessonsInput);
+        }
 
         fetch("/api/v1/exports/journal-xlsx", {
             method: "POST",

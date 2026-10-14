@@ -357,7 +357,7 @@ stories:
   - id: US-043
     epic: EPIC-3
     title: Fill the group-lessons blank form with a template report
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: >
       Depends on US-028. Split out of US-028 by its OD-002 (trebovaniya.md §3,
       §8: the Excel layout file attached to a template at export).

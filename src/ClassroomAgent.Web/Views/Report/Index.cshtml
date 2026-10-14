@@ -96,7 +96,21 @@
     {
         <section id="report-export">
             <meta name="request-verification-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
+            @* US-043 spec FR-004: the layout choice, the program layout preselected; nothing of it is stored. *@
             <fieldset>
+                <legend>@T[JournalExportTextKeys.LayoutCaption]</legend>
+                <label><input type="radio" name="layout" value="program" checked="checked" /> @T[JournalExportTextKeys.LayoutProgram]</label>
+                <label><input type="radio" name="layout" value="group-lessons-blank" /> @T[JournalExportTextKeys.LayoutGroupLessonsBlank]</label>
+            </fieldset>
+            <fieldset id="report-export-blank" hidden>
+                <label>@T[JournalExportTextKeys.StudentsPerCopy]
+                    <input type="number" id="report-export-students" min="1" max="@export.BlankForm.StudentsPerCopyMax.ToString(CultureInfo.InvariantCulture)" step="1" value="@export.BlankForm.StudentsPerCopyDefault.ToString(CultureInfo.InvariantCulture)" />
+                </label>
+                <label>@T[JournalExportTextKeys.LessonsPerCopy]
+                    <input type="number" id="report-export-lessons" min="1" max="@export.BlankForm.LessonsPerCopyMax.ToString(CultureInfo.InvariantCulture)" step="1" value="@export.BlankForm.LessonsPerCopyDefault.ToString(CultureInfo.InvariantCulture)" />
+                </label>
+            </fieldset>
+            <fieldset id="report-export-orientation">
                 <legend>@T[JournalExportTextKeys.OrientationCaption]</legend>
                 <label><input type="radio" name="orientation" value="portrait" checked="checked" /> @T[JournalExportTextKeys.OrientationPortrait]</label>
                 <label><input type="radio" name="orientation" value="landscape" /> @T[JournalExportTextKeys.OrientationLandscape]</label>

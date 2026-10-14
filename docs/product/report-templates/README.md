@@ -9,6 +9,7 @@ instead of an abstraction.
 | File | Origin |
 |---|---|
 | `school-journal-full.xlsx` | originally `Шаблон.xlsx` in the repository root; the full-journal layout used with the Python prototype's `exports.py` |
+| `group-lessons-blank.xlsx` | US-043: the shipped form "Бланк для групових занять" — `school-journal-full.xlsx` with field markers (`{{course}}` …), two date formats and a 0.5 cm footer margin; embedded into `ClassroomAgent.Infrastructure` and filled copy by copy |
 
 Rules:
 

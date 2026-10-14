@@ -32,8 +32,14 @@ public sealed class JournalExportController(ExportJournalCommand export, ILogger
 
     public const string XlsxContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
-    /// <summary>The body members of openapi <c>JournalExportRequest</c>; any other member is ignored and never echoed.</summary>
-    private static readonly string[] Members = ["template", "courseId", "from", "to", "names", "orientation"];
+    /// <summary>
+    /// The string members of openapi <c>JournalExportRequest</c> (US-043 adds <c>layout</c>); any other member is ignored
+    /// and never echoed.
+    /// </summary>
+    private static readonly string[] Members = ["template", "courseId", "from", "to", "names", "orientation", "layout"];
+
+    /// <summary>US-043 api-design §2.3: the per-copy members, taken as raw JSON values and judged in Application.</summary>
+    private static readonly string[] PerCopyMembers = ["studentsPerCopy", "lessonsPerCopy"];
 
     [HttpPost(Route)]
     public async Task<IActionResult> Export(CancellationToken cancellationToken)
@@ -51,16 +57,25 @@ public sealed class JournalExportController(ExportJournalCommand export, ILogger
         }
 
         var request = new JournalExportRequest(
-            body.GetValueOrDefault("template"),
-            body.GetValueOrDefault("courseId"),
-            body.GetValueOrDefault("from"),
-            body.GetValueOrDefault("to"),
-            body.GetValueOrDefault("names"),
-            body.GetValueOrDefault("orientation"));
+            body.Strings.GetValueOrDefault("template"),
+            body.Strings.GetValueOrDefault("courseId"),
+            body.Strings.GetValueOrDefault("from"),
+            body.Strings.GetValueOrDefault("to"),
+            body.Strings.GetValueOrDefault("names"),
+            body.Strings.GetValueOrDefault("orientation"),
+            body.Strings.GetValueOrDefault("layout"),
+            body.PerCopy.TryGetValue("studentsPerCopy", out var students) ? students : null,
+            body.PerCopy.TryGetValue("lessonsPerCopy", out var lessons) ? lessons : null);
 
         var actorId = ActorId();
         var result = await export.ExecuteAsync(
             request, actorId, ActorRole(), CultureInfo.CurrentUICulture, HttpContext.TraceIdentifier, cancellationToken);
+
+        if (result.Outcome == JournalExportOutcome.TooManySheets)
+        {
+            // US-043 VR-002, api-design §2.5: a 400 without a field — the combination with the report's size is wrong.
+            return Refuse(StatusCodes.Status400BadRequest, JournalExportTextKeys.TooManySheets, "TooManySheets");
+        }
 
         if (result.Outcome != JournalExportOutcome.Exported || result.File is not { } file || result.Summary is not { } summary)
         {
@@ -76,18 +91,43 @@ public sealed class JournalExportController(ExportJournalCommand export, ILogger
             return ApiErrorResponse.Result(ApiErrorResponse.Create(HttpContext, status, errors[0].Item2, errors));
         }
 
-        JournalExportLog.Exported(
-            logger,
-            summary.Template,
-            summary.CourseId,
-            summary.From,
-            summary.To,
-            actorId,
-            NameSourceCode.Of(summary.NameSource),
-            summary.NameSourceOrigin.ToString(),
-            summary.RowCount,
-            summary.TopicCount,
-            file.Content.Length);
+        if (summary.BlankForm is { } blank)
+        {
+            // US-043 FR-011: the layout, the fill method, the per-copy sizes and the number of sheets.
+            JournalExportBlankFormLog.ExportedToBlankForm(
+                logger,
+                summary.Template,
+                summary.CourseId,
+                summary.From,
+                summary.To,
+                actorId,
+                NameSourceCode.Of(summary.NameSource),
+                summary.NameSourceOrigin.ToString(),
+                summary.RowCount,
+                summary.TopicCount,
+                file.Content.Length,
+                ExportJournalCommand.GroupLessonsBlankLayout,
+                blank.FillMethod.ToString(),
+                blank.StudentsPerCopy,
+                blank.LessonsPerCopy,
+                blank.SheetCount);
+        }
+        else
+        {
+            JournalExportLog.Exported(
+                logger,
+                summary.Template,
+                summary.CourseId,
+                summary.From,
+                summary.To,
+                actorId,
+                NameSourceCode.Of(summary.NameSource),
+                summary.NameSourceOrigin.ToString(),
+                summary.RowCount,
+                summary.TopicCount,
+                file.Content.Length,
+                ExportJournalCommand.ProgramLayout);
+        }
 
         // Api-design §2.7: attachment with filename and filename* (RFC 6266); Cache-Control: no-store comes from the
         // host-wide rule (SC-14).
@@ -99,9 +139,10 @@ public sealed class JournalExportController(ExportJournalCommand export, ILogger
 
     /// <summary>
     /// Api-design §2.3: a JSON object whose known members are strings, none repeated; anything else is a syntax
-    /// failure (null) — no field value can be named honestly.
+    /// failure (null) — no field value can be named honestly. US-043 api-design §2.3: <c>layout</c> follows the string
+    /// rule, a JSON <c>null</c> being absent (spec I-12); the per-copy members are kept as raw JSON values.
     /// </summary>
-    private async Task<Dictionary<string, string>?> ReadBodyAsync(CancellationToken cancellationToken)
+    private async Task<RequestBody?> ReadBodyAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -112,6 +153,7 @@ public sealed class JournalExportController(ExportJournalCommand export, ILogger
             }
 
             var values = new Dictionary<string, string>(StringComparer.Ordinal);
+            var perCopy = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
             var seen = new HashSet<string>(StringComparer.Ordinal);
             foreach (var member in document.RootElement.EnumerateObject())
             {
@@ -120,7 +162,14 @@ public sealed class JournalExportController(ExportJournalCommand export, ILogger
                     return null;
                 }
 
-                if (Array.IndexOf(Members, member.Name) < 0)
+                if (Array.IndexOf(PerCopyMembers, member.Name) >= 0)
+                {
+                    perCopy[member.Name] = member.Value.Clone();
+                    continue;
+                }
+
+                if (Array.IndexOf(Members, member.Name) < 0
+                    || (member.Name == "layout" && member.Value.ValueKind == JsonValueKind.Null))
                 {
                     continue;
                 }
@@ -133,7 +182,7 @@ public sealed class JournalExportController(ExportJournalCommand export, ILogger
                 values[member.Name] = member.Value.GetString()!;
             }
 
-            return values;
+            return new RequestBody(values, perCopy);
         }
         catch (JsonException)
         {
@@ -156,6 +205,9 @@ public sealed class JournalExportController(ExportJournalCommand export, ILogger
         ExportField.To => "to",
         ExportField.Names => "names",
         ExportField.Orientation => "orientation",
+        ExportField.Layout => "layout",
+        ExportField.StudentsPerCopy => "studentsPerCopy",
+        ExportField.LessonsPerCopy => "lessonsPerCopy",
         _ => throw new ArgumentOutOfRangeException(nameof(field), field, null),
     };
 
@@ -171,8 +223,14 @@ public sealed class JournalExportController(ExportJournalCommand export, ILogger
         ExportMessageKey.PeriodInverted => ReportTemplateTextKeys.Message(ReportMessageKey.PeriodInverted),
         ExportMessageKey.NameSourceMalformed => ReportTemplateTextKeys.Message(ReportMessageKey.NameSourceMalformed),
         ExportMessageKey.OrientationInvalid => JournalExportTextKeys.OrientationInvalid,
+        ExportMessageKey.LayoutInvalid => JournalExportTextKeys.LayoutInvalid,
+        ExportMessageKey.StudentsPerCopyInvalid => JournalExportTextKeys.StudentsPerCopyInvalid,
+        ExportMessageKey.LessonsPerCopyInvalid => JournalExportTextKeys.LessonsPerCopyInvalid,
         _ => throw new ArgumentOutOfRangeException(nameof(key), key, null),
     };
+
+    /// <summary>The known members of a well-formed body: the strings, and the per-copy members as raw JSON.</summary>
+    private sealed record RequestBody(Dictionary<string, string> Strings, Dictionary<string, JsonElement> PerCopy);
 
     /// <summary>Spec VR-002: the signed-in account from the session, never a request value; the policy guarantees one.</summary>
     private long ActorId() =>

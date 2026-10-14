@@ -9,4 +9,9 @@ public enum ExportField
     To,
     Names,
     Orientation,
+
+    // US-043 spec VR-001.
+    Layout,
+    StudentsPerCopy,
+    LessonsPerCopy,
 }

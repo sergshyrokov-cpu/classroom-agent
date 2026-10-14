@@ -1,4 +1,5 @@
 using ClassroomAgent.Application.Models.Dtos;
+using ClassroomAgent.Application.Models.Export;
 using ClassroomAgent.Domain.Enums;
 
 namespace ClassroomAgent.Application.Models;
@@ -15,4 +16,11 @@ public sealed record JournalExportSummary(
     ReportNameSource NameSource,
     NameSourceOrigin NameSourceOrigin,
     int RowCount,
-    int TopicCount);
+    int TopicCount)
+{
+    /// <summary>US-043 spec FR-011: the layout of the file.</summary>
+    public ExportLayout Layout { get; init; }
+
+    /// <summary>US-043 spec FR-011: with the form, the fill method, the per-copy sizes and the number of sheets.</summary>
+    public BlankFormExportFacts? BlankForm { get; init; }
+}

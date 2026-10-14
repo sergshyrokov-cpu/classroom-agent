@@ -12,4 +12,9 @@ public enum ExportMessageKey
     PeriodInverted,
     NameSourceMalformed,
     OrientationInvalid,
+
+    // US-043 spec VR-001.
+    LayoutInvalid,
+    StudentsPerCopyInvalid,
+    LessonsPerCopyInvalid,
 }
