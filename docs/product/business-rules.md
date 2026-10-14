@@ -30,8 +30,8 @@ ID in the legitimacy check response (v54), and, at an Admin login, the email bei
 checked with a yes/no answer. *(§3, §9, SC-12)*
 
 **BR-006** The Owner's access to a school's database on the servers is
-operational only — migrations, decommissioning, erasure on the school's request,
-and backup and restore — governed by the written agreement with the school and
+operational only — migrations, decommissioning, erasure on the school's request
+while the school is in read-only mode (v93), and backup and restore — governed by the written agreement with the school and
 recorded in the Owner's operations journal. *(§9, SC-12)*
 
 ## Admin identity
@@ -426,14 +426,25 @@ until the retention period expires — the course's, or their own as a leaver
 service writes permitted there (BR-026). Retention is an obligation, not a feature: a suspended school must not keep
 data indefinitely. *(§5)*
 
-**BR-076** In the first version, erasing one person's data on request is done by
-the Owner on the school's written request, and only after the school has removed
-that person from Google — otherwise synchronization re-imports them. *(§5,
-EPIC-10)*
+**BR-076** Erasing one person's data on the school's written request is an Admin
+function (v93): every record of one `ClassroomParticipant` — memberships,
+submissions with grades, Meet participations — goes in one transaction, mentions
+in other records (a meeting's organizer email, a course's owner) are cleared, and
+an `ErasedParticipant` exclusion keeps synchronization from re-importing the
+person while they remain in Google: the Google user id and a salted fingerprint
+of the email, never a readable name or address — an explicitly accepted
+trade-off. The Admin lifts an exclusion by entering the person's email. Not
+available in read-only mode; there, an urgent request is done by the Owner by
+hand, only after the school has removed the person from Google. *(§2, §3, §5,
+EPIC-10, v19, v93)*
 
 **BR-077** An erasure never comes back: after a database is restored from a
-backup, every erasure recorded in the operations journal after the backup's date
-is re-applied before the school gets the installation back. *(§9, DC-13, v47)*
+backup, every erasure made after the backup's date is re-applied before the
+school's users get the installation back. The Owner's erasures come from the
+operations journal; an Admin's erasures (v93) are rolled back together with their
+exclusions and audit rows, so the school repeats them from its written requests,
+and the Owner cross-checks their number against the installation log, which
+records every erasure with the participant's internal id. *(§9, DC-13, v47, v93)*
 
 **BR-078** School data leaves the installation only for two destinations: Google,
 read-only (plus Google OAuth for Admin sign-in, authentication only), and the

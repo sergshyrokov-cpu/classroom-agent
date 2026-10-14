@@ -222,15 +222,14 @@ work is queued rather than remembered.
 
 ---
 
-## EPIC-10 (future)
+## EPIC-10
 
 Erasing one person's data on request
 
 ### Goal
 
-Out of scope for the first version, where the Owner performs erasure by hand on
-the school's written request (`trebovaniya.md` §5, BR-076). This epic turns the
-procedure into a function.
+Turns the Owner's manual procedure into an Admin function (`trebovaniya.md` §4
+Epic 10, §5, BR-076, v93).
 
 ### Candidate User Stories
 
@@ -238,14 +237,15 @@ procedure into a function.
   Meet participation, course membership — in one transaction, with an audit event that
   carries no personal data of the erased person.
 
-### Blocked until decided
+### Decided in v93
 
-- Who may trigger erasure — a new cell in the permission matrix
-  (`trebovaniya.md` §2): the Admin on the school's request, or the Owner only.
-- How to keep synchronization from re-importing a person who is still in Google.
-  That needs an exclusion list, and the list itself retains an identifier of the
-  erased person — a trade-off to accept explicitly, not by accident.
-- What the school is told about data already exported into reports: it is
+- The Admin erases, on the school's written request; the Dean cannot
+  (`trebovaniya.md` §2).
+- An `ErasedParticipant` exclusion — the Google user id and a salted fingerprint
+  of the email — keeps synchronization and the Meet load from re-importing the
+  person; the trade-off is accepted explicitly. The Admin lifts it by entering
+  the person's email.
+- The confirmation screen tells the Admin that files already exported are
   outside the system and cannot be erased by it.
 
 ---

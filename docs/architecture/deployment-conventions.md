@@ -297,12 +297,13 @@ the previous one — the dependency is real, not stylistic
   entry and the school disables their Google account. Nothing else is needed:
   data is read by the technical account (BR-015), and every school has at least
   two Admins (BR-013). Their `AppUser` is purged later under PC-11.
-- **Erasing one person's data on the school's written request** is, in the first
-  version, an operational procedure performed by the Owner — there is no function
-  for it yet (EPIC-10). It is executed **only after the school has removed that
-  person from Google Workspace**: synchronization would otherwise re-import them
-  on its next run. Like every operational access to a school database, it is
-  recorded in the Owner's operations journal (SC-12).
+- **Erasing one person's data on the school's written request** is an Admin
+  function (EPIC-10, v93). The Owner performs it by hand only while the school
+  is in read-only mode, where the function is blocked — and then **only after
+  the school has removed that person from Google Workspace**: synchronization
+  would otherwise re-import them on its next run. Like every operational access
+  to a school database, the manual procedure is recorded in the Owner's
+  operations journal (SC-12).
 
 - **Retiring the Python prototype.** It may be retired once Epics 3 and 4 are
   delivered and the Open Decisions it answers are resolved; until then it is the
@@ -466,7 +467,7 @@ most critical one: losing it sends every school to read-only after 7 days.
 - **Restoring is operational access** and goes into the operations journal
   (SC-12). After a restore: apply pending migrations (DC-4), let synchronization
   catch up with Google, let the purge remove what has expired.
-- **Erasures must not come back.** After any restore, every erasure of a
+- **Erasures must not come back** (BR-077, v93). After any restore, every erasure of a
   person's data recorded in the operations journal after the backup's date is
   re-applied before the installation is returned to the school.
 - **Decommissioning deletes that school's backups immediately**, without waiting

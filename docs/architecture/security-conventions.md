@@ -401,7 +401,9 @@ when" — above all, who took personal data out of the system.
   a synchronization by hand; every change to a Meet meeting code link — the
   automatic link (actor `system`), picking a course for an unassigned code,
   confirming and re-linking (v55), marking a code "not a course" and removing
-  the mark (v88); creating, changing and deleting a report
+  the mark (v88); erasing one participant's data on request (the participant's
+  internal id and the count of erased records of each kind) and lifting an
+  erasure exclusion (the exclusion's id) (v93); creating, changing and deleting a report
   template, recording the template id only (v84); **exporting a journal or report**; each retention purge run
   (actor `system`, counts only — PC-11).
 - **Audited in the Control Plane:** Owner sign-in and refused sign-in; creating
@@ -486,7 +488,8 @@ hosts and therefore can reach.
 
 - The Owner touches a school's database only to apply migrations (DC-4),
   decommission the school (DC-8), erase one person's data on the school's
-  written request (BR-076), and back it up and restore it (DC-13).
+  written request while the school is in read-only mode (BR-076, v93), and
+  back it up and restore it (DC-13).
   Never to look at teaching data for the Owner's own purposes.
 - The rules of that access are part of the written agreement with the school,
   the same one that fixes the retention period (PC-11).
