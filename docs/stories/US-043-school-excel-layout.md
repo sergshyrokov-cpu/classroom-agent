@@ -13,6 +13,8 @@ source:
 # no upload of a school's file; the program ships the printed form
 # "Бланк для групових занять" and fills it copy by copy (OD-006 … OD-010,
 # all resolved by the Owner on 2026-10-14).
+# Amended by the Owner on 2026-10-14 at HUMAN_SPEC_APPROVAL of spec v2:
+# OD-011 (sheet limit) and OD-012 (copy number in the page footer).
 # The slug and file name are kept so the workflow's story path stays valid.
 ---
 
@@ -74,7 +76,8 @@ stream), or another printed form a school orders, are separate Stories.
   занять" — the form of `school-journal-full.xlsx` with field markers typed
   into its cells. The program finds where each field goes from the markers; no
   cell address of the form is written in code (§6). Its lines, printed text,
-  column widths, row heights and print settings are never changed.
+  column widths, row heights and print settings are never changed — except
+  the copy number printed in the page footer (OD-012).
 - **Choice at export** (OD-007): next to "Export to Excel" on the report page
   the user chooses "Program layout" (US-028, unchanged) or "Бланк для групових
   занять". With the form chosen, two more inputs appear: **students per copy**
@@ -164,7 +167,8 @@ name, teachers, students, lesson dates, grades and topics are in their places;
 every value equals the screen for the same inputs; a whole-number grade is a
 number; the 24th lesson column, the hours-per-semester line, "Самостійна
 робота" and "Підпис" are empty; the form's lines, printed text, widths, heights
-and print settings are unchanged.
+and print settings are unchanged, except the copy number in the page footer
+(OD-012).
 
 ## AC-002 Several copies
 
@@ -283,6 +287,24 @@ the last lesson column on "Оцінювання" (for example a final grade, an 
 **Resolution:** "Базовий" / "Basic", by the Owner on 2026-10-14.
 
 ---
+
+## OD-011 Upper limit on the number of sheets
+
+Raised by the Specification (v2). Options: (a) at most 100 sheets per file,
+over it the export is refused with a message; (b) no limit; (c) another number.
+
+**Resolution:** (a), by the Owner on 2026-10-14.
+
+## OD-012 Copy number on the printed page
+
+Raised by the Owner at `HUMAN_SPEC_APPROVAL` of spec v2: each copy carries its
+number on paper, placed so that the room for a future continuous page numbering
+of a semester's or year's paper journal stays free.
+
+**Resolution:** by the Owner on 2026-10-14 — the copy's number within its kind
+(3 on "Оцінювання 3", 2 on "Теми занять 2"), digits only, printed in the page
+footer: bottom right on "Оцінювання", bottom left on "Теми занять"; a kind with
+a single copy prints 1.
 
 # Notes
 

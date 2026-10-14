@@ -4,29 +4,30 @@
 version: 1
 story: US-043
 workflow: story-delivery
-current_stage: SPECIFICATION
+current_stage: API_DESIGN
 previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: SPECIFICATION
+last_completed_stage: HUMAN_SPEC_APPROVAL
 status: IN_PROGRESS
-attempt: 2
+attempt: 1
 last_invoked_skill: spec-writer
 last_result:
   verdict: PASS
   stage: SPECIFICATION
-  recorded_at: '2026-10-13T18:57:59Z'
+  recorded_at: '2026-10-14T05:42:00Z'
 last_artifacts:
 - type: specification
   path: docs/specifications/US-043-spec.md
-  version: 1
+  version: 2
 - type: open_decisions
   path: docs/decisions/US-043-open-decisions.md
-  version: 1
+  version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-- 'HUMAN_SPEC_APPROVAL: rejected by Serhii SHYROKOV (/so:reject) at 2026-10-13T22:28:34Z, comment "история переписана Владельцем 2026-10-14: без загрузки файла школы, поставляемый «Бланк для групових занять», заполнение по экземплярам (OD-006…OD-010 решены); спецификацию v1 заменить на v2". Story re-authored (title: Fill the group-lessons blank form with a template report); spec v1 (upload of a school file) to be superseded by v2; open-decisions v1 OD-001…005 superseded, OD-006…OD-010 resolved in the Story.'
-- 'SPECIFICATION: OD-001…OD-005 carried resolved (all a). OD-006 raised — more students/lessons than the layout has rows/columns: a fill the school''s drawn table first (end found by its border lines), then insert formatted rows/columns (recommended) / b always insert from one prepared row/column / c as a with an explicit end marker / d overwrite downward (contradicts AC-003). Corrected after the Owner''s check: the school form has 30 student rows × 24 lesson columns and 23 topic rows, not ~1000. Blocks API_DESIGN; resolve at HUMAN_SPEC_APPROVAL. trebovaniya §7 (v91) blocks nothing.'
-- 'SPECIFICATION: interpretations I-1…I-26 for the gate — notably I-3 a copy does not carry the layout, I-4 no download of the stored layout, I-7 20 MB unpacked limit, I-9 case-insensitive markers, I-11 extra {{lesson.title}} marker, I-16 orientation hidden/not applied with a layout, I-20 audit as ReportTemplateChanged (no new action). Adds SC-15 Uploaded files to security-conventions.md (OD-005 a). 13 markers: course, period, teachers; student.no/name, lesson.date/title, grade; topic.no/date/hours/title/teacher.'
+- 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-14T05:59:11Z, no comment; spec v2 and open-decisions v2 APPROVED (OD-011 a, OD-012 resolved at the gate).'
+- 'HUMAN_SPEC_APPROVAL (attempt 1): spec v1 rejected by Serhii SHYROKOV (/so:reject) at 2026-10-13T22:28:34Z — Story re-authored 2026-10-14 (no upload; shipped "Бланк для групових занять", filled copy by copy; OD-006…OD-010 resolved). v1 is in git history (0236ace).'
+- 'SPECIFICATION v2: OD-001…OD-005 superseded; OD-006…OD-010 carried resolved. OD-011 raised (sheet limit) and resolved at the gate by the Owner 2026-10-14: (a) 100 sheets. OD-012 raised and resolved by the Owner at the gate: copy number in the page footer — Оцінювання bottom right, Теми занять bottom left, digits, 1 for a single copy (Story amended; spec FR-006.1, AC-015, I-13, I-14). No open decision remains. trebovaniya §7 (v91) blocks nothing.'
+- 'SPECIFICATION v2: interpretations I-1…I-12 for the gate — notably I-1 form embedded as a resource of Infrastructure from docs/product/report-templates/group-lessons-blank.xlsx, I-4 date format dd.mm.yyyy set in the shipped file, I-6/I-7 copy counts and per-kind sheet numbering, I-10 program layout ignores new members, I-11 audit format stays xlsx (no migration). 10 markers at A2, A9, B9, C8, C9 (Оцінювання) and D1, A4..D4 (Теми занять); capacities 30 / 24 (23 + final grade) / 23.'
 started_at: '2026-10-13T18:57:59Z'
-updated_at: '2026-10-13T22:28:34Z'
+updated_at: '2026-10-14T05:59:11Z'
 completed_at: null

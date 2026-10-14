@@ -361,3 +361,5 @@
 {"timestamp":"2026-10-13T18:51:41Z","story":"US-043","from_stage":null,"to_stage":"SPECIFICATION","skill":null,"verdict":"ACTIVATED","artifacts":[],"attempt":1}
 {"timestamp":"2026-10-13T18:57:59Z","story":"US-043","from_stage":"SPECIFICATION","to_stage":"HUMAN_SPEC_APPROVAL","skill":"spec-writer","verdict":"PASS","artifacts":["docs/specifications/US-043-spec.md","docs/decisions/US-043-open-decisions.md"],"attempt":1}
 {"timestamp":"2026-10-13T22:28:34Z","story":"US-043","from_stage":"HUMAN_SPEC_APPROVAL","to_stage":"SPECIFICATION","skill":null,"verdict":"HUMAN_REJECTED","artifacts":["docs/specifications/US-043-spec.md"],"attempt":2}
+{"timestamp":"2026-10-14T05:42:00Z","story":"US-043","from_stage":"SPECIFICATION","to_stage":"HUMAN_SPEC_APPROVAL","skill":"spec-writer","verdict":"PASS","artifacts":["docs/specifications/US-043-spec.md","docs/decisions/US-043-open-decisions.md"],"attempt":1}
+{"timestamp":"2026-10-14T05:59:11Z","story":"US-043","from_stage":"HUMAN_SPEC_APPROVAL","to_stage":"API_DESIGN","skill":null,"verdict":"HUMAN_APPROVED","artifacts":["docs/specifications/US-043-spec.md"],"attempt":1}

@@ -1,10 +1,10 @@
 ---
 artifact_type: open_decisions
 story: US-043
-version: 1
-status: DRAFT
+version: 2
+status: APPROVED
 created_at: 2026-10-13T18:55:00Z
-updated_at: 2026-10-13T18:55:00Z
+updated_at: 2026-10-14T05:59:11Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-043-school-excel-layout.md
@@ -14,18 +14,20 @@ inputs:
 supersedes: null
 ---
 
-# US-043 Open Decisions — Fill a school's own Excel layout file with a template report
+# US-043 Open Decisions — Fill the group-lessons blank form with a template report
 
-Five carried from the Story, all resolved by the Owner on 2026-10-13 before
-activation. One raised by the Specification (OD-006), **open — blocks
-API_DESIGN**; to be resolved at `HUMAN_SPEC_APPROVAL`.
+> **Revision v2 (2026-10-14).** The Owner re-authored the Story during
+> `HUMAN_SPEC_APPROVAL` of spec v1: nothing is uploaded; the program ships the
+> printed form "Бланк для групових занять" and fills it copy by copy.
+> OD-001 … OD-005 (written for the upload) are **superseded** and kept below
+> for history. OD-006 is resolved by the Story; OD-007 … OD-010 are carried from
+> the re-authored Story, all resolved by the Owner on 2026-10-14. OD-011 is
+> raised by spec v2 and resolved by the Owner at `HUMAN_SPEC_APPROVAL`;
+> OD-012 was raised and resolved by the Owner there.
 
 No item of `trebovaniya.md` §7 (v91: 10, 14, 26, 27, 28) concerns this Story.
-Item 26 (documentation for the school) is not a dependency: the help text that
-lists the markers is program text on the upload page (spec FR-012), not school
-documentation.
 
-## OD-001 Where the layout lives
+## OD-001 Where the layout lives (superseded)
 
 Carried from the Story. §3 says the layout "подключается к шаблону при
 экспорте" — stored with the template, or supplied at each export.
@@ -37,7 +39,9 @@ once, used by every export of that template, covered by the database backups
 **Resolution:** (a) stored with the template in the installation database, by
 the Owner on 2026-10-13. Spec FR-001, FR-002, FR-009.
 
-## OD-002 How the program knows where each field goes
+**Superseded** on 2026-10-14 by the Owner's re-authoring of the Story (no upload); the spec references above are to spec v1.
+
+## OD-002 How the program knows where each field goes (superseded)
 
 Carried from the Story.
 
@@ -48,7 +52,9 @@ per field; (c) fixed positions, as the prototype — ruled out by §8.
 **Resolution:** (a) markers typed into cells of the school's file, by the Owner
 on 2026-10-13. Spec FR-004, FR-005.
 
-## OD-003 Which templates can carry a layout
+**Superseded** on 2026-10-14 by the Owner's re-authoring of the Story (no upload); the spec references above are to spec v1.
+
+## OD-003 Which templates can carry a layout (superseded)
 
 Carried from the Story. The built-in "Academic journal" cannot be changed (§3).
 
@@ -58,7 +64,9 @@ included; (b) the built-in template too, as a separate per-school setting.
 **Resolution:** (a) only templates created in the school, copies of the
 built-in one included, by the Owner on 2026-10-13. Spec FR-001.
 
-## OD-004 Which files are accepted
+**Superseded** on 2026-10-14 by the Owner's re-authoring of the Story (no upload); the spec references above are to spec v1.
+
+## OD-004 Which files are accepted (superseded)
 
 Carried from the Story.
 
@@ -69,7 +77,9 @@ refused; the file must open as a workbook and mark at least one field; (b) also
 **Resolution:** (a) `.xlsx` only, at most 1 MB, by the Owner on 2026-10-13.
 Spec FR-003, VR-001.
 
-## OD-005 Is a new version of the requirements needed first
+**Superseded** on 2026-10-14 by the Owner's re-authoring of the Story (no upload); the spec references above are to spec v1.
+
+## OD-005 Is a new version of the requirements needed first (superseded)
 
 Carried from the Story. The Story adds the first file a user uploads into an
 installation and stores; `security-conventions.md` has no rule for uploaded
@@ -83,6 +93,8 @@ are the authority; the Specification derives the upload rule and
 **Resolution:** (a) no new version of the requirements; the Story's
 resolutions are the authority, by the Owner on 2026-10-13. Spec FR-014
 (the new SC section), §7.
+
+**Superseded** on 2026-10-14 by the Owner's re-authoring of the Story (no upload); the spec references above are to spec v1.
 
 ## OD-006 What happens when the course has more students or lessons than the layout has rows or columns
 
@@ -176,4 +188,85 @@ Options:
 Impact: FR-006.2 (filling), VR-003 rule 7 (upload checks for (c)), FR-012 (help
 text), AC-003.
 
-**Resolution:** _open_
+**Resolution:** like printed forms filled by hand — a set number of students
+and lessons per copy, overflow to the next copy in the order of the Story's
+Scope; all copies in one file; numbering continues; unused rows cleared;
+materials never written; the hours-per-semester line (A5–E5) empty; the 24th
+lesson column kept for a future final grade. By the Owner on 2026-10-14 (Story
+OD-006). Options (a) … (e) above are history of spec v1. Spec v2 FR-005,
+FR-006.
+
+## OD-007 Where the form is chosen
+
+Carried from the Story. Options: (a) at export, next to "Export", with students
+and lessons per copy (defaults 30 / 23), stored nowhere; (b) as a template
+setting.
+
+**Resolution:** (a), by the Owner on 2026-10-14. Spec v2 FR-004, VR-001.
+
+## OD-008 Where field positions live
+
+Carried from the Story. Options: (a) field markers typed into the shipped form
+file; the code knows the markers, not the cells (§6 "не хардкод"); (b) cell
+addresses in code — needs a new version of `trebovaniya.md`.
+
+**Resolution:** (a), by the Owner on 2026-10-14. Spec v2 FR-001 … FR-003.
+
+## OD-009 Where the marked form file is kept
+
+Carried from the Story. Options: (a) a new file in
+`docs/product/report-templates/` (name indicative `group-lessons-blank.xlsx`) —
+the school form with markers, no student data — built into the program from
+there; `school-journal-full.xlsx` stays untouched as the reference; (b) a file
+inside `src/` — needs an exception to the `AGENTS.md` rule.
+
+**Resolution:** (a), by the Owner on 2026-10-14. Spec v2 FR-001 (embedded
+resource included from that path).
+
+## OD-010 Name of the fill method
+
+Carried from the Story. Not shown in the UI while it is the only one; named now
+so later methods sit beside it.
+
+**Resolution:** "Базовий" / "Basic", by the Owner on 2026-10-14. Spec v2 FR-004,
+FR-012.
+
+## OD-011 Upper limit on the number of sheets in one file
+
+Raised by spec v2 (it decided whether the export
+has one more refusal, its message and status).
+
+The number of sheets is groups × blocks + blocks (spec FR-006). With the
+defaults it is small: 35 students and 100 lessons → 2 × 5 + 5 = **15** sheets.
+But the per-copy inputs go down to 1: the same course by 1 student and 1 lesson
+→ 35 × 100 + 100 = **3 600** sheets, built in memory on the installation's
+server in one request — slow, large, and of no use on paper. Nothing in
+`trebovaniya.md` or the Story bounds it.
+
+Options:
+
+- **(a) (Рекомендую)** A fixed limit of **100 sheets** per file. Over it the
+  export is refused with a translated message: "too many sheets — increase
+  students or lessons per copy, or choose a shorter period"; no file, no audit
+  row. 100 sheets is far above any real course with sensible numbers and keeps
+  one export cheap.
+- (b) No limit — the export always builds every sheet, however many.
+- (c) A different number chosen by the Owner.
+
+Impact: spec FR-006, VR-002, AC-014, Error Handling.
+
+**Resolution:** (a) a fixed limit of 100 sheets per file, by the Owner on
+2026-10-14.
+
+## OD-012 Copy number on the printed page
+
+Raised by the Owner at `HUMAN_SPEC_APPROVAL` of spec v2: each copy carries its
+number on paper, placed so that the room for a future continuous page numbering
+of a semester's or year's paper journal stays free. Options asked: which number
+(within its kind / position in the file), where (page footer / a cell under the
+table), a single copy (print 1 / nothing), the look (digits / with a caption).
+
+**Resolution:** by the Owner on 2026-10-14 — the copy's number within its kind
+(3 on "Оцінювання 3"), digits only, in the page footer: bottom right on
+"Оцінювання", bottom left on "Теми занять"; a kind with a single copy prints 1.
+Story amended; spec v2 FR-006.1, AC-015.
