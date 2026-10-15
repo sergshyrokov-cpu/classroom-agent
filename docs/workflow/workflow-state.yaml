@@ -4,28 +4,19 @@
 version: 1
 story: US-048
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-verifier
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: '2026-10-15T19:00:00Z'
+  verdict: NOT_APPLICABLE
+  stage: API_DESIGN
+  recorded_at: '2026-10-15T19:10:00Z'
 last_artifacts:
-- type: specification
-  path: docs/specifications/US-048-spec.md
-  version: 1
-- type: spec_digest
-  path: docs/specifications/US-048-spec-digest.ru.md
-  version: 1
-- type: open_decisions
-  path: docs/decisions/US-048-open-decisions.md
-  version: 1
-- type: specification_review
-  path: docs/reviews/specifications/US-048-spec-review.md
+- type: api_design
+  path: docs/designs/api/US-048-api-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
@@ -33,6 +24,7 @@ non_blocking_findings:
 - 'SPECIFICATION: PASS — spec v1 (FR-001…FR-007, Story AC-001…AC-005 + derived AC-006…AC-009, VR-001…VR-002), digest v1, open-decisions v1 (OD-001 carried, resolved a; no new OD). Interpretations I-1 count from start of last lockout; I-2 re-run on conflict with any account writer; I-3 re-run meeting a fresh lockout is a step-2 refusal; I-4 at most three runs then propagate; I-5 no second verification of an unchanged hash. API_DESIGN and DB_DESIGN stated not applicable (FR-005 specifies the UnitOfWork conflict translation, US-032 precedent). Story header says v93; v94–v96 checked, none touches the Dean password sign-in.'
 - 'SPEC_REVIEW: PASS — review v1, 0 Critical / 0 Major, 4 Minor: M-1 VR-002 silent on rows already at >=5 from the defect (locks once more, then zeroes); M-2 FR-006/I-5 departs from the Owner sign-in (re-verifies every run) without saying so; M-3 FR-005 changes the conflict exception type for every AppUser writer (outcome still the error page) — state it; M-4 digest omits the residual timing note of spec section 7.'
 - 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) on spec v1, digest v1, review v1 (PASS); Minor M-1…M-4 accepted without a spec change — M-3 to be checked at IMPLEMENTATION_VERIFICATION (other AppUser writers still end on the error page).'
+- 'API_DESIGN: NOT_APPLICABLE — api-design v1 records spec §1, §6, §10 (no endpoint, route, status code or body change); the removed 500 on the sign-in page restores responses US-012 already specifies; no openapi file by design.'
 started_at: '2026-10-15T18:25:22Z'
-updated_at: '2026-10-15T19:00:00Z'
+updated_at: '2026-10-15T19:10:00Z'
 completed_at: null
