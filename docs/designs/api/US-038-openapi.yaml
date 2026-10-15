@@ -1,0 +1,639 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Erase all data of one participant on request (US-038)
+  version: "1"
+  description: >
+    HTTP contract of US-038 on the installation's public port. It adds one
+    Admin-only area under `/settings/erasure` (`trebovaniya.md` v93 §2 row
+    "Удаление всех данных участника по письменному запросу школы и снятие
+    исключения" — Admin ✔, Dean ✘; §4 Epic 10): the erasure page with the search
+    and the "Lift an exclusion" forms, the search itself, the per-participant
+    confirmation page, the erasure and the lifting. All are server-rendered Razor
+    or form posts; there is no JSON API (spec §10). The home page gains a link in
+    its Admin-only block (spec FR-001). The host-wide rules of
+    docs/designs/api/US-008-openapi.yaml apply unchanged. Companion document:
+    docs/designs/api/US-038-api-design.md.
+x-story: US-038
+x-source-specification: docs/specifications/US-038-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-038-open-decisions.md
+x-source-open-decisions-version: 2
+x-requirements-version: 93
+x-produced-by: openapi-designer
+x-extends:
+  - docs/designs/api/US-008-openapi.yaml
+  - docs/designs/api/US-012-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type of
+  the Control Plane channel is added or changed; nothing of this Story is sent to
+  the Control Plane (spec S-05, S-10, SC-13).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port. Illustrative (US-008 spec FR-001)."
+
+tags:
+  - name: erasure
+    description: "Erasure of one participant's data and lifting of exclusions (spec FR-001 … FR-018)"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 configured host-wide applies and is not restated: HTTPS and
+    HSTS, the deny-by-default fallback policy (SC-4, API-9), the global
+    antiforgery filter, the single error page, the anonymous catch-all `404`, the
+    session cookie, the restricted session of a Dean with a temporary password
+    (US-012), and the exception handler that turns a `ReadOnlyModeException` into
+    `409` — the translated error page naming the reason (US-008 spec FR-014).
+
+  policy: >
+    Every operation below carries the **new** policy `EraseParticipantData`,
+    granting the Admin role only (spec FR-015, S-01). A signed-in Dean gets `403`
+    (the translated error page); a Dean on the forced password change and an
+    anonymous caller are redirected as everywhere else.
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list of anonymous endpoints gains **nothing**; the US-008
+    endpoint enumeration test passes with all five new operations classified as
+    protected.
+
+  antiforgery-list-unchanged: >
+    The three `POST`s are covered by the global antiforgery rule and gain no
+    exemption (spec S-08, VR-005, API-7). A missing or invalid token is `400`, the
+    translated error page; nothing is searched, erased or lifted, no audit row.
+
+  outbound: >
+    No operation calls anything outside the process: no Google call, no
+    secret-store read, no Control Plane call (spec S-10).
+
+  no-personal-data-in-addresses: >
+    The search term and the email to lift travel only in `POST` bodies; pages are
+    addressed by the participant's internal id; one-time messages travel in
+    TempData and carry a message key, never a name or an email (spec S-09, I-3,
+    US-039 INFO-1). Request-scope log lines name the route template, never the raw
+    address (`trebovaniya.md` v89); no form value is logged (spec VR-001, VR-003).
+
+paths:
+
+  /settings/erasure:
+
+    get:
+      tags: [erasure]
+      operationId: getErasurePage
+      summary: "The erasure page: search form and \"Lift an exclusion\" form"
+      description: >
+        Renders `ErasurePageModel` with empty forms. Binds **no parameter**; any
+        query string is ignored and never echoed. A one-time `ErasureMessageKey`
+        left in TempData (key `ErasureMessage`) by a successful erasure or lifting
+        is read and shown once. In read-only mode the page opens with
+        `readOnlyNotice` set (spec FR-014, I-8). Writes nothing.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: EraseParticipantData
+      x-policy-new: true
+      x-permission-matrix-row: "\"Удаление всех данных участника … и снятие исключения\" — Admin ✔, Dean ✘"
+      x-calls-google: false
+      x-writes: nothing
+      x-spec: [FR-001, FR-008, FR-009, FR-014, FR-015, FR-018]
+      x-acceptance-criteria: [AC-008, AC-017, AC-021]
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: "The page."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ErasurePageModel"
+        "302":
+          $ref: "#/components/responses/SignInRedirect"
+        "403":
+          $ref: "#/components/responses/ForbiddenForDean"
+
+  /settings/erasure/searches:
+
+    post:
+      tags: [erasure]
+      operationId: searchParticipantsForErasure
+      summary: "Search participants by email or part of a name"
+      description: >
+        Runs the `Application` query `SearchParticipantsForErasureQuery` (name
+        indicative) and re-renders the erasure page with the results (spec
+        FR-002). A `POST` only to keep the term out of the address (spec I-3); it
+        **changes nothing** and is answered directly, not by a redirect, so the
+        term never reaches a `Location`. Works in read-only mode (viewing).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: EraseParticipantData
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: nothing
+      x-spec: [FR-002, FR-014, FR-015]
+      x-acceptance-criteria: [AC-001, AC-013, AC-014, AC-017, AC-020]
+      security:
+        - installationSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ParticipantSearchForm"
+      responses:
+        "200":
+          description: >
+            The erasure page with `search.results` (at most 50, ordered by full
+            name, then email, then internal id), `search.truncated` when more
+            matched, or `search.noneFound` when nothing matched. The term is shown
+            back only in the search field of this response.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ErasurePageModel"
+        "302":
+          $ref: "#/components/responses/SignInRedirect"
+        "400":
+          description: >
+            (1) The term fails VR-001 (missing, or not 2 … 254 characters after
+            trimming): the erasure page re-rendered with `search.fieldError`; no
+            search. (2) Missing or invalid antiforgery token: the translated error
+            page (API-7).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ErasurePageModel"
+        "403":
+          $ref: "#/components/responses/ForbiddenForDean"
+
+  /settings/erasure/participants/{participantId}:
+
+    get:
+      tags: [erasure]
+      operationId: getErasureConfirmation
+      summary: "The confirmation: what will be erased"
+      description: >
+        Runs the `Application` query `GetErasureConfirmationQuery` (name
+        indicative) and renders `ErasureConfirmationPageModel` (spec FR-003). The
+        mark is unset. Writes nothing, calls no Google API, works in every mode;
+        in read-only mode `readOnlyNotice` is set and the button is disabled
+        (spec I-8).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: EraseParticipantData
+      x-calls-google: false
+      x-writes: nothing
+      x-spec: [FR-003, FR-014, FR-015, FR-016, FR-018]
+      x-acceptance-criteria: [AC-001, AC-015, AC-017, AC-019]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/ParticipantId"
+      responses:
+        "200":
+          description: "The confirmation page."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ErasureConfirmationPageModel"
+        "302":
+          $ref: "#/components/responses/SignInRedirect"
+        "403":
+          $ref: "#/components/responses/ForbiddenForDean"
+        "404":
+          $ref: "#/components/responses/NoSuchParticipant"
+
+  /settings/erasure/participants/{participantId}/erasure:
+
+    post:
+      tags: [erasure]
+      operationId: eraseParticipant
+      summary: "Erase all data of the participant"
+      description: >
+        Runs `EraseParticipantUseCase` (name indicative; spec FR-004): read-only
+        guard → mark (VR-002) → participant → one transaction deleting the
+        participant's Meet participations, submissions, memberships and the
+        participant row, clearing the organizer email of their meetings and the
+        owner of their courses, creating one `ErasedParticipant` and adding one
+        audit row (spec FR-005 … FR-008, FR-013); after commit one `Information`
+        log line. Counts recorded are the rows actually affected.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: EraseParticipantData
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: >
+        On success, in one transaction: deletes MeetParticipation, Submission,
+        CourseMembership and ClassroomParticipant rows of the person; clears
+        MeetSession organizer email and Course owner; inserts one ErasedParticipant
+        and one AuditEvent. On a read-only refusal: one refused AuditEvent only.
+        Otherwise nothing.
+      x-return-page: /settings/erasure
+      x-spec: [FR-004, FR-005, FR-006, FR-007, FR-008, FR-010, FR-013, FR-014, FR-015, FR-016]
+      x-acceptance-criteria: [AC-002, AC-003, AC-006, AC-008, AC-009, AC-012, AC-015, AC-017, AC-019, AC-020]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/ParticipantId"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ErasureForm"
+      responses:
+        "302":
+          description: >
+            (1) **Erased** — Post-Redirect-Get: `Location: /settings/erasure`, the
+            one-time `ErasureMessageKey` `Erased` in TempData. (2) Not signed in /
+            Dean with a temporary password — as everywhere (nothing written).
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: [/settings/erasure, /sign-in, /sign-in/change-password]
+        "400":
+          description: >
+            (1) The mark is not set (VR-002): the confirmation page re-rendered
+            with `markError` = `IrreversibleMarkRequired`; nothing changes, no
+            audit row (AC-003). (2) Missing or invalid antiforgery token: the
+            translated error page (API-7).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ErasureConfirmationPageModel"
+        "403":
+          $ref: "#/components/responses/ForbiddenForDean"
+        "404":
+          $ref: "#/components/responses/NoSuchParticipant"
+        "409":
+          description: >
+            Read-only mode, any BR-025 cause (API-5, spec FR-014): the host-wide
+            translated error page naming the reason. Nothing is erased; one refused
+            audit row, category `ReadOnlyMode` (spec I-12). The read-only check
+            runs **before** the mark and the participant are looked at, so a
+            refused request is `409` whatever its body.
+          content:
+            text/html: {}
+        "500":
+          description: >
+            A failure inside the transaction: rolled back, nothing erased, no
+            exclusion, no audit row, no log line; the single error page with no
+            detail (AD-9, API-10, spec AC-002).
+          content:
+            text/html: {}
+
+  /settings/erasure/exclusion-liftings:
+
+    post:
+      tags: [erasure]
+      operationId: liftErasureExclusion
+      summary: "Lift the exclusion(s) for an email"
+      description: >
+        Runs `LiftErasureExclusionUseCase` (name indicative; spec FR-009):
+        read-only guard → email (VR-003) → fingerprint of the normalized email
+        (VR-004, FR-010) → in one transaction removes **every** `ErasedParticipant`
+        with that fingerprint and adds one audit row per removed exclusion (spec
+        I-10).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: EraseParticipantData
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: >
+        On success: deletes the matching ErasedParticipant rows and inserts one
+        AuditEvent per row, in one transaction. On a read-only refusal: one refused
+        AuditEvent only. Otherwise nothing.
+      x-return-page: /settings/erasure
+      x-spec: [FR-009, FR-010, FR-013, FR-014, FR-015]
+      x-acceptance-criteria: [AC-007, AC-008, AC-009, AC-016, AC-017, AC-020]
+      security:
+        - installationSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ExclusionLiftingForm"
+      responses:
+        "200":
+          description: >
+            **No exclusion for that address** — not an error (spec §8): the erasure
+            page re-rendered with `lift.outcome` = `NoExclusionForEmail` and the
+            typed email kept in the field. Nothing changes, no audit row.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ErasurePageModel"
+        "302":
+          description: >
+            (1) **Lifted** — Post-Redirect-Get: `Location: /settings/erasure`, the
+            one-time `ErasureMessageKey` `ExclusionLifted` in TempData; the email is
+            not carried. (2) Not signed in / Dean with a temporary password — as
+            everywhere.
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: [/settings/erasure, /sign-in, /sign-in/change-password]
+        "400":
+          description: >
+            (1) The email fails VR-003: the erasure page re-rendered with
+            `lift.fieldError`; nothing changes, no audit row. (2) Missing or invalid
+            antiforgery token: the translated error page (API-7).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ErasurePageModel"
+        "403":
+          $ref: "#/components/responses/ForbiddenForDean"
+        "409":
+          description: >
+            Read-only mode, any BR-025 cause: the host-wide translated error page
+            naming the reason. Nothing is lifted; one refused audit row, category
+            `ReadOnlyMode`. Checked before the email is validated.
+          content:
+            text/html: {}
+
+  /:
+    get:
+      operationId: getLanding
+      summary: "Existing US-008 home page — changed additively"
+      description: >
+        Unchanged in behaviour, policy and status codes. The Admin-only block
+        `<nav id="admin-settings">` gains one link to `/settings/erasure`; a Dean
+        does not see it (spec FR-001, AC-008). The view model gains nothing.
+      x-policy: ViewLegitimacyStatus
+      x-change: additive-markup
+      x-acceptance-criteria: [AC-008, AC-021]
+      responses:
+        "200":
+          description: "The page; see US-008-openapi.yaml for everything else."
+          content:
+            text/html: {}
+
+x-operations-deliberately-absent:
+
+  json-api: >
+    No `/api/v1` path for search, erasure or lifting (spec §10).
+
+  exclusion-list: >
+    No operation lists or shows exclusions (spec I-14).
+
+  get-with-term: >
+    No `GET` carries a search term or an email (spec S-09, I-3).
+
+  erase-by-email: >
+    Erasure is addressed only by the participant's internal id from a search
+    result; there is no erasure by email or Google user id.
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: __Host-ca-session
+      description: "The installation's own session cookie (US-008 spec FR-015)."
+
+  parameters:
+    ParticipantId:
+      name: participantId
+      in: path
+      required: true
+      description: >
+        Internal id of a `ClassroomParticipant`. Route constraint as the course
+        card's: digits only, 1 … 19 characters; anything else never reaches the
+        action and is answered by the catch-all `404` (spec VR-005). A value that
+        overflows `long`, `0`, or an id with no participant → `404` from the action.
+      schema:
+        type: string
+        pattern: "^[0-9]{1,19}$"
+
+  responses:
+    SignInRedirect:
+      description: >
+        Not signed in: `Location: /sign-in`. A Dean with a temporary password:
+        `Location: /sign-in/change-password` (US-012). Nothing written.
+      headers:
+        Location:
+          schema:
+            type: string
+            enum: [/sign-in, /sign-in/change-password]
+    ForbiddenForDean:
+      description: "Signed in as a Dean: the translated error page (spec FR-015, AC-008). Nothing written."
+      content:
+        text/html: {}
+    NoSuchParticipant:
+      description: >
+        No participant with that id — never existed or already erased (spec
+        FR-016). The generic not-found page; nothing written, no audit row. Two
+        concurrent erasures of one participant: one `302`, the other `404`.
+      content:
+        text/html: {}
+
+  schemas:
+
+    ParticipantSearchForm:
+      type: object
+      additionalProperties: false
+      required: [term]
+      properties:
+        term:
+          type: string
+          description: >
+            Trimmed; 2 … 254 characters after trimming (VR-001). Literal text: no
+            wildcard or escape character has a meaning. Never logged.
+        __RequestVerificationToken:
+          type: string
+
+    ErasureForm:
+      type: object
+      additionalProperties: false
+      properties:
+        irreversibleConfirmed:
+          type: string
+          description: >
+            The "erasure is irreversible" mark. Only the value `true` (case
+            -insensitive) sets it; absent, empty or anything else is unset → `400`
+            (VR-002). The participant comes from the route only.
+        __RequestVerificationToken:
+          type: string
+
+    ExclusionLiftingForm:
+      type: object
+      additionalProperties: false
+      required: [email]
+      properties:
+        email:
+          type: string
+          maxLength: 254
+          description: >
+            Trimmed; ≤ 254 characters; `local@domain` with exactly one `@` and
+            non-empty parts; any domain (VR-003, spec I-13). Normalized as
+            `WorkspaceConnection.NormalizeEmail` before fingerprinting (VR-004).
+            Never logged; not echoed after a success.
+        __RequestVerificationToken:
+          type: string
+
+    ErasureMessageKey:
+      type: string
+      description: "One-time message after a redirect (TempData `ErasureMessage`). Carries no personal data."
+      enum: [Erased, ExclusionLifted]
+
+    SearchFieldError:
+      type: string
+      enum: [TermRequired, TermTooShort, TermTooLong]
+
+    LiftFieldError:
+      type: string
+      enum: [EmailRequired, EmailTooLong, EmailInvalid]
+
+    ErasurePageModel:
+      type: object
+      description: >
+        View DTO of the erasure page, mapped in `Application` (AD-8). Carries no
+        Google user id, fingerprint or exclusion data (spec S-05, I-14).
+      required: [readOnlyNotice, messageKey, search, lift]
+      properties:
+        readOnlyNotice:
+          type: boolean
+          description: "True in read-only mode: erasure and lifting are unavailable (spec FR-014). Display only; enforcement is in `Application`."
+        messageKey:
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/ErasureMessageKey"
+        search:
+          $ref: "#/components/schemas/SearchBlock"
+        lift:
+          $ref: "#/components/schemas/LiftBlock"
+
+    SearchBlock:
+      type: object
+      required: [term, fieldError, performed, results, truncated]
+      properties:
+        term:
+          type: [string, "null"]
+          description: "The submitted term, only in the response to that search; null otherwise."
+        fieldError:
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/SearchFieldError"
+        performed:
+          type: boolean
+          description: "True when a valid search ran; with no result the page says \"nobody found\"."
+        results:
+          type: array
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/ParticipantSearchResult"
+        truncated:
+          type: boolean
+          description: "More than 50 matched; the page asks for a more precise term (spec FR-002, I-4)."
+
+    ParticipantSearchResult:
+      type: object
+      required: [participantId, fullName, email, teacherCourses, studentCourses]
+      properties:
+        participantId:
+          type: integer
+          format: int64
+        fullName:
+          type: [string, "null"]
+          description: "Shown as stored; null or empty → \"no name\"."
+        email:
+          type: [string, "null"]
+          description: "Shown as stored; null → \"no email\"."
+        teacherCourses:
+          type: integer
+          format: int32
+          minimum: 0
+          description: "Courses where the person has a teacher membership, on the roster or not."
+        studentCourses:
+          type: integer
+          format: int32
+          minimum: 0
+
+    LiftBlock:
+      type: object
+      required: [email, fieldError, outcome]
+      properties:
+        email:
+          type: [string, "null"]
+          description: "The typed email, kept only on a `400` or a `NoExclusionForEmail` re-render."
+        fieldError:
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/LiftFieldError"
+        outcome:
+          type: [string, "null"]
+          enum: [NoExclusionForEmail, null]
+
+    ErasureConfirmationPageModel:
+      type: object
+      description: >
+        View DTO of the confirmation page, mapped in `Application` (AD-8). Counts
+        are taken when the page is built (spec FR-003). No Google user id.
+      required: [participantId, fullName, email, courses, submissions, grades, meetParticipations, organizedMeetings, ownedCourses, noEmailNotice, readOnlyNotice, markError]
+      properties:
+        participantId:
+          type: integer
+          format: int64
+        fullName:
+          type: [string, "null"]
+        email:
+          type: [string, "null"]
+        courses:
+          type: array
+          description: "One entry per membership, on the roster or not, ordered by course name."
+          items:
+            $ref: "#/components/schemas/ErasureCourseEntry"
+        submissions:
+          type: integer
+          format: int32
+          minimum: 0
+        grades:
+          type: integer
+          format: int32
+          minimum: 0
+          description: "Submissions with an assigned or a draft grade (spec I-5)."
+        meetParticipations:
+          type: integer
+          format: int32
+          minimum: 0
+          description: "Meet participations whose email matches the participant's (spec FR-006); 0 with no email."
+        organizedMeetings:
+          type: integer
+          format: int32
+          minimum: 0
+        ownedCourses:
+          type: integer
+          format: int32
+          minimum: 0
+          description: "Courses whose owner is the participant's Google user id (spec I-6)."
+        noEmailNotice:
+          type: boolean
+          description: >
+            True when the participant has no email (OD-001 a): the page warns that
+            no Meet row can be tied to them and that the exclusion cannot be lifted
+            by entering an email.
+        readOnlyNotice:
+          type: boolean
+        markError:
+          type: [string, "null"]
+          enum: [IrreversibleMarkRequired, null]
+
+    ErasureCourseEntry:
+      type: object
+      required: [courseName, role]
+      properties:
+        courseName:
+          type: string
+          description: "Course name as stored; never translated."
+        role:
+          type: string
+          enum: [Teacher, Student]

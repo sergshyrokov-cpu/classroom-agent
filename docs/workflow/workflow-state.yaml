@@ -4,28 +4,29 @@
 version: 1
 story: US-038
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-writer
+last_invoked_skill: openapi-designer
 last_result:
   verdict: PASS
-  stage: SPECIFICATION
-  recorded_at: '2026-10-15T05:35:49Z'
+  stage: API_DESIGN
+  recorded_at: '2026-10-15T05:50:00Z'
 last_artifacts:
-- type: specification
-  path: docs/specifications/US-038-spec.md
+- type: api_design
+  path: docs/designs/api/US-038-api-design.md
   version: 1
-- type: open_decisions
-  path: docs/decisions/US-038-open-decisions.md
-  version: 2
+- type: openapi
+  path: docs/designs/api/US-038-openapi.yaml
+  version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'API_DESIGN: PASS — five Admin-only operations under /settings/erasure (GET page, POST searches, GET participants/{id}, POST participants/{id}/erasure, POST exclusion-liftings) + home-page link; new policy EraseParticipantData; search by POST answered 200 (no redirect, term never in an address); lifting with no match 200; read-only guard before validation (409 whatever the body); 302 PRG; no /api/v1; ContractVersion stays 1.'
 - 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-15T05:41:35Z, no comment; spec v1 and open-decisions v2 APPROVED. OD-001 resolved (a): a participant with no email is erased, exclusion without fingerprint, confirmation warns. Interpretations I-1…I-14 accepted as written.'
 - 'SPECIFICATION: PASS — spec v1 (FR-001…FR-018, AC-001…AC-009 + derived AC-010…AC-021, VR-001…VR-006, S-01…S-12), open-decisions v1. Interpretations I-1…I-14, notably I-2 HMAC-SHA-256 + 32-byte installation salt, I-3 search by POST, I-4 2…254 chars / 50 results, I-8 read-only page works with actions refused, I-9 MeetSession.OrganizerEmail becomes optional, I-12 read-only refusals audited. DB_DESIGN owns: salt storage, ErasedParticipant schema, audit columns, FR-011 write-time enforcement mechanism.'
 started_at: '2026-10-15T05:35:49Z'
-updated_at: '2026-10-15T05:41:35Z'
+updated_at: '2026-10-15T05:50:00Z'
 completed_at: null
