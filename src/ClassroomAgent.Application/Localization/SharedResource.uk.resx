@@ -22,6 +22,7 @@
   <data name="SignIn.Refused.CouldNotConfirm" xml:space="preserve"><value>Не вдалося підтвердити дозвіл на вхід. Спробуйте пізніше.</value></data>
   <data name="SignIn.Refused.SignInFailed" xml:space="preserve"><value>Вхід не завершився. Почніть спочатку.</value></data>
   <data name="SignIn.Refused.AccountDisabled" xml:space="preserve"><value>Обліковий запис вимкнено. Зверніться до адміністратора школи.</value></data>
+  <data name="SignIn.Refused.NotAdminAccount" xml:space="preserve"><value>Ця адреса — обліковий запис декана. Увійдіть за логіном і паролем. Для ролі адміністратора потрібна інша адреса.</value></data>
   <data name="Landing.Title" xml:space="preserve"><value>Ваш обліковий запис</value></data>
   <data name="Landing.SignedInAs" xml:space="preserve"><value>Ви увійшли як</value></data>
   <data name="Landing.Role.Admin" xml:space="preserve"><value>Адміністратор школи</value></data>

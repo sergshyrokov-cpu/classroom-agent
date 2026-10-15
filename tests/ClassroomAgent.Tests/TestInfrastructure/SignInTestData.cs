@@ -52,6 +52,9 @@ public static class SignInTestData
 
         public const string RefusedAccountDisabled = "SignIn.Refused.AccountDisabled";
 
+        /// <summary>US-051 spec FR-006: the address is a Dean account (not part of the US-008 <see cref="All"/> list).</summary>
+        public const string RefusedNotAdminAccount = "SignIn.Refused.NotAdminAccount";
+
         public const string LandingTitle = "Landing.Title";
 
         public const string SignedInAs = "Landing.SignedInAs";
@@ -130,5 +133,8 @@ public static class SignInTestData
         public const string CallbackFailed = "callback_failed";
 
         public const string AccountDisabled = "account_disabled";
+
+        /// <summary>US-051 db-design §1: the Google sign-in found an account that is not an Admin account.</summary>
+        public const string NotAnAdminAccount = "not_an_admin_account";
     }
 }

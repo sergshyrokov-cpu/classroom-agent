@@ -53,7 +53,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 "refusal_category IS NULL OR refusal_category IN ('not_in_allowed_admin', 'control_plane_unavailable', "
                 + "'unknown_installation', 'callback_failed', 'account_disabled', 'domain_mismatch', "
                 + "'impersonation_domain_mismatch', 'domain_not_confirmed', 'read_only_mode', 'connection_not_usable', "
-                + "'unknown_login', 'wrong_password', 'locked_out')");
+                + "'unknown_login', 'wrong_password', 'locked_out', 'not_an_admin_account')");
 
             // PC-6 states the equality as a property of the table; turning it into a CHECK costs nothing and
             // catches an update that passes through EF Core, because the interceptor stamps updated_at on a
@@ -458,6 +458,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         AuditRefusalCategory.UnknownLogin => "unknown_login",
         AuditRefusalCategory.WrongPassword => "wrong_password",
         AuditRefusalCategory.LockedOut => "locked_out",
+        AuditRefusalCategory.NotAnAdminAccount => "not_an_admin_account",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -476,6 +477,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         "unknown_login" => AuditRefusalCategory.UnknownLogin,
         "wrong_password" => AuditRefusalCategory.WrongPassword,
         "locked_out" => AuditRefusalCategory.LockedOut,
+        "not_an_admin_account" => AuditRefusalCategory.NotAnAdminAccount,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 }

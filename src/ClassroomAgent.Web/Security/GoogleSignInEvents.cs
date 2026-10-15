@@ -87,6 +87,7 @@ public static class GoogleSignInEvents
         SignInRefusal.CouldNotConfirm => "SignIn.Refused.CouldNotConfirm",
         SignInRefusal.SignInFailed => "SignIn.Refused.SignInFailed",
         SignInRefusal.AccountDisabled => "SignIn.Refused.AccountDisabled",
+        SignInRefusal.NotAnAdminAccount => "SignIn.Refused.NotAdminAccount",
         _ => throw new ArgumentOutOfRangeException(nameof(refusal), refusal, null),
     };
 

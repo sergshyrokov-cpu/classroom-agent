@@ -370,7 +370,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_audit_event_refusal_category", "(outcome = 'refused') = (refusal_category IS NOT NULL)");
 
-                            t.HasCheckConstraint("ck_audit_event_refusal_category_value", "refusal_category IS NULL OR refusal_category IN ('not_in_allowed_admin', 'control_plane_unavailable', 'unknown_installation', 'callback_failed', 'account_disabled', 'domain_mismatch', 'impersonation_domain_mismatch', 'domain_not_confirmed', 'read_only_mode', 'connection_not_usable', 'unknown_login', 'wrong_password', 'locked_out')");
+                            t.HasCheckConstraint("ck_audit_event_refusal_category_value", "refusal_category IS NULL OR refusal_category IN ('not_in_allowed_admin', 'control_plane_unavailable', 'unknown_installation', 'callback_failed', 'account_disabled', 'domain_mismatch', 'impersonation_domain_mismatch', 'domain_not_confirmed', 'read_only_mode', 'connection_not_usable', 'unknown_login', 'wrong_password', 'locked_out', 'not_an_admin_account')");
 
                             t.HasCheckConstraint("ck_audit_event_report_template_shape", "action NOT IN ('report_template_created', 'report_template_changed', 'report_template_deleted') OR (actor_type = 'app_user' AND target_type = 'report_template' AND (refusal_category IS NULL OR refusal_category = 'read_only_mode') AND (outcome <> 'succeeded' OR target_id IS NOT NULL) AND (action <> 'report_template_created' OR outcome = 'succeeded' OR target_id IS NULL))");
 

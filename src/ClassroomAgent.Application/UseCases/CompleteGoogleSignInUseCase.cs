@@ -56,16 +56,10 @@ public sealed class CompleteGoogleSignInUseCase(
             return await RefuseAsync(reply, existing, requestId, cancellationToken);
         }
 
-        // The disabled check is written and tested now, so no window exists in which a disabled account could
-        // sign in between this Story and US-012 (spec I-9).
-        if (existing is not null && existing.IsDisabled)
+        // The role, then the disabled state (US-051 FR-001, FR-004; trebovaniya.md §2 v96).
+        if (existing is not null && RefusalOf(existing) is { } refusal)
         {
-            return await RefuseWithAsync(
-                AuditRefusalCategory.AccountDisabled,
-                SignInRefusal.AccountDisabled,
-                existing,
-                requestId,
-                cancellationToken);
+            return await RefuseWithAsync(refusal.Category, refusal.Refusal, existing, requestId, cancellationToken);
         }
 
         return await AdmitAsync(normalized, existing, requestId, cancellationToken);
@@ -84,6 +78,7 @@ public sealed class CompleteGoogleSignInUseCase(
     {
         var now = Now();
         AppUser? admitted = null;
+        SignInRefusal? refused = null;
         await unitOfWork.ExecuteInTransactionAsync(
             async token =>
             {
@@ -99,11 +94,26 @@ public sealed class CompleteGoogleSignInUseCase(
                     catch (UniqueEmailViolationException)
                     {
                         // Two first sign-ins of the same address at once: someone else created the row, so re-read
-                        // and stamp it instead of surfacing an error (spec I-10; db-design §3.3).
+                        // it instead of surfacing an error (spec I-10; db-design §3.3). The row read again goes
+                        // through the same role and disabled checks as any existing account; a refusal leaves it
+                        // untouched and its audit row commits with this transaction (US-051 FR-005).
                         users.Forget(user);
                         user = await users.FindByNormalizedEmailAsync(normalizedEmail, token)
                             ?? throw new InvalidOperationException(
                                 "The unique index rejected the insert but no account with that address exists.");
+                        if (RefusalOf(user) is { } refusal)
+                        {
+                            auditEvents.Add(AuditEvent.AdminSignInRefused(
+                                user.Id,
+                                user.Role,
+                                refusal.Category,
+                                now,
+                                requestId));
+                            await CommitAsync(PermittedServiceWrite.AuditEvent, token);
+                            refused = refusal.Refusal;
+                            return;
+                        }
+
                         user.RecordSuccessfulSignIn(now);
                         await CommitAsync(PermittedServiceWrite.SignInBookkeeping, token);
                     }
@@ -120,6 +130,11 @@ public sealed class CompleteGoogleSignInUseCase(
             },
             cancellationToken);
 
+        if (refused is { } refusedWith)
+        {
+            return SignInOutcome.Refused(refusedWith);
+        }
+
         var signedIn = admitted ?? throw new InvalidOperationException("The sign-in committed no account.");
         return SignInOutcome.Success(new SignedInUser(
             signedIn.Id,
@@ -127,6 +142,22 @@ public sealed class CompleteGoogleSignInUseCase(
             signedIn.Role,
             signedIn.UiLanguage,
             signedIn.SecurityStamp));
+    }
+
+    /// <summary>
+    /// Why an existing account may not sign in through Google, or null when it may. The Google sign-in admits only an
+    /// Admin account, so the role is checked first — a disabled Dean is "not an Admin account" — and the disabled
+    /// state second (US-051 FR-001, FR-004, I-1, I-2; trebovaniya.md §2 v96; SC-3).
+    /// </summary>
+    private static (AuditRefusalCategory Category, SignInRefusal Refusal)? RefusalOf(AppUser account)
+    {
+        if (account.Role != AppRole.Admin)
+        {
+            return (AuditRefusalCategory.NotAnAdminAccount, SignInRefusal.NotAnAdminAccount);
+        }
+
+        // The disabled check (US-008 spec I-9).
+        return account.IsDisabled ? (AuditRefusalCategory.AccountDisabled, SignInRefusal.AccountDisabled) : null;
     }
 
     private Task<SignInOutcome> RefuseAsync(

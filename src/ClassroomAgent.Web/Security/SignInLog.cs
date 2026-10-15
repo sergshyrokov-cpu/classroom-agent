@@ -23,6 +23,8 @@ public static class SignInLog
 
     private static readonly EventId AccountDisabled = new(2204, "AdminSignInAccountDisabled");
 
+    private static readonly EventId NotAnAdminAccount = new(2205, "AdminSignInNotAnAdminAccount");
+
     public static void Succeed(ILogger logger, long appUserId, string? requestId) =>
         logger.LogInformation(
             Succeeded,
@@ -31,7 +33,8 @@ public static class SignInLog
             requestId);
 
     /// <summary>
-    /// FR-020: a refusal that is a decision — not approved, a failed callback, a disabled account — is a
+    /// FR-020: a refusal that is a decision — not approved, a failed callback, a disabled account, an account that is
+    /// not an Admin account (US-051 FR-007) — is a
     /// <c>Warning</c>; one that means the Control Plane could not be asked is an <c>Error</c>, because it needs an
     /// operator. Only the category is written, never what was entered.
     /// </summary>
@@ -61,6 +64,12 @@ public static class SignInLog
                 logger.LogWarning(
                     AccountDisabled,
                     "Admin sign-in refused in request {RequestId}: the account is disabled",
+                    requestId);
+                break;
+            case SignInRefusal.NotAnAdminAccount:
+                logger.LogWarning(
+                    NotAnAdminAccount,
+                    "Admin sign-in refused in request {RequestId}: the account is not an Admin account",
                     requestId);
                 break;
             default:

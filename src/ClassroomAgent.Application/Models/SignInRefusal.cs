@@ -17,4 +17,7 @@ public enum SignInRefusal
 
     /// <summary>The account exists but is disabled (spec I-9).</summary>
     AccountDisabled,
+
+    /// <summary>US-051: the address belongs to an account that is not an Admin account (spec FR-001, FR-006).</summary>
+    NotAnAdminAccount,
 }

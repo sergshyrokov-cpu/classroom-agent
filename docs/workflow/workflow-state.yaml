@@ -4,23 +4,28 @@
 version: 1
 story: US-051
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: '2026-10-15T20:45:00Z'
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_PR_APPROVAL
+  recorded_at: '2026-10-15T21:30:04Z'
 last_artifacts:
-- type: database_design
-  path: docs/designs/database/US-051-db-design.md
+- type: security_review
+  path: docs/reviews/security/US-051-security-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'HUMAN_PR_APPROVAL: approved by Serhii SHYROKOV (/so:approve) on 2026-10-15T21:30:04Z on implementation report v1, implementation verification v1 (PASS), security review v1 (PASS); no comment. INFO-1: keep .claude/settings.local.json out of the final commit.'
+- 'SECURITY_REVIEW: PASS — 0 Critical/Major/Minor; build 0 warnings, full suite 5962/5962, no vulnerable packages. INFO-1: keep .claude/settings.local.json out of the commit. INFO-2: refusal text discloses Dean-account status only to the verified, approved address owner (FR-006). INFO-3: carries verification N-1/N-2.'
+- 'IMPLEMENTATION_VERIFICATION: PASS — AC-001…AC-009 proved; story tests 32/32; M-3 confirmed (race-path refusal row committed, read on its own connection). D-1, D-2 accepted. N-1 (Minor): AC-009 test does not pin event 2205/AdminSignInNotAnAdminAccount. N-2 (Minor): race-path refusal not tested in read-only mode.'
+- 'IMPLEMENTATION: PASS — 5962/5962, build 0 warnings, format clean; migration 20261015203416_AddNotAnAdminAccountRefusal; log event 2205 (M-4); race-path refusal row committed in the open transaction (M-3, check at IMPL_VERIFICATION). D-1: two TEST_WRITING reads did not exclude the background retention_purge_run row — fixed without weakening; D-2: AppUserMigrationTests count 19→20.'
+- 'TEST_WRITING: PASS — 26 cases in 4 classes, 16 red for missing behaviour, 10 green regression guards (AC-003/004/006, FR-005 admin race, closed list); full suite 5946/5962 green, only the 16 new red. Skeleton: AuditRefusalCategory.NotAnAdminAccount, SignInRefusal.NotAnAdminAccount.'
 - 'DB_DESIGN: PASS — one migration AddNotAnAdminAccountRefusal re-adds ck_audit_event_refusal_category_value with not_an_admin_account; enum member AuditRefusalCategory.NotAnAdminAccount; no entity-model file by design (no attribute change).'
 - 'API_DESIGN: NOT_APPLICABLE — spec §1/§14: no endpoint, route, status code or body change; new refusal uses the existing callback redirect with a new translation key. No openapi.yaml by design.'
 - 'SPEC_REVIEW M-1 (Minor): spec §1 says two translation entries per language; FR-006 defines one key.'
@@ -28,5 +33,5 @@ non_blocking_findings:
 - 'SPEC_REVIEW M-3 (Minor): race-path refusal inside the open transaction — its audit row must be committed (AC-007); check at IMPLEMENTATION_VERIFICATION.'
 - 'SPEC_REVIEW M-4 (Minor): FR-007 event id not named (next free 2205); name it in the implementation report.'
 started_at: '2026-10-15T19:58:00Z'
-updated_at: '2026-10-15T20:45:00Z'
-completed_at: null
+updated_at: '2026-10-15T21:30:04Z'
+completed_at: '2026-10-15T21:30:04Z'

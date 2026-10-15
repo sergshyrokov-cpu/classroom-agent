@@ -48,4 +48,8 @@ public enum AuditRefusalCategory
 
     /// <summary>US-012 step 2: a sign-in lockout is in force, so the password was not checked (spec FR-012, FR-013).</summary>
     LockedOut,
+
+    /// <summary>US-051: the Google sign-in found an account whose role is not Admin; it is refused and left
+    /// untouched (spec FR-001, FR-003; db-design §2).</summary>
+    NotAnAdminAccount,
 }
