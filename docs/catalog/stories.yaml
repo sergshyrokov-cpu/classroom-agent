@@ -186,6 +186,14 @@ stories:
     # went into trebovaniya.md v94 (section 8) first, as OD-001 required.
     # Story file authored: docs/stories/US-049-encrypt-data-protection-keys.md
     # Origin: pre-pilot security audit 2026-10-15, finding F-2 (option 1).
+  - id: US-050
+    epic: EPIC-6
+    title: Every response carries the browser security headers
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-050-browser-security-headers.md
+    # Origin: pre-pilot security audit 2026-10-15, finding F-3 (option 1); the
+    # rule went into trebovaniya.md v95 (section 8) and SC-15 first.
     # (aligned with v88). Origin: US-021 security review INFO-1, INFO-2.
   - id: US-046
     epic: EPIC-6
