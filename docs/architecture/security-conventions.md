@@ -284,10 +284,16 @@ pages are disabled outside local development.
   antiforgery tokens, are kept by each host — every installation and the Control
   Plane — in its own directory on a persistent volume: outside the container, the
   repository and the database, readable only by the application process, with the
-  path in configuration (DC-3). They are not backed up (DC-13): a backup together
+  path in configuration (DC-3). **They are encrypted at rest with Windows DPAPI
+  bound to the Windows account the host's service runs under** (`trebovaniya.md`
+  §8, v94): a copied key file is unreadable under another account of the same
+  server and on another computer. No key is ever written unencrypted — outside
+  Windows the host refuses to start; keys written before v94 are read until they
+  expire. They are not backed up (DC-13): a backup together
   with the keys would let anyone forge a session, while losing the keys only signs
   users out. A key ring kept in memory, in a database, in a backup or shared
-  between hosts is a finding (`trebovaniya.md` §8, v64).
+  between hosts, or a key written unencrypted, is a finding (`trebovaniya.md` §8,
+  v64, v94).
 - There is **no UI to upload a key**. An Admin configures the domain and the
   impersonation user only. Adding an upload form is a Critical finding.
 - One Cloud project owned by the Owner, **a separate service account per

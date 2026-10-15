@@ -46,7 +46,13 @@ the previous one — the dependency is real, not stylistic
    (`docs/stories/US-001-owner-first-run-setup.md`). Until it exists nothing
    else is configurable. A Windows service has no console, so this first run is
    started by hand from the server console; only after the Owner account exists
-   is the Control Plane stopped and registered as a service (DC-14, v92).
+   is the Control Plane stopped and registered as a service (DC-14, v92). This
+   console run is started **under the Control Plane service's own Windows
+   account**: the Data Protection keys are encrypted with that account's DPAPI,
+   and keys created under another account cannot be read by the service, which
+   then creates new ones and signs everyone out (`trebovaniya.md` §8, v94). The
+   same holds for any console start of the installation. Before the first start,
+   confirm the key directory is readable only by that account (SC-7).
 3. Owner creates the school's service account in the Owner's Cloud project, which
    lives outside every school's domain (DC-5). In the same project the Owner also
    creates that school's **OAuth web client** for the Admin sign-in (SC-7, v78):
@@ -71,7 +77,9 @@ the previous one — the dependency is real, not stylistic
    OAuth client id from step 3, all required — and the service-account key and the
    OAuth client secret placed in
    the secret store (DC-5, SC-7). Create its Data Protection key directory on a
-   persistent volume. If the Control Plane certificate comes from the internal
+   persistent volume, readable only by the installation service's own Windows
+   account, and start the installation from a console only under that account
+   (`trebovaniya.md` §8, v94; see step 2). If the Control Plane certificate comes from the internal
    certificate authority, add that authority's root certificate to the trusted
    roots of the installation's server (DC-6). Set the private port's address
    (DC-3, DC-6) and confirm after deployment that the private port does not answer
