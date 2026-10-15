@@ -168,6 +168,24 @@ stories:
     # OD-001 … OD-004 resolved by the Owner on 2026-10-11; the rule went into
     # trebovaniya.md v89 (section 8) first, as OD-004 required.
     # Story file authored: docs/stories/US-045-route-template-in-logs.md
+  - id: US-048
+    epic: EPIC-6
+    title: A Dean's failed-attempt count starts again when a lockout begins
+    state: READY
+    blocked_by: null
+    # OD-001 resolved (a) by the Owner on 2026-10-15: the 500 on two
+    # simultaneous wrong passwords is fixed in this Story too.
+    # Story file authored: docs/stories/US-048-dean-lockout-counter-reset.md
+    # Origin: pre-pilot security audit 2026-10-15, finding F-1.
+  - id: US-049
+    epic: EPIC-6
+    title: Session-signing keys are encrypted at rest with the service account's Windows protection
+    state: READY
+    blocked_by: null
+    # OD-001 a, OD-002 a, OD-003 a resolved by the Owner on 2026-10-15; the rule
+    # went into trebovaniya.md v94 (section 8) first, as OD-001 required.
+    # Story file authored: docs/stories/US-049-encrypt-data-protection-keys.md
+    # Origin: pre-pilot security audit 2026-10-15, finding F-2 (option 1).
     # (aligned with v88). Origin: US-021 security review INFO-1, INFO-2.
   - id: US-046
     epic: EPIC-6
