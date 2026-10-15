@@ -2,35 +2,37 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-048
+story: US-051
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
 last_invoked_skill: null
 last_result:
   verdict: HUMAN_APPROVED
-  stage: HUMAN_PR_APPROVAL
-  recorded_at: '2026-10-15T19:46:19Z'
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: '2026-10-15T20:20:00Z'
+  decided_by: Serhii SHYROKOV (/so:approve)
+  comment: null
 last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-048-security-review.md
+- type: specification
+  path: docs/specifications/US-051-spec.md
+  version: 1
+- type: spec_digest
+  path: docs/specifications/US-051-spec-digest.ru.md
+  version: 1
+- type: specification_review
+  path: docs/reviews/specifications/US-051-spec-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-- 'SPECIFICATION: PASS — spec v1 (FR-001…FR-007, Story AC-001…AC-005 + derived AC-006…AC-009, VR-001…VR-002), digest v1, open-decisions v1 (OD-001 carried, resolved a; no new OD). Interpretations I-1 count from start of last lockout; I-2 re-run on conflict with any account writer; I-3 re-run meeting a fresh lockout is a step-2 refusal; I-4 at most three runs then propagate; I-5 no second verification of an unchanged hash. API_DESIGN and DB_DESIGN stated not applicable (FR-005 specifies the UnitOfWork conflict translation, US-032 precedent). Story header says v93; v94–v96 checked, none touches the Dean password sign-in.'
-- 'SPEC_REVIEW: PASS — review v1, 0 Critical / 0 Major, 4 Minor: M-1 VR-002 silent on rows already at >=5 from the defect (locks once more, then zeroes); M-2 FR-006/I-5 departs from the Owner sign-in (re-verifies every run) without saying so; M-3 FR-005 changes the conflict exception type for every AppUser writer (outcome still the error page) — state it; M-4 digest omits the residual timing note of spec section 7.'
-- 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) on spec v1, digest v1, review v1 (PASS); Minor M-1…M-4 accepted without a spec change — M-3 to be checked at IMPLEMENTATION_VERIFICATION (other AppUser writers still end on the error page).'
-- 'API_DESIGN: NOT_APPLICABLE — api-design v1 records spec §1, §6, §10 (no endpoint, route, status code or body change); the removed 500 on the sign-in page restores responses US-012 already specifies; no openapi file by design.'
-- 'DB_DESIGN: NOT_APPLICABLE — db-design v1 records spec §1, §10 (no table, column, index, constraint or migration); FR-005 UnitOfWork AppUser conflict translation is code per the US-032 precedent; no data fix for rows already at >=5 (M-1 accepted); no entity model by design.'
-- 'TEST_WRITING: PASS — 19 new tests (8 unit DeanLockoutCounterResetTests, 9 PostgreSQL DeanSignInConcurrencyTests with a controlled interleaving, 2 AppUserConflictTranslationTests); build 0 warnings; red phase 17 failed as expected (count 5/6 not reset; raw DbUpdateConcurrencyException, no re-run/translation), 2 pass explained (VR-001 guard kept; FR-007 cancellation regression guard); US-012 regression 62/62 green. Skeleton: Application/Exceptions/AppUserConflictException (name after US-032 precedent; spec FR-005 gives none). M-3 still for IMPLEMENTATION_VERIFICATION.'
-- 'IMPLEMENTATION: PASS — report v1: AppUser.RecordFailedSignIn zeroes the count with the lockout; UnitOfWork translates AppUser DbUpdateConcurrencyException to AppUserConflictException after detaching the failed account entry and staged audit rows; SignInDeanUseCase re-runs on a fresh read/clock up to MaximumRuns = 3, PasswordCheck reuses the verification on an unchanged hash, cancelled request not re-run. Build 0 warnings; full suite 5936/5936; format clean; no config change, no deviation. M-3 note in report §7: other AppUser writers catch neither exception type, so they still end on the error page.'
-- 'IMPLEMENTATION_VERIFICATION: PASS — review v1, 0 Critical / 0 Major, 2 Minor; story tests 19/19. M-3 checked: no Data Plane code catches either conflict type besides the sign-in loop, so other AppUser writers still end on the error page. N-1 the FR-007 cancellation filter is never reached by its test (regression guard only); N-2 the conflict detach drops every staged audit row in the scope, not only the run''s (same effect in sign-in; US-032 pattern).'
-- 'SECURITY_REVIEW: PASS — review v1, 0 Critical / 0 Major / 0 Minor, 3 Informational; independent build 0 warnings, full suite 5936/5936, story tests 19/19, no vulnerable packages, no dependency change. SC-2 order kept in every run; count restarts at lockout; one verification per unchanged hash. INFO-1 an attempt whose three runs all conflict is not counted (no outcome revealed); INFO-2 a re-run finding the account gone does one more dummy verification; INFO-3 .claude/settings.local.json modified — keep out of the Story commit.'
-- 'HUMAN_PR_APPROVAL: approved by Serhii SHYROKOV (/so:approve) on 2026-10-15 on implementation report v1, implementation verification v1 (PASS), security review v1 (PASS); no comment. INFO-3: keep .claude/settings.local.json out of the final commit.'
-started_at: '2026-10-15T18:25:22Z'
-updated_at: '2026-10-15T19:46:19Z'
-completed_at: '2026-10-15T19:46:19Z'
+- 'SPEC_REVIEW M-1 (Minor): spec §1 says two translation entries per language; FR-006 defines one key.'
+- 'SPEC_REVIEW M-2 (Minor): FR-005 also adds the disabled check on the race path (any disabled account); digest mentions only the Dean case.'
+- 'SPEC_REVIEW M-3 (Minor): race-path refusal inside the open transaction — its audit row must be committed (AC-007); check at IMPLEMENTATION_VERIFICATION.'
+- 'SPEC_REVIEW M-4 (Minor): FR-007 event id not named (next free 2205); name it in the implementation report.'
+started_at: '2026-10-15T19:58:00Z'
+updated_at: '2026-10-15T20:20:00Z'
+completed_at: null

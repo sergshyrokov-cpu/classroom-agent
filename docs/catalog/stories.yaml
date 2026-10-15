@@ -197,7 +197,7 @@ stories:
   - id: US-051
     epic: EPIC-6
     title: The Google sign-in admits only Admin accounts
-    state: READY
+    state: IN_PROGRESS
     blocked_by: null
     # Story file authored: docs/stories/US-051-google-sign-in-admin-accounts-only.md
     # Origin: pre-pilot audit 2 2026-10-15, finding F-2 (option a); the rule

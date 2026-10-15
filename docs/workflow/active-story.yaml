@@ -3,10 +3,10 @@
 # Writer: story-orchestrator (on activation). Stories are authored by a human
 # in docs/stories/ — there is no backlog-sync stage in this workflow variant.
 version: 1
-active_story: US-048
-story_path: docs/stories/US-048-dean-lockout-counter-reset.md
+active_story: US-051
+story_path: docs/stories/US-051-google-sign-in-admin-accounts-only.md
 source:
   type: authored
-activated_at: 2026-10-15T18:22:48Z
+activated_at: 2026-10-15T19:51:41Z
 activated_by: Serhii SHYROKOV (/so:start)
-status: COMPLETED
+status: IN_PROGRESS
