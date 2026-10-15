@@ -61,7 +61,8 @@ public sealed class MeetSchemaTests(PostgreSqlFixture database)
                 "id bigint - NO",
                 "conference_id character varying 128 NO",
                 "meeting_code character varying 64 NO",
-                "organizer_email character varying 254 NO",
+                // US-038 db-design §4: nullable since the erasure clears the organizer of a person erased or excluded.
+                "organizer_email character varying 254 YES",
                 "started_at timestamp with time zone - NO",
                 "ended_at timestamp with time zone - NO",
                 "created_at timestamp with time zone - NO",

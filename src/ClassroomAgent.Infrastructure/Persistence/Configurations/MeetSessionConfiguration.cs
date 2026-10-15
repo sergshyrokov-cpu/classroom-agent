@@ -18,14 +18,17 @@ public sealed class MeetSessionConfiguration : IEntityTypeConfiguration<MeetSess
             table.HasCheckConstraint("ck_meet_session_ended_after_started", "ended_at >= started_at");
             table.HasCheckConstraint(
                 "ck_meet_session_values",
-                "char_length(conference_id) >= 1 AND char_length(meeting_code) >= 1 AND char_length(organizer_email) >= 3");
+                "char_length(conference_id) >= 1 AND char_length(meeting_code) >= 1 "
+                + "AND (organizer_email IS NULL OR char_length(organizer_email) >= 3)");
         });
 
         builder.HasKey(s => s.Id).HasName("pk_meet_session");
         builder.Property(s => s.Id).UseIdentityByDefaultColumn();
         builder.Property(s => s.ConferenceId).HasMaxLength(MeetSession.ConferenceIdMaxLength).IsRequired();
         builder.Property(s => s.MeetingCode).HasMaxLength(MeetSession.MeetingCodeMaxLength).IsRequired();
-        builder.Property(s => s.OrganizerEmail).HasMaxLength(MeetSession.EmailMaxLength).IsRequired();
+        // US-038 db-design §4: null once the organizer was erased or excluded; the lower(organizer_email) expression
+        // index is created by the AddParticipantErasure migration (EF Core cannot express it).
+        builder.Property(s => s.OrganizerEmail).HasMaxLength(MeetSession.EmailMaxLength);
         builder.Property(s => s.StartedAt).IsRequired();
         builder.Property(s => s.EndedAt).IsRequired();
         builder.Property(s => s.CreatedAt).IsRequired();

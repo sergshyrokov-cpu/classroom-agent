@@ -1,0 +1,60 @@
+@using ClassroomAgent.Application.Models.Dtos
+@model ErasureConfirmationPageModel
+@{
+    ViewData["Title"] = T[ErasureTextKeys.ConfirmationTitle];
+}
+
+<h1>@T[ErasureTextKeys.ConfirmationTitle]</h1>
+
+@if (Model.ReadOnlyNotice)
+{
+    <p class="notice" id="erasure-read-only-notice">@T[ErasureTextKeys.ReadOnlyNotice]</p>
+}
+
+<section id="erasure-confirmation">
+    <p>@(string.IsNullOrWhiteSpace(Model.FullName) ? T[ErasureTextKeys.NoName].Value : Model.FullName)</p>
+    <p>@(Model.Email ?? T[ErasureTextKeys.NoEmail].Value)</p>
+
+    <h2>@T[ErasureTextKeys.Courses]</h2>
+    <ul id="erasure-courses">
+        @foreach (var course in Model.Courses)
+        {
+            <li>@course.CourseName — @T[ErasureTextKeys.Of(course.Role)]</li>
+        }
+    </ul>
+
+    <dl>
+        <dt>@T[ErasureTextKeys.Submissions]</dt>
+        <dd data-erasure-count="submissions">@Model.Submissions</dd>
+        <dt>@T[ErasureTextKeys.Grades]</dt>
+        <dd data-erasure-count="grades">@Model.Grades</dd>
+        <dt>@T[ErasureTextKeys.MeetParticipations]</dt>
+        <dd data-erasure-count="meet-participations">@Model.MeetParticipations</dd>
+        <dt>@T[ErasureTextKeys.OrganizedMeetings]</dt>
+        <dd data-erasure-count="organized-meetings">@Model.OrganizedMeetings</dd>
+        <dt>@T[ErasureTextKeys.OwnedCourses]</dt>
+        <dd data-erasure-count="owned-courses">@Model.OwnedCourses</dd>
+    </dl>
+
+    <p class="notice" id="erasure-export-warning">@T[ErasureTextKeys.ExportWarning]</p>
+
+    @if (Model.NoEmailNotice)
+    {
+        <p class="notice" id="erasure-no-email-notice">@T[ErasureTextKeys.NoEmailNotice]</p>
+    }
+</section>
+
+<form method="post" action="@SignInRoutes.ErasureEraseOf(Model.ParticipantId)" id="erasure-form">
+    @Html.AntiForgeryToken()
+    <label>
+        <input type="checkbox" name="irreversibleConfirmed" value="true" />
+        @T[ErasureTextKeys.Mark]
+    </label>
+    @if (Model.MarkError is not null)
+    {
+        <p class="field-error" id="erasure-mark-error">@T[ErasureTextKeys.MarkRequired]</p>
+    }
+    <button type="submit" disabled="@(Model.ReadOnlyNotice ? "disabled" : null)">@T[ErasureTextKeys.EraseButton]</button>
+</form>
+
+<p><a href="@SignInRoutes.Erasure">@T[ErasureTextKeys.Title]</a></p>

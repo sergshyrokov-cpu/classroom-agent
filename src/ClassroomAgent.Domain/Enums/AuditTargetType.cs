@@ -17,4 +17,10 @@ public enum AuditTargetType
 
     /// <summary>US-028 db-design §3.2: the course whose journal was exported.</summary>
     Course,
+
+    /// <summary>US-038 db-design §9.1: the erased participant — a bare id, the row no longer exists by design.</summary>
+    ClassroomParticipant,
+
+    /// <summary>US-038 db-design §9.1: the lifted exclusion — a bare id, the row no longer exists by design.</summary>
+    ErasedParticipant,
 }

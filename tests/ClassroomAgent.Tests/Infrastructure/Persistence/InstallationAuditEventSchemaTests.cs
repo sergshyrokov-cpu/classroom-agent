@@ -32,7 +32,14 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
                 "actor_id bigint - YES -",
                 "actor_role character varying 16 YES -",
                 "actor_type character varying 16 NO -",
+
+                // US-038 adds the five counts of a succeeded erasure (US-038 db-design §9.2).
+                "cleared_course_owners integer - YES -",
+                "cleared_meet_organizers integer - YES -",
                 "created_at timestamp with time zone - NO -",
+                "erased_meet_participations integer - YES -",
+                "erased_memberships integer - YES -",
+                "erased_submissions integer - YES -",
                 "export_format character varying 8 YES -",
 
                 // US-044 adds the meeting id and the meetings count of a Meet export (US-044 db-design §3).
@@ -102,6 +109,13 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
                 "ck_audit_event_actor_role",
                 "ck_audit_event_actor_role_value",
                 "ck_audit_event_actor_type",
+
+                // US-038 adds five constraints on the erasure and lifting rows (US-038 db-design §9.3).
+                "ck_audit_event_erasure_counts",
+                "ck_audit_event_erasure_counts_absent",
+                "ck_audit_event_erasure_counts_non_negative",
+                "ck_audit_event_erasure_shape",
+                "ck_audit_event_exclusion_lift_shape",
                 "ck_audit_event_export_columns",
                 "ck_audit_event_export_columns_absent",
                 "ck_audit_event_export_shape",

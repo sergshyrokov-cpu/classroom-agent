@@ -52,6 +52,12 @@ public sealed class ClassroomAgentDbContext(DbContextOptions<ClassroomAgentDbCon
     /// <summary>US-032 entity model §1: a meeting code linked to a course, or marked "not a course" (db-design §2).</summary>
     public DbSet<MeetingCodeLink> MeetingCodeLinks => Set<MeetingCodeLink>();
 
+    /// <summary>US-038 entity model §1: the exclusions left by erasures (db-design §2).</summary>
+    public DbSet<ErasedParticipant> ErasedParticipants => Set<ErasedParticipant>();
+
+    /// <summary>US-038 entity model §2: the installation's one salt for email fingerprints (db-design §3).</summary>
+    public DbSet<ErasureSalt> ErasureSalts => Set<ErasureSalt>();
+
     /// <summary>US-020 db-design §2: the collation the course list orders and searches under.</summary>
     public const string CourseListCollation = "course_name_uk";
 
@@ -73,6 +79,8 @@ public sealed class ClassroomAgentDbContext(DbContextOptions<ClassroomAgentDbCon
         modelBuilder.ApplyConfiguration(new MeetSessionConfiguration());
         modelBuilder.ApplyConfiguration(new MeetParticipationConfiguration());
         modelBuilder.ApplyConfiguration(new MeetingCodeLinkConfiguration());
+        modelBuilder.ApplyConfiguration(new ErasedParticipantConfiguration());
+        modelBuilder.ApplyConfiguration(new ErasureSaltConfiguration());
 
         // US-020 db-design §2.1: Ukrainian alphabetical order and case folding for the course list's queries only — applied
         // to no column. Deterministic, because PostgreSQL refuses pattern matching under a non-deterministic collation.

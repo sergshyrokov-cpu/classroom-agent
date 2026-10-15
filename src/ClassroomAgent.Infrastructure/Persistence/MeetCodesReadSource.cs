@@ -84,7 +84,8 @@ public sealed class MeetCodesReadSource(ClassroomAgentDbContext db) : IMeetCodes
             .GroupBy(o => o.MeetingCode, StringComparer.Ordinal)
             .ToDictionary(
                 g => g.Key,
-                g => g.Select(o => o.OrganizerEmail).OrderBy(e => e, StringComparer.Ordinal).ToList(),
+                // US-038 spec I-9: an erased or excluded organizer is not listed.
+                g => g.Select(o => o.OrganizerEmail).OfType<string>().OrderBy(e => e, StringComparer.Ordinal).ToList(),
                 StringComparer.Ordinal);
 
         // Connections per code: distinct lowered emails with a count each, so the page never pulls individual connections.

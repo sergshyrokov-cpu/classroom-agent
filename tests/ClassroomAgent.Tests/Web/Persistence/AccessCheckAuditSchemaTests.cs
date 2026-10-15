@@ -121,6 +121,10 @@ public sealed class AccessCheckAuditSchemaTests(PostgreSqlFixture database)
                 "course",
                 "course_membership",
                 "course_work",
+
+                // US-038 adds erased_participant and erasure_salt (US-038 db-design §2, §3).
+                "erased_participant",
+                "erasure_salt",
                 "legitimacy_state",
                 "meet_participation",
                 "meet_session",
@@ -152,7 +156,12 @@ public sealed class AccessCheckAuditSchemaTests(PostgreSqlFixture database)
         Assert.Equal(
             new[]
             {
-                "action", "actor_id", "actor_role", "actor_type", "created_at",
+                "action", "actor_id", "actor_role", "actor_type",
+
+                // US-038 db-design §9.2: the five counts of a succeeded erasure.
+                "cleared_course_owners", "cleared_meet_organizers",
+                "created_at",
+                "erased_meet_participations", "erased_memberships", "erased_submissions",
 
                 // US-028 db-design: the six columns of the journal export's row.
                 // US-044 db-design §3.2: the meeting id and the meeting count of the Meet export rows.

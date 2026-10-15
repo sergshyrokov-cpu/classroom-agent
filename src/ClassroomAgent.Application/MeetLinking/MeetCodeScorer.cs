@@ -22,10 +22,10 @@ public static class MeetCodeScorer
 
         // FR-003 item 2: a course is a candidate when an organizer was its teacher on the date of a meeting they organized.
         var candidates = new SortedSet<long>();
-        foreach (var meeting in input.Meetings)
+        foreach (var meeting in input.Meetings.Where(m => m.OrganizerEmail is not null))
         {
             var date = RosterOnDate.LocalDate(meeting.StartedAt, zone);
-            foreach (var membership in byEmail[meeting.OrganizerEmail])
+            foreach (var membership in byEmail[meeting.OrganizerEmail!])
             {
                 if (membership.Role == ClassroomRole.Teacher && RosterOnDate.Covers(membership, date, zone))
                 {
@@ -36,7 +36,7 @@ public static class MeetCodeScorer
 
         // FR-003 item 3: the distinct domain accounts of all the code's meetings, organizers excluded, each with the
         // dates of the meetings they joined.
-        var organizers = new HashSet<string>(input.Meetings.Select(m => m.OrganizerEmail), Emails);
+        var organizers = new HashSet<string>(input.Meetings.Select(m => m.OrganizerEmail).OfType<string>(), Emails);
         var datesByAccount = new Dictionary<string, HashSet<DateOnly>>(Emails);
         foreach (var meeting in input.Meetings)
         {

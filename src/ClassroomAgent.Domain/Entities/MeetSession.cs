@@ -31,7 +31,8 @@ public sealed class MeetSession
 
     public string MeetingCode { get; private set; } = string.Empty;
 
-    public string OrganizerEmail { get; private set; } = string.Empty;
+    /// <summary>Null when the organizer was erased or is excluded (US-038 spec FR-007, FR-012, I-9): "organizer unknown".</summary>
+    public string? OrganizerEmail { get; private set; }
 
     public DateTimeOffset StartedAt { get; private set; }
 
@@ -43,16 +44,22 @@ public sealed class MeetSession
 
     public DateTimeOffset UpdatedAt { get; private set; }
 
-    /// <summary>A new meeting with its first connection; start and end from it (spec FR-005, FR-008).</summary>
+    /// <summary>
+    /// A new meeting with its first connection; start and end from it (spec FR-005, FR-008). A null organizer is an
+    /// excluded one (US-038 spec FR-012).
+    /// </summary>
     public static MeetSession Store(
         string conferenceId,
         string meetingCode,
-        string organizerEmail,
+        string? organizerEmail,
         MeetConnection firstConnection)
     {
         CheckValue(conferenceId, 1, ConferenceIdMaxLength, nameof(conferenceId));
         CheckValue(meetingCode, 1, MeetingCodeMaxLength, nameof(meetingCode));
-        CheckValue(organizerEmail, 3, EmailMaxLength, nameof(organizerEmail));
+        if (organizerEmail is not null)
+        {
+            CheckValue(organizerEmail, 3, EmailMaxLength, nameof(organizerEmail));
+        }
 
         var session = new MeetSession
         {
@@ -85,6 +92,12 @@ public sealed class MeetSession
         StartedAt = _participations.Min(p => p.JoinedAt);
         EndedAt = _participations.Max(p => p.LeftAt);
     }
+
+    /// <summary>
+    /// US-038 spec FR-007: the organizer was erased — the meeting stays, with an unknown organizer. The one change the
+    /// organizer can undergo after storing (I-4); it never regains an email.
+    /// </summary>
+    public void ClearOrganizer() => OrganizerEmail = null;
 
     private static void CheckValue(string value, int minLength, int maxLength, string name)
     {

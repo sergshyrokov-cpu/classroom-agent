@@ -50,6 +50,9 @@ public sealed class CourseConfiguration : IEntityTypeConfiguration<Course>
         builder.Property(c => c.UpdatedAt).IsRequired();
 
         builder.HasIndex(c => c.GoogleId).IsUnique().HasDatabaseName("uq_course_google_id");
+
+        // US-038 db-design §6: the lookup key of the erasure's count and clearing of an owner (PC-7).
+        builder.HasIndex(c => c.OwnerGoogleId).HasDatabaseName("ix_course_owner_google_id");
     }
 
     private static string StateCode(CourseState value) => value switch

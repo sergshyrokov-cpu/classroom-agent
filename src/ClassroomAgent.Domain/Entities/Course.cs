@@ -129,6 +129,9 @@ public sealed class Course
         Apply(state, details);
     }
 
+    /// <summary>US-038 spec FR-007: the owner was erased — the course stays, without an owner.</summary>
+    public void ClearOwner() => OwnerGoogleId = null;
+
     /// <summary>
     /// A value longer than its bound is <b>cut, not refused</b> (VR-002): a verbose course description must not
     /// make a run fail at the commit — the <c>SyncState.LastError</c> precedent.

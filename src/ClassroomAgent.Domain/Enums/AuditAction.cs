@@ -92,4 +92,10 @@ public enum AuditAction
 
     /// <summary>US-044 spec FR-013: report 4 of one meeting was exported to a file.</summary>
     MeetMeetingExported,
+
+    /// <summary>US-038 spec FR-013: an Admin erased all data of one participant on request.</summary>
+    ParticipantErased,
+
+    /// <summary>US-038 spec FR-013: an Admin lifted one erasure exclusion.</summary>
+    ErasureExclusionLifted,
 }

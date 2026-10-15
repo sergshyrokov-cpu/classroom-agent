@@ -30,7 +30,10 @@ public sealed class CourseWorkFailureTests
             world.Submissions,
             world.Retention,
             world.Meet,
-            world.MeetSessions);
+            world.MeetSessions,
+            world.Erasures,
+            world.Erasures,
+            world.Erasures);
 
     private static void SeedBothCourses(SyncWorld.ClassroomReader reader, DateTimeOffset now, bool secondCourseSubmissionsFail)
     {

@@ -171,9 +171,29 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(16)")
                         .HasColumnName("actor_type");
 
+                    b.Property<int?>("ClearedCourseOwners")
+                        .HasColumnType("integer")
+                        .HasColumnName("cleared_course_owners");
+
+                    b.Property<int?>("ClearedMeetOrganizers")
+                        .HasColumnType("integer")
+                        .HasColumnName("cleared_meet_organizers");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<int?>("ErasedMeetParticipations")
+                        .HasColumnType("integer")
+                        .HasColumnName("erased_meet_participations");
+
+                    b.Property<int?>("ErasedMemberships")
+                        .HasColumnType("integer")
+                        .HasColumnName("erased_memberships");
+
+                    b.Property<int?>("ErasedSubmissions")
+                        .HasColumnType("integer")
+                        .HasColumnName("erased_submissions");
 
                     b.Property<string>("ExportFormat")
                         .HasMaxLength(8)
@@ -290,7 +310,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                     b.ToTable("audit_event", null, t =>
                         {
-                            t.HasCheckConstraint("ck_audit_event_action", "action IN ('admin_sign_in', 'workspace_connection_saved', 'access_check_run', 'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', 'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run', 'synchronization_requested', 'report_template_created', 'report_template_changed', 'report_template_deleted', 'journal_exported', 'meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', 'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed', 'meet_reports_exported', 'meet_meeting_exported')");
+                            t.HasCheckConstraint("ck_audit_event_action", "action IN ('admin_sign_in', 'workspace_connection_saved', 'access_check_run', 'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', 'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run', 'synchronization_requested', 'report_template_created', 'report_template_changed', 'report_template_deleted', 'journal_exported', 'meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', 'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed', 'meet_reports_exported', 'meet_meeting_exported', 'participant_erased', 'erasure_exclusion_lifted')");
 
                             t.HasCheckConstraint("ck_audit_event_actor_id", "(actor_type = 'app_user') = (actor_id IS NOT NULL)");
 
@@ -299,6 +319,16 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_audit_event_actor_role_value", "actor_role IS NULL OR actor_role IN ('admin', 'dean')");
 
                             t.HasCheckConstraint("ck_audit_event_actor_type", "actor_type IN ('app_user', 'anonymous', 'system')");
+
+                            t.HasCheckConstraint("ck_audit_event_erasure_counts", "NOT (action = 'participant_erased' AND outcome = 'succeeded') OR (erased_memberships IS NOT NULL AND erased_submissions IS NOT NULL AND erased_meet_participations IS NOT NULL AND cleared_meet_organizers IS NOT NULL AND cleared_course_owners IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_audit_event_erasure_counts_absent", "(action = 'participant_erased' AND outcome = 'succeeded') OR (erased_memberships IS NULL AND erased_submissions IS NULL AND erased_meet_participations IS NULL AND cleared_meet_organizers IS NULL AND cleared_course_owners IS NULL)");
+
+                            t.HasCheckConstraint("ck_audit_event_erasure_counts_non_negative", "(erased_memberships IS NULL OR erased_memberships >= 0) AND (erased_submissions IS NULL OR erased_submissions >= 0) AND (erased_meet_participations IS NULL OR erased_meet_participations >= 0) AND (cleared_meet_organizers IS NULL OR cleared_meet_organizers >= 0) AND (cleared_course_owners IS NULL OR cleared_course_owners >= 0)");
+
+                            t.HasCheckConstraint("ck_audit_event_erasure_shape", "action <> 'participant_erased' OR (actor_type = 'app_user' AND actor_role = 'admin' AND (outcome = 'refused' OR (target_type = 'classroom_participant' AND target_id IS NOT NULL)))");
+
+                            t.HasCheckConstraint("ck_audit_event_exclusion_lift_shape", "action <> 'erasure_exclusion_lifted' OR (actor_type = 'app_user' AND actor_role = 'admin' AND (outcome = 'refused' OR (target_type = 'erased_participant' AND target_id IS NOT NULL)))");
 
                             t.HasCheckConstraint("ck_audit_event_export_columns", "(action = 'journal_exported') = (export_period_from IS NOT NULL AND export_period_to IS NOT NULL AND export_template_built_in IS NOT NULL AND export_rows IS NOT NULL AND export_format IS NOT NULL)");
 
@@ -348,7 +378,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_audit_event_target", "target_id IS NULL OR target_type IS NOT NULL");
 
-                            t.HasCheckConstraint("ck_audit_event_target_type_value", "target_type IS NULL OR target_type IN ('workspace_connection', 'app_user', 'report_template', 'course')");
+                            t.HasCheckConstraint("ck_audit_event_target_type_value", "target_type IS NULL OR target_type IN ('workspace_connection', 'app_user', 'report_template', 'course', 'classroom_participant', 'erased_participant')");
                         });
                 });
 
@@ -506,6 +536,9 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                     b.HasIndex("GoogleId")
                         .IsUnique()
                         .HasDatabaseName("uq_course_google_id");
+
+                    b.HasIndex("OwnerGoogleId")
+                        .HasDatabaseName("ix_course_owner_google_id");
 
                     b.ToTable("course", null, t =>
                         {
@@ -665,6 +698,100 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_course_work_max_points_non_negative", "max_points IS NULL OR max_points >= 0");
 
                             t.HasCheckConstraint("ck_course_work_resource", "resource IN ('course_work', 'course_work_material')");
+                        });
+                });
+
+            modelBuilder.Entity("ClassroomAgent.Domain.Entities.ErasedParticipant", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<byte[]>("EmailFingerprint")
+                        .HasColumnType("bytea")
+                        .HasColumnName("email_fingerprint");
+
+                    b.Property<DateTimeOffset>("ErasedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("erased_at");
+
+                    b.Property<string>("GoogleUserId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("google_user_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_erased_participant");
+
+                    b.HasIndex("EmailFingerprint")
+                        .HasDatabaseName("ix_erased_participant_email_fingerprint");
+
+                    b.HasIndex("GoogleUserId")
+                        .IsUnique()
+                        .HasDatabaseName("uq_erased_participant_google_user_id");
+
+                    b.ToTable("erased_participant", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_erased_participant_immutable", "updated_at = created_at");
+
+                            t.HasCheckConstraint("ck_erased_participant_values", "char_length(google_user_id) >= 1 AND (email_fingerprint IS NULL OR octet_length(email_fingerprint) = 32)");
+                        });
+                });
+
+            modelBuilder.Entity("ClassroomAgent.Domain.Entities.ErasureSalt", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("Singleton")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("singleton");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<byte[]>("Value")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("salt");
+
+                    b.HasKey("Id")
+                        .HasName("pk_erasure_salt");
+
+                    b.HasIndex("Singleton")
+                        .IsUnique()
+                        .HasDatabaseName("uq_erasure_salt_singleton");
+
+                    b.ToTable("erasure_salt", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_erasure_salt_immutable", "updated_at = created_at");
+
+                            t.HasCheckConstraint("ck_erasure_salt_singleton", "singleton");
+
+                            t.HasCheckConstraint("ck_erasure_salt_values", "octet_length(salt) = 32");
                         });
                 });
 
@@ -828,7 +955,6 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .HasColumnName("meeting_code");
 
                     b.Property<string>("OrganizerEmail")
-                        .IsRequired()
                         .HasMaxLength(254)
                         .HasColumnType("character varying(254)")
                         .HasColumnName("organizer_email");
@@ -858,7 +984,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_meet_session_ended_after_started", "ended_at >= started_at");
 
-                            t.HasCheckConstraint("ck_meet_session_values", "char_length(conference_id) >= 1 AND char_length(meeting_code) >= 1 AND char_length(organizer_email) >= 3");
+                            t.HasCheckConstraint("ck_meet_session_values", "char_length(conference_id) >= 1 AND char_length(meeting_code) >= 1 AND (organizer_email IS NULL OR char_length(organizer_email) >= 3)");
                         });
                 });
 

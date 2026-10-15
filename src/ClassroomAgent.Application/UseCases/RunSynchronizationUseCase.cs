@@ -49,6 +49,9 @@ public sealed class RunSynchronizationUseCase(
     RetentionSettings retention,
     IMeetReportsReader meet,
     IMeetSessionRepository meetSessions,
+    IErasureFence fence,
+    IErasedParticipantRepository exclusions,
+    IErasureSaltStore salts,
     LinkMeetCodesStep? linking = null)
 {
     /// <summary>The operation name the read-only refusal carries (US-007 spec VR-001).</summary>
@@ -214,7 +217,12 @@ public sealed class RunSynchronizationUseCase(
         MeetProgress progress,
         CancellationToken cancellationToken)
     {
+        // US-038 spec FR-011, db-design §7.3: the shared fence first, so an erasure committing meanwhile is waited for
+        // and its exclusion, read after the fence, is seen by this page's write.
+        await fence.EnterAsWriterAsync(cancellationToken);
+
         var conferences = events.GroupBy(e => e.ConferenceId!, StringComparer.Ordinal).ToList();
+        var excluded = await ExcludedEmailsAsync(conferences, schoolDomain, progress, cancellationToken);
         var stored = (await meetSessions.GetByConferenceIdsAsync(
                 conferences.Select(c => c.Key).ToList(),
                 cancellationToken))
@@ -237,18 +245,32 @@ public sealed class RunSynchronizationUseCase(
                     continue;
                 }
 
+                // US-038 spec FR-012: the meeting qualifies on the organizer as read; an excluded organizer is stored as
+                // none, and an excluded person's connections are not stored at all.
+                var connections = new[] { organizing }
+                    .Concat(progress.Release(conference.Key))
+                    .Concat(conference.Where(e => !ReferenceEquals(e, organizing)))
+                    .Where(e => !IsExcluded(ConnectionOf(e, schoolDomain).DomainEmail, excluded))
+                    .ToList();
+                if (connections.Count == 0)
+                {
+                    // Only excluded people took part: nothing of the meeting can be stored.
+                    continue;
+                }
+
+                var organizer = IsExcluded(organizing.OrganizerEmail, excluded) ? null : organizing.OrganizerEmail;
                 session = MeetSession.Store(
                     conference.Key,
                     organizing.MeetingCode!,
-                    organizing.OrganizerEmail!,
-                    ConnectionOf(organizing, schoolDomain));
+                    organizer,
+                    ConnectionOf(connections[0], schoolDomain));
                 meetSessions.Add(session);
                 stored[conference.Key] = session;
                 progress.SessionsAdded++;
                 progress.ParticipationsAdded++;
 
-                // The organizing event is already its first connection; the others of the run follow.
-                foreach (var other in progress.Release(conference.Key).Concat(conference.Where(e => !ReferenceEquals(e, organizing))))
+                // The first allowed event is already its first connection; the others of the run follow.
+                foreach (var other in connections.Skip(1))
                 {
                     Record(session, other, schoolDomain, progress);
                 }
@@ -256,7 +278,7 @@ public sealed class RunSynchronizationUseCase(
                 continue;
             }
 
-            foreach (var meetEvent in conference)
+            foreach (var meetEvent in conference.Where(e => !IsExcluded(ConnectionOf(e, schoolDomain).DomainEmail, excluded)))
             {
                 Record(session, meetEvent, schoolDomain, progress);
             }
@@ -264,6 +286,44 @@ public sealed class RunSynchronizationUseCase(
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
+
+    /// <summary>
+    /// US-038 spec FR-012, db-design §7.4: the normalized emails of this page — connections, organizers and the events
+    /// held from earlier pages for its conferences — whose fingerprint matches an exclusion, in one lookup. No salt yet:
+    /// no fingerprinted exclusion exists. A salt once found is kept for the run (it never changes); while there is none
+    /// it is read again on every page, because a first erasure may create it during the run.
+    /// </summary>
+    private async Task<IReadOnlySet<string>> ExcludedEmailsAsync(
+        List<IGrouping<string, MeetCallEndedEvent>> conferences,
+        string schoolDomain,
+        MeetProgress progress,
+        CancellationToken cancellationToken)
+    {
+        progress.Salt ??= await salts.FindAsync(cancellationToken);
+        if (progress.Salt is not { } salt)
+        {
+            return new HashSet<string>(StringComparer.Ordinal);
+        }
+
+        var emails = conferences
+            .SelectMany(c => c.Concat(progress.Peek(c.Key)))
+            .SelectMany(e => new[] { e.OrganizerEmail, ConnectionOf(e, schoolDomain).DomainEmail })
+            .Where(e => !string.IsNullOrWhiteSpace(e))
+            .Select(e => WorkspaceConnection.NormalizeEmail(e!))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        if (emails.Count == 0)
+        {
+            return new HashSet<string>(StringComparer.Ordinal);
+        }
+
+        var byFingerprint = emails.ToDictionary(e => EmailFingerprint.Of(e, salt));
+        var found = await exclusions.GetExcludedFingerprintsAsync(byFingerprint.Keys.ToList(), cancellationToken);
+        return found.Select(f => byFingerprint[f]).ToHashSet(StringComparer.Ordinal);
+    }
+
+    private static bool IsExcluded(string? email, IReadOnlySet<string> excluded) =>
+        !string.IsNullOrWhiteSpace(email) && excluded.Count > 0 && excluded.Contains(WorkspaceConnection.NormalizeEmail(email));
 
     /// <summary>Adds or updates one connection of a session, counted as new or updated (spec FR-009, FR-012).</summary>
     private static void Record(MeetSession session, MeetCallEndedEvent meetEvent, string schoolDomain, MeetProgress progress)
@@ -492,6 +552,10 @@ public sealed class RunSynchronizationUseCase(
         DateTimeOffset observedAt,
         CancellationToken cancellationToken)
     {
+        // US-038 spec FR-011, db-design §7.3: the shared fence first, so an erasure committing meanwhile is waited for
+        // and its exclusion, read after the fence, is seen by this course's write.
+        await fence.EnterAsWriterAsync(cancellationToken);
+
         // The upsert on the Google id: an already known course is updated in place and keeps its surrogate
         // identity, so everything referring to it still does (spec FR-008).
         var course = await courses.GetByGoogleIdAsync(snapshot.GoogleId, cancellationToken);
@@ -504,17 +568,31 @@ public sealed class RunSynchronizationUseCase(
             return CourseResult.AgedOut;
         }
 
+        // US-038 spec FR-012, db-design §7.4: the excluded among the course's owner, roster and submitters, in one
+        // lookup. They are skipped — not an error and not a failure — and the course keeps no excluded owner.
+        var excluded = await exclusions.GetExcludedGoogleUserIdsAsync(
+            RosterOf(roster).Select(p => p.Entry.GoogleUserId)
+                .Concat(submissionSnapshots.Select(s => s.GoogleUserId))
+                .Append(snapshot.Details.OwnerGoogleId)
+                .OfType<string>()
+                .Distinct(StringComparer.Ordinal)
+                .ToList(),
+            cancellationToken);
+        var details = snapshot.Details.OwnerGoogleId is { } owner && excluded.Contains(owner)
+            ? snapshot.Details with { OwnerGoogleId = null }
+            : snapshot.Details;
+
         if (course is null)
         {
-            course = Course.Import(snapshot.GoogleId, state, snapshot.Details);
+            course = Course.Import(snapshot.GoogleId, state, details);
             courses.Add(course);
         }
         else
         {
-            course.UpdateFrom(state, snapshot.Details);
+            course.UpdateFrom(state, details);
         }
 
-        var people = RosterOf(roster);
+        var people = RosterOf(roster).Where(p => !excluded.Contains(p.Entry.GoogleUserId)).ToList();
         var stored = await ResolveParticipantsAsync(people, cancellationToken);
         var existing = await memberships.GetByCourseAsync(course.Id, cancellationToken);
         var byParticipant = existing.ToDictionary(m => m.ParticipantId);
@@ -563,7 +641,7 @@ public sealed class RunSynchronizationUseCase(
         var unrecognised = await ImportSubmissionsAsync(
             course,
             storedItems,
-            submissionSnapshots,
+            submissionSnapshots.Where(s => !excluded.Contains(s.GoogleUserId)).ToList(),
             stored,
             observedAt,
             cancellationToken);
@@ -741,6 +819,13 @@ public sealed class RunSynchronizationUseCase(
             memberships.Add(membership);
         }
 
+        if (participant.Id == 0)
+        {
+            // A person first met here gets their generated identity now, inside the course's transaction, because the
+            // submission that follows refers to it (found by US-038 AC-011: it was inserted with participant id 0).
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
         return participant;
     }
 
@@ -862,6 +947,13 @@ public sealed class RunSynchronizationUseCase(
 
         public IReadOnlyList<MeetCallEndedEvent> Release(string conferenceId) =>
             _undecided.Remove(conferenceId, out var held) ? held : [];
+
+        /// <summary>The events held for a conference, left held (US-038: their emails are checked against exclusions).</summary>
+        public IReadOnlyList<MeetCallEndedEvent> Peek(string conferenceId) =>
+            _undecided.TryGetValue(conferenceId, out var held) ? held : [];
+
+        /// <summary>US-038 db-design §7.4: the installation's salt once found; it never changes afterwards.</summary>
+        public ErasureSalt? Salt { get; set; }
 
         public void Skip(MeetEventRejection reason, int count)
         {

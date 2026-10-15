@@ -224,6 +224,18 @@ public static class InstallationServices
         // §6) — and its background service, which shares SyncRunCoordinator with synchronization (spec FR-014).
         services.AddScoped<IRetentionPurgeStore, RetentionPurgeStore>();
         services.AddScoped<RunRetentionPurgeUseCase>();
+
+        // US-038 entity model §7 … §9: the erasure of one participant, the lifting of an exclusion, their two page
+        // queries, and the write fence and exclusion lookups synchronization and the Meet load share.
+        services.AddScoped<IErasureFence, ErasureFence>();
+        services.AddScoped<IErasureSaltStore, ErasureSaltStore>();
+        services.AddScoped<IErasedParticipantRepository, ErasedParticipantRepository>();
+        services.AddScoped<IParticipantErasureStore, ParticipantErasureStore>();
+        services.AddScoped<IParticipantErasureReadSource, ParticipantErasureReadSource>();
+        services.AddScoped<SearchParticipantsForErasureQuery>();
+        services.AddScoped<GetErasureConfirmationQuery>();
+        services.AddScoped<EraseParticipantUseCase>();
+        services.AddScoped<LiftErasureExclusionUseCase>();
         services.AddHostedService<StartupSelfCheckBackgroundService>();
         services.AddHostedService<LegitimacyCheckBackgroundService>();
         services.AddHostedService<SynchronizationBackgroundService>();

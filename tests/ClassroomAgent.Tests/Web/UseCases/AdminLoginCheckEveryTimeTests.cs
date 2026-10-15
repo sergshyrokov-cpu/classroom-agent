@@ -114,6 +114,10 @@ public sealed class AdminLoginCheckEveryTimeTests(PostgreSqlFixture database)
                 "course",
                 "course_membership",
                 "course_work",
+
+                // US-038 adds erased_participant and erasure_salt (US-038 db-design §2, §3).
+                "erased_participant",
+                "erasure_salt",
                 "legitimacy_state",
                 "meet_participation",
                 "meet_session",

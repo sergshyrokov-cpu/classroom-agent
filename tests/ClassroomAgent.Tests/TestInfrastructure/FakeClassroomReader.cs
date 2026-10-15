@@ -42,12 +42,14 @@ public sealed class FakeClassroomReader : IClassroomReader
         IEnumerable<RosterEntry>? teachers = null,
         IEnumerable<RosterEntry>? students = null,
         string? description = null,
-        DateTimeOffset? updateTime = null)
+        DateTimeOffset? updateTime = null,
+        string? ownerGoogleId = null)
     {
+        // US-038: the owner, so the exclusion tests can prove an excluded owner is stored as none (spec FR-012).
         _courses.Add(new CourseSnapshot(
             googleId,
             state,
-            new CourseDetails(name, null, null, description, null, null, null, updateTime, null, null, null, null)));
+            new CourseDetails(name, null, null, description, null, ownerGoogleId, null, updateTime, null, null, null, null)));
         _rosters[googleId] = new CourseRoster((teachers ?? []).ToList(), (students ?? []).ToList());
         return this;
     }

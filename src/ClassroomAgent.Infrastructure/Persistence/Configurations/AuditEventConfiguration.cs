@@ -34,7 +34,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 + "'report_template_deleted', 'journal_exported', "
                 + "'meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', "
                 + "'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed', "
-                + "'meet_reports_exported', 'meet_meeting_exported')");
+                + "'meet_reports_exported', 'meet_meeting_exported', 'participant_erased', 'erasure_exclusion_lifted')");
 
             // US-009 db-design §4.1: a refused action names WHAT was refused without naming a row that was never
             // created, so a target type without an id is now legal. An id without a type — an identifier belonging
@@ -42,7 +42,8 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
             table.HasCheckConstraint("ck_audit_event_target", "target_id IS NULL OR target_type IS NOT NULL");
             table.HasCheckConstraint(
                 "ck_audit_event_target_type_value",
-                "target_type IS NULL OR target_type IN ('workspace_connection', 'app_user', 'report_template', 'course')");
+                "target_type IS NULL OR target_type IN ('workspace_connection', 'app_user', 'report_template', 'course', "
+                + "'classroom_participant', 'erased_participant')");
             table.HasCheckConstraint("ck_audit_event_outcome", "outcome IN ('succeeded', 'refused')");
             table.HasCheckConstraint(
                 "ck_audit_event_refusal_category",
@@ -184,6 +185,34 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
             table.HasCheckConstraint(
                 "ck_audit_event_purge_meet_code_links",
                 "(purged_meet_code_links IS NULL OR (action = 'retention_purge_run' AND purged_meet_code_links >= 0))");
+
+            // US-038 db-design §9.3: the five erasure counts belong to a succeeded erasure — all of them there, none
+            // anywhere else, never negative; an erasure and a lifting are an Admin's, and a succeeded one names its row.
+            table.HasCheckConstraint(
+                "ck_audit_event_erasure_counts",
+                "NOT (action = 'participant_erased' AND outcome = 'succeeded') OR (erased_memberships IS NOT NULL "
+                + "AND erased_submissions IS NOT NULL AND erased_meet_participations IS NOT NULL "
+                + "AND cleared_meet_organizers IS NOT NULL AND cleared_course_owners IS NOT NULL)");
+            table.HasCheckConstraint(
+                "ck_audit_event_erasure_counts_absent",
+                "(action = 'participant_erased' AND outcome = 'succeeded') OR (erased_memberships IS NULL "
+                + "AND erased_submissions IS NULL AND erased_meet_participations IS NULL "
+                + "AND cleared_meet_organizers IS NULL AND cleared_course_owners IS NULL)");
+            table.HasCheckConstraint(
+                "ck_audit_event_erasure_counts_non_negative",
+                "(erased_memberships IS NULL OR erased_memberships >= 0) "
+                + "AND (erased_submissions IS NULL OR erased_submissions >= 0) "
+                + "AND (erased_meet_participations IS NULL OR erased_meet_participations >= 0) "
+                + "AND (cleared_meet_organizers IS NULL OR cleared_meet_organizers >= 0) "
+                + "AND (cleared_course_owners IS NULL OR cleared_course_owners >= 0)");
+            table.HasCheckConstraint(
+                "ck_audit_event_erasure_shape",
+                "action <> 'participant_erased' OR (actor_type = 'app_user' AND actor_role = 'admin' "
+                + "AND (outcome = 'refused' OR (target_type = 'classroom_participant' AND target_id IS NOT NULL)))");
+            table.HasCheckConstraint(
+                "ck_audit_event_exclusion_lift_shape",
+                "action <> 'erasure_exclusion_lifted' OR (actor_type = 'app_user' AND actor_role = 'admin' "
+                + "AND (outcome = 'refused' OR (target_type = 'erased_participant' AND target_id IS NOT NULL)))");
         });
 
         builder.HasKey(e => e.Id).HasName("pk_audit_event");
@@ -223,6 +252,13 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         builder.Property(e => e.PurgedMeetSessions);
         builder.Property(e => e.PurgedMeetParticipations);
         builder.Property(e => e.PurgedMeetCodeLinks);
+
+        // US-038 db-design §9.2: the counts of a succeeded erasure.
+        builder.Property(e => e.ErasedMemberships);
+        builder.Property(e => e.ErasedSubmissions);
+        builder.Property(e => e.ErasedMeetParticipations);
+        builder.Property(e => e.ClearedMeetOrganizers);
+        builder.Property(e => e.ClearedCourseOwners);
 
         // US-032 db-design §3.2: a code and bare course ids (no foreign key, PC-11).
         builder.Property(e => e.MeetCode).HasMaxLength(MeetSession.MeetingCodeMaxLength);
@@ -321,6 +357,8 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         AuditAction.MeetCodeMarkRemoved => "meet_code_mark_removed",
         AuditAction.MeetReportsExported => "meet_reports_exported",
         AuditAction.MeetMeetingExported => "meet_meeting_exported",
+        AuditAction.ParticipantErased => "participant_erased",
+        AuditAction.ErasureExclusionLifted => "erasure_exclusion_lifted",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -349,6 +387,8 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         "meet_code_mark_removed" => AuditAction.MeetCodeMarkRemoved,
         "meet_reports_exported" => AuditAction.MeetReportsExported,
         "meet_meeting_exported" => AuditAction.MeetMeetingExported,
+        "participant_erased" => AuditAction.ParticipantErased,
+        "erasure_exclusion_lifted" => AuditAction.ErasureExclusionLifted,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 
@@ -359,6 +399,8 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         AuditTargetType.AppUser => "app_user",
         AuditTargetType.ReportTemplate => "report_template",
         AuditTargetType.Course => "course",
+        AuditTargetType.ClassroomParticipant => "classroom_participant",
+        AuditTargetType.ErasedParticipant => "erased_participant",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -368,6 +410,8 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         "app_user" => AuditTargetType.AppUser,
         "report_template" => AuditTargetType.ReportTemplate,
         "course" => AuditTargetType.Course,
+        "classroom_participant" => AuditTargetType.ClassroomParticipant,
+        "erased_participant" => AuditTargetType.ErasedParticipant,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 

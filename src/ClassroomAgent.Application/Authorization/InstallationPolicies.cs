@@ -94,6 +94,13 @@ public static class InstallationPolicies
     public const string ManageDeanAccounts = nameof(ManageDeanAccounts);
 
     /// <summary>
+    /// US-038 spec FR-015: the erasure page, its search and confirmation, the erasure and the lifting of an exclusion.
+    /// Admin only — the matrix row is "Удаление всех данных участника по письменному запросу школы и снятие
+    /// исключения", ✔ Admin, ✘ Dean (<c>trebovaniya.md</c> §2 v93).
+    /// </summary>
+    public const string EraseParticipantData = nameof(EraseParticipantData);
+
+    /// <summary>
     /// US-012 spec FR-016: a Dean changing their own password. Dean only — an Admin has no local password at
     /// all (SC-2), so the page answers 403 to one.
     /// </summary>

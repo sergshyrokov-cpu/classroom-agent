@@ -43,7 +43,10 @@ public sealed class CourseWorkImportTests
             world.Submissions,
             world.Retention,
             world.Meet,
-            world.MeetSessions);
+            world.MeetSessions,
+            world.Erasures,
+            world.Erasures,
+            world.Erasures);
 
     /// <summary>AC-001, FR-003: both Classroom resources of a course are imported into the one table (OD-008).</summary>
     [Fact]

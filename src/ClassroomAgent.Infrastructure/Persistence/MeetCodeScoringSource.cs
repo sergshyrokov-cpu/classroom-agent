@@ -59,6 +59,7 @@ public sealed class MeetCodeScoringSource(ClassroomAgentDbContext db) : IMeetCod
             .ToDictionary(g => g.Key, g => (IReadOnlyList<string>)g.Select(p => p.Email).ToList());
 
         var lowered = sessions.Select(s => s.OrganizerEmail)
+            .OfType<string>()
             .Concat(participations.Select(p => p.Email))
             .Select(e => e.ToLowerInvariant())
             .Distinct(StringComparer.Ordinal)
@@ -90,7 +91,11 @@ public sealed class MeetCodeScoringSource(ClassroomAgentDbContext db) : IMeetCod
             var relevant = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var meeting in meetings)
             {
-                relevant.Add(meeting.OrganizerEmail);
+                if (meeting.OrganizerEmail is not null)
+                {
+                    relevant.Add(meeting.OrganizerEmail);
+                }
+
                 relevant.UnionWith(meeting.ParticipantEmails);
             }
 

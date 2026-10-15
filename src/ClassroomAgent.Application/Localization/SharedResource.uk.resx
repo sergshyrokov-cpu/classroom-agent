@@ -520,4 +520,41 @@
   <data name="PageSearchHint.Ordinary" xml:space="preserve"><value>Пошук на сторінці: Ctrl+F (на Mac — ⌘F), на телефоні — меню браузера → «Знайти на сторінці».</value></data>
   <data name="PageSearchHint.CourseList" xml:space="preserve"><value>Курс шукайте в полі «Пошук за назвою або розділом» нижче — воно шукає в усьому списку; Ctrl+F (на Mac — ⌘F) знаходить лише показані рядки.</value></data>
   <data name="PageSearchHint.PagedList" xml:space="preserve"><value>Ctrl+F (на Mac — ⌘F; на телефоні — меню браузера → «Знайти на сторінці») шукає лише серед показаних рядків; решта — на наступних сторінках списку (кнопки внизу).</value></data>
+  <data name="Erasure.Title" xml:space="preserve"><value>Видалення персональних даних</value></data>
+  <data name="Erasure.NavigationEntry" xml:space="preserve"><value>Видалення даних людини за запитом</value></data>
+  <data name="Erasure.Search.Label" xml:space="preserve"><value>Електронна пошта або частина імені</value></data>
+  <data name="Erasure.Search.Button" xml:space="preserve"><value>Знайти</value></data>
+  <data name="Erasure.Search.NoneFound" xml:space="preserve"><value>Нікого не знайдено.</value></data>
+  <data name="Erasure.Search.Truncated" xml:space="preserve"><value>Показано перші 50 збігів. Уточніть запит.</value></data>
+  <data name="Erasure.Search.NoName" xml:space="preserve"><value>без імені</value></data>
+  <data name="Erasure.Search.NoEmail" xml:space="preserve"><value>без електронної пошти</value></data>
+  <data name="Erasure.Search.TeacherCourses" xml:space="preserve"><value>Курсів як викладач</value></data>
+  <data name="Erasure.Search.StudentCourses" xml:space="preserve"><value>Курсів як учень</value></data>
+  <data name="Erasure.Search.Error.TermRequired" xml:space="preserve"><value>Введіть електронну пошту або частину імені.</value></data>
+  <data name="Erasure.Search.Error.TermTooShort" xml:space="preserve"><value>Введіть щонайменше 2 символи.</value></data>
+  <data name="Erasure.Search.Error.TermTooLong" xml:space="preserve"><value>Запит задовгий: не більше 254 символів.</value></data>
+  <data name="Erasure.Lift.Title" xml:space="preserve"><value>Зняти виключення</value></data>
+  <data name="Erasure.Lift.Label" xml:space="preserve"><value>Електронна пошта людини</value></data>
+  <data name="Erasure.Lift.Button" xml:space="preserve"><value>Зняти виключення</value></data>
+  <data name="Erasure.Lift.NoExclusion" xml:space="preserve"><value>Для цієї адреси виключення немає.</value></data>
+  <data name="Erasure.Lift.Error.EmailRequired" xml:space="preserve"><value>Введіть електронну пошту.</value></data>
+  <data name="Erasure.Lift.Error.EmailTooLong" xml:space="preserve"><value>Адреса задовга: не більше 254 символів.</value></data>
+  <data name="Erasure.Lift.Error.EmailInvalid" xml:space="preserve"><value>Введіть адресу у вигляді ім'я@домен.</value></data>
+  <data name="Erasure.Message.Erased" xml:space="preserve"><value>Дані людини видалено.</value></data>
+  <data name="Erasure.Message.ExclusionLifted" xml:space="preserve"><value>Виключення знято. Наступна синхронізація завантажить людину як нову.</value></data>
+  <data name="Erasure.ReadOnlyNotice" xml:space="preserve"><value>Інсталяція працює лише на читання: видалення даних і зняття виключення недоступні.</value></data>
+  <data name="Erasure.Confirmation.Title" xml:space="preserve"><value>Підтвердження видалення даних</value></data>
+  <data name="Erasure.Confirmation.Courses" xml:space="preserve"><value>Курси</value></data>
+  <data name="Erasure.Confirmation.Submissions" xml:space="preserve"><value>Здані роботи</value></data>
+  <data name="Erasure.Confirmation.Grades" xml:space="preserve"><value>Оцінки</value></data>
+  <data name="Erasure.Confirmation.MeetParticipations" xml:space="preserve"><value>Участь у зустрічах Meet</value></data>
+  <data name="Erasure.Confirmation.OrganizedMeetings" xml:space="preserve"><value>Організовані зустрічі</value></data>
+  <data name="Erasure.Confirmation.OwnedCourses" xml:space="preserve"><value>Курси, власником яких є людина</value></data>
+  <data name="Erasure.Confirmation.ExportWarning" xml:space="preserve"><value>Файли, вже вивантажені з програми (журнали, звіти), програма видалити не може.</value></data>
+  <data name="Erasure.Confirmation.NoEmailNotice" xml:space="preserve"><value>У людини немає електронної пошти: її участь у Meet не можна визначити, а виключення не можна буде зняти за адресою.</value></data>
+  <data name="Erasure.Confirmation.Mark" xml:space="preserve"><value>Я розумію, що видалення незворотне</value></data>
+  <data name="Erasure.Confirmation.Button" xml:space="preserve"><value>Видалити</value></data>
+  <data name="Erasure.Confirmation.MarkRequired" xml:space="preserve"><value>Підтвердіть, що видалення незворотне.</value></data>
+  <data name="Erasure.Role.Teacher" xml:space="preserve"><value>викладач</value></data>
+  <data name="Erasure.Role.Student" xml:space="preserve"><value>учень</value></data>
 </root>

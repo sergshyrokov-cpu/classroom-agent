@@ -62,7 +62,8 @@ internal static class MeetReportRules
         var date = RosterOnDate.LocalDate(meeting.StartedAt, zone);
         var teachers = OnRoster(members, courseId, ClassroomRole.Teacher, date, zone);
         var students = OnRoster(members, courseId, ClassroomRole.Student, date, zone);
-        var organizer = Lower(meeting.OrganizerEmail);
+        // US-038 spec I-9: an unknown organizer matches no connection and is not reported as "not a course teacher".
+        var organizer = meeting.OrganizerEmail is null ? null : Lower(meeting.OrganizerEmail);
 
         var lines = new List<PersonLine>();
         var otherCount = 0;
@@ -85,7 +86,7 @@ internal static class MeetReportRules
                 : null;
             if (mark is { } identified)
             {
-                var email = identified == MeetParticipantMark.Organizer ? meeting.OrganizerEmail : group.First().Email!;
+                var email = identified == MeetParticipantMark.Organizer ? meeting.OrganizerEmail! : group.First().Email!;
                 lines.Add(new PersonLine(group.Key, email, identified, Math.Min(group.Sum(c => (long)c.DurationSeconds), duration)));
             }
             else
@@ -95,12 +96,20 @@ internal static class MeetReportRules
             }
         }
 
-        return new MeetingFacts(meeting, duration, !teachers.Contains(organizer), lines, otherCount, otherSeconds);
+        return new MeetingFacts(
+            meeting,
+            duration,
+            organizer is not null && !teachers.Contains(organizer),
+            lines,
+            otherCount,
+            otherSeconds);
     }
 
     /// <summary>Spec FR-011, OD-012: the participant's full name as Google gave it, with the email beside it.</summary>
-    internal static PersonRef Person(string email, IReadOnlyDictionary<string, MeetReportPersonRecord> people) =>
-        new(Name(people.TryGetValue(Lower(email), out var person) ? person.FullName : null), email);
+    internal static PersonRef Person(string? email, IReadOnlyDictionary<string, MeetReportPersonRecord> people) =>
+        email is null
+            ? new PersonRef(null, null) // US-038 spec I-9: the organizer was erased or is excluded
+            : new PersonRef(Name(people.TryGetValue(Lower(email), out var person) ? person.FullName : null), email);
 
     /// <summary>A name that is blank counts as no name (spec I-12).</summary>
     internal static string? Name(string? fullName) => string.IsNullOrWhiteSpace(fullName) ? null : fullName;

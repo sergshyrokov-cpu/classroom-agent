@@ -1,8 +1,11 @@
 namespace ClassroomAgent.Application.MeetLinking;
 
-/// <summary>One stored meeting of a code: organizer, start and the emails of its domain-account participants (US-032 spec FR-003).</summary>
+/// <summary>
+/// One stored meeting of a code: organizer, start and the emails of its domain-account participants (US-032 spec FR-003).
+/// A null organizer was erased or is excluded (US-038 spec I-9): it makes no course a candidate.
+/// </summary>
 public sealed record MeetCodeMeeting(
     long MeetSessionId,
-    string OrganizerEmail,
+    string? OrganizerEmail,
     DateTimeOffset StartedAt,
     IReadOnlyList<string> ParticipantEmails);

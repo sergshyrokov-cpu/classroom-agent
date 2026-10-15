@@ -49,7 +49,7 @@ public sealed class CourseSchemaTests(PostgreSqlFixture database)
         Assert.Contains(columns, c => c.Name == "updated_at" && c.Nullable == "NO");
     }
 
-    /// <summary>db-design §3.1, §3.4: the primary key and the one unique index exist, and nothing else does.</summary>
+    /// <summary>db-design §3.1, §3.4: the primary key, the one unique index and the US-038 owner index exist, and nothing else does.</summary>
     [Fact]
     public async Task TheOnlyIndexes_AreThePrimaryKeyAndTheGoogleId()
     {
@@ -60,9 +60,11 @@ public sealed class CourseSchemaTests(PostgreSqlFixture database)
         var indexes = await InstallationSchemaQueries.IndexNamesAsync(host, CourseTestData.CourseTable, ct);
 
         Assert.Equal(CourseTestData.Constraints.CoursePrimaryKey, primaryKey);
+        // US-038 db-design §6 adds ix_course_owner_google_id, the lookup key of the erasure's count and clearing.
         Assert.Equal(
-            new[] { CourseTestData.Constraints.CoursePrimaryKey, CourseTestData.Constraints.CourseGoogleId },
-            indexes);
+            new[] { ErasureTestData.Names.CourseOwnerIndex, CourseTestData.Constraints.CoursePrimaryKey, CourseTestData.Constraints.CourseGoogleId }
+                .Order(StringComparer.Ordinal),
+            indexes.Order(StringComparer.Ordinal));
     }
 
     /// <summary>db-design §3.1, spec FR-008: the Google id is the upsert key, so a duplicate is rejected.</summary>

@@ -131,6 +131,38 @@ public static class SignInRoutes
     /// <summary>The key the US-012 message travels under in TempData — never a query parameter (the US-008 rule).</summary>
     public const string MessageTempDataKey = "DeanAccountMessage";
 
+    /// <summary>US-038 openapi: the erasure page with its search and lifting forms (api-design §2.1).</summary>
+    public const string Erasure = "/settings/erasure";
+
+    /// <summary>US-038 openapi: the search, answered directly so the term never enters an address (api-design §2.2).</summary>
+    public const string ErasureSearches = "/settings/erasure/searches";
+
+    /// <summary>US-038 openapi: the lifting of an exclusion by email (api-design §2.3).</summary>
+    public const string ErasureLiftings = "/settings/erasure/exclusion-liftings";
+
+    /// <summary>The route parameter of the participant pages (US-038 api-design §2.6).</summary>
+    public const string ErasureParticipantIdParameter = "participantId";
+
+    /// <summary>
+    /// US-038 openapi: the confirmation of one participant — the course card's constraint, so a malformed id falls to the
+    /// catch-all 404 (api-design §2.6).
+    /// </summary>
+    public const string ErasureConfirmation =
+        "/settings/erasure/participants/{" + ErasureParticipantIdParameter + ":regex(^[[0-9]]+$):length(1,19)}";
+
+    /// <summary>US-038 openapi: the erasure of one participant.</summary>
+    public const string ErasureErase = ErasureConfirmation + "/erasure";
+
+    /// <summary>The key the US-038 one-time message travels under in TempData — never a query parameter.</summary>
+    public const string ErasureMessageTempDataKey = "ErasureMessage";
+
+    /// <summary>The address of one participant's confirmation page.</summary>
+    public static string ErasureConfirmationOf(long participantId) =>
+        "/settings/erasure/participants/" + participantId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    /// <summary>The address one participant's erasure is posted to.</summary>
+    public static string ErasureEraseOf(long participantId) => ErasureConfirmationOf(participantId) + "/erasure";
+
     /// <summary>The key the refusal category travels under in TempData (api-design §2.2). Never a query parameter.</summary>
     public const string RefusalTempDataKey = "SignInRefusal";
 

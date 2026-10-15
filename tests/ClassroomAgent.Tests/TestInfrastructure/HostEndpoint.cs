@@ -54,6 +54,9 @@ public sealed partial record HostEndpoint(RouteEndpoint Endpoint)
             // US-012's {deanId:long}: the sample has to satisfy the route constraint, or the request is a 404
             // from routing and says nothing about the antiforgery token.
             "deanid" => "9999",
+
+            // US-038's {participantId}: digits only, for the same reason.
+            "participantid" => "9999",
             _ => "sample",
         });
 

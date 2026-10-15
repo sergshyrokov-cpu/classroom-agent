@@ -104,6 +104,21 @@ public sealed class AuditEvent
     /// <summary>US-032 db-design §3.2: links removed by a purge run; null for every other action and older purge rows.</summary>
     public int? PurgedMeetCodeLinks { get; private set; }
 
+    /// <summary>US-038 db-design §9.2: memberships deleted by a succeeded erasure; null for every other row.</summary>
+    public int? ErasedMemberships { get; private set; }
+
+    /// <summary>US-038 db-design §9.2: submissions deleted by a succeeded erasure; null for every other row.</summary>
+    public int? ErasedSubmissions { get; private set; }
+
+    /// <summary>US-038 db-design §9.2: Meet participations deleted by a succeeded erasure; null for every other row.</summary>
+    public int? ErasedMeetParticipations { get; private set; }
+
+    /// <summary>US-038 db-design §9.2: meetings whose organizer email a succeeded erasure cleared; null otherwise.</summary>
+    public int? ClearedMeetOrganizers { get; private set; }
+
+    /// <summary>US-038 db-design §9.2: courses whose owner a succeeded erasure cleared; null otherwise.</summary>
+    public int? ClearedCourseOwners { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -889,6 +904,112 @@ public sealed class AuditEvent
         }
 
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(courseId);
+    }
+
+    /// <summary>
+    /// US-038 spec FR-013: an Admin erased one participant — target the erased participant's internal id, and the
+    /// count of each kind of record deleted or cleared (db-design §9).
+    /// </summary>
+    public static AuditEvent ParticipantErased(
+        long adminId,
+        long participantId,
+        ErasureCounts counts,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        ArgumentNullException.ThrowIfNull(counts);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(participantId);
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = adminId,
+            ActorRole = AppRole.Admin,
+            Action = AuditAction.ParticipantErased,
+            TargetType = AuditTargetType.ClassroomParticipant,
+            TargetId = participantId,
+            Outcome = AuditOutcome.Succeeded,
+            RefusalCategory = null,
+            RequestId = requestId,
+            ErasedMemberships = counts.Memberships,
+            ErasedSubmissions = counts.Submissions,
+            ErasedMeetParticipations = counts.MeetParticipations,
+            ClearedMeetOrganizers = counts.ClearedMeetOrganizers,
+            ClearedCourseOwners = counts.ClearedCourseOwners,
+        };
+    }
+
+    /// <summary>US-038 spec FR-013: an Admin lifted one exclusion — target the exclusion's internal id.</summary>
+    public static AuditEvent ErasureExclusionLifted(
+        long adminId,
+        long exclusionId,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(exclusionId);
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = adminId,
+            ActorRole = AppRole.Admin,
+            Action = AuditAction.ErasureExclusionLifted,
+            TargetType = AuditTargetType.ErasedParticipant,
+            TargetId = exclusionId,
+            Outcome = AuditOutcome.Succeeded,
+            RefusalCategory = null,
+            RequestId = requestId,
+        };
+    }
+
+    /// <summary>
+    /// US-038 spec I-12: an erasure or a lifting refused in read-only mode. The action is one of the two; the category
+    /// is read-only mode; the participant id is named only for an erasure (db-design §9.4).
+    /// </summary>
+    public static AuditEvent ErasureRefused(
+        AuditAction action,
+        long adminId,
+        long? participantId,
+        AuditRefusalCategory category,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        if (action is not (AuditAction.ParticipantErased or AuditAction.ErasureExclusionLifted))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(action),
+                action,
+                "A refused erasure row carries the erasure or the lifting action.");
+        }
+
+        if (category is not AuditRefusalCategory.ReadOnlyMode)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(category),
+                category,
+                "A refused erasure or lifting carries the read-only category (US-038 spec FR-014).");
+        }
+
+        if (action == AuditAction.ErasureExclusionLifted && participantId is not null)
+        {
+            throw new ArgumentException("A refused lifting names no participant (db-design §9.4).", nameof(participantId));
+        }
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = adminId,
+            ActorRole = AppRole.Admin,
+            Action = action,
+            TargetType = participantId is null ? null : AuditTargetType.ClassroomParticipant,
+            TargetId = participantId,
+            Outcome = AuditOutcome.Refused,
+            RefusalCategory = category,
+            RequestId = requestId,
+        };
     }
 
     /// <summary>

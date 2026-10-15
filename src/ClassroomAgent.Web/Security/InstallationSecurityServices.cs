@@ -132,6 +132,12 @@ public static class InstallationSecurityServices
                 policy => policy.RequireAuthenticatedUser().RequireRole(
                     InstallationSession.RoleName(AppRole.Admin)));
 
+            // US-038 spec FR-015: erasing a participant's data and lifting an exclusion is the Admin's cell (v93).
+            options.AddPolicy(
+                InstallationPolicies.EraseParticipantData,
+                policy => policy.RequireAuthenticatedUser().RequireRole(
+                    InstallationSession.RoleName(AppRole.Admin)));
+
             // US-012 spec FR-016: changing one's own password is the Dean's cell — an Admin has no password
             // at all, so this policy refuses one (SC-2, spec S-07).
             options.AddPolicy(

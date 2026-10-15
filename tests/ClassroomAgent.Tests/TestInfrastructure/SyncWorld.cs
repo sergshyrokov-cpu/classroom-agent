@@ -76,6 +76,12 @@ public sealed class SyncWorld
     /// <summary>The <c>meet_session</c> port, in memory (US-031 entity model §5).</summary>
     public MeetSessionRepository MeetSessions { get; } = new();
 
+    /// <summary>
+    /// US-038: no exclusion and no salt — the unit tests of synchronization predate erasure; its exclusion behaviour is
+    /// tested through the host (test strategy §9).
+    /// </summary>
+    public NoErasures Erasures { get; } = new();
+
     public RunSynchronizationUseCase Run =>
         new(
             States,
@@ -91,7 +97,10 @@ public sealed class SyncWorld
             Submissions,
             Retention,
             Meet,
-            MeetSessions);
+            MeetSessions,
+            Erasures,
+            Erasures,
+            Erasures);
 
     /// <summary>
     /// The run use case over this world's stores but another Classroom reader — a later run that sees different
@@ -112,10 +121,45 @@ public sealed class SyncWorld
             Submissions,
             Retention,
             Meet,
-            MeetSessions);
+            MeetSessions,
+            Erasures,
+            Erasures,
+            Erasures);
 
     /// <summary>A run identifier the assertions can recognise.</summary>
     public static Guid RunId(int ordinal) => new($"00000000-0000-0000-0000-{ordinal:D12}");
+
+    /// <summary>The US-038 ports with nothing erased: the fence is free, nothing is excluded and there is no salt.</summary>
+    public sealed class NoErasures : IErasureFence, IErasedParticipantRepository, IErasureSaltStore
+    {
+        public Task EnterAsWriterAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task EnterAsErasureAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public void Add(ErasedParticipant exclusion) => throw new InvalidOperationException("Synchronization never excludes.");
+
+        public Task<IReadOnlySet<string>> GetExcludedGoogleUserIdsAsync(
+            IReadOnlyCollection<string> googleUserIds,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlySet<string>>(new HashSet<string>(StringComparer.Ordinal));
+
+        public Task<IReadOnlyList<ClassroomAgent.Domain.Rules.EmailFingerprint>> GetExcludedFingerprintsAsync(
+            IReadOnlyCollection<ClassroomAgent.Domain.Rules.EmailFingerprint> candidates,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ClassroomAgent.Domain.Rules.EmailFingerprint>>([]);
+
+        public Task<IReadOnlyList<ErasedParticipant>> GetByFingerprintAsync(
+            ClassroomAgent.Domain.Rules.EmailFingerprint fingerprint,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ErasedParticipant>>([]);
+
+        public void Remove(ErasedParticipant exclusion) => throw new InvalidOperationException("Synchronization never lifts.");
+
+        public Task<ErasureSalt?> FindAsync(CancellationToken cancellationToken) => Task.FromResult<ErasureSalt?>(null);
+
+        public Task<ErasureSalt> GetOrCreateAsync(CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("Synchronization never creates the salt.");
+    }
 
     /// <summary>The read-only guard, with the cause the tests need and a record of what it was asked.</summary>
     public sealed class Guard(bool readOnly, LegitimacyModeReason reason = LegitimacyModeReason.SuspendedByOwner) : IReadOnlyModeGuard

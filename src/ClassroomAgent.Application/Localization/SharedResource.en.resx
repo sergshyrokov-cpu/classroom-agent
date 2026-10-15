@@ -520,4 +520,41 @@
   <data name="PageSearchHint.Ordinary" xml:space="preserve"><value>Search this page: Ctrl+F (⌘F on Mac); on a phone — browser menu → "Find in page".</value></data>
   <data name="PageSearchHint.CourseList" xml:space="preserve"><value>Find a course in the "Search by name or section" field below — it searches the whole list; Ctrl+F (⌘F on Mac) finds only the rows shown.</value></data>
   <data name="PageSearchHint.PagedList" xml:space="preserve"><value>Ctrl+F (⌘F on Mac; on a phone — browser menu → "Find in page") searches only the rows shown; the rest are on the next pages of the list (buttons below).</value></data>
+  <data name="Erasure.Title" xml:space="preserve"><value>Erasure of personal data</value></data>
+  <data name="Erasure.NavigationEntry" xml:space="preserve"><value>Erase a person's data on request</value></data>
+  <data name="Erasure.Search.Label" xml:space="preserve"><value>Email or part of a name</value></data>
+  <data name="Erasure.Search.Button" xml:space="preserve"><value>Search</value></data>
+  <data name="Erasure.Search.NoneFound" xml:space="preserve"><value>Nobody found.</value></data>
+  <data name="Erasure.Search.Truncated" xml:space="preserve"><value>The first 50 matches are shown. Please refine the search.</value></data>
+  <data name="Erasure.Search.NoName" xml:space="preserve"><value>no name</value></data>
+  <data name="Erasure.Search.NoEmail" xml:space="preserve"><value>no email</value></data>
+  <data name="Erasure.Search.TeacherCourses" xml:space="preserve"><value>Courses as teacher</value></data>
+  <data name="Erasure.Search.StudentCourses" xml:space="preserve"><value>Courses as student</value></data>
+  <data name="Erasure.Search.Error.TermRequired" xml:space="preserve"><value>Enter an email or part of a name.</value></data>
+  <data name="Erasure.Search.Error.TermTooShort" xml:space="preserve"><value>Enter at least 2 characters.</value></data>
+  <data name="Erasure.Search.Error.TermTooLong" xml:space="preserve"><value>The search is too long: at most 254 characters.</value></data>
+  <data name="Erasure.Lift.Title" xml:space="preserve"><value>Lift an exclusion</value></data>
+  <data name="Erasure.Lift.Label" xml:space="preserve"><value>The person's email</value></data>
+  <data name="Erasure.Lift.Button" xml:space="preserve"><value>Lift the exclusion</value></data>
+  <data name="Erasure.Lift.NoExclusion" xml:space="preserve"><value>There is no exclusion for this address.</value></data>
+  <data name="Erasure.Lift.Error.EmailRequired" xml:space="preserve"><value>Enter an email.</value></data>
+  <data name="Erasure.Lift.Error.EmailTooLong" xml:space="preserve"><value>The address is too long: at most 254 characters.</value></data>
+  <data name="Erasure.Lift.Error.EmailInvalid" xml:space="preserve"><value>Enter an address of the form name@domain.</value></data>
+  <data name="Erasure.Message.Erased" xml:space="preserve"><value>The person's data was erased.</value></data>
+  <data name="Erasure.Message.ExclusionLifted" xml:space="preserve"><value>The exclusion was lifted. The next synchronization will load the person as new.</value></data>
+  <data name="Erasure.ReadOnlyNotice" xml:space="preserve"><value>The installation is read-only: erasure and lifting an exclusion are unavailable.</value></data>
+  <data name="Erasure.Confirmation.Title" xml:space="preserve"><value>Confirm the erasure</value></data>
+  <data name="Erasure.Confirmation.Courses" xml:space="preserve"><value>Courses</value></data>
+  <data name="Erasure.Confirmation.Submissions" xml:space="preserve"><value>Submissions</value></data>
+  <data name="Erasure.Confirmation.Grades" xml:space="preserve"><value>Grades</value></data>
+  <data name="Erasure.Confirmation.MeetParticipations" xml:space="preserve"><value>Meet participations</value></data>
+  <data name="Erasure.Confirmation.OrganizedMeetings" xml:space="preserve"><value>Meetings organized</value></data>
+  <data name="Erasure.Confirmation.OwnedCourses" xml:space="preserve"><value>Courses the person owns</value></data>
+  <data name="Erasure.Confirmation.ExportWarning" xml:space="preserve"><value>Files already exported from the program (journals, reports) cannot be erased by it.</value></data>
+  <data name="Erasure.Confirmation.NoEmailNotice" xml:space="preserve"><value>The person has no email: their Meet participations cannot be identified, and the exclusion cannot be lifted by address.</value></data>
+  <data name="Erasure.Confirmation.Mark" xml:space="preserve"><value>I understand that erasure is irreversible</value></data>
+  <data name="Erasure.Confirmation.Button" xml:space="preserve"><value>Erase</value></data>
+  <data name="Erasure.Confirmation.MarkRequired" xml:space="preserve"><value>Confirm that erasure is irreversible.</value></data>
+  <data name="Erasure.Role.Teacher" xml:space="preserve"><value>teacher</value></data>
+  <data name="Erasure.Role.Student" xml:space="preserve"><value>student</value></data>
 </root>
