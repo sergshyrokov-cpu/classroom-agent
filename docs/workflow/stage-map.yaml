@@ -27,7 +27,7 @@
 # -----------------------------------------------------------------------------
 # SCOPE NOTE (classroom-agent)
 # -----------------------------------------------------------------------------
-# This is the LIGHTWEIGHT variant of the workflow: 6 automated stages, 2 human
+# This is the LIGHTWEIGHT variant of the workflow: 8 automated stages, 2 human
 # gates, 1 terminal stage. The project is a solo rewrite, so the review- and
 # planning-heavy stages of the full harness were deliberately dropped:
 #
@@ -35,16 +35,22 @@
 #                               directly in docs/stories/
 #   CLARIFICATION             - requirements were clarified conversationally and
 #                               are frozen in trebovaniya.md (v12)
-#   SPEC_REVIEW               - the human gate after SPECIFICATION covers it
 #   DESIGN_REVIEW             - API/DB design is reviewed at the same gate
 #   IMPACT_ANALYSIS           - codebase is new; impact is the Story scope
 #   IMPLEMENTATION_PLANNING   - specification + designs are the plan
 #   PLAN_REVIEW               - no plan artifact to review
-#   IMPLEMENTATION_VERIFICATION - tests are the verification (test-writer runs
-#                               before dotnet-implementor)
-#   RECONCILIATION            - single-author project; drift is visible directly
 #   PR_PREPARATION / READY_FOR_PR - no PR flow; commits land on master
 #   ARCHIVED                  - COMPLETED is terminal here
+#
+# SPEC_REVIEW was dropped here at first ("the human gate covers it") and
+# restored on 2026-10-15: the Owner is not a developer and was the only check
+# of a long English Specification, so a fresh-context review now precedes the
+# gate and he reads a Russian digest (spec_digest).
+#
+# IMPLEMENTATION_VERIFICATION was restored the same day, with RECONCILIATION
+# folded into it: the implementation report is written by the author of the
+# code, and its deviations from the designs (six in US-038) reached the Owner
+# with no independent check.
 #
 # Restoring any of them means: re-adding the stage below, restoring its Skill
 # under .claude/skills/, and re-adding its artifact to artifact-paths.yaml.
@@ -56,11 +62,13 @@ workflow: story-delivery
 # Ordered list of canonical stage identifiers. This is the authoritative set.
 stage_order:
   - SPECIFICATION
+  - SPEC_REVIEW
   - HUMAN_SPEC_APPROVAL
   - API_DESIGN
   - DB_DESIGN
   - TEST_WRITING
   - IMPLEMENTATION
+  - IMPLEMENTATION_VERIFICATION
   - SECURITY_REVIEW
   - HUMAN_PR_APPROVAL
   - COMPLETED
@@ -83,7 +91,6 @@ retired_identifiers:
   CLARIFICATION: REMOVED
   BACKLOG_SYNC: REMOVED
   SPEC_WRITE: SPECIFICATION
-  SPEC_REVIEW: REMOVED
   DESIGN: [API_DESIGN, DB_DESIGN]
   DESIGN_REVIEW: REMOVED
   IMPACT_ANALYSIS: REMOVED
@@ -92,9 +99,8 @@ retired_identifiers:
   PLAN_REVIEW: REMOVED
   TESTING: TEST_WRITING
   VERIFICATION: REMOVED
-  IMPLEMENTATION_VERIFICATION: REMOVED
   IMPLEMENTATION_VERIFY: REMOVED
-  RECONCILIATION: REMOVED
+  RECONCILIATION: IMPLEMENTATION_VERIFICATION
   HUMAN_REVIEW: HUMAN_PR_APPROVAL
   PR_PREPARATION: REMOVED
   PULL_REQUEST: REMOVED
@@ -113,21 +119,34 @@ stages:
       resolved from trebovaniya.md is recorded as an Open Decision rather
       than guessed.
     inputs: [story]
-    outputs: [specification, open_decisions]
+    outputs: [specification, spec_digest, open_decisions]
+    next: SPEC_REVIEW
+
+  SPEC_REVIEW:
+    type: automated_skill
+    skill: spec-verifier
+    purpose: >
+      Independent fresh-context check that the Specification is faithful to
+      trebovaniya.md and the Story, that every interpretation it makes is
+      visible, and that the Russian digest tells the Owner the truth about it.
+    inputs: [story, requirements, specification, spec_digest, open_decisions]
+    outputs: [specification_review]
     next: HUMAN_SPEC_APPROVAL
+    loop_back:
+      changes_required: SPECIFICATION
 
   HUMAN_SPEC_APPROVAL:
     type: human_gate
     owner: human
-    required_artifacts: [specification]
+    required_artifacts: [specification, spec_digest, specification_review]
     approve_command: "/so:approve"
     reject_command: "/so:reject"
     on_approve: API_DESIGN
     on_reject: SPECIFICATION
     meaning: >
-      The human reads the Specification and any Open Decisions. This gate also
-      absorbs what SPEC_REVIEW did in the full harness — there is no automated
-      spec reviewer in this variant.
+      The human reads the Russian digest, the review's findings and the Open
+      Decisions, and decides whether the Story is understood right. SPEC_REVIEW
+      checked fidelity to trebovaniya.md; product intent is only his to judge.
 
   API_DESIGN:
     type: automated_skill
@@ -175,18 +194,38 @@ stages:
     inputs: [story, open_decisions, specification, api_design, openapi,
              database_design, entity_model, test_strategy, ac_test_matrix]
     outputs: [implementation_report]
-    next: SECURITY_REVIEW
+    next: IMPLEMENTATION_VERIFICATION
     loop_back:
       partial: IMPLEMENTATION
       blocked_by_specification: SPECIFICATION
       blocked_by_api_design: API_DESIGN
       blocked_by_database_design: DB_DESIGN
 
+  IMPLEMENTATION_VERIFICATION:
+    type: automated_skill
+    skill: implementation-verifier
+    purpose: >
+      Independent fresh-context check that the code does what the approved
+      Specification and designs say, that the tests really prove the
+      Acceptance Criteria, and that every deviation is disclosed and justified
+      (absorbs RECONCILIATION).
+    inputs: [story, specification, open_decisions, api_design, openapi,
+             database_design, entity_model, test_strategy, ac_test_matrix,
+             test_generation_report, implementation_report]
+    outputs: [implementation_verification]
+    next: SECURITY_REVIEW
+    loop_back:
+      changes_required: IMPLEMENTATION
+      test_gap: TEST_WRITING
+      invalid_database_design: DB_DESIGN
+      invalid_api_design: API_DESIGN
+      invalid_specification: SPECIFICATION
+
   SECURITY_REVIEW:
     type: automated_skill
     skill: security-reviewer
     purpose: >
-      The one automated reviewer kept in this variant. The system handles
+      The automated reviewer of the code. The system handles
       personal data of minors, Google OAuth, service-account impersonation and
       a Control Plane authorization model — see trebovaniya.md sections 5 and 9.
     inputs: [story, specification, implementation_report, api_design, openapi,
@@ -201,13 +240,15 @@ stages:
   HUMAN_PR_APPROVAL:
     type: human_gate
     owner: human
-    required_artifacts: [implementation_report, security_review]
+    required_artifacts: [implementation_report, implementation_verification,
+                         security_review]
     approve_command: "/so:approve"
     reject_command: "/so:reject"
     on_approve: COMPLETED
     on_reject: IMPLEMENTATION
     meaning: >
-      The human reviews the implementation report and the security review and
+      The human reviews the implementation report, the verification (with
+      its accepted deviations, retold in Russian) and the security review, and
       approves. The final commit — Story code, its artifacts and the workflow
       state at COMPLETED — follows at once, made by the human, or by an agent
       only on the human's explicit "коммить". There is no PR flow in this project —

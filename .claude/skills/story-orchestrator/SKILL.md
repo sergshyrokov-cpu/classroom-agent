@@ -350,7 +350,7 @@ Telemetry is execution evidence, never requirement authority.
 Commits follow the Git Policy in `AGENTS.md`. The Orchestrator only offers a
 commit and never runs `git commit` itself.
 
-- After `start` mode, after a transition out of `SPECIFICATION`, `API_DESIGN` or
+- After `start` mode, after a transition out of `SPEC_REVIEW`, `API_DESIGN` or
   `DB_DESIGN`, and after an approval recorded at `HUMAN_SPEC_APPROVAL`: offer a
   commit of the workflow state (`workflow-state.yaml`, `active-story.yaml`,
   `history.jsonl`, the Story's catalog entry — the closed list in the `AGENTS.md`
@@ -374,31 +374,43 @@ Every invocation finishes with a concise Orchestration Result:
 ```
 Mode:                continue
 Active Story:        US-001
-Starting Stage:      SPECIFICATION
-Routed Skill:        spec-writer
+Starting Stage:      SPEC_REVIEW
+Routed Skill:        spec-verifier
 Verdict:             PASS
-Output Artifact(s):  docs/specifications/US-001-spec.md (v1)
-Transition:          SPECIFICATION → HUMAN_SPEC_APPROVAL
+Output Artifact(s):  docs/reviews/specifications/US-001-spec-review.md (v1)
+Transition:          SPEC_REVIEW → HUMAN_SPEC_APPROVAL
 Ending Stage:        HUMAN_SPEC_APPROVAL
 Workflow Status:     WAITING_FOR_HUMAN
-Human Gate:          HUMAN_SPEC_APPROVAL — review docs/specifications/US-001-spec.md (v1);
-                     no automated spec review in this variant;
+Human Gate:          HUMAN_SPEC_APPROVAL — read docs/specifications/US-001-spec-digest.ru.md,
+                     then docs/specifications/US-001-spec.md (v1) where needed;
+                     review: PASS, 2 minor findings (retold below in Russian);
                      run /so:approve or /so:reject
 Blocking Issues:     none
 Recommended Command: /so:approve   (after human review)
-Commit Offer:        workflow state + docs/specifications/US-001-spec.md —
-                     say «коммить» to commit (or "none")
+Commit Offer:        workflow state + specification, digest, open decisions,
+                     spec review — say «коммить» to commit (or "none")
 ```
 
 Paths shown must be resolved from `artifact-paths.yaml`. Do not claim a
 transition unless `workflow-state.yaml` was updated.
 
-**Fresh context before SECURITY_REVIEW.** When the recorded transition ends at
-`SECURITY_REVIEW`, the Recommended Command is `/clear`, then `/so:next`, with a
-one-line reason: the review must not run in the context that wrote the code.
-Workflow state lives in files, so clearing loses nothing. Do not invoke
+**Fresh context before SPEC_REVIEW.** When the recorded transition ends at
+`SPEC_REVIEW`, the Recommended Command is `/clear`, then `/so:next`, with a
+one-line reason: the review must not run in the context that wrote the
+Specification. Do not invoke `spec-verifier` in the same invocation or
+conversation turn that recorded `SPECIFICATION → SPEC_REVIEW`. At
+`HUMAN_SPEC_APPROVAL`, retell the review's non-blocking findings to the Owner
+in plain Russian, one line each.
+
+**Fresh context before IMPLEMENTATION_VERIFICATION and SECURITY_REVIEW.** When
+the recorded transition ends at either stage, the Recommended Command is
+`/clear`, then `/so:next`, with a one-line reason: a review must not run in the
+context that wrote the code or ran the other review. Workflow state lives in
+files, so clearing loses nothing. Do not invoke `implementation-verifier` or
 `security-reviewer` in the same invocation or conversation turn that recorded
-`IMPLEMENTATION → SECURITY_REVIEW`.
+the transition into its stage. At `HUMAN_PR_APPROVAL`, retell the
+verification's accepted deviations and non-blocking findings to the Owner in
+plain Russian, one line each.
 
 **Fresh context before TEST_WRITING.** The same holds when the recorded
 transition ends at `TEST_WRITING`: the Recommended Command is `/clear`, then

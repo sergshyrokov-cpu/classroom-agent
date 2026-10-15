@@ -62,6 +62,28 @@ specification`), then:
 - Open Decisions (with impact)
 - Traceability (Acceptance Criterion → functional requirement / validation rule)
 
+# Russian digest for the human gate
+
+The Owner is the only check of the Specification in this variant and reads it
+best in Russian. Alongside the Specification, write the `spec_digest` artifact:
+one page of plain Russian with no technical jargon — the one exception to the
+English-artifacts rule (`AGENTS.md`, Agent Behavior). Front matter per
+`docs/workflow/artifact-schema.md` (`artifact_type: spec_digest`; `inputs`
+names the Specification and the version summarised). Sections:
+
+1. **Что изменится для пользователей** — per role (Owner, Admin, Dean), what
+   they will see or be able to do; three to seven points.
+2. **Решения, которые нужно подтвердить** — every interpretation the
+   Specification makes where `trebovaniya.md` or the Story leaves room: what was
+   decided, why, and the FR-/AC- id it lives in. One or two lines each.
+3. **Открытые вопросы** — every Open Decision still open, the recommended
+   option marked «(рекомендую)» with one line on why.
+4. **Что не входит в Story** — the Out of Scope list, one line each.
+
+The digest summarises and never adds: every statement traces to the
+Specification. Whenever the Specification is revised, the digest is rewritten
+from the new version.
+
 # Delegation
 
 The artifact is judgement work and is written here. Lookups go to `quick-look`
@@ -80,6 +102,8 @@ artifact states what was delegated.
 # Output
 
 - `specification` (`docs/specifications/{story_id}-spec.md`), `status: DRAFT`.
+- `spec_digest` (`docs/specifications/{story_id}-spec-digest.ru.md`),
+  `status: DRAFT`.
 
 # Result Envelope
 
@@ -93,7 +117,8 @@ result:
   artifact_status: DRAFT
   artifacts:
     - docs/specifications/<StoryId>-spec.md
-  next_stage: HUMAN_SPEC_APPROVAL
+    - docs/specifications/<StoryId>-spec-digest.ru.md
+  next_stage: SPEC_REVIEW
   loop_back_stage: null
   blocking_issues: []
   non_blocking_findings: []
@@ -101,7 +126,8 @@ result:
 
 - `PASS` — all Acceptance Criteria represented; validation, security, error
   handling, and traceability sections complete; Open Decisions listed with
-  impact.
+  impact; the `spec_digest` covers every interpretation and every open Open
+  Decision of this Specification version.
 - `BLOCKED` — the Story is missing or unreadable, `trebovaniya.md` is
   unavailable, or an Open Decision makes a mandatory requirement impossible to
   state even as a documented gap.

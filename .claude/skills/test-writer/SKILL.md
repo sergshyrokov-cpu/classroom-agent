@@ -34,7 +34,8 @@ This Skill is responsible for:
 
 This Skill is not responsible for:
 
-- implementing production code;
+- implementing production behaviour (the compile-only skeleton is the only
+  production code this Skill writes);
 - changing the User Story;
 - changing Acceptance Criteria;
 - changing approved API or database designs;
@@ -221,7 +222,7 @@ Judgement stays with this Skill's model; bulk goes to `cheap-worker` subagents
 from the start, not after the user asks.
 
 Keep inline: the test design (`test_strategy`, `ac_test_matrix`), the
-compile-only skeleton and its Open Decision, migration and data tests, and the
+compile-only skeleton, migration and data tests, and the
 red-phase verdict — what each failure means.
 
 Delegate: bulk test code once the scenarios are decided — HTTP allowed/
@@ -292,13 +293,35 @@ generation report states which parts were delegated.
 
 17. Correct invalid tests or test setup problems.
 
-18. Do not modify production code.
+18. Do not modify production code beyond the compile-only skeleton.
 
 19. Run the relevant test set again.
 
 20. Create a test-generation report containing actual execution evidence.
 
 21. Return the required result envelope.
+
+## Compile-only skeleton
+
+When the tests reference declarations that do not exist yet, create a
+compile-only skeleton. This is a standing rule and needs no Open Decision — it
+replaces the per-Story Open Decision that US-001 OD-007 through US-038 OD-002
+resolved the same way every time.
+
+- Declarations only, with the names and signatures the approved entity model,
+  API design and Specification give: types, members, enum values, port
+  interfaces, DTOs, queries and use cases. A declaration no design names is an
+  Open Decision, not an invention.
+- Every new member body throws `NotImplementedException`; no behaviour of
+  existing code changes.
+- Nothing is registered in DI; no migration, route or translation entry. An EF
+  Core configuration ignores new entity properties until IMPLEMENTATION's
+  migration maps them.
+- The solution builds with 0 warnings once the skeleton is in. A design
+  signature that does not compile is a design defect: return `BLOCKED` with
+  `invalid_database_design` or `invalid_api_design`; do not patch around it.
+- IMPLEMENTATION owns the skeleton from then on and completes it.
+- The test generation report lists every skeleton declaration with its file.
 
 ## Red-Phase Verification
 
@@ -491,6 +514,7 @@ The test-generation report must include:
 - story identifier;
 - test files created;
 - test files modified;
+- compile-only skeleton declarations, with their files;
 - commands or IDE tools used;
 - tests executed;
 - passing existing tests;
@@ -511,7 +535,8 @@ Do not use GitHub MCP for local test implementation.
 
 ## Constraints
 
-- Do not modify production source files.
+- Do not modify production source files, except to add the compile-only
+  skeleton.
 - Do not change the User Story.
 - Do not change Acceptance Criteria.
 - Do not rewrite approved Specification content.

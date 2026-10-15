@@ -56,6 +56,12 @@ artifacts:
     pattern: docs/specifications/{story_id}-spec.md
     owner: spec-writer
 
+  # One-page Russian summary of the Specification for HUMAN_SPEC_APPROVAL —
+  # the only workflow artifact not written in English (AGENTS.md, Agent Behavior).
+  spec_digest:
+    pattern: docs/specifications/{story_id}-spec-digest.ru.md
+    owner: spec-writer
+
   open_decisions:
     pattern: docs/decisions/{story_id}-open-decisions.md
     owner: spec-writer
@@ -95,6 +101,14 @@ artifacts:
     pattern: docs/evidence/{story_id}-implementation-report.md
     owner: dotnet-implementor
 
+  specification_review:
+    pattern: docs/reviews/specifications/{story_id}-spec-review.md
+    owner: spec-verifier
+
+  implementation_verification:
+    pattern: docs/reviews/implementation/{story_id}-implementation-verification.md
+    owner: implementation-verifier
+
   security_review:
     pattern: docs/reviews/security/{story_id}-security-review.md
     owner: security-reviewer
@@ -110,14 +124,12 @@ artifacts:
 # restoring a stage means restoring its artifact entry here too.
 #
 #   clarification_report        (us-clarifier)
-#   specification_review        (spec-verifier)
 #   design_review               (design-reviewer)
 #   impact_analysis             (impact-analyzer)
 #   implementation_plan         (implementation-planner)
 #   plan_review                 (plan-reviewer)
-#   implementation_verification (implementation-verifier)
-#   reconciliation              (reconciliation-reviewer)
-#   traceability                (reconciliation-reviewer)
+#   reconciliation              (reconciliation-reviewer) — folded into
+#   traceability                (reconciliation-reviewer)   implementation_verification
 #   pr_summary                  (pr-preparer)
 #   delivery_summary            (story-orchestrator, archive mode)
 #   project_state               (story-orchestrator) — cross-story knowledge

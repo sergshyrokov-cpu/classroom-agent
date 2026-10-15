@@ -11,7 +11,7 @@ a committed, security-reviewed implementation. Automated stages are executed by
 exactly one Skill. Human gates stop the workflow until a person records a
 decision with `/so:approve` or `/so:reject`.
 
-This project runs the **lightweight variant** of the harness: 6 automated
+This project runs the **lightweight variant** of the harness: 8 automated
 stages, 2 human gates, 1 terminal stage. See the SCOPE NOTE in
 `stage-map.yaml` for the full list of stages that were dropped and why.
 
@@ -19,15 +19,17 @@ stages, 2 human gates, 1 terminal stage. See the SCOPE NOTE in
 
 | # | Stage | Type | Owner | Produces (registry keys) |
 |---|---|---|---|---|
-| 1 | `SPECIFICATION` | skill | `spec-writer` | `specification`, `open_decisions` |
-| 2 | `HUMAN_SPEC_APPROVAL` | human gate | human | — |
-| 3 | `API_DESIGN` | skill (optional) | `openapi-designer` | `api_design`, `openapi` |
-| 4 | `DB_DESIGN` | skill (optional) | `db-designer` | `database_design`, `entity_model` |
-| 5 | `TEST_WRITING` | skill | `test-writer` | `test_strategy`, `ac_test_matrix`, `test_generation_report` |
-| 6 | `IMPLEMENTATION` | skill | `dotnet-implementor` | `implementation_report` |
-| 7 | `SECURITY_REVIEW` | skill | `security-reviewer` | `security_review` |
-| 8 | `HUMAN_PR_APPROVAL` | human gate | human | — |
-| 9 | `COMPLETED` | terminal | `story-orchestrator` | — |
+| 1 | `SPECIFICATION` | skill | `spec-writer` | `specification`, `spec_digest`, `open_decisions` |
+| 2 | `SPEC_REVIEW` | skill | `spec-verifier` | `specification_review` |
+| 3 | `HUMAN_SPEC_APPROVAL` | human gate | human | — |
+| 4 | `API_DESIGN` | skill (optional) | `openapi-designer` | `api_design`, `openapi` |
+| 5 | `DB_DESIGN` | skill (optional) | `db-designer` | `database_design`, `entity_model` |
+| 6 | `TEST_WRITING` | skill | `test-writer` | `test_strategy`, `ac_test_matrix`, `test_generation_report` |
+| 7 | `IMPLEMENTATION` | skill | `dotnet-implementor` | `implementation_report` |
+| 8 | `IMPLEMENTATION_VERIFICATION` | skill | `implementation-verifier` | `implementation_verification` |
+| 9 | `SECURITY_REVIEW` | skill | `security-reviewer` | `security_review` |
+| 10 | `HUMAN_PR_APPROVAL` | human gate | human | — |
+| 11 | `COMPLETED` | terminal | `story-orchestrator` | — |
 
 The Story itself is **not** produced by the workflow: a human writes it into
 `docs/stories/` and registers it in `docs/catalog/stories.yaml`. There is no
@@ -35,12 +37,15 @@ backlog-sync stage and no GitHub-Issue source.
 
 ## What the two gates carry
 
-- **`HUMAN_SPEC_APPROVAL`** — the heaviest gate. Because there is no automated
-  spec reviewer and no separate design review, this is where a person checks
-  that the Specification actually reflects `trebovaniya.md` and that any Open
-  Decisions are resolved. Everything downstream trusts it.
-- **`HUMAN_PR_APPROVAL`** — the person reads `implementation_report` and
-  `security_review` and approves; the final commit follows at once, made by the
+- **`HUMAN_SPEC_APPROVAL`** — the heaviest gate. `SPEC_REVIEW` has already
+  checked, in a fresh context, that the Specification is faithful to
+  `trebovaniya.md` and that the Russian `spec_digest` hides nothing. The person
+  reads the digest and the review's findings, resolves the Open Decisions and
+  decides whether the Story is understood right. There is no separate design
+  review; everything downstream trusts this gate.
+- **`HUMAN_PR_APPROVAL`** — the person reads `implementation_report`,
+  `implementation_verification` (the accepted deviations are retold in Russian)
+  and `security_review` and approves; the final commit follows at once, made by the
   person, or by an agent only on their explicit «коммить». Despite the name there is no
   Pull Request in this project: commits land on `master`.
 - **`COMPLETED`** — terminal. There is no ARCHIVED stage and no archive mode.
@@ -50,12 +55,10 @@ backlog-sync stage and no GitHub-Issue source.
 | Dropped stage | Who covers it now |
 |---|---|
 | `CLARIFICATION` | `trebovaniya.md` (frozen requirements, v12); its section 7 lists what is still open |
-| `SPEC_REVIEW` | `HUMAN_SPEC_APPROVAL` |
-| `DESIGN_REVIEW` | `HUMAN_SPEC_APPROVAL` covers the spec; designs are checked by the person at `HUMAN_PR_APPROVAL` |
+| `DESIGN_REVIEW` | `SPEC_REVIEW` and `HUMAN_SPEC_APPROVAL` cover the spec; designs are checked against the code at `IMPLEMENTATION_VERIFICATION` |
 | `IMPACT_ANALYSIS` | the Story scope — the codebase is new |
 | `IMPLEMENTATION_PLANNING` / `PLAN_REVIEW` | the approved Specification plus the design artifacts **are** the plan |
-| `IMPLEMENTATION_VERIFICATION` | the tests, written at `TEST_WRITING` before implementation |
-| `RECONCILIATION` | single author; drift is visible directly in the diff |
+| `RECONCILIATION` | folded into `IMPLEMENTATION_VERIFICATION` (deviations from the artifacts) |
 | `PR_PREPARATION` / `READY_FOR_PR` | no PR flow |
 | `ARCHIVED` | `COMPLETED` is terminal |
 

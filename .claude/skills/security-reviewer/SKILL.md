@@ -41,14 +41,16 @@ delegation. Treat every finding as production severity
 Canonical workflow: `docs/workflow/stage-map.yaml`. Relevant slice:
 
     IMPLEMENTATION
+    → IMPLEMENTATION_VERIFICATION
     → SECURITY_REVIEW            (this Skill)
     → HUMAN_PR_APPROVAL
     → COMPLETED
 
-This is the lightweight workflow variant: SECURITY_REVIEW is the **only**
-automated reviewer, and it runs directly after IMPLEMENTATION. There is no
-verification stage ahead of it and no reconciliation after it, so this review
-is the last automated check before the final commit.
+This is the lightweight workflow variant. IMPLEMENTATION_VERIFICATION runs
+ahead of this review and checks the code against the Specification and designs;
+it does not run the full test suite and does not check security. This review is
+the last automated check before the final commit, and its independent build and
+full test run are the only ones after IMPLEMENTATION.
 
 This Skill owns only the `SECURITY_REVIEW` stage. Loop-back
 (`stage-map.yaml`): `changes_required` → `IMPLEMENTATION`,

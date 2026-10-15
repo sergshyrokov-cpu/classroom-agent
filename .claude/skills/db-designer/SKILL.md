@@ -61,8 +61,10 @@ The artifact is judgement work and is written here. Lookups go to `quick-look`
 - the current entity, its configuration, the latest migration and the model
   snapshot of every table the design touches;
 - the existing constraint and index names;
-- the compile check of the entity model's skeleton signatures, when one is built
-  (a design naming C# signatures is verified only once it compiles).
+- facts about existing types the entity model's signatures must fit. The
+  compile check itself is the skeleton that TEST_WRITING builds from this model
+  (standing rule in `test-writer`); a signature that fails to compile there
+  loops back here as `invalid_database_design`.
 
 Each delegated prompt names the exact files or commands, says "read only" or
 which files it may touch, and "make no decisions; report facts verbatim; stop on

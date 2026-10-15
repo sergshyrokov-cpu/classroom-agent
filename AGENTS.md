@@ -251,7 +251,7 @@ Order of authority when artifacts conflict:
 
 Implementation never overrides a documented requirement.
 
-**This project runs the lightweight workflow variant** — 6 automated stages,
+**This project runs the lightweight workflow variant** — 8 automated stages,
 2 human gates, 1 terminal stage. The SCOPE NOTE in `stage-map.yaml` lists which
 stages of the full harness were dropped and what covers their work now.
 
@@ -263,9 +263,10 @@ stages of the full harness were dropped and what covers their work now.
 `HUMAN_SPEC_APPROVAL` and `HUMAN_PR_APPROVAL`. Approval is recorded only via
 `/so:approve` (or `/so:reject`). Auto Mode never passes a human gate.
 
-`HUMAN_SPEC_APPROVAL` carries more weight here than in the full harness: with no
-automated spec or design reviewer, it is the only check that the Specification
-faithfully reflects `trebovaniya.md`.
+`HUMAN_SPEC_APPROVAL` carries more weight here than in the full harness: there
+is no design reviewer, and `SPEC_REVIEW` checks only that the Specification is
+faithful to `trebovaniya.md` — whether the Story is understood right is the
+Owner's call, made from the Russian `spec_digest` and the review's findings.
 
 `HUMAN_PR_APPROVAL` keeps its name from the full harness. There is no pull
 request in this project — it is the approval to commit the finished Story to
@@ -327,7 +328,7 @@ A Story is Done only when all of the following hold:
    (PC-2); no `EnsureCreated()`, no schema change outside a migration.
 6. No `TODO`, `TBD`, `FIXME` or unresolved Open Decision remains in the changed
    code or in the Story's artifacts.
-7. `SECURITY_REVIEW` returned PASS.
+7. `IMPLEMENTATION_VERIFICATION` and `SECURITY_REVIEW` returned PASS.
 8. No secret, generated database file or IDE-local config is staged for commit.
 9. Every changed file is in the active Story's scope: code and tests traced in
    the `implementation_report`, workflow artifacts and state files by the
@@ -388,7 +389,7 @@ Non-negotiable — the Hard Stops above apply in full, and in addition:
   by the human, or by an agent in the conversation only on the human's explicit
   "коммить".
 - **Workflow commits are offered, never made unasked.** After `/so:start`, after
-  SPECIFICATION, API_DESIGN and DB_DESIGN, and after approval at
+  SPEC_REVIEW, API_DESIGN and DB_DESIGN, and after approval at
   HUMAN_SPEC_APPROVAL, `story-orchestrator` offers a commit of the workflow state
   and that stage's artifacts, and after approval at HUMAN_PR_APPROVAL the final
   commit. The orchestrator only offers; the commit is made by the human, or by
@@ -414,4 +415,6 @@ Telemetry is execution evidence, never requirement authority.
 # Agent Behavior
 
 `trebovaniya.md` is written in Russian and is the authority. Workflow artifacts
-and code comments are written in English.
+and code comments are written in English. The one exception is the
+`spec_digest` (`artifact-paths.yaml`): a one-page Russian summary of the
+Specification for `HUMAN_SPEC_APPROVAL`.

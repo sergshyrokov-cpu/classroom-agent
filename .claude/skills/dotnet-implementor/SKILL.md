@@ -886,7 +886,7 @@ result:
   artifact_status: DRAFT
   artifacts:
     - docs/evidence/<StoryId>-implementation-report.md
-  next_stage: SECURITY_REVIEW
+  next_stage: IMPLEMENTATION_VERIFICATION
   loop_back_stage: null
   blocking_issues: []
   non_blocking_findings: []
@@ -895,7 +895,7 @@ result:
 - `PASS` — every Acceptance Criterion is implemented; build, tests and the format
   check pass with recorded evidence; every changed file is traced; no
   undisclosed security-sensitive change. The orchestrator advances to
-  `SECURITY_REVIEW`.
+  `IMPLEMENTATION_VERIFICATION`.
 - `CHANGES_REQUIRED` — either implementation is incomplete but progressing and
   no upstream artifact is at fault → `loop_back_stage: IMPLEMENTATION`
   (key `partial`); or an upstream artifact cannot be implemented as written →
