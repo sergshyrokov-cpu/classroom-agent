@@ -4,35 +4,29 @@
 version: 1
 story: US-051
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: db-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: '2026-10-15T20:20:00Z'
-  decided_by: Serhii SHYROKOV (/so:approve)
-  comment: null
+  verdict: PASS
+  stage: DB_DESIGN
+  recorded_at: '2026-10-15T20:45:00Z'
 last_artifacts:
-- type: specification
-  path: docs/specifications/US-051-spec.md
-  version: 1
-- type: spec_digest
-  path: docs/specifications/US-051-spec-digest.ru.md
-  version: 1
-- type: specification_review
-  path: docs/reviews/specifications/US-051-spec-review.md
+- type: database_design
+  path: docs/designs/database/US-051-db-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'DB_DESIGN: PASS — one migration AddNotAnAdminAccountRefusal re-adds ck_audit_event_refusal_category_value with not_an_admin_account; enum member AuditRefusalCategory.NotAnAdminAccount; no entity-model file by design (no attribute change).'
+- 'API_DESIGN: NOT_APPLICABLE — spec §1/§14: no endpoint, route, status code or body change; new refusal uses the existing callback redirect with a new translation key. No openapi.yaml by design.'
 - 'SPEC_REVIEW M-1 (Minor): spec §1 says two translation entries per language; FR-006 defines one key.'
 - 'SPEC_REVIEW M-2 (Minor): FR-005 also adds the disabled check on the race path (any disabled account); digest mentions only the Dean case.'
 - 'SPEC_REVIEW M-3 (Minor): race-path refusal inside the open transaction — its audit row must be committed (AC-007); check at IMPLEMENTATION_VERIFICATION.'
 - 'SPEC_REVIEW M-4 (Minor): FR-007 event id not named (next free 2205); name it in the implementation report.'
 started_at: '2026-10-15T19:58:00Z'
-updated_at: '2026-10-15T20:20:00Z'
+updated_at: '2026-10-15T20:45:00Z'
 completed_at: null
