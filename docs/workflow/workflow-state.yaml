@@ -4,29 +4,30 @@
 version: 1
 story: US-038
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: PASS
-  stage: API_DESIGN
-  recorded_at: '2026-10-15T05:50:00Z'
+  stage: DB_DESIGN
+  recorded_at: '2026-10-15T06:05:00Z'
 last_artifacts:
-- type: api_design
-  path: docs/designs/api/US-038-api-design.md
+- type: database_design
+  path: docs/designs/database/US-038-db-design.md
   version: 1
-- type: openapi
-  path: docs/designs/api/US-038-openapi.yaml
+- type: entity_model
+  path: docs/designs/database/US-038-entity-model.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'DB_DESIGN: PASS — new erased_participant (google_user_id unique, email_fingerprint bytea(32) nullable, erased_at) and erasure_salt (singleton, 32 bytes, created lazily by the first erasure, immutable); meet_session.organizer_email nullable (compiler forces every reader to handle it); expression indexes lower(email) on meet_participation and lower(organizer_email) on meet_session; ix_course_owner_google_id; audit_event + 2 actions, 2 target types, 5 count columns, shape checks. FR-011 write fence: transaction-scoped advisory lock — exclusive for the erasure, shared for each sync course / Meet page transaction. Migration AddParticipantErasure. Entity-model signatures indicative until the TEST_WRITING skeleton compiles.'
 - 'API_DESIGN: PASS — five Admin-only operations under /settings/erasure (GET page, POST searches, GET participants/{id}, POST participants/{id}/erasure, POST exclusion-liftings) + home-page link; new policy EraseParticipantData; search by POST answered 200 (no redirect, term never in an address); lifting with no match 200; read-only guard before validation (409 whatever the body); 302 PRG; no /api/v1; ContractVersion stays 1.'
 - 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-15T05:41:35Z, no comment; spec v1 and open-decisions v2 APPROVED. OD-001 resolved (a): a participant with no email is erased, exclusion without fingerprint, confirmation warns. Interpretations I-1…I-14 accepted as written.'
 - 'SPECIFICATION: PASS — spec v1 (FR-001…FR-018, AC-001…AC-009 + derived AC-010…AC-021, VR-001…VR-006, S-01…S-12), open-decisions v1. Interpretations I-1…I-14, notably I-2 HMAC-SHA-256 + 32-byte installation salt, I-3 search by POST, I-4 2…254 chars / 50 results, I-8 read-only page works with actions refused, I-9 MeetSession.OrganizerEmail becomes optional, I-12 read-only refusals audited. DB_DESIGN owns: salt storage, ErasedParticipant schema, audit columns, FR-011 write-time enforcement mechanism.'
 started_at: '2026-10-15T05:35:49Z'
-updated_at: '2026-10-15T05:50:00Z'
+updated_at: '2026-10-15T06:05:00Z'
 completed_at: null
