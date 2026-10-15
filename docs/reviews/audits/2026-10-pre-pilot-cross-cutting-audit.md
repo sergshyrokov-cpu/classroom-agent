@@ -189,6 +189,7 @@ Google error text — which can contain an address — is kept in the database.
   Dean-account endpoints and an Admin POSTing to `/account/password`, each
   asserted `403` with nothing changed. The same Story could add the matrix test
   of I-1.
+- **Resolution (2026-10-15):** Story US-052 (test-only), which also covers I-1.
 
 ### F-2 (Minor, REQUIREMENTS GAP, §2) — one email as both a Dean account and an `AllowedAdmin`
 
