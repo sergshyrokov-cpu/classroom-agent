@@ -169,6 +169,14 @@ Admin's account (BR-015, SC-8).
   for daily mail and teaching (BR-013, `trebovaniya.md` §9, v50). The Control
   Plane does not enforce the minimum — revoking the last Admin is allowed — but
   warns the Owner on the school's page while fewer than two entries exist (v70).
+- **One account, one role** (v96). The Google sign-in admits only an `AppUser`
+  with role Admin, or creates one. An existing account with another role — a
+  Dean — is refused even when its email is in `AllowedAdmin`, with refusal
+  category "not an Admin account" and the account's id as actor; it is never
+  converted or changed. The order is: the `AllowedAdmin` check, then the role,
+  then the disabled state. Admitting a Dean through Google would skip the Dean
+  password, the forced temporary-password change and the lockout (SC-2) — that is
+  a Critical finding.
 - **An `AllowedAdmin` email is accepted only in the `Installation`'s own
   domain**, stored and compared in lower case, once per `Installation` (BR-079,
   v70). The Admin login check compares the lower-cased login email with it.
@@ -430,7 +438,8 @@ when" — above all, who took personal data out of the system.
   typed is never recorded. Either way the row carries the refusal category:
   unknown login, wrong password, account disabled, locked out after failed
   attempts (v62), not in `AllowedAdmin`,
-  Control Plane unavailable (`trebovaniya.md` §5, v45). For a disabled account,
+  Control Plane unavailable (`trebovaniya.md` §5, v45), not an Admin account (a
+  Google sign-in into a Dean account, SC-3, v96). For a disabled account,
   "account disabled" is recorded only with the correct password; a wrong password
   is "wrong password", and a refusal during a lockout is "locked out" (v65).
 - **A row never carries personal data** — SC-10 binds it exactly as it binds

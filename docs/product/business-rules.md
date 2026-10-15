@@ -43,7 +43,10 @@ domain administrator account, never a super-admin. The impersonation user is
 
 **BR-011** An `AppUser` with role Admin is created automatically on the first
 successful Google OAuth login by an email present in `AllowedAdmin` for this
-`Installation`. No manual seeding. *(§2)*
+`Installation`. No manual seeding. The Google sign-in admits only an Admin
+account: an existing Dean account with that email is refused even when the email
+is in `AllowedAdmin`, and is never converted — one account, one role; a person who
+needs both roles uses two addresses. *(§2, v96)*
 
 **BR-012** `AllowedAdmin` is verified on **every** Admin login, not only the
 first. On revocation the `AppUser` row is kept for history (until the retention purge,
