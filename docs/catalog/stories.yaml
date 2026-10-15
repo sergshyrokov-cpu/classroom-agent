@@ -194,6 +194,14 @@ stories:
     # Story file authored: docs/stories/US-050-browser-security-headers.md
     # Origin: pre-pilot security audit 2026-10-15, finding F-3 (option 1); the
     # rule went into trebovaniya.md v95 (section 8) and SC-15 first.
+  - id: US-051
+    epic: EPIC-6
+    title: The Google sign-in admits only Admin accounts
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-051-google-sign-in-admin-accounts-only.md
+    # Origin: pre-pilot audit 2 2026-10-15, finding F-2 (option a); the rule
+    # went into trebovaniya.md v96 (sections 2, 5, 9), SC-3, SC-11, BR-011 first.
     # (aligned with v88). Origin: US-021 security review INFO-1, INFO-2.
   - id: US-046
     epic: EPIC-6
