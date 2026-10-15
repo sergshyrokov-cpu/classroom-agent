@@ -171,7 +171,7 @@ stories:
   - id: US-048
     epic: EPIC-6
     title: A Dean's failed-attempt count starts again when a lockout begins
-    state: READY
+    state: IN_PROGRESS
     blocked_by: null
     # OD-001 resolved (a) by the Owner on 2026-10-15: the 500 on two
     # simultaneous wrong passwords is fixed in this Story too.

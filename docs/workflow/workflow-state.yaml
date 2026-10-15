@@ -2,33 +2,37 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-038
+story: US-048
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
+last_invoked_skill: spec-verifier
 last_result:
-  verdict: PASS
-  stage: SECURITY_REVIEW
-  recorded_at: '2026-10-15T10:50:00Z'
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: '2026-10-15T19:00:00Z'
 last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-038-security-review.md
+- type: specification
+  path: docs/specifications/US-048-spec.md
+  version: 1
+- type: spec_digest
+  path: docs/specifications/US-048-spec-digest.ru.md
+  version: 1
+- type: open_decisions
+  path: docs/decisions/US-048-open-decisions.md
+  version: 1
+- type: specification_review
+  path: docs/reviews/specifications/US-048-spec-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-- 'HUMAN_PR_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-15T10:55:00Z, no comment; reviewed implementation-report v1 and security-review v1 (PASS). Approved, not Done until the final commit lands on master.'
-- 'SECURITY_REVIEW: PASS — 0 critical, 0 major, 0 minor, 4 informational; independent build 0 warnings, 5917/5917 tests, no vulnerable packages. INFO-1 erasure loads Meet rows into memory (D-1); INFO-2 untrimmed search term echoed on a validation error (encoded, bounded); INFO-3 a no-match lifting is not audited (approved design); INFO-4 a sync run can stay running after a failed course transaction (outside the Story).'
-- 'IMPLEMENTATION: PASS — build 0 warnings, full suite 5917/5917, format clean; migration AddParticipantErasure. Deviations for SECURITY_REVIEW and the human gate: D-1 erasure deletes through the change tracker (not ExecuteDelete/ExecuteUpdate as db-design §7.1) because AuditDeletionConfinementTests confines set-based deletes to the purge store (read-only backstop); D-2 pre-existing US-015 defect fixed (off-roster new submitter got participant_id 0, run stuck running); D-3 unknown organizer not flagged "not a course teacher"; D-4 a conference with only excluded connections is not stored; D-5 salt cached per run only once found; D-6 lifting button disabled in read-only mode. Four other Stories'' schema snapshots and the antiforgery sample path updated (supporting).'
-- 'TEST_WRITING: PASS — 14 new classes, 240 new tests: 231 red for missing behaviour, 9 "X does not happen" tests green and explained (report §5.3); 6 amended schema tests red until migration AddParticipantErasure; 5680 existing tests green; build 0 warnings. OD-002 (a) compile-only skeleton — IMPLEMENTATION completes it, registers DI, removes the five AuditEventConfiguration Ignore lines, and passes the new ports to RunSynchronizationUseCase in SyncWorld.'
-- 'DB_DESIGN: PASS — new erased_participant (google_user_id unique, email_fingerprint bytea(32) nullable, erased_at) and erasure_salt (singleton, 32 bytes, created lazily by the first erasure, immutable); meet_session.organizer_email nullable (compiler forces every reader to handle it); expression indexes lower(email) on meet_participation and lower(organizer_email) on meet_session; ix_course_owner_google_id; audit_event + 2 actions, 2 target types, 5 count columns, shape checks. FR-011 write fence: transaction-scoped advisory lock — exclusive for the erasure, shared for each sync course / Meet page transaction. Migration AddParticipantErasure. Entity-model signatures indicative until the TEST_WRITING skeleton compiles.'
-- 'API_DESIGN: PASS — five Admin-only operations under /settings/erasure (GET page, POST searches, GET participants/{id}, POST participants/{id}/erasure, POST exclusion-liftings) + home-page link; new policy EraseParticipantData; search by POST answered 200 (no redirect, term never in an address); lifting with no match 200; read-only guard before validation (409 whatever the body); 302 PRG; no /api/v1; ContractVersion stays 1.'
-- 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) at 2026-10-15T05:41:35Z, no comment; spec v1 and open-decisions v2 APPROVED. OD-001 resolved (a): a participant with no email is erased, exclusion without fingerprint, confirmation warns. Interpretations I-1…I-14 accepted as written.'
-- 'SPECIFICATION: PASS — spec v1 (FR-001…FR-018, AC-001…AC-009 + derived AC-010…AC-021, VR-001…VR-006, S-01…S-12), open-decisions v1. Interpretations I-1…I-14, notably I-2 HMAC-SHA-256 + 32-byte installation salt, I-3 search by POST, I-4 2…254 chars / 50 results, I-8 read-only page works with actions refused, I-9 MeetSession.OrganizerEmail becomes optional, I-12 read-only refusals audited. DB_DESIGN owns: salt storage, ErasedParticipant schema, audit columns, FR-011 write-time enforcement mechanism.'
-started_at: '2026-10-15T05:35:49Z'
-updated_at: '2026-10-15T10:55:00Z'
-completed_at: '2026-10-15T10:55:00Z'
+- 'SPECIFICATION: PASS — spec v1 (FR-001…FR-007, Story AC-001…AC-005 + derived AC-006…AC-009, VR-001…VR-002), digest v1, open-decisions v1 (OD-001 carried, resolved a; no new OD). Interpretations I-1 count from start of last lockout; I-2 re-run on conflict with any account writer; I-3 re-run meeting a fresh lockout is a step-2 refusal; I-4 at most three runs then propagate; I-5 no second verification of an unchanged hash. API_DESIGN and DB_DESIGN stated not applicable (FR-005 specifies the UnitOfWork conflict translation, US-032 precedent). Story header says v93; v94–v96 checked, none touches the Dean password sign-in.'
+- 'SPEC_REVIEW: PASS — review v1, 0 Critical / 0 Major, 4 Minor: M-1 VR-002 silent on rows already at >=5 from the defect (locks once more, then zeroes); M-2 FR-006/I-5 departs from the Owner sign-in (re-verifies every run) without saying so; M-3 FR-005 changes the conflict exception type for every AppUser writer (outcome still the error page) — state it; M-4 digest omits the residual timing note of spec section 7.'
+- 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) on spec v1, digest v1, review v1 (PASS); Minor M-1…M-4 accepted without a spec change — M-3 to be checked at IMPLEMENTATION_VERIFICATION (other AppUser writers still end on the error page).'
+started_at: '2026-10-15T18:25:22Z'
+updated_at: '2026-10-15T19:00:00Z'
+completed_at: null
