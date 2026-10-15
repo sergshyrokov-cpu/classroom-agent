@@ -4,19 +4,19 @@
 version: 1
 story: US-048
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: '2026-10-15T19:10:00Z'
+  stage: DB_DESIGN
+  recorded_at: '2026-10-15T19:20:00Z'
 last_artifacts:
-- type: api_design
-  path: docs/designs/api/US-048-api-design.md
+- type: database_design
+  path: docs/designs/database/US-048-db-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
@@ -25,6 +25,7 @@ non_blocking_findings:
 - 'SPEC_REVIEW: PASS — review v1, 0 Critical / 0 Major, 4 Minor: M-1 VR-002 silent on rows already at >=5 from the defect (locks once more, then zeroes); M-2 FR-006/I-5 departs from the Owner sign-in (re-verifies every run) without saying so; M-3 FR-005 changes the conflict exception type for every AppUser writer (outcome still the error page) — state it; M-4 digest omits the residual timing note of spec section 7.'
 - 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) on spec v1, digest v1, review v1 (PASS); Minor M-1…M-4 accepted without a spec change — M-3 to be checked at IMPLEMENTATION_VERIFICATION (other AppUser writers still end on the error page).'
 - 'API_DESIGN: NOT_APPLICABLE — api-design v1 records spec §1, §6, §10 (no endpoint, route, status code or body change); the removed 500 on the sign-in page restores responses US-012 already specifies; no openapi file by design.'
+- 'DB_DESIGN: NOT_APPLICABLE — db-design v1 records spec §1, §10 (no table, column, index, constraint or migration); FR-005 UnitOfWork AppUser conflict translation is code per the US-032 precedent; no data fix for rows already at >=5 (M-1 accepted); no entity model by design.'
 started_at: '2026-10-15T18:25:22Z'
-updated_at: '2026-10-15T19:10:00Z'
+updated_at: '2026-10-15T19:20:00Z'
 completed_at: null
