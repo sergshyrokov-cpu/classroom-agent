@@ -184,7 +184,10 @@ public sealed class AppUser
         AccessFailedCount++;
         if (AccessFailedCount >= maxAttempts)
         {
+            // The count starts again when the lockout begins, so the next lockout again needs maxAttempts
+            // consecutive failures after this one ends (US-048 spec FR-001, I-1; SC-2 v62).
             LockoutEnd = at + lockoutFor;
+            AccessFailedCount = 0;
         }
 
         ConcurrencyStamp = NewStamp();

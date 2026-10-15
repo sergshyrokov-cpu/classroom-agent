@@ -45,6 +45,14 @@ public sealed class UnitOfWork(ClassroomAgentDbContext db) : IUnitOfWork
             DetachFailedMeetCodeEntries();
             throw new MeetingCodeLinkConflictException(failure);
         }
+        catch (DbUpdateConcurrencyException failure) when (failure.Entries.Any(IsAppUser))
+        {
+            // A concurrency-stamp mismatch on an account row (US-048 spec FR-005). The failed account entry and the
+            // staged audit rows leave the tracker first, so the caller's next read returns the current row and a
+            // later save does not carry the discarded attempt's row.
+            DetachFailedAppUserEntries(failure);
+            throw new AppUserConflictException(failure);
+        }
         catch (DbUpdateException) when (HasPendingMeetCodeEntries())
         {
             // US-032 spec FR-006: a link that failed to save for any other reason must not be retried by the run's own
@@ -80,6 +88,21 @@ public sealed class UnitOfWork(ClassroomAgentDbContext db) : IUnitOfWork
         }
     }
 
+    private void DetachFailedAppUserEntries(DbUpdateConcurrencyException failure)
+    {
+        foreach (var entry in failure.Entries.Where(IsAppUser).ToList())
+        {
+            entry.State = EntityState.Detached;
+        }
+
+        foreach (var entry in db.ChangeTracker.Entries<ClassroomAgent.Domain.Entities.AuditEvent>()
+                     .Where(e => e.State == EntityState.Added)
+                     .ToList())
+        {
+            entry.State = EntityState.Detached;
+        }
+    }
+
     public async Task ExecuteInTransactionAsync(Func<CancellationToken, Task> work, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(work);
@@ -93,6 +116,9 @@ public sealed class UnitOfWork(ClassroomAgentDbContext db) : IUnitOfWork
         await work(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
+
+    private static bool IsAppUser(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry) =>
+        entry.Entity is ClassroomAgent.Domain.Entities.AppUser;
 
     private static bool IsMeetingCodeLink(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry) =>
         entry.Entity is ClassroomAgent.Domain.Entities.MeetingCodeLink;

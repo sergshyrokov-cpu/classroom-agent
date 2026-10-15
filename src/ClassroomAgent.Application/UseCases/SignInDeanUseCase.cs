@@ -1,3 +1,4 @@
+using ClassroomAgent.Application.Exceptions;
 using ClassroomAgent.Application.Models;
 using ClassroomAgent.Application.Ports;
 using ClassroomAgent.Domain.Entities;
@@ -15,6 +16,11 @@ namespace ClassroomAgent.Application.UseCases;
 /// bookkeeping, one of the closed list of service writes permitted in read-only mode (BR-026, spec FR-015), so
 /// this use case consults no read-only guard and declares <see cref="PermittedServiceWrite.SignInBookkeeping"/>
 /// around every commit.
+/// <para>
+/// A save that loses a race with another write to the same account does not end the request: the unit of work
+/// discards the run's staged changes and the whole sequence runs again on a fresh read and a fresh clock, at most
+/// <see cref="MaximumRuns"/> times (US-048 spec FR-003…FR-005, as the Control Plane's <c>OwnerSignInService</c>).
+/// </para>
 /// </remarks>
 public sealed class SignInDeanUseCase(
     IAppUserRepository users,
@@ -29,6 +35,12 @@ public sealed class SignInDeanUseCase(
 
     /// <summary>How long the lockout lasts. It expires by itself; there is no permanent lockout (SC-2 v62).</summary>
     public static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
+
+    /// <summary>
+    /// How many times one request runs the sequence when its saves keep conflicting; the last conflict propagates
+    /// (US-048 spec FR-004, I-4).
+    /// </summary>
+    public const int MaximumRuns = 3;
 
     /// <summary>
     /// A hash of a value nobody knows, verified against on the unknown-login path so that step 1 costs what a
@@ -50,8 +62,30 @@ public sealed class SignInDeanUseCase(
         ArgumentNullException.ThrowIfNull(email);
         ArgumentNullException.ThrowIfNull(password);
 
-        var now = timeProvider.GetUtcNow();
         var normalized = AppUser.Normalize(email);
+        var passwordCheck = new PasswordCheck(passwordHasher, password);
+        for (var run = 1; ; run++)
+        {
+            try
+            {
+                return await RunAsync(normalized, passwordCheck, requestId, cancellationToken);
+            }
+            catch (AppUserConflictException) when (run < MaximumRuns && !cancellationToken.IsCancellationRequested)
+            {
+                // Another write landed on the account between this run's read and its save; the unit of work has
+                // already dropped the stale account and the run's audit row (spec FR-003, FR-005, FR-007).
+            }
+        }
+    }
+
+    /// <summary>One run of the six steps on a fresh read of the account and a fresh clock (spec FR-003).</summary>
+    private async Task<DeanSignInOutcome> RunAsync(
+        string normalized,
+        PasswordCheck passwordCheck,
+        string? requestId,
+        CancellationToken cancellationToken)
+    {
+        var now = timeProvider.GetUtcNow();
         var account = await users.FindByNormalizedEmailAsync(normalized, cancellationToken);
 
         // Step 1: the login is unknown. The row names no actor and no target: the typed login is never
@@ -62,7 +96,7 @@ public sealed class SignInDeanUseCase(
             // login exists (SC-2: "the response never reveals whether the login exists"; §2 v62 notes this page
             // is reachable from the internet and the login is a guessable work email). The Control Plane's
             // Owner sign-in does the same. The result is discarded on purpose.
-            passwordHasher.Verify(TimingEqualisationHashOf(passwordHasher), password);
+            passwordCheck.VerifyDiscarding(TimingEqualisationHashOf(passwordHasher));
             await CommitAsync(
                 () => auditEvents.Add(AuditEvent.DeanSignInRefusedUnknownLogin(now, requestId)),
                 cancellationToken);
@@ -78,7 +112,7 @@ public sealed class SignInDeanUseCase(
         }
 
         // Step 3: the password does not match. The counter rises and may lock sign-in.
-        if (!passwordHasher.Verify(hash, password))
+        if (!passwordCheck.Matches(hash))
         {
             account.RecordFailedSignIn(now, MaximumFailedAttempts, LockoutDuration);
             await AuditRefusalAsync(account, AuditRefusalCategory.WrongPassword, now, requestId, cancellationToken);
@@ -112,6 +146,32 @@ public sealed class SignInDeanUseCase(
     /// </summary>
     private static string TimingEqualisationHashOf(IPasswordHasher hasher) =>
         _timingEqualisationHash ??= hasher.Hash(Guid.NewGuid().ToString("N"));
+
+    /// <summary>
+    /// The password check of one request. A re-run verifies again only when the stored hash changed since the
+    /// previous run (an Admin reset or a password change landed in between); otherwise it reuses the result, so a
+    /// known login costs one verification under contention as an unknown login does (spec FR-006, I-5; SC-2).
+    /// </summary>
+    private sealed class PasswordCheck(IPasswordHasher hasher, string password)
+    {
+        private string? _verifiedHash;
+
+        private bool _matches;
+
+        public bool Matches(string hash)
+        {
+            if (!string.Equals(_verifiedHash, hash, StringComparison.Ordinal))
+            {
+                _matches = hasher.Verify(hash, password);
+                _verifiedHash = hash;
+            }
+
+            return _matches;
+        }
+
+        /// <summary>The timing-equalisation verification of step 1; its result is discarded on purpose.</summary>
+        public void VerifyDiscarding(string hash) => hasher.Verify(hash, password);
+    }
 
     private Task AuditRefusalAsync(
         AppUser account,
