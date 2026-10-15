@@ -543,3 +543,30 @@ Decided in `trebovaniya.md` section 8 (v85).
   without the header is a finding.
 - This does not replace sign-out or the session limits of SC-2: an unfinished
   session is protected by its expiry, not by caching rules.
+
+## SC-15 Browser security headers
+
+Decided in `trebovaniya.md` section 8 (v95).
+
+- Every response of both hosts — installation and Control Plane, every port,
+  static files, the error page, downloaded files and `/api/v1` responses
+  included — carries:
+  - `X-Frame-Options: DENY` and, in the CSP, `frame-ancestors 'none'` — no page
+    can be framed by another site (clickjacking);
+  - `X-Content-Type-Options: nosniff`;
+  - `Content-Security-Policy` — scripts, styles, images and fonts from the same
+    host only (`'self'`); no inline script, no inline event handler, no inline
+    style; `object-src 'none'`; `base-uri 'self'`; `form-action 'self'`, plus, in
+    the installation, the Google sign-in address the "Sign in with Google" form
+    leads to;
+  - `Referrer-Policy: same-origin`.
+- The headers are set by **one host-wide rule** per host, as SC-14 sets
+  `no-store`, not by attributes on individual pages or actions.
+- **No inline code in the interface:** no `<script>` block with a body, no
+  `onclick`-style attribute, no `style` attribute. Scripts and styles live as
+  files in the application's static files directory. No resource is loaded from
+  another site (fonts, libraries, counters) — SC-13 forbids it as well.
+- Each host has a test that enumerates its endpoints and asserts the headers on
+  every one. A response without them, a CSP that allows `'unsafe-inline'`,
+  `'unsafe-eval'` or another origin beyond the Google sign-in address, or an
+  inline script or style in a view is a finding.
