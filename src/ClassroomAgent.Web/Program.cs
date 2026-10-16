@@ -107,6 +107,8 @@ public sealed class Program
         // The pipeline order of spec FR-002; several of its guarantees depend on it.
         // US-040: first of all, so the no-store rule sees every response of both ports (SC-14).
         app.UseMiddleware<NoStoreMiddleware>();
+        // US-050: beside it, so the browser security headers reach every response of both ports (SC-15).
+        app.UseMiddleware<SecurityHeadersMiddleware>();
         app.UseMiddleware<PublicPortMiddleware>(settings.PrivatePort);
 
         // Everything in this branch is the public port's alone. The private port keeps exactly what US-005 and

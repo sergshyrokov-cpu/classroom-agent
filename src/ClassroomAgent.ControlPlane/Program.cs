@@ -111,6 +111,8 @@ public partial class Program
 
         // US-040: first of all, so the no-store rule sees every response of the host (SC-14).
         app.UseMiddleware<NoStoreMiddleware>();
+        // US-050: beside it, so the browser security headers reach every response of the host (SC-15).
+        app.UseMiddleware<SecurityHeadersMiddleware>();
         app.UseExceptionHandler(new ExceptionHandlerOptions { ExceptionHandlingPath = "/error/500" });
         app.UseStatusCodePagesWithReExecute("/error/{0}");
         app.UseStaticFiles(new StaticFileOptions { OnPrepareResponse = NoStoreMiddleware.MarkStaticFile });

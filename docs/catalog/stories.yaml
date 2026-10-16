@@ -189,7 +189,7 @@ stories:
   - id: US-050
     epic: EPIC-6
     title: Every response carries the browser security headers
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: null
     # Story file authored: docs/stories/US-050-browser-security-headers.md
     # Origin: pre-pilot security audit 2026-10-15, finding F-3 (option 1); the
