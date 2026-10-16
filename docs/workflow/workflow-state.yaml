@@ -2,32 +2,43 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-050
+story: US-049
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: HUMAN_SPEC_APPROVAL
+previous_stage: SPEC_REVIEW
+last_completed_stage: SPEC_REVIEW
+status: WAITING_FOR_HUMAN
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: spec-verifier
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_PR_APPROVAL
-  recorded_at: '2026-10-16T11:46:16Z'
+  verdict: PASS
+  stage: SPEC_REVIEW
+  recorded_at: '2026-10-16T12:40:00Z'
 last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-050-security-review.md
+- type: specification_review
+  path: docs/reviews/specifications/US-049-spec-review.md
   version: 1
-pending_human_gate: null
+pending_human_gate:
+  stage: HUMAN_SPEC_APPROVAL
+  status: PENDING
+  requested_at: '2026-10-16T12:40:00Z'
+  required_artifacts:
+  - type: specification
+    path: docs/specifications/US-049-spec.md
+    version: 1
+  - type: spec_digest
+    path: docs/specifications/US-049-spec-digest.ru.md
+    version: 1
+  - type: specification_review
+    path: docs/reviews/specifications/US-049-spec-review.md
+    version: 1
+  automated_verdict: PASS
+  blocking_findings: []
 blocking_issues: []
 non_blocking_findings:
-- 'HUMAN_PR_APPROVAL: approved by Serhii SHYROKOV (/so:approve) on 2026-10-16T11:46:16Z on implementation report v1, implementation verification v1 (PASS), security review v1 (PASS); no comment. AC-004 manual real-browser Google sign-in deferred by the Owner to the pilot server (deployment stage 6), impl report 3.1. Keep .claude/settings.local.json out of the final commit.'
-- 'SPECIFICATION: PASS — no Open Decisions; interpretations I-1 default-src self, I-2 Google origin https://accounts.google.com (not full path), I-3 static files carry headers, I-4 antiforgery X-Frame-Options SAMEORIGIN replaced by DENY. AC-004 has a manual real-browser part for the implementation report.'
-- 'SPEC_REVIEW: PASS — m-1 (Minor) the inline-code view scan (FR-006/VR-003/AC-005) does not look for <style> blocks; none exist today; can be covered at TEST_WRITING.'
-- 'TEST_WRITING: PASS — 75 new tests (42 red header tests, 33 green guards with self-tested scanners); m-1 covered (<style> block in the view scan); no skeleton. Full suite 6037: 5983 passed, 54 failed = 42 new red + 12 existing with a one-off ~8 min Npgsql stream timeout, all 303 tests of those 12 classes green on rerun. AC-004 manual check still due at IMPLEMENTATION.'
-- 'IMPLEMENTATION: PASS — SecurityHeadersMiddleware per host after NoStoreMiddleware; Google origin from GoogleDefaults.AuthorizationEndpoint; antiforgery SAMEORIGIN overwritten. Build 0/0, full suite 6037/6037, format clean. AC-004 manual real-browser Google sign-in PENDING (impl report 3.1) — Owner to do before/at HUMAN_PR_APPROVAL.'
-- 'IMPLEMENTATION_VERIFICATION: PASS — no deviations; 2 sound technical choices (Google origin from GoogleDefaults, antiforgery header overwritten). Story tests 75/75. N-1 AC-004 manual real-browser Google sign-in still PENDING (Owner, before/at HUMAN_PR_APPROVAL); N-2 CSP strings duplicated in tests and middleware by design.'
-- 'SECURITY_REVIEW: PASS — 0 Critical/0 Major/0 Minor; build 0/0, full suite 6037/6037, no vulnerable packages. INFO-1 AC-004 manual real-browser Google sign-in (form-action redirect chain) PENDING — Owner before/at HUMAN_PR_APPROVAL; INFO-2 Kestrel-level 400/431 carry no headers; INFO-3 keep .claude/settings.local.json out of the commit; INFO-4 rule must stay first in the pipeline (OnStarting LIFO).'
-started_at: '2026-10-16T07:46:00Z'
-updated_at: '2026-10-16T11:46:16Z'
-completed_at: '2026-10-16T11:46:16Z'
+- 'SPEC_REVIEW m-1: spec 11 I-3 and digest 2 I-3 mention the Windows event log for a refusal that only happens outside Windows.'
+- 'SPEC_REVIEW m-2: spec 9 performance statement has no source (descriptive only).'
+- 'SPEC_REVIEW m-3: FR-003 relies on ASP.NET Core skipping an undecryptable key and generating a new one; AC-002 tests must prove it, incl. the newest-default-key case.'
+started_at: '2026-10-16T12:12:08Z'
+updated_at: '2026-10-16T12:40:00Z'
+completed_at: null
