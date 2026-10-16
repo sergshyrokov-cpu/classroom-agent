@@ -2,33 +2,19 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-052
+story: US-053
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: SPECIFICATION
+previous_stage: null
+last_completed_stage: null
+status: IN_PROGRESS
 attempt: 1
 last_invoked_skill: null
-last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_PR_APPROVAL
-  recorded_at: '2026-10-16T14:57:50Z'
-last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-052-security-review.md
-  version: 1
+last_result: null
+last_artifacts: []
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings:
-- 'SPECIFICATION: PASS — no Open Decisions; I-1 matrix test = endpoint->policy and policy->§2 row->roles tables; I-2 sign-out, UI language, forced temporary-password change as "any signed-in user", an endpoint with no declared policy fails; I-3 journal export stays under UseReportTemplates (audit I-2); I-4 full Dean session; I-5 allowed-role success = 302 + DB effect + one audit row; I-6 red phase via temporarily removed attribute; FR-015 contradiction -> new OD, BLOCKED.'
-- 'SPEC_REVIEW: PASS — m-1 FR-010 registered-policy check must exempt AuthenticatedUser and CompleteTemporaryPasswordChange (honour at TEST_WRITING); m-2 AC-002 state change tested in disable direction only, re-enable optional; m-3 endpoint table rows do not name their §2 row, suggest a comment/field.'
-- 'API_DESIGN: NOT_APPLICABLE — test-only Story, no endpoint/contract change (spec §1, FR-014, I-7); no openapi file by design.'
-- 'DB_DESIGN: NOT_APPLICABLE — no schema change (FR-014, I-7); no entity-model file by design.'
-- 'TEST_WRITING: PASS — 11 tests (OneRoleWriteAuthorizationTests 8, PermissionMatrixTests 3), all green by design (spec I-6); full suite 6068/6068; no src change; m-1/m-2/m-3 honoured; mutation proof (temporarily removed attribute) refused by auto-mode guard at this stage -> IMPLEMENTATION report per I-6, needs Owner permission.'
-- 'IMPLEMENTATION: PASS — no production code; I-6 mutation proof run with Owner live confirmation (all 4 forbidden-role tests + 2/3 matrix tests failed, then src restored clean); format fixed (whitespace, PermissionMatrixTests); build 0 warnings; story classes 11/11.'
-- 'IMPLEMENTATION_VERIFICATION: PASS — story tests 8/8 + 3/3; no deviations; N-1 matrix skips anonymous static-file-shaped endpoints (per FR-012); N-2 AC-002 disable direction only; N-3 role-policy check uses a synthetic principal; N-4 full suite not rerun after whitespace fix (security review reruns it).'
-- 'SECURITY_REVIEW: PASS — 0/0/0; build 0 warnings, full suite 6068/6068 rerun (closes N-4), no vulnerable packages, src unchanged; INFO-1 static-shaped anon skipped by matrix (covered by PublicPortAuthorizationTests), INFO-2 AC-002 disable only, INFO-3 synthetic principal in role check, INFO-4 keep settings.local.json out of commit.'
-started_at: '2026-10-16T13:41:00Z'
-updated_at: '2026-10-16T14:57:50Z'
-completed_at: '2026-10-16T14:57:50Z'
+non_blocking_findings: []
+started_at: null
+updated_at: '2026-10-16T15:19:53Z'
+completed_at: null

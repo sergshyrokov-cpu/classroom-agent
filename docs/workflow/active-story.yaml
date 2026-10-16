@@ -3,10 +3,10 @@
 # Writer: story-orchestrator (on activation). Stories are authored by a human
 # in docs/stories/ — there is no backlog-sync stage in this workflow variant.
 version: 1
-active_story: US-052
-story_path: docs/stories/US-052-forbidden-role-tests.md
+active_story: US-053
+story_path: docs/stories/US-053-failed-sync-run-recorded.md
 source:
   type: authored
-activated_at: 2026-10-16T13:37:28Z
+activated_at: 2026-10-16T15:19:53Z
 activated_by: Serhii SHYROKOV (/so:start)
-status: COMPLETED
+status: IN_PROGRESS

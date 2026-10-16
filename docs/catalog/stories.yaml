@@ -210,6 +210,15 @@ stories:
     # Story file authored: docs/stories/US-052-forbidden-role-tests.md
     # Origin: pre-pilot audit 2 2026-10-15, finding F-1 and note I-1. Test-only.
     # (aligned with v88). Origin: US-021 security review INFO-1, INFO-2.
+  - id: US-053
+    epic: EPIC-1
+    title: A failed synchronization run is always recorded as failed
+    state: IN_PROGRESS
+    blocked_by: null
+    # OD-001 resolved (a) by the Owner on 2026-10-16: the run still stops; the
+    # Story only records the failure.
+    # Story file authored: docs/stories/US-053-failed-sync-run-recorded.md
+    # Origin: US-038 security review INFO-4; diagnosed 2026-10-16.
   - id: US-046
     epic: EPIC-6
     title: Page-search hint on teaching-data pages
