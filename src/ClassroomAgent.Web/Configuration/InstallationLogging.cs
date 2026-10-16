@@ -53,10 +53,22 @@ public static class InstallationLogging
     }
 
     /// <summary>Writes the refusal to start — the setting and the rule, never the value — and flushes the file.</summary>
-    public static void WriteStartupRefusal(string directory, InstallationSettingException exception, bool isDevelopment)
+    public static void WriteStartupRefusal(string directory, InstallationSettingException exception, bool isDevelopment) =>
+        WriteStartupRefusal(directory, exception.Message, isDevelopment);
+
+    /// <summary>
+    /// US-049 spec FR-005: why the installation refuses to start outside Windows. It names the cause and carries no
+    /// path or key material (S-02).
+    /// </summary>
+    public const string NotOnWindowsReason =
+        "The Data Protection keys are encrypted with Windows DPAPI, which this operating system does not provide; " +
+        "the installation runs only on Windows.";
+
+    /// <summary>Writes the reason a start is refused as a <c>Fatal</c> line, before the host exists.</summary>
+    public static void WriteStartupRefusal(string directory, string reason, bool isDevelopment)
     {
         // Written before the host exists: outside any request, so no line carries a request path.
         using var logger = Configure(new LoggerConfiguration(), directory, isDevelopment, new HttpContextAccessor()).CreateLogger();
-        logger.Fatal("The installation does not start: {Reason}", exception.Message);
+        logger.Fatal("The installation does not start: {Reason}", reason);
     }
 }

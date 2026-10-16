@@ -19,17 +19,45 @@ using Serilog.Formatting.Compact;
 
 // US-047 FR-001: the process decides once, at start-up, whether the Windows Service Control Manager started it — no
 // setting, variable or argument selects the mode (VR-002).
-Program.BuildApplication(args, WindowsServiceHelpers.IsWindowsService()).Run();
+Program.BuildApplication(args, WindowsServiceHelpers.IsWindowsService(), OperatingSystem.IsWindows()).Run();
 
 /// <summary>Entry point, exposed to <c>WebApplicationFactory&lt;Program&gt;</c>.</summary>
 public partial class Program
 {
     /// <summary>
+    /// US-049 spec FR-005: builds the Control Plane host with the operating-system decision supplied, the way
+    /// <paramref name="runsAsService"/> is, so a test can drive the refusal outside Windows; never a setting, an
+    /// environment variable or an argument (VR-003).
+    /// </summary>
+    public static WebApplication BuildApplication(string[] args, bool runsAsService, bool runsOnWindows)
+    {
+        // US-049 FR-005, I-3: refused before anything can write a key, through the start-up failure path a missing
+        // required setting uses — the exception's message gives the reason.
+        if (!runsOnWindows)
+        {
+            throw new PlatformNotSupportedException(NotOnWindowsReason);
+        }
+
+        return Build(args, runsAsService);
+    }
+
+    /// <summary>
+    /// US-049 spec FR-005: why the Control Plane refuses to start outside Windows. It names the cause and carries no
+    /// path or key material (S-02).
+    /// </summary>
+    internal const string NotOnWindowsReason =
+        "The Data Protection keys are encrypted with Windows DPAPI, which this operating system does not provide; " +
+        "the Control Plane runs only on Windows.";
+
+    /// <summary>
     /// Builds the Control Plane host without running it (US-047 spec FR-001 … FR-004, I-1). <paramref name="runsAsService"/>
     /// is the detection result of FR-001, passed in so a test can drive either branch; it is never a setting, an
     /// environment variable or an argument (VR-002).
     /// </summary>
-    public static WebApplication BuildApplication(string[] args, bool runsAsService)
+    public static WebApplication BuildApplication(string[] args, bool runsAsService) =>
+        BuildApplication(args, runsAsService, OperatingSystem.IsWindows());
+
+    private static WebApplication Build(string[] args, bool runsAsService)
     {
         var builder = CreateBuilder(args, runsAsService);
         var configuration = builder.Configuration;

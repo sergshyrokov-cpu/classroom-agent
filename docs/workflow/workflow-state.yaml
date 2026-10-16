@@ -4,25 +4,29 @@
 version: 1
 story: US-049
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: null
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: DB_DESIGN
-  recorded_at: '2026-10-16T13:00:00Z'
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_PR_APPROVAL
+  recorded_at: '2026-10-16T13:22:41Z'
 last_artifacts:
-- type: database_design
-  path: docs/designs/database/US-049-db-design.md
+- type: security_review
+  path: docs/reviews/security/US-049-security-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
 - 'SPECIFICATION: PASS — OD-001…003 resolved (a/a/a); I-1 unreadable key skipped, not deleted; I-2 AC-002 by undecryptable key, genuine second-account run = manual check at pilot deployment (impl report 3.1); I-3 non-Windows refusal via existing start-up failure paths; I-4 DC-2 already updated with v94.'
 - 'SPEC_REVIEW: PASS — m-1 I-3 event-log clause inaccurate (refusal only off Windows); m-2 spec 9 performance statement unsourced; m-3 AC-002 tests must prove ASP.NET Core skips an undecryptable key and creates a new one, incl. newest-default-key case.'
+- 'TEST_WRITING: PASS — 20 new tests (18 red, 2 calibration green); full suite 6057/6039, no regression; m-3 proven: framework skips an undecryptable key incl. newest default and writes a new one; HTTP AC-002/AC-003 assertions first run at IMPLEMENTATION; skeleton BuildApplication(args, runsAsService, runsOnWindows) on both hosts; multi-term | test filter runs zero tests under MTP.'
+- 'IMPLEMENTATION: PASS — 6057/6057, build 0 warnings, format clean; ProtectKeysWithDpapi(current user) on both hosts; OS refusal in BuildApplication(args, runsAsService, runsOnWindows); N-1 defensive PlatformNotSupportedException in Add…Security (CA1416 guard); N-2 mixed-key case: framework writes a new key; AC-002 genuine second account = manual (impl report 3.1); keep settings.local.json out of commit.'
+- 'IMPLEMENTATION_VERIFICATION: PASS — 20/20 story tests, build 0 warnings; m-3 confirmed; D-1 defensive throw accepted, D-2 mixed-key new key accepted; N-1 /api/v1 401 for undecryptable-key cookie untested; N-2 installation builds WebApplicationBuilder before OS refusal (key dir proven empty); N-3 NotOnWindowsReason per host; AC-004 confirmed in DC-2 steps 2 and 6; AC-002 genuine second account = manual.'
+- 'SECURITY_REVIEW: PASS — 0/0/0, 4 INFO; independent build 0 warnings, 6057/6057, no vulnerable packages; INFO-1 keep .claude/settings.local.json out of commit; INFO-2 installation builder + log dir before OS refusal (key dir empty); INFO-3 AC-002 genuine second account manual on pilot server, /api/v1 401 untested; INFO-4 user-bound DPAPI needs service profile, forced reset signs everyone out (documented).'
 started_at: '2026-10-16T12:12:08Z'
-updated_at: '2026-10-16T13:00:00Z'
-completed_at: null
+updated_at: '2026-10-16T13:22:41Z'
+completed_at: '2026-10-16T13:22:41Z'

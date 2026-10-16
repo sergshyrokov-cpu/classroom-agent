@@ -180,7 +180,7 @@ stories:
   - id: US-049
     epic: EPIC-6
     title: Session-signing keys are encrypted at rest with the service account's Windows protection
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: null
     # OD-001 a, OD-002 a, OD-003 a resolved by the Owner on 2026-10-15; the rule
     # went into trebovaniya.md v94 (section 8) first, as OD-001 required.

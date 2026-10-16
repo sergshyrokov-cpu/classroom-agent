@@ -74,9 +74,15 @@ public sealed class ControlPlaneTestHost : IAsyncDisposable
         return host;
     }
 
-    /// <summary>Starts another host over the same database — a restart of the Control Plane.</summary>
-    public static ControlPlaneTestHost Restart(ControlPlaneTestHost previous, string setupCode) =>
-        Start(previous.ConnectionString, setupCode);
+    /// <summary>
+    /// Starts another host over the same database — a restart of the Control Plane. US-049: a test that restarts over
+    /// the same key directory passes it in <paramref name="extraSettings"/>.
+    /// </summary>
+    public static ControlPlaneTestHost Restart(
+        ControlPlaneTestHost previous,
+        string setupCode,
+        IReadOnlyDictionary<string, string>? extraSettings = null) =>
+        Start(previous.ConnectionString, setupCode, extraSettings);
 
     public FormClient CreateClient() =>
         new(Factory.CreateClient(new WebApplicationFactoryClientOptions

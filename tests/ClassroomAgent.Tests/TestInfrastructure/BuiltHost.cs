@@ -53,6 +53,24 @@ public static class BuiltHost
             : Program.BuildApplication(args, runsAsService);
     }
 
+    /// <summary>
+    /// US-049 AC-006: builds a host from the console whose operating-system decision is told it is not on Windows
+    /// (spec FR-005); the settings are otherwise valid, so only that decision can refuse the start.
+    /// </summary>
+    public static WebApplication BuildOffWindows(BuiltHostKind host, string logDirectory, string keyDirectory)
+    {
+        var args = HostBuildArguments.From(host == BuiltHostKind.Installation
+            ? HostBuildArguments.Installation(logDirectory, keyDirectory)
+            : HostBuildArguments.ControlPlane(logDirectory, keyDirectory));
+        return host == BuiltHostKind.Installation
+            ? ClassroomAgent.Web.Program.BuildApplication(args, runsAsService: false, runsOnWindows: false)
+            : Program.BuildApplication(args, runsAsService: false, runsOnWindows: false);
+    }
+
+    /// <summary>The Data Protection application name of a host (US-008 FR-001, US-002 FR-017) — unchanged by US-049.</summary>
+    public static string DataProtectionApplicationName(BuiltHostKind host) =>
+        host == BuiltHostKind.Installation ? "ClassroomAgent.Installation" : "ClassroomAgent.ControlPlane";
+
     /// <summary>The rolling file name pattern of a host's log (DC-10).</summary>
     public static string LogFilePattern(BuiltHostKind host) =>
         host == BuiltHostKind.Installation ? "installation-*.log" : "control-plane-*.log";

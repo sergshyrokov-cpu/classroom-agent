@@ -33,20 +33,44 @@ public sealed class Program
     /// it — no setting, variable or argument selects the mode (VR-002).
     /// </summary>
     public static void Main(string[] args) =>
-        BuildApplication(args, WindowsServiceHelpers.IsWindowsService()).Run();
+        BuildApplication(args, WindowsServiceHelpers.IsWindowsService(), OperatingSystem.IsWindows()).Run();
 
     /// <summary>
-    /// Builds the installation host without running it (US-047 spec FR-001 … FR-004, I-1). <paramref name="runsAsService"/>
-    /// is the detection result of FR-001, passed in so a test can drive either branch; it is never a setting, an
-    /// environment variable or an argument (VR-002).
+    /// US-049 spec FR-005: builds the installation host with the operating-system decision supplied, the way
+    /// <paramref name="runsAsService"/> is, so a test can drive the refusal outside Windows; never a setting, an
+    /// environment variable or an argument (VR-003).
     /// </summary>
-    public static WebApplication BuildApplication(string[] args, bool runsAsService)
+    public static WebApplication BuildApplication(string[] args, bool runsAsService, bool runsOnWindows)
     {
         var builder = WindowsServiceHosting.CreateBuilder(args, runsAsService);
         var contentRoot = builder.Environment.ContentRootPath;
         var logDirectory = InstallationLogging.Directory(builder.Configuration, contentRoot);
         var isDevelopment = builder.Environment.IsDevelopment();
 
+        // US-049 FR-005: refused before anything can write a key, through the installation's start-up refusal.
+        if (!runsOnWindows)
+        {
+            InstallationLogging.WriteStartupRefusal(logDirectory, InstallationLogging.NotOnWindowsReason, isDevelopment);
+            throw new PlatformNotSupportedException(InstallationLogging.NotOnWindowsReason);
+        }
+
+        return Build(builder, contentRoot, logDirectory, isDevelopment);
+    }
+
+    /// <summary>
+    /// Builds the installation host without running it (US-047 spec FR-001 … FR-004, I-1). <paramref name="runsAsService"/>
+    /// is the detection result of FR-001, passed in so a test can drive either branch; it is never a setting, an
+    /// environment variable or an argument (VR-002).
+    /// </summary>
+    public static WebApplication BuildApplication(string[] args, bool runsAsService) =>
+        BuildApplication(args, runsAsService, OperatingSystem.IsWindows());
+
+    private static WebApplication Build(
+        WebApplicationBuilder builder,
+        string contentRoot,
+        string logDirectory,
+        bool isDevelopment)
+    {
         // OD-004: the OAuth client secret is resolved from the configured store before anything else needs it.
         ISecretStore secretStore = new EnvironmentSecretStore();
 

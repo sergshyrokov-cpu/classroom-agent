@@ -16,9 +16,19 @@ public static class ControlPlaneSecurityServices
 
     public static IServiceCollection AddControlPlaneSecurity(this IServiceCollection services, string keyDirectory)
     {
-        services.AddDataProtection()
+        var dataProtection = services.AddDataProtection()
             .SetApplicationName("ClassroomAgent.ControlPlane")
             .PersistKeysToFileSystem(new DirectoryInfo(keyDirectory));
+
+        // US-049 FR-001, FR-002: every key is written encrypted with DPAPI bound to the Windows account the host runs
+        // under, never to the machine (VR-001). Off Windows the host refuses to start before this point (FR-005); the
+        // throw keeps any other path from writing a plain key.
+        if (!OperatingSystem.IsWindows())
+        {
+            throw new PlatformNotSupportedException(Program.NotOnWindowsReason);
+        }
+
+        dataProtection.ProtectKeysWithDpapi(protectToLocalMachine: false);
 
         services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>
