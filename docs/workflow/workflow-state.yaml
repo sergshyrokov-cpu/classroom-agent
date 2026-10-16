@@ -4,19 +4,19 @@
 version: 1
 story: US-050
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: '2026-10-16T07:58:40Z'
+  stage: DB_DESIGN
+  recorded_at: '2026-10-16T08:01:15Z'
 last_artifacts:
-- type: api_design
-  path: docs/designs/api/US-050-api-design.md
+- type: database_design
+  path: docs/designs/database/US-050-db-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
@@ -24,5 +24,5 @@ non_blocking_findings:
 - 'SPECIFICATION: PASS — no Open Decisions; interpretations I-1 default-src self, I-2 Google origin https://accounts.google.com (not full path), I-3 static files carry headers, I-4 antiforgery X-Frame-Options SAMEORIGIN replaced by DENY. AC-004 has a manual real-browser part for the implementation report.'
 - 'SPEC_REVIEW: PASS — m-1 (Minor) the inline-code view scan (FR-006/VR-003/AC-005) does not look for <style> blocks; none exist today; can be covered at TEST_WRITING.'
 started_at: '2026-10-16T07:46:00Z'
-updated_at: '2026-10-16T07:58:40Z'
+updated_at: '2026-10-16T08:01:15Z'
 completed_at: null
