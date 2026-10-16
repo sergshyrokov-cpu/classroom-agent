@@ -4,17 +4,25 @@
 version: 1
 story: US-053
 workflow: story-delivery
-current_stage: SPECIFICATION
-previous_stage: null
-last_completed_stage: null
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
 status: IN_PROGRESS
 attempt: 1
 last_invoked_skill: null
-last_result: null
-last_artifacts: []
+last_result:
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: '2026-10-16T16:02:01Z'
+last_artifacts:
+- type: specification_review
+  path: docs/reviews/specifications/US-053-spec-review.md
+  version: 1
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings: []
-started_at: null
-updated_at: '2026-10-16T15:19:53Z'
+non_blocking_findings:
+- 'SPECIFICATION: PASS — no open OD (OD-001 a carried); I-1 discard on every failure in the run catch, not only DbUpdateException (rule = US-013 FR-006); I-2 discard via IUnitOfWork, SyncState stays tracked; I-3 derived AC-007 non-DB exception inside a course tx writes nothing staged; I-4 US-032/US-048 detaches untouched; I-5 DB rejection forced in test DB only, no seam in src; I-6 AC-004 via the connection-page Application query; AC-003 may be green before the change.'
+- 'SPEC_REVIEW: PASS — m-1 AC-007 needs a non-DB trigger inside the course tx without a src seam (Google reads precede the tx); if none, report unreachable, never add a seam; m-2 FR-005 host line not asserted by an AC, follows from the outcome; m-3 digest states the partial-write risk as fact, it is code reading until the red phase; m-4 I-2 relies on the run ending after the failure save, breaks if OD-001 b is ever taken.'
+started_at: '2026-10-16T15:32:37Z'
+updated_at: '2026-10-16T16:02:01Z'
 completed_at: null
