@@ -4,25 +4,26 @@
 version: 1
 story: US-052
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: '2026-10-16T13:51:39Z'
+  verdict: NOT_APPLICABLE
+  stage: API_DESIGN
+  recorded_at: '2026-10-16T13:54:24Z'
 last_artifacts:
-- type: specification_review
-  path: docs/reviews/specifications/US-052-spec-review.md
+- type: api_design
+  path: docs/designs/api/US-052-api-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
 - 'SPECIFICATION: PASS — no Open Decisions; I-1 matrix test = endpoint->policy and policy->§2 row->roles tables; I-2 sign-out, UI language, forced temporary-password change as "any signed-in user", an endpoint with no declared policy fails; I-3 journal export stays under UseReportTemplates (audit I-2); I-4 full Dean session; I-5 allowed-role success = 302 + DB effect + one audit row; I-6 red phase via temporarily removed attribute; FR-015 contradiction -> new OD, BLOCKED.'
 - 'SPEC_REVIEW: PASS — m-1 FR-010 registered-policy check must exempt AuthenticatedUser and CompleteTemporaryPasswordChange (honour at TEST_WRITING); m-2 AC-002 state change tested in disable direction only, re-enable optional; m-3 endpoint table rows do not name their §2 row, suggest a comment/field.'
+- 'API_DESIGN: NOT_APPLICABLE — test-only Story, no endpoint/contract change (spec §1, FR-014, I-7); no openapi file by design.'
 started_at: '2026-10-16T13:41:00Z'
-updated_at: '2026-10-16T13:51:39Z'
+updated_at: '2026-10-16T13:54:24Z'
 completed_at: null
