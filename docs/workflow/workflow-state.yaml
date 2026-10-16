@@ -4,19 +4,19 @@
 version: 1
 story: US-049
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: '2026-10-16T12:50:00Z'
+  verdict: NOT_APPLICABLE
+  stage: API_DESIGN
+  recorded_at: '2026-10-16T12:55:00Z'
 last_artifacts:
-- type: specification_review
-  path: docs/reviews/specifications/US-049-spec-review.md
+- type: api_design
+  path: docs/designs/api/US-049-api-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
@@ -24,5 +24,5 @@ non_blocking_findings:
 - 'SPECIFICATION: PASS — OD-001…003 resolved (a/a/a); I-1 unreadable key skipped, not deleted; I-2 AC-002 by undecryptable key, genuine second-account run = manual check at pilot deployment (impl report 3.1); I-3 non-Windows refusal via existing start-up failure paths; I-4 DC-2 already updated with v94.'
 - 'SPEC_REVIEW: PASS — m-1 I-3 event-log clause inaccurate (refusal only off Windows); m-2 spec 9 performance statement unsourced; m-3 AC-002 tests must prove ASP.NET Core skips an undecryptable key and creates a new one, incl. newest-default-key case.'
 started_at: '2026-10-16T12:12:08Z'
-updated_at: '2026-10-16T12:50:00Z'
+updated_at: '2026-10-16T12:55:00Z'
 completed_at: null
