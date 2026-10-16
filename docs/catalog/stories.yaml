@@ -205,7 +205,7 @@ stories:
   - id: US-052
     epic: EPIC-6
     title: Every Admin-only and Dean-only write has a forbidden-role test
-    state: READY
+    state: IN_PROGRESS
     blocked_by: null
     # Story file authored: docs/stories/US-052-forbidden-role-tests.md
     # Origin: pre-pilot audit 2 2026-10-15, finding F-1 and note I-1. Test-only.
