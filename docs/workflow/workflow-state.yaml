@@ -4,41 +4,25 @@
 version: 1
 story: US-049
 workflow: story-delivery
-current_stage: HUMAN_SPEC_APPROVAL
-previous_stage: SPEC_REVIEW
-last_completed_stage: SPEC_REVIEW
-status: WAITING_FOR_HUMAN
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-verifier
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: SPEC_REVIEW
-  recorded_at: '2026-10-16T12:40:00Z'
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: '2026-10-16T12:50:00Z'
 last_artifacts:
 - type: specification_review
   path: docs/reviews/specifications/US-049-spec-review.md
   version: 1
-pending_human_gate:
-  stage: HUMAN_SPEC_APPROVAL
-  status: PENDING
-  requested_at: '2026-10-16T12:40:00Z'
-  required_artifacts:
-  - type: specification
-    path: docs/specifications/US-049-spec.md
-    version: 1
-  - type: spec_digest
-    path: docs/specifications/US-049-spec-digest.ru.md
-    version: 1
-  - type: specification_review
-    path: docs/reviews/specifications/US-049-spec-review.md
-    version: 1
-  automated_verdict: PASS
-  blocking_findings: []
+pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-- 'SPEC_REVIEW m-1: spec 11 I-3 and digest 2 I-3 mention the Windows event log for a refusal that only happens outside Windows.'
-- 'SPEC_REVIEW m-2: spec 9 performance statement has no source (descriptive only).'
-- 'SPEC_REVIEW m-3: FR-003 relies on ASP.NET Core skipping an undecryptable key and generating a new one; AC-002 tests must prove it, incl. the newest-default-key case.'
+- 'SPECIFICATION: PASS — OD-001…003 resolved (a/a/a); I-1 unreadable key skipped, not deleted; I-2 AC-002 by undecryptable key, genuine second-account run = manual check at pilot deployment (impl report 3.1); I-3 non-Windows refusal via existing start-up failure paths; I-4 DC-2 already updated with v94.'
+- 'SPEC_REVIEW: PASS — m-1 I-3 event-log clause inaccurate (refusal only off Windows); m-2 spec 9 performance statement unsourced; m-3 AC-002 tests must prove ASP.NET Core skips an undecryptable key and creates a new one, incl. newest-default-key case.'
 started_at: '2026-10-16T12:12:08Z'
-updated_at: '2026-10-16T12:40:00Z'
+updated_at: '2026-10-16T12:50:00Z'
 completed_at: null
