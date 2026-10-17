@@ -188,6 +188,11 @@ public sealed class ReportTemplateWorld
     /// <summary>Commits, counted; can be told to fail the next commit as the unique name index would.</summary>
     public sealed class UnitOfWork(DeanAccountWorld.AuditRepository audit, TemplateRepository templates) : IUnitOfWork
     {
+        /// <summary>US-053: nothing is staged in this double, so there is nothing to discard.</summary>
+        public void DiscardUncommittedChanges()
+        {
+        }
+
         public int Commits { get; private set; }
 
         public int Transactions { get; private set; }

@@ -211,6 +211,11 @@ public sealed class ChooseUiLanguageUseCaseTests
     /// <summary>A unit of work that records which BR-026 declaration was open at each commit.</summary>
     private sealed class DeclarationRecordingUnitOfWork(ServiceWriteScope scope) : ClassroomAgent.Application.Ports.IUnitOfWork
     {
+        /// <summary>US-053: nothing is staged in this double, so there is nothing to discard.</summary>
+        public void DiscardUncommittedChanges()
+        {
+        }
+
         public List<PermittedServiceWrite?> DeclaredAtCommit { get; } = [];
 
         public Task SaveChangesAsync(CancellationToken cancellationToken)

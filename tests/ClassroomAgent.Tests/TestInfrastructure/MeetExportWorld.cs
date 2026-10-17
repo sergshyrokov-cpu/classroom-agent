@@ -142,6 +142,11 @@ public sealed class MeetExportWorld
     /// <summary>Commits, counted; notes the declared service write and how many audit rows were staged at each commit.</summary>
     public sealed class RecordingUnitOfWork(DeanAccountWorld.AuditRepository audit, ServiceWriteScope scope) : IUnitOfWork
     {
+        /// <summary>US-053: nothing is staged in this double, so there is nothing to discard.</summary>
+        public void DiscardUncommittedChanges()
+        {
+        }
+
         public List<PermittedServiceWrite?> Declared { get; } = [];
 
         public List<int> StagedAuditRows { get; } = [];

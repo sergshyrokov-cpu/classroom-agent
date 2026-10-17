@@ -135,6 +135,9 @@ public sealed class RunSynchronizationUseCase(
             // (I-5). The stored value is a code of the closed list, never the exception's own message or type
             // (SC-10); the type name travels in the outcome for the host's one Error line (spec FR-010).
             // US-031 spec FR-010: the step that stopped the run is recorded with the code; the watermark stays.
+            // US-053 spec FR-002, FR-003: what the failure left staged and not committed is discarded first, so the
+            // failure save writes the SyncState row only (US-013 spec FR-006) — on every failure, not only a rejection.
+            unitOfWork.DiscardUncommittedChanges();
             var diagnosis = DiagnosisOf(failure);
             state.FailRun(timeProvider.GetUtcNow(), import.ProcessedCount, diagnosis, step);
             await unitOfWork.SaveChangesAsync(cancellationToken);

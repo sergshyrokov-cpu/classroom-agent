@@ -59,6 +59,9 @@ public sealed class JournalExportWorld
     /// <summary>Commits through the report world's unit of work, noting the declared service write of each.</summary>
     public sealed class ScopeRecordingUnitOfWork(ReportTemplateWorld.UnitOfWork inner, ServiceWriteScope scope) : IUnitOfWork
     {
+        /// <summary>Passed through.</summary>
+        public void DiscardUncommittedChanges() => inner.DiscardUncommittedChanges();
+
         public List<PermittedServiceWrite?> Declared { get; } = [];
 
         public async Task SaveChangesAsync(CancellationToken cancellationToken)

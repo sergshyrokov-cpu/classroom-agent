@@ -260,6 +260,11 @@ public sealed class ErasureUnitWorld
     /// </summary>
     public sealed class UnitOfWorkFake(ErasureUnitWorld world) : IUnitOfWork
     {
+        /// <summary>US-053: nothing is staged in this double, so there is nothing to discard.</summary>
+        public void DiscardUncommittedChanges()
+        {
+        }
+
         public bool InTransaction { get; private set; }
 
         public int Transactions { get; private set; }

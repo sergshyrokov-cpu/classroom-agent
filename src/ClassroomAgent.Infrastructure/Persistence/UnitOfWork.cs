@@ -103,6 +103,23 @@ public sealed class UnitOfWork(ClassroomAgentDbContext db) : IUnitOfWork
         }
     }
 
+    /// <summary>
+    /// US-053 spec FR-002, I-2: an entry staged for insertion leaves the tracker; one staged for update or deletion is
+    /// detached too, so no later save of the scope writes it. Not <c>ChangeTracker.Clear()</c>: the run's tracked
+    /// <c>SyncState</c> must stay tracked for the failure save. Entries a save inside a rolled-back transaction marked
+    /// as unchanged are left alone — no later save writes them, and the run's scope ends after the failure save.
+    /// </summary>
+    public void DiscardUncommittedChanges()
+    {
+        foreach (var entry in db.ChangeTracker.Entries()
+                     .Where(e => e.Entity is not ClassroomAgent.Domain.Entities.SyncState
+                                 && e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+                     .ToList())
+        {
+            entry.State = EntityState.Detached;
+        }
+    }
+
     public async Task ExecuteInTransactionAsync(Func<CancellationToken, Task> work, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(work);

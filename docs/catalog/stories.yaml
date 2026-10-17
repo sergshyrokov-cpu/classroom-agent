@@ -213,7 +213,7 @@ stories:
   - id: US-053
     epic: EPIC-1
     title: A failed synchronization run is always recorded as failed
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: null
     # OD-001 resolved (a) by the Owner on 2026-10-16: the run still stops; the
     # Story only records the failure.

@@ -35,4 +35,7 @@ public sealed class ReadOnlyModeUnitOfWork(
     /// <summary>Passed through: every commit inside the transaction still goes through this backstop.</summary>
     public Task ExecuteInTransactionAsync(Func<CancellationToken, Task> work, CancellationToken cancellationToken) =>
         inner.ExecuteInTransactionAsync(work, cancellationToken);
+
+    /// <summary>Passed through: a discard writes nothing, so the backstop has nothing to refuse (US-053 spec §7).</summary>
+    public void DiscardUncommittedChanges() => inner.DiscardUncommittedChanges();
 }

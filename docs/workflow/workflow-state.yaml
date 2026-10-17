@@ -4,19 +4,19 @@
 version: 1
 story: US-053
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: null
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: DB_DESIGN
-  recorded_at: '2026-10-16T16:07:33Z'
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_PR_APPROVAL
+  recorded_at: '2026-10-17T09:13:52Z'
 last_artifacts:
-- type: database_design
-  path: docs/designs/database/US-053-db-design.md
+- type: security_review
+  path: docs/reviews/security/US-053-security-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
@@ -25,6 +25,10 @@ non_blocking_findings:
 - 'SPEC_REVIEW: PASS — m-1 AC-007 needs a non-DB trigger inside the course tx without a src seam (Google reads precede the tx); if none, report unreachable, never add a seam; m-2 FR-005 host line not asserted by an AC, follows from the outcome; m-3 digest states the partial-write risk as fact, it is code reading until the red phase; m-4 I-2 relies on the run ending after the failure save, breaks if OD-001 b is ever taken.'
 - 'API_DESIGN: NOT_APPLICABLE — no endpoint/contract change (spec §1, §7, FR-006); change is inside the background run and IUnitOfWork; no openapi file by design.'
 - 'DB_DESIGN: NOT_APPLICABLE — no schema/migration change (spec §1, §9); FR-002 discard is IUnitOfWork code, tests reach it via the run, skeleton needs no new signature; rejection trigger lives in the test DB only (I-5).'
+- 'TEST_WRITING: PASS — 8 integration tests (FailedRunRecordedTests, real host + PostgreSQL), 7 red for the missing discard, AC-003 green before the change as the spec foresees; no skeleton; 6069 existing green; DB rejections = test-only CHECK/trigger (I-5); m-1 met: AC-007 via domain guards on synthetic Google data (blank roster id, blank item title); AC-007a proves the partial write (course 2 stored outside its tx) — m-3 now fact.'
+- 'IMPLEMENTATION: PASS — IUnitOfWork.DiscardUncommittedChanges (detach Added/Modified/Deleted except SyncState) called first in the run failure catch; decorators forward; 11 test doubles no-op/forward; build 0 warnings, 6076/6076, format clean; Unchanged rolled-back entries left tracked (I-2); US-032/US-048 detaches kept (I-4).'
+- 'IMPLEMENTATION_VERIFICATION: PASS — 8/8 story tests (after Docker start), every AC proven end-to-end, D-1 Unchanged entries kept (I-2), D-2 no-op doubles, D-3 US-032/US-048 detaches kept; N-1 discard-before-FailRun order pinned only by integration tests; N-2 SyncState excluded by type not instance; N-3 full suite not rerun (SECURITY_REVIEW reruns); N-4 first run blocked by Docker down.'
+- 'SECURITY_REVIEW: PASS — 0/0/0, 4 INFO; build 0 warnings, full suite 6076/6076 rerun after Docker/WSL recovery (wsl --shutdown), story 8/8, no vulnerable packages; INFO-1 settings.local.json out of commit; INFO-2 discard drops uncommitted MeetCodeAutoLinked audit row together with its link (atomic); INFO-3 = N-2 SyncState by type; INFO-4 first two full runs failed on Docker/WSL infra.'
 started_at: '2026-10-16T15:32:37Z'
-updated_at: '2026-10-16T16:07:33Z'
-completed_at: null
+updated_at: '2026-10-17T09:13:52Z'
+completed_at: '2026-10-17T09:13:52Z'

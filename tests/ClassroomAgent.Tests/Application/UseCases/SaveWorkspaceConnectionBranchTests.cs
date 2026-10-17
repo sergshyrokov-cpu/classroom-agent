@@ -134,6 +134,11 @@ public sealed class SaveWorkspaceConnectionBranchTests
 
     private sealed class NoOpUnitOfWork : IUnitOfWork
     {
+        /// <summary>US-053: nothing is staged in this double, so there is nothing to discard.</summary>
+        public void DiscardUncommittedChanges()
+        {
+        }
+
         public Task SaveChangesAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
         public Task ExecuteInTransactionAsync(Func<CancellationToken, Task> work, CancellationToken cancellationToken) =>

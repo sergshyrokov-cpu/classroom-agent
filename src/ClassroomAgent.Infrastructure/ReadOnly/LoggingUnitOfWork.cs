@@ -26,4 +26,7 @@ public sealed class LoggingUnitOfWork(IUnitOfWork inner, ILogger<LoggingUnitOfWo
     /// <summary>Passed through: a refusal inside the transaction is logged by the commit that raised it.</summary>
     public Task ExecuteInTransactionAsync(Func<CancellationToken, Task> work, CancellationToken cancellationToken) =>
         inner.ExecuteInTransactionAsync(work, cancellationToken);
+
+    /// <summary>Passed through: a discard writes nothing and raises no refusal to log.</summary>
+    public void DiscardUncommittedChanges() => inner.DiscardUncommittedChanges();
 }

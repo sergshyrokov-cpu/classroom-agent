@@ -724,6 +724,11 @@ public sealed class SyncWorld
     /// <summary>Commits, counted, with what was staged at each one (carried US-009 F-2).</summary>
     public sealed class UnitOfWork(StateRepository states) : IUnitOfWork
     {
+        /// <summary>US-053: nothing is staged in this double, so there is nothing to discard.</summary>
+        public void DiscardUncommittedChanges()
+        {
+        }
+
         public int Commits { get; private set; }
 
         public int Transactions { get; private set; }

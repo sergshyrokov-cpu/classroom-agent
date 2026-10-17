@@ -125,6 +125,11 @@ public sealed class MeetCodeWorld
     /// <summary>Commits, counted, with the transaction boundary honoured; can simulate a concurrent change.</summary>
     public sealed class UnitOfWork(DeanAccountWorld.AuditRepository audit, LinkRepository links) : IUnitOfWork
     {
+        /// <summary>US-053: nothing is staged in this double, so there is nothing to discard.</summary>
+        public void DiscardUncommittedChanges()
+        {
+        }
+
         public int Commits { get; private set; }
 
         public int Transactions { get; private set; }

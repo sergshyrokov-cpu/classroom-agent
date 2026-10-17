@@ -203,6 +203,11 @@ public sealed class DeanAccountWorld
     /// <summary>Commits, counted, with the transaction boundary honoured.</summary>
     public sealed class UnitOfWork(AuditRepository audit, AccountRepository users) : IUnitOfWork
     {
+        /// <summary>US-053: nothing is staged in this double, so there is nothing to discard.</summary>
+        public void DiscardUncommittedChanges()
+        {
+        }
+
         public int Commits { get; private set; }
 
         public int Transactions { get; private set; }

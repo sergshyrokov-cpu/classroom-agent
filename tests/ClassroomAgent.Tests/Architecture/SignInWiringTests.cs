@@ -118,6 +118,11 @@ public sealed class SignInWiringTests(PostgreSqlFixture database)
     /// <summary>A commit the read-only backstop refuses.</summary>
     private sealed class RefusingUnitOfWork : IUnitOfWork
     {
+        /// <summary>US-053: nothing is staged in this double, so there is nothing to discard.</summary>
+        public void DiscardUncommittedChanges()
+        {
+        }
+
         public Task SaveChangesAsync(CancellationToken cancellationToken) =>
             throw new ReadOnlyModeException(
                 LegitimacyModeReason.SuspendedByOwner,
@@ -131,6 +136,11 @@ public sealed class SignInWiringTests(PostgreSqlFixture database)
     /// <summary>A commit that fails for an ordinary reason — the database refused the row.</summary>
     private sealed class FailingUnitOfWork : IUnitOfWork
     {
+        /// <summary>US-053: nothing is staged in this double, so there is nothing to discard.</summary>
+        public void DiscardUncommittedChanges()
+        {
+        }
+
         public Task SaveChangesAsync(CancellationToken cancellationToken) =>
             throw new InvalidOperationException("The database refused the row.");
 
