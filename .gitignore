@@ -8,6 +8,9 @@ OAuth client created.txt
 # Local review prompt for AGENTS.md (personal tooling, not project content)
 /Validator for your AGENTS.md
 
+# Claude Code personal permissions (machine-local, never shared)
+.claude/settings.local.json
+
 # Data / cache (may contain personal data)
 classroom_cache.db
 *.xlsx
