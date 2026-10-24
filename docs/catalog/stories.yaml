@@ -219,6 +219,14 @@ stories:
     # Story only records the failure.
     # Story file authored: docs/stories/US-053-failed-sync-run-recorded.md
     # Origin: US-038 security review INFO-4; diagnosed 2026-10-16.
+  - id: US-054
+    epic: EPIC-6
+    title: The program's texts describe the technical account as a super-admin with blocked sign-in
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-054-technical-account-superadmin-texts.md
+    # (aligned with v97). OD-001...OD-004 resolved by the Owner on 2026-10-24
+    # (1 yes, 2a, 3 yes, 4a, 5a, 6 ok). Needed before pilot stage 5.
   - id: US-046
     epic: EPIC-6
     title: Page-search hint on teaching-data pages
