@@ -69,8 +69,10 @@ the previous one — the dependency is real, not stylistic
    admin account rather than the one used for daily mail and teaching — and
    gives the school's super-admin the client ID and the scope list from
    `trebovaniya.md` §6. The super-admin authorizes domain-wide delegation in the
-   school's own Google console and creates the technical account with read-only
-   roles (BR-015) — the Owner cannot do either step (BR-032).
+   school's own Google console and creates the technical account — a super-admin
+   with interactive sign-in blocked by the mandatory measures in BR-015 (v97); the
+   role itself is granted only immediately before the first synchronization —
+   the Owner cannot do either step (BR-032).
 6. Deploy the installation: its database, its migrations, its configuration
    (DC-3) — including the installation id from step 4, the retention period
    agreed with the school, the school's time zone, the public base address and the
@@ -339,7 +341,7 @@ remains is **verification at onboarding**, not a decision:
 
 | To verify | Where it is tracked |
 |---|---|
-| Minimum Google Workspace roles the impersonation user needs | §7 item 10 |
+| Domain-wide delegation still works while the technical account's sign-in is blocked by enforced 2-step verification | §7 item 29 |
 | Whether Classroom still returns submissions of a student removed from a course | §7 item 14 |
 
 A deployment or operations Story that finds a new gap raises an Open Decision

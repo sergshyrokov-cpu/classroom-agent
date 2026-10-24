@@ -39,7 +39,7 @@ terms from `trebovaniya.md` are given so the two documents can be read together.
 | **Service account** | A machine identity in the Owner's Cloud project used to read a school's data. One per school. Its key never leaves the Owner's infrastructure. The project lives outside every school's domain, so no school controls the others' access. |
 | **Client ID** | The service account's public identifier. Given to the school so its super-admin can authorize it. Not a secret. |
 | **Domain-wide delegation (DWD)** | The Google mechanism by which a school's super-admin authorizes a service account to read that domain's data, for a named list of scopes. Authorized only by the domain owner — the Owner cannot do it for them. |
-| **Impersonation user** | The school account the service account acts as when calling Google APIs: a **technical account** created by the school's super-admin, with no person behind it, not a super-admin, read-only roles only. Never an Admin's account (BR-015). |
+| **Impersonation user** | The school account the service account acts as when calling Google APIs: a **technical account** created by the school's super-admin, with no person behind it: a super-admin whose interactive sign-in is blocked; the program's reads are bounded by the read-only delegation scopes (v97). Never an Admin's account (BR-015). |
 | **Technical account** | See *impersonation user*. |
 | **Scope** | A named Google permission. Every scope this system uses is read-only. |
 

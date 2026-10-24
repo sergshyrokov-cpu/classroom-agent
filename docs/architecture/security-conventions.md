@@ -347,9 +347,11 @@ pages are disabled outside local development.
   super-admin authorizes. Adding a scope is a requirements change, not an
   implementation detail: it forces every school to re-authorize.
 - Data is read through impersonation of the school's technical account (BR-015):
-  no person behind it, not a super-admin, read-only roles for Classroom and
-  Admin Reports only. A design that impersonates an Admin's or a super-admin's
-  account is a finding.
+  no person behind it; it holds the super-admin role with interactive sign-in
+  blocked by the mandatory measures in BR-015 (v97). What the program reads is
+  bounded by the read-only scopes above, never by the account's roles. A design
+  that impersonates any account other than the configured technical account — an
+  Admin's, or a person who is a super-admin — is a finding.
   The Admin's own OAuth session is **never** used to call a Google data API —
   it authenticates the human, nothing more.
 - Permission failures (`403 unauthorized_client`, `access_denied`, missing

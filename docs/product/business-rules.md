@@ -77,11 +77,17 @@ which is checked first (v65). *(§2, v38, v62, v64, v65)*
 
 **BR-015** Teaching data is read on behalf of a **technical account** of the
 school — the impersonation user in `WorkspaceConnection`. The school's
-super-admin creates it at onboarding; no person stands behind it, it is not a
-super-admin, and it holds read-only roles for Classroom and Admin Reports only.
+super-admin creates it at onboarding; no person stands behind it. It holds the
+super-admin role, because lesser Classroom roles give the Classroom API no view of
+the domain's courses; what the program can read is bounded by the read-only
+domain-wide delegation scopes, not by the account's roles (v97). Interactive
+sign-in to it is blocked by mandatory measures: a random password stored nowhere;
+enforced 2-step verification with no enrolment grace and no factor, backup code,
+recovery email or phone enrolled; a separate organizational unit; an alert on any
+sign-in; the role granted only immediately before the first synchronization (v97).
 Nobody signs in to the program with it and it is not in `AllowedAdmin`. The Admin
 enters its email in the connection settings. Staff leaving or an Admin being
-revoked therefore never stops synchronization. *(§9, v30)*
+revoked therefore never stops synchronization. *(§9, v30, v97)*
 
 ## Installation and the Owner's control
 

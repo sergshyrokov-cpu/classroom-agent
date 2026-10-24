@@ -150,7 +150,7 @@ These are binding.
 **Non-normative summary** of `trebovaniya.md` sections 2, 4, 5, 6 and 9 — a cheap
 cache so routine decisions do not require opening a ~180 KB Russian document.
 `trebovaniya.md` always wins; on conflict this section is the one that gets
-corrected. **Verified against v96.** When `trebovaniya.md` moves past that
+corrected. **Verified against v97.** When `trebovaniya.md` moves past that
 version, re-verify this section and update the marker.
 
 - **Roles in the first version are Owner, Admin and Dean only.** Teacher and
@@ -162,9 +162,11 @@ version, re-verify this section and update the marker.
   super-admin.** One email is simultaneously the OAuth login, the `AllowedAdmin`
   entry in the Control Plane and the `AppUser` with role Admin.
 - **Data is read as a technical account, not as a person.** The impersonation
-  user in `WorkspaceConnection` is a school account with read-only roles, created
-  by the school's super-admin; nobody logs in with it (BR-015). The prototype's
-  impersonation of a super-admin is not a precedent.
+  user in `WorkspaceConnection` is a school account created by the school's
+  super-admin; nobody logs in with it (BR-015). Since v97 it holds the super-admin
+  role (lesser Classroom roles see no courses) with interactive sign-in blocked;
+  what the program reads is bounded by the read-only delegation scopes. The
+  prototype's impersonation of a person's super-admin account is not a precedent.
 - **Google data is a mirror nobody edits** (v83). What the system reads from
   Google is stored as Google returned it and never corrected by a user; data the
   school owns lives in its own tables and refers to the mirror through link
