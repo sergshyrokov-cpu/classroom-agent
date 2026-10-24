@@ -4,28 +4,37 @@
 version: 1
 story: US-054
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: IMPLEMENTATION
+previous_stage: TEST_WRITING
+last_completed_stage: TEST_WRITING
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: test-writer
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: '2026-10-24T20:26:00Z'
+  verdict: PASS
+  stage: TEST_WRITING
+  recorded_at: '2026-10-24T21:30:00Z'
 last_artifacts:
-- type: api_design
-  path: docs/designs/api/US-054-api-design.md
+- type: test_strategy
+  path: docs/tests/US-054-test-strategy.md
+  version: 1
+- type: ac_test_matrix
+  path: docs/tests/US-054-ac-test-matrix.md
+  version: 1
+- type: test_generation_report
+  path: docs/evidence/US-054-test-generation-report.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'TEST_WRITING: 34 new cases (TechnicalAccountSuperAdminTextsTests) + rewritten instruction tests; 76 red for expected reasons (7 keys missing, old wording/keys present), regression classes green; no skeleton; binding §4.1 wording pinned as literals.'
+- 'TEST_WRITING: production comments (ConnectionInstructionTextKeys, SaveWorkspaceConnectionRequest) left to IMPLEMENTATION under FR-006; full suite not rerun.'
+- 'DB_DESIGN: NOT_APPLICABLE — texts only (spec 1, 10); translations are resx; no entity-model by design; no migration.'
 - 'API_DESIGN: NOT_APPLICABLE — texts only (spec 1, 7, 8, 10); no openapi.yaml by design; markup hook #connection-instruction kept.'
 - 'HUMAN_SPEC_APPROVAL (Owner comment): m-1 — fix the two missed comments too (WorkspaceConnectionTestData.cs:19, AccessCheckTranslationTests.cs:53) under FR-006; m-2 — accepted.'
 - 'SPEC_REVIEW m-1: FR-006 omits two stale comments contradicting v97 (WorkspaceConnectionTestData.cs:19 read-only roles; AccessCheckTranslationTests.cs:53 item 10 open); RunSynchronizationUseCase.cs:792 and CourseImportTests.cs:145 cite item 10 informationally.'
 - 'SPEC_REVIEW m-2: ForbiddenRoleNames is shared with AccessCheckTranslationTests.NoMessage_NamesAWorkspaceAdminRole; dropping Super Admin (I-2) also changes that guard.'
 - 'SPECIFICATION F-1: trebovaniya.md section 3 WorkspaceConnection (line ~837) still says not super-admin; new requirements version, not this Story.'
 started_at: '2026-10-24T19:40:45Z'
-updated_at: '2026-10-24T20:26:00Z'
+updated_at: '2026-10-24T21:30:00Z'
 completed_at: null

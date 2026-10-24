@@ -50,7 +50,8 @@ public sealed class AccessCheckTranslationTests(PostgreSqlFixture database)
     }
 
     /// <summary>
-    /// Spec FR-005, US-010 OD-001: no message of this Story names a Workspace admin role — §7 item 10 is open, and the
+    /// Spec FR-005, US-054 VR-002: no message of this Story names a delegated Workspace admin role — since v97 (§9, §7
+    /// item 10 closed) the only role a text may name is super-admin, and the
     /// check proves reads succeed, not which roles are enough.
     /// </summary>
     [Theory]

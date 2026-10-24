@@ -106,8 +106,9 @@ public sealed class GoogleClassroomReaderTests
     }
 
     /// <summary>
-    /// FR-002, BR-015, S-03: the delegated token impersonates the school's technical account — never a person and
-    /// never a super-admin, which is what the prototype did and what AGENTS.md names as no precedent.
+    /// FR-002, BR-015, S-03: the delegated token impersonates the school's technical account — no person stands
+    /// behind it; it is a super-admin with sign-in blocked (§9 v97), never a person's own account, which is what the
+    /// prototype did and what AGENTS.md names as no precedent.
     /// </summary>
     [Fact]
     public async Task TheTokenRequest_ImpersonatesTheTechnicalAccount()

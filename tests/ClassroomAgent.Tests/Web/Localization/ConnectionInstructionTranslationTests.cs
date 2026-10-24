@@ -97,7 +97,7 @@ public sealed class ConnectionInstructionTranslationTests(PostgreSqlFixture data
 
         Assert.Contains(host.Text(ConnectionInstructionTestData.TextKeys.Title, "en"), page.Text, StringComparison.Ordinal);
         Assert.Contains(
-            host.Text(ConnectionInstructionTestData.TextKeys.TechnicalAccountReadOnlyRoles, "en"),
+            host.Text(ConnectionInstructionTestData.TextKeys.TechnicalAccountSuperAdminRole, "en"),
             page.Text,
             StringComparison.Ordinal);
     }

@@ -91,13 +91,13 @@ public static class ConnectionInstructionTestData
     }
 
     /// <summary>
-    /// Google Workspace admin-role names the instruction must **not** print while <c>trebovaniya.md</c> §7
-    /// item 10 is unverified (OD-001, spec VR-005). The list is of role vocabulary, not of one guessed answer:
-    /// whichever a helpful change reached for, it fails here.
+    /// Google Workspace admin-role names the instruction must **not** print (US-054 spec VR-002, I-2). Since
+    /// <c>trebovaniya.md</c> v97 (§9, §7 item 10 closed) the only role the instruction names is super-admin; the
+    /// lesser delegated roles see no domain courses, so naming one would send a school to a role that does not work.
+    /// The list is of role vocabulary, not of one guessed answer: whichever a helpful change reached for, it fails here.
     /// </summary>
     public static readonly string[] ForbiddenRoleNames =
     [
-        "Super Admin",
         "Groups Admin",
         "User Management Admin",
         "Help Desk Admin",
@@ -152,9 +152,22 @@ public static class ConnectionInstructionTestData
 
         public const string TechnicalAccountNoPersonBehindIt = "ConnectionInstruction.TechnicalAccount.NoPersonBehindIt";
 
-        public const string TechnicalAccountReadOnlyRoles = "ConnectionInstruction.TechnicalAccount.ReadOnlyRoles";
+        /// <summary>US-054 FR-001 #3: the account gets the super-admin role, and why the program still only reads.</summary>
+        public const string TechnicalAccountSuperAdminRole = "ConnectionInstruction.TechnicalAccount.SuperAdminRole";
 
-        public const string TechnicalAccountNoWriteAccess = "ConnectionInstruction.TechnicalAccount.NoWriteAccess";
+        /// <summary>US-054 FR-001 #4: sign-in under the account is closed by the measures that follow.</summary>
+        public const string TechnicalAccountMeasuresLead = "ConnectionInstruction.TechnicalAccount.MeasuresLead";
+
+        public const string MeasureRandomPassword = "ConnectionInstruction.TechnicalAccount.Measure.RandomPassword";
+
+        public const string MeasureTwoStepVerification = "ConnectionInstruction.TechnicalAccount.Measure.TwoStepVerification";
+
+        public const string MeasureSeparateOrgUnit = "ConnectionInstruction.TechnicalAccount.Measure.SeparateOrgUnit";
+
+        public const string MeasureSignInAlert = "ConnectionInstruction.TechnicalAccount.Measure.SignInAlert";
+
+        /// <summary>US-054 FR-001 4.5, OD-002 a: the role is granted last, immediately before the access check.</summary>
+        public const string MeasureRoleGrantedLast = "ConnectionInstruction.TechnicalAccount.Measure.RoleGrantedLast";
 
         public const string TechnicalAccountEnteredInSettings = "ConnectionInstruction.TechnicalAccount.EnteredInSettings";
 
@@ -165,13 +178,27 @@ public static class ConnectionInstructionTestData
         /// <summary>The second entry of the settings section US-009 created (spec FR-013).</summary>
         public const string NavigationEntry = "Landing.Settings.ConnectionInstruction";
 
-        /// <summary>The five statements of spec FR-005, which AC-004 requires the page to make.</summary>
+        /// <summary>The five measures of US-054 FR-001 4.1–4.5, in order, nested under the lead statement.</summary>
+        public static readonly string[] Measures =
+        [
+            MeasureRandomPassword,
+            MeasureTwoStepVerification,
+            MeasureSeparateOrgUnit,
+            MeasureSignInAlert,
+            MeasureRoleGrantedLast,
+        ];
+
+        /// <summary>
+        /// Every technical-account statement of US-054 FR-001, in the order the instruction makes them: statements 1–4,
+        /// the five measures under statement 4, then statement 5.
+        /// </summary>
         public static readonly string[] TechnicalAccountStatements =
         [
             TechnicalAccountCreatedBySuperAdmin,
             TechnicalAccountNoPersonBehindIt,
-            TechnicalAccountReadOnlyRoles,
-            TechnicalAccountNoWriteAccess,
+            TechnicalAccountSuperAdminRole,
+            TechnicalAccountMeasuresLead,
+            .. Measures,
             TechnicalAccountEnteredInSettings,
         ];
 
@@ -189,8 +216,9 @@ public static class ConnectionInstructionTestData
             TechnicalAccountLabel,
             TechnicalAccountCreatedBySuperAdmin,
             TechnicalAccountNoPersonBehindIt,
-            TechnicalAccountReadOnlyRoles,
-            TechnicalAccountNoWriteAccess,
+            TechnicalAccountSuperAdminRole,
+            TechnicalAccountMeasuresLead,
+            .. Measures,
             TechnicalAccountEnteredInSettings,
             CopyButton,
             CopyConfirmation,

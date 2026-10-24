@@ -16,7 +16,7 @@ public static class WorkspaceConnectionTestData
     /// <summary>The domain the seeded <c>legitimacy_state</c> carries — the domain the Owner approved.</summary>
     public const string AllowedDomain = InstallationTestData.Domain;
 
-    /// <summary>The school's technical account: no person behind it, read-only roles only (BR-015).</summary>
+    /// <summary>The school's technical account: no person behind it, a super-admin with sign-in blocked (BR-015, §9 v97).</summary>
     public const string TechnicalAccount = "classroom-agent@school-one.example.test";
 
     /// <summary>A second technical account, for the change path (AC-007).</summary>
