@@ -4,30 +4,32 @@
 version: 1
 story: US-055
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: security-reviewer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: '2026-10-25T11:50:00Z'
+  stage: SECURITY_REVIEW
+  recorded_at: '2026-10-25T13:50:00Z'
 last_artifacts:
-- type: database_design
-  path: docs/designs/database/US-055-db-design.md
-  version: 1
-- type: entity_model
-  path: docs/designs/database/US-055-entity-model.md
+- type: security_review
+  path: docs/reviews/security/US-055-security-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'HUMAN_PR_APPROVAL: APPROVED by Serhii SHYROKOV (/so:approve) at 2026-10-25T13:59:40Z; no comment.'
 - 'SPEC_REVIEW m-1: I-3 overflow argument covers only AC values; scale-template points/max*100 can overflow decimal for an extreme pair (unrealistic) — TEST_WRITING may add a scale-template case.'
 - 'SPEC_REVIEW m-2: AC-006a does not name the export layout (table vs shipped blank form; both use GradingCell) — TEST_WRITING states the layout.'
 - 'SPEC_REVIEW m-3: Razor line refs off by one (Journal 145, Report 269).'
 - 'DB_DESIGN: three columns -> unconstrained numeric, migration WidenGradeColumns; no table rewrite (filenode unchanged), CHECK re-validation scan only, measured 127-154 ms per ALTER on 2M rows (postgres:17); Down is lossy, not run by deployment; no C# signature change, no skeleton.'
+- 'TEST_WRITING: 16 cases in 3 classes (GradeColumnsPersistenceTests, LargeGradesSyncTests, LargeGradesPageTests), 15 red, NegativeValues green by design; no skeleton; page tests fail at seed (22003) so display assertions are first reached at IMPLEMENTATION; m-1 built-in scale report test added, m-2 export = table layout.'
+- 'IMPLEMENTATION: 2 config lines -> numeric, migration 20261025104345_WidenGradeColumns (3 AlterColumn only); journal test corrected with Owner OK (draft shown only without a grade, US-025: second ungraded student carries the large draft); AppUserMigrationTests count 20->21; full suite 6138/6139 then registry fix 6/6, full suite not rerun after it.'
+- 'IMPLEMENTATION_VERIFICATION: PASS, 0 Critical/Major/Minor; story tests 7/7 + 5/5 + 4/4 + AppUserMigrationTests 6/6; accepted deviations: journal test draft on a second ungraded student (Owner OK), migration count 20->21; N-1 reader double->decimal cast not exercised (spec I-1), N-2 full suite not rerun after last test change (SECURITY_REVIEW closes it), N-3 Down fails 22003 above old max by design.'
+- 'SECURITY_REVIEW: PASS, 0 Critical/Major/Minor, 4 INFO; build 0 warnings, full suite 6139/6139 green (closes N-2), no vulnerable packages; INFO-1 reader double->decimal cast throws beyond decimal range (pre-existing, run recorded failed), INFO-2 extreme scale-template pair -> generic 500 page, INFO-3 Down lossy, INFO-4 first full runs lost to host low memory + Docker 500, green after Docker/WSL restart.'
 started_at: '2026-10-25T09:57:15Z'
-updated_at: '2026-10-25T11:50:00Z'
-completed_at: null
+updated_at: '2026-10-25T13:59:40Z'
+completed_at: '2026-10-25T13:59:40Z'

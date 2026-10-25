@@ -230,7 +230,7 @@ stories:
   - id: US-055
     epic: EPIC-1
     title: Points and grades of any size are stored as Google returned them
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: null
     # Story file authored: docs/stories/US-055-grade-columns-fit-any-value.md
     # (aligned with v97). Origin: deployment rehearsal P-9 (numeric(10,4)

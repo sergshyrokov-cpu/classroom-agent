@@ -44,8 +44,8 @@ public sealed class SubmissionConfiguration : IEntityTypeConfiguration<Submissio
             .IsRequired()
             .HasConversion(v => StateCode(v), code => StateFromCode(code));
         builder.Property(s => s.RawState).HasMaxLength(Submission.MaxRawStateLength);
-        builder.Property(s => s.AssignedGrade).HasColumnType("numeric(10,4)");
-        builder.Property(s => s.DraftGrade).HasColumnType("numeric(10,4)");
+        builder.Property(s => s.AssignedGrade).HasColumnType("numeric");
+        builder.Property(s => s.DraftGrade).HasColumnType("numeric");
         builder.Property(s => s.TurnedInAt);
         builder.Property(s => s.Late).IsRequired();
         builder.Property(s => s.UpdateTime);

@@ -44,7 +44,7 @@ public sealed class CourseWorkConfiguration : IEntityTypeConfiguration<CourseWor
         builder.Property(c => c.Title).HasMaxLength(CourseWork.MaxTitleLength).IsRequired();
         builder.Property(c => c.ItemDate).IsRequired();
         builder.Property(c => c.DueAt);
-        builder.Property(c => c.MaxPoints).HasColumnType("numeric(10,4)");
+        builder.Property(c => c.MaxPoints).HasColumnType("numeric");
         builder.Property(c => c.CreationTime);
         builder.Property(c => c.ScheduledTime);
         builder.Property(c => c.UpdateTime);

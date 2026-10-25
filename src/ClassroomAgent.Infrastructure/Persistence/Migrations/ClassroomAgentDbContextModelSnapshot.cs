@@ -654,7 +654,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .HasColumnName("item_date");
 
                     b.Property<decimal?>("MaxPoints")
-                        .HasColumnType("numeric(10,4)")
+                        .HasColumnType("numeric")
                         .HasColumnName("max_points");
 
                     b.Property<string>("Resource")
@@ -1277,7 +1277,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<decimal?>("AssignedGrade")
-                        .HasColumnType("numeric(10,4)")
+                        .HasColumnType("numeric")
                         .HasColumnName("assigned_grade");
 
                     b.Property<long>("CourseWorkId")
@@ -1289,7 +1289,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<decimal?>("DraftGrade")
-                        .HasColumnType("numeric(10,4)")
+                        .HasColumnType("numeric")
                         .HasColumnName("draft_grade");
 
                     b.Property<string>("GoogleId")
