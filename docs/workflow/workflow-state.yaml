@@ -4,23 +4,24 @@
 version: 1
 story: US-057
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: '2026-10-25T19:02:30Z'
+  stage: DB_DESIGN
+  recorded_at: '2026-10-25T19:06:30Z'
 last_artifacts:
-- type: api_design
-  path: docs/designs/api/US-057-api-design.md
+- type: database_design
+  path: docs/designs/database/US-057-db-design.md
   version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'DB_DESIGN v2: NOT_APPLICABLE (spec v2 §9, §10, OD-001 a); every stored value of spec v2 ACs passes ck_*_non_negative; new outcome list is in-memory like CoursesGone; no entity model, no migration; v1 B-1/B-2 kept as history.'
 - 'API_DESIGN v2: NOT_APPLICABLE re-checked against spec v2 (§6, §7, §9: no endpoint, route, body or policy change; AC-007b uses a substituted journal port, no HTTP operation); no openapi file by design.'
 - 'HUMAN_SPEC_APPROVAL (attempt 2): approved by Serhii SHYROKOV (/so:approve) 2026-10-25T18:58:00Z, no comment; spec, digest, open decisions v2 APPROVED. Owner 2026-10-25: Dean-visible highlight of grades above maximum goes to a separate Story after US-057 (trebovaniya v99 first).'
 - 'SPEC_REVIEW v2 m-1 (carried): digest says the next run reads the course again without FR-004 unreachable exception.'
@@ -37,5 +38,5 @@ non_blocking_findings:
 - 'SPEC_REVIEW m-2: FR-001 does not name the Diagnosis the ValueOutOfRange exception carries (null like CourseGone) — decide at IMPLEMENTATION.'
 - 'SPEC_REVIEW m-3: digest bullet 1 omits "if nothing else fails" for the completed run.'
 started_at: '2026-10-25T17:56:59Z'
-updated_at: '2026-10-25T19:02:30Z'
+updated_at: '2026-10-25T19:06:30Z'
 completed_at: null

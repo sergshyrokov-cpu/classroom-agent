@@ -502,3 +502,4 @@
 {"timestamp": "2026-10-25T18:48:00Z", "story": "US-057", "from_stage": "SPEC_REVIEW", "to_stage": "HUMAN_SPEC_APPROVAL", "skill": "spec-verifier", "verdict": "PASS", "artifacts": ["docs/reviews/specifications/US-057-spec-review.md"], "attempt": 2}
 {"timestamp": "2026-10-25T18:58:00Z", "story": "US-057", "from_stage": "HUMAN_SPEC_APPROVAL", "to_stage": "API_DESIGN", "skill": null, "verdict": "HUMAN_APPROVED", "artifacts": [], "attempt": 1}
 {"timestamp": "2026-10-25T19:02:30Z", "story": "US-057", "from_stage": "API_DESIGN", "to_stage": "DB_DESIGN", "skill": "openapi-designer", "verdict": "NOT_APPLICABLE", "artifacts": ["docs/designs/api/US-057-api-design.md"], "attempt": 1}
+{"timestamp": "2026-10-25T19:06:30Z", "story": "US-057", "from_stage": "DB_DESIGN", "to_stage": "TEST_WRITING", "skill": "db-designer", "verdict": "NOT_APPLICABLE", "artifacts": ["docs/designs/database/US-057-db-design.md"], "attempt": 1}
