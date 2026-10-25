@@ -227,6 +227,15 @@ stories:
     # Story file authored: docs/stories/US-054-technical-account-superadmin-texts.md
     # (aligned with v97). OD-001...OD-004 resolved by the Owner on 2026-10-24
     # (1 yes, 2a, 3 yes, 4a, 5a, 6 ok). Needed before pilot stage 5.
+  - id: US-055
+    epic: EPIC-1
+    title: Points and grades of any size are stored as Google returned them
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-055-grade-columns-fit-any-value.md
+    # (aligned with v97). Origin: deployment rehearsal P-9 (numeric(10,4)
+    # overflow stopped the college's first full sync). Owner 2026-10-25: (a)
+    # widen the columns only, the run-stops rule unchanged. Pre-pilot blocker.
   - id: US-046
     epic: EPIC-6
     title: Page-search hint on teaching-data pages
