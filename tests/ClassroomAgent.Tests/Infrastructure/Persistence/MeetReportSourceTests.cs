@@ -181,7 +181,7 @@ public sealed class MeetReportSourceTests(PostgreSqlFixture database)
             Assert.Equal(Mr.TeacherEmail, teacher.Email, ignoreCase: true);
             Assert.Equal(Mr.TeacherName, teacher.FullName);
             Assert.True(teacher.OnRoster);
-            Assert.Equal(new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero), teacher.FirstSeenAt);
+            Assert.Equal(new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero), teacher.StartsAt);
             var leaver = Assert.Single(members, m => m.ParticipantId == left);
             Assert.False(leaver.OnRoster);
             Assert.Equal(ClassroomRole.Student, leaver.Role);

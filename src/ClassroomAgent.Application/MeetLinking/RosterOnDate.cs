@@ -9,7 +9,7 @@ public static class RosterOnDate
     public static bool Covers(RosterMembership membership, DateOnly date, TimeZoneInfo zone)
     {
         ArgumentNullException.ThrowIfNull(membership);
-        if (LocalDate(membership.FirstSeenAt, zone) > date)
+        if (LocalDate(membership.StartsAt, zone) > date)
         {
             return false;
         }

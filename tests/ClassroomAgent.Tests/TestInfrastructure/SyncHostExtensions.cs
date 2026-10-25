@@ -24,9 +24,10 @@ public static class SyncHostExtensions
         int? intervalMinutes = null,
         bool? replySuccess = null,
         Func<InstallationTestHost, CancellationToken, Task>? seed = null,
-        Action<FakeClassroomReader>? classroom = null)
+        Action<FakeClassroomReader>? classroom = null,
+        DateTimeOffset? now = null)
     {
-        var host = await InstallationTestHost.CreateAsync(database, cancellationToken);
+        var host = await InstallationTestHost.CreateAsync(database, cancellationToken, now: now);
         await ReadOnlyModeHost.SeedAsync(host, cause, cancellationToken);
         await AccessCheckHostExtensions.SeedConnectionAsync(host, connection, cancellationToken);
         if (intervalMinutes is { } minutes)

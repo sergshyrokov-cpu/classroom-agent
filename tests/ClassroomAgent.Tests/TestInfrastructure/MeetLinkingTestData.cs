@@ -42,11 +42,16 @@ public static class MeetLinkingTestData
     public static List<string> Students(int from, int to) =>
         Enumerable.Range(from, to - from + 1).Select(Student).ToList();
 
-    /// <summary>Seeds courses A and B, with <see cref="Organizer"/> as a teacher of both from <paramref name="teacherSince"/>.</summary>
+    /// <summary>
+    /// Seeds courses A and B, with <see cref="Organizer"/> as a teacher of both from <paramref name="teacherSince"/>.
+    /// <paramref name="firstLoadedAt"/> is the courses' first load (<c>created_at</c>, US-056 db-design §1); by default the
+    /// host's clock, so every membership seeded before it counts as seen in that load.
+    /// </summary>
     public static async Task<Courses> SeedCoursesAsync(
         InstallationTestHost host,
         CancellationToken cancellationToken,
-        DateTimeOffset? teacherSince = null)
+        DateTimeOffset? teacherSince = null,
+        DateTimeOffset? firstLoadedAt = null)
     {
         var updated = InstallationTestHost.DefaultStart - TimeSpan.FromDays(10);
         var a = await CourseRows.InsertCourseAsync(
@@ -55,14 +60,16 @@ public static class MeetLinkingTestData
             googleId: CourseTestData.CourseId(1),
             name: CourseTestData.CourseName(1),
             creationTime: updated,
-            updateTime: updated);
+            updateTime: updated,
+            createdAt: firstLoadedAt);
         var b = await CourseRows.InsertCourseAsync(
             host,
             cancellationToken,
             googleId: CourseTestData.CourseId(2),
             name: CourseTestData.CourseName(2),
             creationTime: updated,
-            updateTime: updated);
+            updateTime: updated,
+            createdAt: firstLoadedAt);
         await SeedRosterAsync(host, a, CourseTestData.Roles.Teacher, [Organizer], cancellationToken, teacherSince);
         await SeedRosterAsync(host, b, CourseTestData.Roles.Teacher, [Organizer], cancellationToken, teacherSince);
         return new Courses(a, b);
@@ -119,9 +126,10 @@ public static class MeetLinkingTestData
     public static async Task<Courses> SeedClearRostersAsync(
         InstallationTestHost host,
         CancellationToken cancellationToken,
-        DateTimeOffset? firstSeenAt = null)
+        DateTimeOffset? firstSeenAt = null,
+        DateTimeOffset? firstLoadedAt = null)
     {
-        var courses = await SeedCoursesAsync(host, cancellationToken, firstSeenAt);
+        var courses = await SeedCoursesAsync(host, cancellationToken, firstSeenAt, firstLoadedAt);
         await SeedRosterAsync(host, courses.A, CourseTestData.Roles.Student, Students(1, 17), cancellationToken, firstSeenAt);
         await SeedRosterAsync(host, courses.B, CourseTestData.Roles.Student, Students(15, 18), cancellationToken, firstSeenAt);
         return courses;

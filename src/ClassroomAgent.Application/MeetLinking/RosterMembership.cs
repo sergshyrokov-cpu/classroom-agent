@@ -7,6 +7,6 @@ public sealed record RosterMembership(
     long CourseId,
     ClassroomRole Role,
     string Email,
-    DateTimeOffset FirstSeenAt,
+    DateTimeOffset StartsAt,
     DateTimeOffset LastSeenAt,
     bool OnRoster);

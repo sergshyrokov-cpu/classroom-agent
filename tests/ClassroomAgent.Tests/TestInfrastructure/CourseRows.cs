@@ -23,9 +23,11 @@ public static class CourseRows
         string? section = null,
         string? description = null,
         string? room = null,
-        string? descriptionHeading = null)
+        string? descriptionHeading = null,
+        DateTimeOffset? createdAt = null)
     {
-        var stamp = host.Time.GetUtcNow();
+        // US-056 db-design §1: created_at is the course's first committed load; a test of the membership start sets it.
+        var stamp = createdAt ?? host.Time.GetUtcNow();
         var id = await host.ScalarAsync<long>(
             """
             INSERT INTO course (google_id, name, section, description_heading, description, room,

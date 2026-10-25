@@ -8,6 +8,6 @@ public sealed record MeetReportMemberRecord(
     ClassroomRole Role,
     string? Email,
     string? FullName,
-    DateTimeOffset FirstSeenAt,
+    DateTimeOffset StartsAt,
     DateTimeOffset LastSeenAt,
     bool OnRoster);

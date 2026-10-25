@@ -1,6 +1,7 @@
 using ClassroomAgent.Application.Models;
 using ClassroomAgent.Application.Ports;
 using ClassroomAgent.Domain.Enums;
+using ClassroomAgent.Domain.Rules;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClassroomAgent.Infrastructure.Persistence.Repositories;
@@ -40,18 +41,34 @@ public sealed class JournalSource(ClassroomAgentDbContext db) : IJournalSource
     }
 
     /// <summary>Q3 — every student membership of the course with its participant, leavers included.</summary>
-    public async Task<IReadOnlyList<JournalMemberRecord>> GetStudentMembersAsync(long courseId, CancellationToken cancellationToken) =>
-        await db.CourseMemberships
+    public async Task<IReadOnlyList<JournalMemberRecord>> GetStudentMembersAsync(long courseId, CancellationToken cancellationToken)
+    {
+        // US-056 db-design §3: the three values of the start are projected, the rule applied in memory.
+        var rows = await db.CourseMemberships
             .AsNoTracking()
             .Where(m => m.CourseId == courseId && m.Role == ClassroomRole.Student)
-            .Select(m => new JournalMemberRecord(
+            .Select(m => new
+            {
                 m.ParticipantId,
                 m.FirstSeenAt,
+                CourseCreatedAt = m.Course.CreatedAt,
+                m.Course.CreationTime,
                 m.LastSeenAt,
                 m.OnRoster,
                 m.Participant.FullName,
-                m.Participant.Email))
+                m.Participant.Email,
+            })
             .ToListAsync(cancellationToken);
+        return rows
+            .Select(m => new JournalMemberRecord(
+                m.ParticipantId,
+                MembershipStart.Of(m.FirstSeenAt, m.CourseCreatedAt, m.CreationTime),
+                m.LastSeenAt,
+                m.OnRoster,
+                m.FullName,
+                m.Email))
+            .ToList();
+    }
 
     /// <summary>
     /// Q4 — every submission to an item of the course dated in the period. The period is repeated through the join

@@ -9,7 +9,7 @@ namespace ClassroomAgent.Application.Models;
 public sealed record JournalCourseMemberRecord(
     long ParticipantId,
     ClassroomRole Role,
-    DateTimeOffset FirstSeenAt,
+    DateTimeOffset StartsAt,
     DateTimeOffset LastSeenAt,
     bool OnRoster,
     string? Surname,

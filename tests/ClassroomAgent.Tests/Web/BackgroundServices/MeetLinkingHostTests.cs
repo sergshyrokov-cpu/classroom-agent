@@ -270,7 +270,11 @@ public sealed class MeetLinkingHostTests(PostgreSqlFixture database)
         Assert.True(link.LinkedAutomatically);
     }
 
-    /// <summary>I-1, FR-002: meetings older than every membership's first sighting find nobody on the roster, so nothing is linked.</summary>
+    /// <summary>
+    /// I-1, FR-002: meetings older than the start of every membership find nobody on the roster, so nothing is linked.
+    /// US-056 FR-001 c: the memberships are later arrivals — first seen after the courses' first load — so their start is
+    /// their first sighting, after the meetings.
+    /// </summary>
     [Fact]
     public async Task MeetingsBeforeEveryFirstSeenDate_FindNobodyOnTheRoster_AndLinkNothing()
     {
@@ -279,7 +283,7 @@ public sealed class MeetLinkingHostTests(PostgreSqlFixture database)
             ct,
             async h =>
             {
-                await SeedClearRostersAsync(h, ct, firstSeenAt: LaterMeeting);
+                await SeedClearRostersAsync(h, ct, firstSeenAt: LaterMeeting, firstLoadedAt: FirstMeeting);
                 h.Meet.WithPage(FirstMeetingEvents());
             });
 

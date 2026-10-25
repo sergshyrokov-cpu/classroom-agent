@@ -153,7 +153,7 @@ public sealed class GetMeetReportsQuery(
 
         // Spec FR-009: the students of the period; a meeting counts for one only where they were a course student.
         var students = members
-            .Where(m => m.Role == ClassroomRole.Student && IsOfPeriod(m.FirstSeenAt, m.LastSeenAt, m.OnRoster, start, end))
+            .Where(m => m.Role == ClassroomRole.Student && IsOfPeriod(m.StartsAt, m.LastSeenAt, m.OnRoster, start, end))
             .Select(m =>
             {
                 var attended = m.Email is null

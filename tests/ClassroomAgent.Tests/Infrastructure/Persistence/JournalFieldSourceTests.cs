@@ -178,7 +178,7 @@ public sealed class JournalFieldSourceTests(PostgreSqlFixture database)
             Assert.True(s.OnRoster);
             Assert.Equal(("Тестова", "Олена"), (s.Surname, s.GivenName)); // US-042 entity model §3.2
             Assert.Equal(CourseTestData.Email("student.one"), s.Email);
-            Assert.Equal(first, s.FirstSeenAt);
+            Assert.Equal(first, s.StartsAt);
             Assert.Equal(last, s.LastSeenAt);
             var t = Assert.Single(members, m => m.ParticipantId == teacher);
             Assert.Equal(ClassroomRole.Teacher, t.Role);

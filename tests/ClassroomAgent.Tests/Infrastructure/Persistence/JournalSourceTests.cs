@@ -135,7 +135,7 @@ public sealed class JournalSourceTests(PostgreSqlFixture database)
             Assert.True(a.OnRoster);
             Assert.Equal("Test Student One", a.FullName);
             Assert.Equal(CourseTestData.Email("student.one"), a.Email);
-            Assert.Equal(first, a.FirstSeenAt);
+            Assert.Equal(first, a.StartsAt);
             Assert.Equal(last, a.LastSeenAt);
             var b = Assert.Single(members, m => m.ParticipantId == leaver);
             Assert.False(b.OnRoster);

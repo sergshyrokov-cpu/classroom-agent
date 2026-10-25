@@ -1,5 +1,6 @@
 using ClassroomAgent.Application.MeetLinking;
 using ClassroomAgent.Application.Ports;
+using ClassroomAgent.Domain.Rules;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClassroomAgent.Infrastructure.Persistence;
@@ -64,17 +65,32 @@ public sealed class MeetCodeScoringSource(ClassroomAgentDbContext db) : IMeetCod
             .Select(e => e.ToLowerInvariant())
             .Distinct(StringComparer.Ordinal)
             .ToList();
-        var memberships = await db.CourseMemberships
+        var rows = await db.CourseMemberships
             .AsNoTracking()
             .Where(m => m.Participant.Email != null && lowered.Contains(m.Participant.Email.ToLower()))
+            .Select(m => new
+            {
+                m.CourseId,
+                m.Role,
+                Email = m.Participant.Email!,
+                m.FirstSeenAt,
+                CourseCreatedAt = m.Course.CreatedAt,
+                m.Course.CreationTime,
+                m.LastSeenAt,
+                m.OnRoster,
+            })
+            .ToListAsync(cancellationToken);
+
+        // US-056 db-design §3: the start of each membership, by the one Domain rule.
+        var memberships = rows
             .Select(m => new RosterMembership(
                 m.CourseId,
                 m.Role,
-                m.Participant.Email!,
-                m.FirstSeenAt,
+                m.Email,
+                MembershipStart.Of(m.FirstSeenAt, m.CourseCreatedAt, m.CreationTime),
                 m.LastSeenAt,
                 m.OnRoster))
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         var inputs = new List<MeetCodeScoringInput>();
         foreach (var group in sessions.GroupBy(s => s.MeetingCode, StringComparer.Ordinal).OrderBy(g => g.Key, StringComparer.Ordinal))

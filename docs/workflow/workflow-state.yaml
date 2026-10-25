@@ -4,33 +4,32 @@
 version: 1
 story: US-056
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: security-reviewer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: '2026-10-25T17:10:00Z'
+  verdict: PASS
+  stage: SECURITY_REVIEW
+  recorded_at: '2026-10-25T23:00:00Z'
 last_artifacts:
-- type: specification
-  path: docs/specifications/US-056-spec.md
-  version: 3
-- type: spec_digest
-  path: docs/specifications/US-056-spec-digest.ru.md
-  version: 3
-- type: open_decisions
-  path: docs/decisions/US-056-open-decisions.md
+- type: security_review
+  path: docs/reviews/security/US-056-security-review.md
   version: 1
-- type: specification_review
-  path: docs/reviews/specifications/US-056-spec-review.md
-  version: 3
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'HUMAN_PR_APPROVAL: APPROVED by Serhii SHYROKOV (/so:approve) at 2026-10-25T17:15:01Z; no comment.'
 - 'SPEC_REVIEW v3 m-1: FR-003.5 "agrees with the scoring of item 4" means same start and same teacher-on-date rule, not the same score.'
+- 'DB_DESIGN: derived start (first_seen_at <= course.created_at), no schema change, no migration; Domain rule MembershipStart.Of; records FirstSeenAt -> StartsAt.'
+- 'DB_DESIGN §6: existing fixtures with creation_time and first_seen_at <= course.created_at change meaning; adjusted tests must be listed in the implementation report. Advance the clock between runs.'
+- 'TEST_WRITING: 29 new tests in 6 classes, 25 red, 4 green by design (AC-006, AC-010, AC-009 para 2, AC-007 Meet); skeleton MembershipStart.Of + FirstSeenAt -> StartsAt renames; full suite not run.'
+- 'TEST_WRITING: MeetLinkingHostTests ~:282 fixture (first_seen <= created_at with creation_time) may change meaning; list adjusted tests in the implementation report.'
+- 'IMPLEMENTATION: D-1 MeetLinkingHostTests fixture given firstLoadedAt (db-design 6); N-2 PushCheckCoordinationTests flaky once in full run (6167/6168), 9/9 alone, unrelated; N-3 SQL <= boundary pinned only in C#.'
+- 'IMPL_VERIFICATION: PASS 0/0/3; story tests 29/29 + MeetLinkingHostTests 11/11; D-1 accepted; N-1 SQL <= boundary only C#-pinned; N-2 full suite 6167/6168 (unrelated flaky) not rerun; N-3 two test files LF in working copy (cosmetic).'
+- 'SECURITY_REVIEW: PASS 0/0/0, 3 INFO; full suite 6168/6168, build 0 warnings, no vulnerable packages; INFO-1 earlier periods list first-load members (intended v98), INFO-2 = N-1, INFO-3 flaky test did not recur.'
 started_at: '2026-10-25T14:38:14Z'
-updated_at: '2026-10-25T17:10:00Z'
-completed_at: null
+updated_at: '2026-10-25T17:15:01Z'
+completed_at: '2026-10-25T17:15:01Z'

@@ -239,7 +239,7 @@ stories:
   - id: US-056
     epic: EPIC-1
     title: Members seen when a course is first loaded count from the course's creation
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: null
     # Story file authored: docs/stories/US-056-membership-starts-at-course-creation.md
     # (aligned with v98). Origin: deployment rehearsal P-14 (no members before the

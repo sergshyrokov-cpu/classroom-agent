@@ -94,7 +94,7 @@ internal sealed class ReportBuilder(
 
         var view = settings.View;
         var teachers = members
-            .Where(m => m.Role == ClassroomRole.Teacher && IsOfPeriod(m.FirstSeenAt, m.LastSeenAt, m.OnRoster, start, end))
+            .Where(m => m.Role == ClassroomRole.Teacher && IsOfPeriod(m.StartsAt, m.LastSeenAt, m.OnRoster, start, end))
             .Select(m => (Member: m, Label: ReportPersonNameRule.Label(m.Surname, m.GivenName, m.Email, nameSource)))
             .OrderBy(r => r.Label.Kind == ReportNameKind.Unnamed)
             .ThenBy(r => r.Label.Name, comparer)
@@ -153,7 +153,7 @@ internal sealed class ReportBuilder(
 
         var rows = members
             .Where(m => m.Role == ClassroomRole.Student
-                && (IsOfPeriod(m.FirstSeenAt, m.LastSeenAt, m.OnRoster, start, end) || submitters.Contains(m.ParticipantId)))
+                && (IsOfPeriod(m.StartsAt, m.LastSeenAt, m.OnRoster, start, end) || submitters.Contains(m.ParticipantId)))
             .Select(m => (Member: m, Label: ReportPersonNameRule.Label(m.Surname, m.GivenName, m.Email, nameSource)))
             .OrderBy(r => r.Label.Kind == ReportNameKind.Unnamed)
             .ThenBy(r => r.Label.Name, comparer)

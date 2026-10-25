@@ -145,7 +145,7 @@ internal static class MeetReportRules
         members
             .Where(m => m.Role == role && m.Email is not null)
             .Where(m => RosterOnDate.Covers(
-                new RosterMembership(courseId, m.Role, m.Email!, m.FirstSeenAt, m.LastSeenAt, m.OnRoster), date, zone))
+                new RosterMembership(courseId, m.Role, m.Email!, m.StartsAt, m.LastSeenAt, m.OnRoster), date, zone))
             .Select(m => Lower(m.Email!))
             .ToHashSet(StringComparer.Ordinal);
 }

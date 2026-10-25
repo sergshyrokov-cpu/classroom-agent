@@ -82,8 +82,8 @@ internal static class JournalCellRule
     /// on the roster or last seen no earlier than its start.
     /// </summary>
     internal static bool IsOfPeriod(
-        DateTimeOffset firstSeenAt, DateTimeOffset lastSeenAt, bool onRoster, DateTimeOffset start, DateTimeOffset end) =>
-        firstSeenAt < end && (onRoster || lastSeenAt >= start);
+        DateTimeOffset startsAt, DateTimeOffset lastSeenAt, bool onRoster, DateTimeOffset start, DateTimeOffset end) =>
+        startsAt < end && (onRoster || lastSeenAt >= start);
 
     /// <summary>Spec FR-005, OD-005 (a), I-5: the full name, else the email, else unnamed.</summary>
     internal static (string? Name, JournalNameKind Kind) Label(string? fullName, string? email)

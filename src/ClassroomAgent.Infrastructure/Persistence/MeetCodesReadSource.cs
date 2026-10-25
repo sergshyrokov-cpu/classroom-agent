@@ -36,7 +36,8 @@ public sealed class MeetCodesReadSource(ClassroomAgentDbContext db) : IMeetCodes
         var total = (await GetCountsAsync(cancellationToken)).Unassigned;
 
         // The school's calendar day on both sides, converted by PostgreSQL from the IANA id (db-design §5.2); the
-        // same rule as RosterOnDate. An organizer with a teacher membership covering the meeting's day is a candidate.
+        // same rule as RosterOnDate. An organizer with a teacher membership covering the meeting's day is a candidate;
+        // the membership's start is MembershipStart in SQL (US-056 db-design §3).
         var zoneId = zone.Id;
         var offset = (long)page * size;
         var codes = await db.Database
@@ -50,8 +51,12 @@ public sealed class MeetCodesReadSource(ClassroomAgentDbContext db) : IMeetCodes
                            FROM meet_session m
                            JOIN classroom_participant p ON lower(p.email) = lower(m.organizer_email)
                            JOIN course_membership cm ON cm.participant_id = p.id AND cm.role = 'teacher'
+                           JOIN course co ON co.id = cm.course_id
                            WHERE m.meeting_code = c.meeting_code
-                             AND (cm.first_seen_at AT TIME ZONE {zoneId})::date <= (m.started_at AT TIME ZONE {zoneId})::date
+                             AND ((CASE WHEN cm.first_seen_at <= co.created_at
+                                        THEN COALESCE(co.creation_time, cm.first_seen_at)
+                                        ELSE cm.first_seen_at END) AT TIME ZONE {zoneId})::date
+                                 <= (m.started_at AT TIME ZONE {zoneId})::date
                              AND (cm.on_roster
                                   OR (cm.last_seen_at AT TIME ZONE {zoneId})::date >= (m.started_at AT TIME ZONE {zoneId})::date)
                        ) AS has_candidate

@@ -121,7 +121,7 @@ public sealed class GetJournalQuery(IJournalSource source, SchoolTimeZone school
         var submitters = chosenSubmissions.Keys.Select(k => k.ParticipantId).ToHashSet();
 
         var rows = members
-            .Where(m => IsOfPeriod(m.FirstSeenAt, m.LastSeenAt, m.OnRoster, start, end) || submitters.Contains(m.ParticipantId))
+            .Where(m => IsOfPeriod(m.StartsAt, m.LastSeenAt, m.OnRoster, start, end) || submitters.Contains(m.ParticipantId))
             .Select(m => (Member: m, Label: Label(m.FullName, m.Email)))
             .OrderBy(r => r.Label.Kind == JournalNameKind.Unnamed)
             .ThenBy(r => r.Label.Name, comparer)

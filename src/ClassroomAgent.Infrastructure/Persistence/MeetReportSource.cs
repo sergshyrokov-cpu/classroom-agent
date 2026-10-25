@@ -1,5 +1,6 @@
 using ClassroomAgent.Application.Models;
 using ClassroomAgent.Application.Ports;
+using ClassroomAgent.Domain.Rules;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClassroomAgent.Infrastructure.Persistence;
@@ -82,19 +83,36 @@ public sealed class MeetReportSource(ClassroomAgentDbContext db) : IMeetReportSo
     /// <summary>R4: every membership of the course, any role.</summary>
     public async Task<IReadOnlyList<MeetReportMemberRecord>> GetCourseMembersAsync(
         long courseId,
-        CancellationToken cancellationToken) =>
-        await db.CourseMemberships
+        CancellationToken cancellationToken)
+    {
+        // US-056 db-design §3: the three values of the start are projected, the rule applied in memory.
+        var rows = await db.CourseMemberships
             .AsNoTracking()
             .Where(m => m.CourseId == courseId)
-            .Select(m => new MeetReportMemberRecord(
+            .Select(m => new
+            {
                 m.ParticipantId,
                 m.Role,
                 m.Participant.Email,
                 m.Participant.FullName,
                 m.FirstSeenAt,
+                CourseCreatedAt = m.Course.CreatedAt,
+                m.Course.CreationTime,
+                m.LastSeenAt,
+                m.OnRoster,
+            })
+            .ToListAsync(cancellationToken);
+        return rows
+            .Select(m => new MeetReportMemberRecord(
+                m.ParticipantId,
+                m.Role,
+                m.Email,
+                m.FullName,
+                MembershipStart.Of(m.FirstSeenAt, m.CourseCreatedAt, m.CreationTime),
                 m.LastSeenAt,
                 m.OnRoster))
-            .ToListAsync(cancellationToken);
+            .ToList();
+    }
 
     public async Task<IReadOnlyList<MeetReportPersonRecord>> GetPeopleAsync(
         IReadOnlyCollection<string> lowerCaseEmails,
