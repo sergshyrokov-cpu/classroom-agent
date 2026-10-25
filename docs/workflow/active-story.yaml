@@ -3,10 +3,10 @@
 # Writer: story-orchestrator (on activation). Stories are authored by a human
 # in docs/stories/ — there is no backlog-sync stage in this workflow variant.
 version: 1
-active_story: US-055
-story_path: docs/stories/US-055-grade-columns-fit-any-value.md
+active_story: US-056
+story_path: docs/stories/US-056-membership-starts-at-course-creation.md
 source:
   type: authored
-activated_at: 2026-10-25T09:57:15Z
+activated_at: 2026-10-25T14:38:14Z
 activated_by: Serhii SHYROKOV (/so:start)
-status: COMPLETED
+status: IN_PROGRESS
