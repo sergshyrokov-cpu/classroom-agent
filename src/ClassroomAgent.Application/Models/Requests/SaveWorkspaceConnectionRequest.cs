@@ -10,7 +10,10 @@ namespace ClassroomAgent.Application.Models.Requests;
 /// </summary>
 public sealed class SaveWorkspaceConnectionRequest
 {
-    /// <summary>The school's technical account — not the Admin's own account and not a super-admin (BR-015).</summary>
+    /// <summary>
+    /// The school's technical account — not the Admin's own account, no person behind it (BR-015); a super-admin
+    /// with blocked sign-in (§9 v97).
+    /// </summary>
     [Required(ErrorMessage = "WorkspaceConnection.Validation.Required")]
     [StringLength(ServiceAccountEmailAttribute.MaximumLength, ErrorMessage = "WorkspaceConnection.Validation.TooLong")]
     [ServiceAccountEmail(ErrorMessage = "WorkspaceConnection.Validation.Email")]

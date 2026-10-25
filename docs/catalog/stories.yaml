@@ -222,7 +222,7 @@ stories:
   - id: US-054
     epic: EPIC-6
     title: The program's texts describe the technical account as a super-admin with blocked sign-in
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: null
     # Story file authored: docs/stories/US-054-technical-account-superadmin-texts.md
     # (aligned with v97). OD-001...OD-004 resolved by the Owner on 2026-10-24

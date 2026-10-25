@@ -37,6 +37,13 @@
 @foreach (var statement in ConnectionInstructionTextKeys.TechnicalAccountStatements)
 {
     @:    - @T[statement]
+    if (statement == ConnectionInstructionTextKeys.TechnicalAccountMeasuresLead)
+    {
+        foreach (var measure in ConnectionInstructionTextKeys.TechnicalAccountMeasures)
+        {
+            @:        - @T[measure]
+        }
+    }
 }</pre>
 
 <button type="button" id="copy-instruction" data-confirmation="@T[ConnectionInstructionTextKeys.CopyConfirmation]">

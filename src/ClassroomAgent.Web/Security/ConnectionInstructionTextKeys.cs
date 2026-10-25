@@ -32,18 +32,28 @@ public static class ConnectionInstructionTextKeys
     /// <summary>BR-015: the school's super-admin creates the account at onboarding, with the delegation.</summary>
     public const string TechnicalAccountCreatedBySuperAdmin = "ConnectionInstruction.TechnicalAccount.CreatedBySuperAdmin";
 
-    /// <summary>BR-015: no person behind it, not a super-admin, nobody signs in to the program with it.</summary>
+    /// <summary>BR-015: no person stands behind it, and nobody signs in to the program with it.</summary>
     public const string TechnicalAccountNoPersonBehindIt = "ConnectionInstruction.TechnicalAccount.NoPersonBehindIt";
 
     /// <summary>
-    /// BR-015, OD-001: it must be able to **read** Classroom and Admin Reports and hold nothing beyond that.
-    /// The requirement, not a role list — no Workspace admin-role name is printed while
-    /// <c>trebovaniya.md</c> §7 item 10 is unverified.
+    /// §9 v97: it gets the super-admin role, because lesser Classroom roles do not see the domain's courses; the
+    /// program still only reads, bounded by the delegation scopes, not by the account's role.
     /// </summary>
-    public const string TechnicalAccountReadOnlyRoles = "ConnectionInstruction.TechnicalAccount.ReadOnlyRoles";
+    public const string TechnicalAccountSuperAdminRole = "ConnectionInstruction.TechnicalAccount.SuperAdminRole";
 
-    /// <summary>§9, BR-030: a super-admin account, and any account with write access, are not acceptable.</summary>
-    public const string TechnicalAccountNoWriteAccess = "ConnectionInstruction.TechnicalAccount.NoWriteAccess";
+    /// <summary>§9 v97: sign-in under the account is closed by the mandatory measures that follow.</summary>
+    public const string TechnicalAccountMeasuresLead = "ConnectionInstruction.TechnicalAccount.MeasuresLead";
+
+    public const string MeasureRandomPassword = "ConnectionInstruction.TechnicalAccount.Measure.RandomPassword";
+
+    public const string MeasureTwoStepVerification = "ConnectionInstruction.TechnicalAccount.Measure.TwoStepVerification";
+
+    public const string MeasureSeparateOrgUnit = "ConnectionInstruction.TechnicalAccount.Measure.SeparateOrgUnit";
+
+    public const string MeasureSignInAlert = "ConnectionInstruction.TechnicalAccount.Measure.SignInAlert";
+
+    /// <summary>§9 v97: the super-admin role is granted last, immediately before the access check.</summary>
+    public const string MeasureRoleGrantedLast = "ConnectionInstruction.TechnicalAccount.Measure.RoleGrantedLast";
 
     /// <summary>BR-020: its address is entered by the Admin in the connection settings, in the school's domain.</summary>
     public const string TechnicalAccountEnteredInSettings = "ConnectionInstruction.TechnicalAccount.EnteredInSettings";
@@ -55,13 +65,26 @@ public static class ConnectionInstructionTextKeys
     /// <summary>The second entry of the settings section US-009 created (spec FR-013).</summary>
     public const string NavigationEntry = "Landing.Settings.ConnectionInstruction";
 
-    /// <summary>The five statements of spec FR-005, in the order the instruction makes them.</summary>
+    /// <summary>
+    /// The five top-level technical-account statements of US-054 FR-001, in the order the instruction makes them;
+    /// <see cref="TechnicalAccountMeasures"/> are nested under <see cref="TechnicalAccountMeasuresLead"/>.
+    /// </summary>
     public static readonly string[] TechnicalAccountStatements =
     [
         TechnicalAccountCreatedBySuperAdmin,
         TechnicalAccountNoPersonBehindIt,
-        TechnicalAccountReadOnlyRoles,
-        TechnicalAccountNoWriteAccess,
+        TechnicalAccountSuperAdminRole,
+        TechnicalAccountMeasuresLead,
         TechnicalAccountEnteredInSettings,
+    ];
+
+    /// <summary>The five mandatory measures of US-054 FR-001 4.1–4.5, in order (§9 v97).</summary>
+    public static readonly string[] TechnicalAccountMeasures =
+    [
+        MeasureRandomPassword,
+        MeasureTwoStepVerification,
+        MeasureSeparateOrgUnit,
+        MeasureSignInAlert,
+        MeasureRoleGrantedLast,
     ];
 }

@@ -47,7 +47,7 @@
   <data name="WorkspaceConnection.Domain.Label" xml:space="preserve"><value>The school's domain</value></data>
   <data name="WorkspaceConnection.Domain.Unknown" xml:space="preserve"><value>The domain is not known yet: the installation's legitimacy has not been confirmed.</value></data>
   <data name="WorkspaceConnection.ImpersonationUser.Label" xml:space="preserve"><value>The school's technical account</value></data>
-  <data name="WorkspaceConnection.ImpersonationUser.Hint" xml:space="preserve"><value>The technical account is created by the school's super-admin. It is neither your own account nor a super-admin: no person stands behind it, and it holds read-only roles.</value></data>
+  <data name="WorkspaceConnection.ImpersonationUser.Hint" xml:space="preserve"><value>The technical account is created by the school's super-admin. It is not your own account: no person stands behind it, and sign-in under it is blocked. It holds the super-admin role, but the program only reads — its access is bounded by the scopes in domain-wide delegation.</value></data>
   <data name="WorkspaceConnection.CheckAccess.Hint" xml:space="preserve"><value>Saving only records the account. Checking access is a separate action.</value></data>
   <data name="WorkspaceConnection.State.NotConfigured" xml:space="preserve"><value>The connection is not configured yet.</value></data>
   <data name="WorkspaceConnection.State.Configured" xml:space="preserve"><value>The connection is configured.</value></data>
@@ -73,9 +73,14 @@
   <data name="ConnectionInstruction.Step.CreateTechnicalAccount" xml:space="preserve"><value>Create the school's technical account, on whose behalf the program reads the data.</value></data>
   <data name="ConnectionInstruction.TechnicalAccount.Label" xml:space="preserve"><value>What the technical account must be:</value></data>
   <data name="ConnectionInstruction.TechnicalAccount.CreatedBySuperAdmin" xml:space="preserve"><value>the school's super-admin creates it at onboarding, together with the domain-wide delegation;</value></data>
-  <data name="ConnectionInstruction.TechnicalAccount.NoPersonBehindIt" xml:space="preserve"><value>no person stands behind it, it is not a super-admin, and nobody signs in to the program with it;</value></data>
-  <data name="ConnectionInstruction.TechnicalAccount.ReadOnlyRoles" xml:space="preserve"><value>it must be able to read Classroom and Admin Reports — and hold nothing beyond that;</value></data>
-  <data name="ConnectionInstruction.TechnicalAccount.NoWriteAccess" xml:space="preserve"><value>a super-admin account, and any account with write access, are not acceptable: the program writes nothing to Google Workspace;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.NoPersonBehindIt" xml:space="preserve"><value>no person stands behind it, and nobody signs in to the program with it;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.SuperAdminRole" xml:space="preserve"><value>it gets the super-admin role: lesser Classroom roles do not see the domain's courses, and the program still only reads, because its access is bounded by the scopes in domain-wide delegation, not by the account's role;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.MeasuresLead" xml:space="preserve"><value>sign-in under it is closed by these mandatory measures:</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.Measure.RandomPassword" xml:space="preserve"><value>a random password that is stored nowhere;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.Measure.TwoStepVerification" xml:space="preserve"><value>enforced 2-Step Verification with no enrolment grace period and no method enrolled — no backup codes, no recovery email, no recovery phone — so that signing in to the account is impossible;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.Measure.SeparateOrgUnit" xml:space="preserve"><value>a separate organizational unit that carries these settings;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.Measure.SignInAlert" xml:space="preserve"><value>an alert rule for any sign-in to the account, emailed to a domain administrator;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.Measure.RoleGrantedLast" xml:space="preserve"><value>the super-admin role is granted last — after all the other measures, immediately before an Administrator clicks "Check access", and not earlier;</value></data>
   <data name="ConnectionInstruction.TechnicalAccount.EnteredInSettings" xml:space="preserve"><value>an Administrator enters its address in the connection settings, and that address must be in the school's domain.</value></data>
   <data name="ConnectionInstruction.Copy.Button" xml:space="preserve"><value>Copy the instructions</value></data>
   <data name="ConnectionInstruction.Copy.Confirmation" xml:space="preserve"><value>Instructions copied</value></data>
@@ -92,7 +97,7 @@
   <data name="AccessCheck.Outcome.Succeeded" xml:space="preserve"><value>works</value></data>
   <data name="AccessCheck.Outcome.ScopeNotAuthorized" xml:space="preserve"><value>this scope is not authorised in domain-wide delegation. Ask the school's super-admin to add it for this school's client ID, as the connection instruction says.</value></data>
   <data name="AccessCheck.Outcome.TechnicalAccountUnknown" xml:space="preserve"><value>the technical account was not found in the school's domain, or it cannot be acted for. Check the address in the connection settings with the school's super-admin.</value></data>
-  <data name="AccessCheck.Outcome.TechnicalAccountCannotRead" xml:space="preserve"><value>access is authorised, but the technical account has no right to this read. The school's super-admin must give it read-only rights to this data.</value></data>
+  <data name="AccessCheck.Outcome.TechnicalAccountCannotRead" xml:space="preserve"><value>access is authorised, but the technical account has no right to this read. The school's super-admin must give it the super-admin role, as the connection instructions say.</value></data>
   <data name="AccessCheck.Outcome.ApiNotEnabled" xml:space="preserve"><value>this API is not enabled in the service Owner's Google Cloud project. The service Owner fixes this, not the school.</value></data>
   <data name="AccessCheck.Outcome.KeyUnavailable" xml:space="preserve"><value>the service-account key is not available. The service Owner fixes this, not the school.</value></data>
   <data name="AccessCheck.Outcome.KeyRejected" xml:space="preserve"><value>Google rejected the service-account key. The service Owner fixes this, not the school.</value></data>

@@ -4,29 +4,35 @@
 version: 1
 story: US-054
 workflow: story-delivery
-current_stage: IMPLEMENTATION
-previous_stage: TEST_WRITING
-last_completed_stage: TEST_WRITING
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: test-writer
+last_invoked_skill: security-reviewer
 last_result:
   verdict: PASS
-  stage: TEST_WRITING
-  recorded_at: '2026-10-24T21:30:00Z'
+  stage: SECURITY_REVIEW
+  recorded_at: '2026-10-25T09:05:00Z'
 last_artifacts:
-- type: test_strategy
-  path: docs/tests/US-054-test-strategy.md
-  version: 1
-- type: ac_test_matrix
-  path: docs/tests/US-054-ac-test-matrix.md
-  version: 1
-- type: test_generation_report
-  path: docs/evidence/US-054-test-generation-report.md
+- type: security_review
+  path: docs/reviews/security/US-054-security-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'HUMAN_PR_APPROVAL: APPROVED by Serhii SHYROKOV (/so:approve) at 2026-10-25T09:05:30Z; no comment.'
+- 'SECURITY_REVIEW: PASS — 0/0/0, 4 INFO; build 0 warnings, 6123/6123 rerun, no vulnerable packages; texts match all five §9 v97 measures.'
+- 'SECURITY_REVIEW INFO-1: program cannot verify role/2SV/OU/alert; DWD under 2SV = §7 item 29, first live access check on pilot server.'
+- 'SECURITY_REVIEW INFO-2: RoleGrantedLast ties timing to Check access, §9 says before first sync — equivalent, OD-002 a.'
+- 'SECURITY_REVIEW INFO-3 = IMPL_VERIFICATION N-2; INFO-4 keep .claude/settings.local.json out of the commit.'
+- 'IMPL_VERIFICATION: PASS — all resx values equal spec 4.1 verbatim; 8 story classes green (264/264), build 0 warnings; full suite not rerun.'
+- 'IMPL_VERIFICATION deviations accepted: statements/measures split into two arrays for nesting; two informational item-10 comments left per FR-006.'
+- 'IMPL_VERIFICATION N-1 (Minor): four Measure* constants in ConnectionInstructionTextKeys lack summaries, unlike the rest of the class.'
+- 'IMPL_VERIFICATION N-2 (Minor): AC-003 absence checked against exact pre-v97 literals only (spec I-5, by design).'
+- 'IMPLEMENTATION: texts only — 5 src files (2 resx, ConnectionInstructionTextKeys, instruction view nesting, SaveWorkspaceConnectionRequest comment); build 0 warnings, 6123/6123, format clean.'
+- 'IMPLEMENTATION: production splits TechnicalAccountStatements (5 top-level) and TechnicalAccountMeasures (5 nested); test data keeps one flat ordered list.'
+- 'IMPLEMENTATION: first full run stalled on Docker/WSL (infra), second stopped for low host memory; third run green. Manual: first live access check on pilot server verifies §7 item 29.'
 - 'TEST_WRITING: 34 new cases (TechnicalAccountSuperAdminTextsTests) + rewritten instruction tests; 76 red for expected reasons (7 keys missing, old wording/keys present), regression classes green; no skeleton; binding §4.1 wording pinned as literals.'
 - 'TEST_WRITING: production comments (ConnectionInstructionTextKeys, SaveWorkspaceConnectionRequest) left to IMPLEMENTATION under FR-006; full suite not rerun.'
 - 'DB_DESIGN: NOT_APPLICABLE — texts only (spec 1, 10); translations are resx; no entity-model by design; no migration.'
@@ -36,5 +42,5 @@ non_blocking_findings:
 - 'SPEC_REVIEW m-2: ForbiddenRoleNames is shared with AccessCheckTranslationTests.NoMessage_NamesAWorkspaceAdminRole; dropping Super Admin (I-2) also changes that guard.'
 - 'SPECIFICATION F-1: trebovaniya.md section 3 WorkspaceConnection (line ~837) still says not super-admin; new requirements version, not this Story.'
 started_at: '2026-10-24T19:40:45Z'
-updated_at: '2026-10-24T21:30:00Z'
-completed_at: null
+updated_at: '2026-10-25T09:05:30Z'
+completed_at: '2026-10-25T09:05:30Z'

@@ -47,7 +47,7 @@
   <data name="WorkspaceConnection.Domain.Label" xml:space="preserve"><value>Домен школи</value></data>
   <data name="WorkspaceConnection.Domain.Unknown" xml:space="preserve"><value>Домен ще не відомий: легітимність інсталяції не підтверджено.</value></data>
   <data name="WorkspaceConnection.ImpersonationUser.Label" xml:space="preserve"><value>Технічний акаунт школи</value></data>
-  <data name="WorkspaceConnection.ImpersonationUser.Hint" xml:space="preserve"><value>Технічний акаунт створює super-admin школи. Це не ваш акаунт і не super-admin: за ним не стоїть людина, і він має лише права на читання.</value></data>
+  <data name="WorkspaceConnection.ImpersonationUser.Hint" xml:space="preserve"><value>Технічний акаунт створює super-admin школи. Це не ваш акаунт: за ним не стоїть людина, і вхід під ним заблоковано. Він має роль super-admin, але програма лише читає — її доступ обмежують scope у domain-wide delegation.</value></data>
   <data name="WorkspaceConnection.CheckAccess.Hint" xml:space="preserve"><value>Збереження лише записує акаунт. Перевірка доступу — окрема дія.</value></data>
   <data name="WorkspaceConnection.State.NotConfigured" xml:space="preserve"><value>Підключення ще не налаштовано.</value></data>
   <data name="WorkspaceConnection.State.Configured" xml:space="preserve"><value>Підключення налаштовано.</value></data>
@@ -73,9 +73,14 @@
   <data name="ConnectionInstruction.Step.CreateTechnicalAccount" xml:space="preserve"><value>Створіть технічний акаунт школи, від імені якого програма читатиме дані.</value></data>
   <data name="ConnectionInstruction.TechnicalAccount.Label" xml:space="preserve"><value>Вимоги до технічного акаунта:</value></data>
   <data name="ConnectionInstruction.TechnicalAccount.CreatedBySuperAdmin" xml:space="preserve"><value>його створює super-admin школи під час підключення, разом із domain-wide delegation;</value></data>
-  <data name="ConnectionInstruction.TechnicalAccount.NoPersonBehindIt" xml:space="preserve"><value>за ним не стоїть людина, він не super-admin, і в програму під ним ніхто не входить;</value></data>
-  <data name="ConnectionInstruction.TechnicalAccount.ReadOnlyRoles" xml:space="preserve"><value>він має читати Classroom і Admin Reports — і не мати нічого понад це;</value></data>
-  <data name="ConnectionInstruction.TechnicalAccount.NoWriteAccess" xml:space="preserve"><value>акаунт super-admin і будь-який акаунт із правом запису не підходять: програма нічого не записує в Google Workspace;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.NoPersonBehindIt" xml:space="preserve"><value>за ним не стоїть людина, і в програму під ним ніхто не входить;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.SuperAdminRole" xml:space="preserve"><value>він отримує роль super-admin: з меншими ролями Classroom курсів домену не видно, а програма однаково лише читає, бо її доступ обмежують scope у domain-wide delegation, а не роль акаунта;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.MeasuresLead" xml:space="preserve"><value>вхід під ним закривають обов'язкові заходи:</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.Measure.RandomPassword" xml:space="preserve"><value>випадковий пароль, який ніде не зберігається;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.Measure.TwoStepVerification" xml:space="preserve"><value>примусова двоетапна перевірка без відстрочки реєстрації і без жодного зареєстрованого способу підтвердження — без резервних кодів, резервної пошти й телефону, тож увійти під акаунтом неможливо;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.Measure.SeparateOrgUnit" xml:space="preserve"><value>окремий організаційний підрозділ, у якому діють ці правила;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.Measure.SignInAlert" xml:space="preserve"><value>правило сповіщень про будь-який вхід в акаунт; лист отримує адміністратор домену;</value></data>
+  <data name="ConnectionInstruction.TechnicalAccount.Measure.RoleGrantedLast" xml:space="preserve"><value>роль super-admin видається останньою — після всіх інших заходів, безпосередньо перед тим, як Адміністратор натисне «Перевірити доступ», і не раніше;</value></data>
   <data name="ConnectionInstruction.TechnicalAccount.EnteredInSettings" xml:space="preserve"><value>його адресу вписує Адміністратор у налаштуваннях підключення, і домен адреси має бути доменом школи.</value></data>
   <data name="ConnectionInstruction.Copy.Button" xml:space="preserve"><value>Скопіювати інструкцію</value></data>
   <data name="ConnectionInstruction.Copy.Confirmation" xml:space="preserve"><value>Інструкцію скопійовано</value></data>
@@ -92,7 +97,7 @@
   <data name="AccessCheck.Outcome.Succeeded" xml:space="preserve"><value>працює</value></data>
   <data name="AccessCheck.Outcome.ScopeNotAuthorized" xml:space="preserve"><value>цей скоуп не дозволено в делегуванні на рівні домену. Попросіть super-admin школи додати його для client ID цієї школи, як зазначено в інструкції з підключення.</value></data>
   <data name="AccessCheck.Outcome.TechnicalAccountUnknown" xml:space="preserve"><value>технічний обліковий запис не знайдено в домені школи або від його імені не можна діяти. Перевірте адресу в налаштуваннях підключення разом із super-admin школи.</value></data>
-  <data name="AccessCheck.Outcome.TechnicalAccountCannotRead" xml:space="preserve"><value>доступ дозволено, але технічний обліковий запис не має прав на це читання. Super-admin школи має надати йому права лише на читання цих даних.</value></data>
+  <data name="AccessCheck.Outcome.TechnicalAccountCannotRead" xml:space="preserve"><value>доступ дозволено, але технічний обліковий запис не має прав на це читання. Super-admin школи має надати йому роль super-admin, як сказано в інструкції з підключення.</value></data>
   <data name="AccessCheck.Outcome.ApiNotEnabled" xml:space="preserve"><value>цей API не ввімкнено в проєкті Google Cloud Власника сервісу. Це виправляє Власник сервісу, а не школа.</value></data>
   <data name="AccessCheck.Outcome.KeyUnavailable" xml:space="preserve"><value>ключ сервісного облікового запису недоступний. Це виправляє Власник сервісу, а не школа.</value></data>
   <data name="AccessCheck.Outcome.KeyRejected" xml:space="preserve"><value>Google відхилив ключ сервісного облікового запису. Це виправляє Власник сервісу, а не школа.</value></data>
