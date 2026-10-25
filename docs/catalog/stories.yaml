@@ -248,7 +248,7 @@ stories:
   - id: US-057
     epic: EPIC-1
     title: A course with points beyond the program's range is skipped, and the school scale never fails a report
-    state: READY
+    state: IN_PROGRESS
     blocked_by: null
     # Story file authored: docs/stories/US-057-out-of-range-grades-do-not-stop-sync.md
     # (aligned with v98). Origin: US-055 security review INFO-1 (sync stops on a
