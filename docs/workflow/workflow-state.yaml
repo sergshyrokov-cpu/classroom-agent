@@ -4,28 +4,29 @@
 version: 1
 story: US-057
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: '2026-10-25T18:15:00Z'
+  verdict: NOT_APPLICABLE
+  stage: API_DESIGN
+  recorded_at: '2026-10-25T18:19:24Z'
 last_artifacts:
-- type: specification_review
-  path: docs/reviews/specifications/US-057-spec-review.md
+- type: api_design
+  path: docs/designs/api/US-057-api-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'API_DESIGN: NOT_APPLICABLE — spec §6, §7, §9 state no endpoint, route, body or policy change; no openapi file by design.'
 - 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) 2026-10-25T18:15:00Z, no comment; spec, digest, open decisions v1 APPROVED.'
 - 'SPECIFICATION: spec v1 FR-001…005, AC-001…010 (009, 010 derived), I-1…I-5; no Open Decisions; new failure kind ValueOutOfRange, log event 5135 SyncCourseValueOutOfRange; API/DB expected N/A.'
 - 'SPEC_REVIEW m-1: digest says the next run always re-reads the course; FR-004 carries an unreachable exception (archived course with the same complete-read updateTime).'
 - 'SPEC_REVIEW m-2: FR-001 does not name the Diagnosis the ValueOutOfRange exception carries (null like CourseGone) — decide at IMPLEMENTATION.'
 - 'SPEC_REVIEW m-3: digest bullet 1 omits "if nothing else fails" for the completed run.'
 started_at: '2026-10-25T17:56:59Z'
-updated_at: '2026-10-25T18:15:00Z'
+updated_at: '2026-10-25T18:19:24Z'
 completed_at: null
