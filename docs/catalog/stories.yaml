@@ -245,6 +245,15 @@ stories:
     # (aligned with v98). Origin: deployment rehearsal P-14 (no members before the
     # first sync: empty teacher line, Meet reports without course members). Owner
     # 2026-10-23 option 1, 2026-10-25 1a-5a. Pre-pilot blocker.
+  - id: US-057
+    epic: EPIC-1
+    title: A course with points beyond the program's range is skipped, and the school scale never fails a report
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-057-out-of-range-grades-do-not-stop-sync.md
+    # (aligned with v98). Origin: US-055 security review INFO-1 (sync stops on a
+    # value beyond decimal) and INFO-2 (scale percent overflow). Owner 2026-10-25:
+    # settle both in the requirements first (v98 88183e2).
   - id: US-046
     epic: EPIC-6
     title: Page-search hint on teaching-data pages
