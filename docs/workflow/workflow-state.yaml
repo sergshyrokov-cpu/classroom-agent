@@ -4,17 +4,33 @@
 version: 1
 story: US-056
 workflow: story-delivery
-current_stage: SPECIFICATION
-previous_stage: null
-last_completed_stage: null
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
 status: IN_PROGRESS
 attempt: 1
 last_invoked_skill: null
-last_result: null
-last_artifacts: []
+last_result:
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: '2026-10-25T17:10:00Z'
+last_artifacts:
+- type: specification
+  path: docs/specifications/US-056-spec.md
+  version: 3
+- type: spec_digest
+  path: docs/specifications/US-056-spec-digest.ru.md
+  version: 3
+- type: open_decisions
+  path: docs/decisions/US-056-open-decisions.md
+  version: 1
+- type: specification_review
+  path: docs/reviews/specifications/US-056-spec-review.md
+  version: 3
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings: []
+non_blocking_findings:
+- 'SPEC_REVIEW v3 m-1: FR-003.5 "agrees with the scoring of item 4" means same start and same teacher-on-date rule, not the same score.'
 started_at: '2026-10-25T14:38:14Z'
-updated_at: '2026-10-25T14:38:14Z'
+updated_at: '2026-10-25T17:10:00Z'
 completed_at: null
