@@ -1,22 +1,26 @@
 ---
 artifact_type: api_design
 story: US-057
-version: 1
+version: 2
 status: DRAFT
-created_at: 2026-10-25T18:19:24Z
-updated_at: 2026-10-25T18:19:24Z
+created_at: 2026-10-25T19:02:00Z
+updated_at: 2026-10-25T19:02:00Z
 produced_by: openapi-designer
 inputs:
   - path: docs/specifications/US-057-spec.md
-    version: 1
+    version: 2
   - path: docs/decisions/US-057-open-decisions.md
-    version: 1
+    version: 2
   - path: trebovaniya.md
     version: 98
-supersedes: null
+supersedes: docs/designs/api/US-057-api-design.md@v1
 ---
 
 # US-057 API Design — A course with points beyond the program's range is skipped, and the school scale never fails a report
+
+**Version 2** — re-run after the Specification loop-back (spec v2, OD-001: keep the
+non-negative constraints). Spec v2 changes AC-007, AC-010, VR-002 and the FR-005 note; none of
+them touches an HTTP operation, so the verdict and reasoning of v1 stand, re-checked against v2.
 
 **Verdict: NOT_APPLICABLE.** This Story changes no public API behaviour, so no
 OpenAPI contract is produced.
@@ -30,11 +34,11 @@ US-056 and earlier Stories without API changes. Downstream stages that list
 
 `stage-map.yaml` marks `API_DESIGN` optional when the approved Specification
 states the Story does not change public API behaviour. The approved
-Specification (v1) states it:
+Specification (v2) states it:
 
 - **§7** — "No endpoint, policy, role or audit event changes (SC-4, SC-11
   unaffected)."
-- **§6 VR-002** — "No user input, request body, route or query parameter is
+- **§6** (last bullet) — "No user input, request body, route or query parameter is
   added or changed."
 - **§9** — "no migration; no schema, endpoint or UI change."
 
@@ -58,7 +62,8 @@ Specification (v1) states it:
 | AC | Operation | Contract change |
 |---|---|---|
 | AC-001 … AC-005, AC-009, AC-010 | none (synchronization run) | — |
-| AC-006, AC-007 | existing report Razor `GET` page; existing report export endpoint | none |
+| AC-006, AC-007a | existing report Razor `GET` page; existing report export endpoint | none |
+| AC-007b | report and export use cases over a substituted journal port (no HTTP operation) | none |
 | AC-008 | existing report Razor `GET` page | none |
 
 ## 4. Open questions

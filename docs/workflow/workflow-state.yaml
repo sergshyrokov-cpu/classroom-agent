@@ -4,32 +4,24 @@
 version: 1
 story: US-057
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-verifier
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: PASS
-  stage: SPEC_REVIEW
-  recorded_at: '2026-10-25T18:48:00Z'
+  verdict: NOT_APPLICABLE
+  stage: API_DESIGN
+  recorded_at: '2026-10-25T19:02:30Z'
 last_artifacts:
-- type: specification_review
-  path: docs/reviews/specifications/US-057-spec-review.md
-  version: 2
-- type: specification
-  path: docs/specifications/US-057-spec.md
-  version: 2
-- type: spec_digest
-  path: docs/specifications/US-057-spec-digest.ru.md
-  version: 2
-- type: open_decisions
-  path: docs/decisions/US-057-open-decisions.md
+- type: api_design
+  path: docs/designs/api/US-057-api-design.md
   version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'API_DESIGN v2: NOT_APPLICABLE re-checked against spec v2 (§6, §7, §9: no endpoint, route, body or policy change; AC-007b uses a substituted journal port, no HTTP operation); no openapi file by design.'
 - 'HUMAN_SPEC_APPROVAL (attempt 2): approved by Serhii SHYROKOV (/so:approve) 2026-10-25T18:58:00Z, no comment; spec, digest, open decisions v2 APPROVED. Owner 2026-10-25: Dean-visible highlight of grades above maximum goes to a separate Story after US-057 (trebovaniya v99 first).'
 - 'SPEC_REVIEW v2 m-1 (carried): digest says the next run reads the course again without FR-004 unreachable exception.'
 - 'SPEC_REVIEW v2 m-2 (carried): FR-001 does not name the Diagnosis of ValueOutOfRange (null like CourseGone) — decide at IMPLEMENTATION.'
@@ -45,5 +37,5 @@ non_blocking_findings:
 - 'SPEC_REVIEW m-2: FR-001 does not name the Diagnosis the ValueOutOfRange exception carries (null like CourseGone) — decide at IMPLEMENTATION.'
 - 'SPEC_REVIEW m-3: digest bullet 1 omits "if nothing else fails" for the completed run.'
 started_at: '2026-10-25T17:56:59Z'
-updated_at: '2026-10-25T18:58:00Z'
+updated_at: '2026-10-25T19:02:30Z'
 completed_at: null
