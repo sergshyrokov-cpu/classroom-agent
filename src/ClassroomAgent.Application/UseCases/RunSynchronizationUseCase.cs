@@ -122,7 +122,8 @@ public sealed class RunSynchronizationUseCase(
                 import.CoursesWithBlankName,
                 meetPull.ToCounts(),
                 linked,
-                import.CoursesSkippedUnchanged);
+                import.CoursesSkippedUnchanged,
+                import.CoursesValueOutOfRange);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -152,7 +153,8 @@ public sealed class RunSynchronizationUseCase(
                 import.CoursesWithBlankName,
                 step,
                 step is SyncStep.Meet or SyncStep.Linking ? meetPull.ToCounts() : null,
-                import.CoursesSkippedUnchanged);
+                import.CoursesSkippedUnchanged,
+                import.CoursesValueOutOfRange);
         }
     }
 
@@ -513,6 +515,14 @@ public sealed class RunSynchronizationUseCase(
                 // US-017 spec FR-005: the course vanished between the listing and its reads. Every read precedes the
                 // transaction, so nothing of it is written and a stored copy stays as it was.
                 progress.CoursesGone.Add(snapshot.GoogleId);
+                continue;
+            }
+            catch (GoogleReadFailedException outOfRange) when (outOfRange.Kind == GoogleReadFailureKind.ValueOutOfRange)
+            {
+                // US-057 spec FR-002, FR-004: Classroom returned points beyond the range the program holds. Skipped like a
+                // gone course — before its transaction, so nothing of it is written (its complete-read updateTime
+                // included, so the next run reads it again) and it is not counted (FR-002.3).
+                progress.CoursesValueOutOfRange.Add(snapshot.GoogleId);
                 continue;
             }
 
@@ -908,6 +918,9 @@ public sealed class RunSynchronizationUseCase(
         public List<UnrecognisedSubmission> UnrecognisedSubmissions { get; } = [];
 
         public List<string> CoursesGone { get; } = [];
+
+        /// <summary>US-057 spec FR-002.2: courses skipped for a value beyond the range, reported whether the run completed or stopped.</summary>
+        public List<string> CoursesValueOutOfRange { get; } = [];
 
         public List<string> CoursesWithBlankName { get; } = [];
     }

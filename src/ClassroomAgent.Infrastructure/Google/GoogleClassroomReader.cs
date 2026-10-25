@@ -349,7 +349,7 @@ public sealed partial class GoogleClassroomReader : IClassroomReader
                 work.Title ?? string.Empty,
                 ItemDate(work.ScheduledTimeDateTimeOffset, dueAt, work.UpdateTimeDateTimeOffset, work.CreationTimeDateTimeOffset),
                 dueAt,
-                work.MaxPoints is { } maxPoints ? (decimal)maxPoints : null,
+                Points(work.MaxPoints),
                 work.CreationTimeDateTimeOffset,
                 work.UpdateTimeDateTimeOffset,
                 work.ScheduledTimeDateTimeOffset));
@@ -381,11 +381,34 @@ public sealed partial class GoogleClassroomReader : IClassroomReader
             submission.CourseWorkId ?? string.Empty,
             submission.UserId ?? string.Empty,
             submission.State ?? string.Empty,
-            submission.AssignedGrade is { } assigned ? (decimal)assigned : null,
-            submission.DraftGrade is { } draft ? (decimal)draft : null,
+            Points(submission.AssignedGrade),
+            Points(submission.DraftGrade),
             LastTurnIn(submission.SubmissionHistory),
             submission.Late ?? false,
             submission.UpdateTimeDateTimeOffset);
+
+    /// <summary>
+    /// US-057 spec FR-001, VR-001: Google's points as the program holds them. A value beyond the <c>decimal</c> range in
+    /// either direction fails the course's read as <see cref="GoogleReadFailureKind.ValueOutOfRange"/> — with no value,
+    /// no identifier and no inner exception (SC-10) — instead of letting <see cref="OverflowException"/> escape
+    /// unclassified. A value within the range keeps the plain conversion.
+    /// </summary>
+    private static decimal? Points(double? value)
+    {
+        if (value is not { } points)
+        {
+            return null;
+        }
+
+        try
+        {
+            return (decimal)points;
+        }
+        catch (OverflowException)
+        {
+            throw new GoogleReadFailedException(GoogleReadFailureKind.ValueOutOfRange, null);
+        }
+    }
 
     private static DateTimeOffset? LastTurnIn(IList<GoogleSubmissionHistory>? history) =>
         history?

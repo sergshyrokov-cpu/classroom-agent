@@ -251,14 +251,16 @@ internal sealed class ReportBuilder(
     /// <summary>
     /// Spec FR-015: with ranges the percent is points over maximum, rounded to a whole number with 0.5 up and clamped
     /// to 0 … 100, and the cell shows the label of the row containing it; with no conversion, or a maximum that is not
-    /// positive, the raw points out of the maximum.
+    /// positive, the raw points out of the maximum. US-057 spec FR-005: points not less than the maximum are 100 % and
+    /// points not greater than 0 are 0 % without dividing, so no stored pair can overflow.
     /// </summary>
     private static ReportGrade Grade(decimal points, decimal? max, ReportTemplateSettings settings)
     {
         if (settings.ScaleMode == ReportScaleMode.Ranges && max is > 0m)
         {
-            var percent = (int)Math.Clamp(
-                Math.Round(points / max.Value * 100m, 0, MidpointRounding.AwayFromZero), 0m, 100m);
+            var percent = points >= max.Value ? 100
+                : points <= 0m ? 0
+                : (int)Math.Clamp(Math.Round(points / max.Value * 100m, 0, MidpointRounding.AwayFromZero), 0m, 100m);
             var row = settings.ScaleRows.FirstOrDefault(r => r.FromPercent <= percent && percent <= r.ToPercent);
             if (row is not null)
             {

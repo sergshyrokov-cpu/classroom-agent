@@ -12,6 +12,12 @@ public enum GoogleReadFailureKind
     /// <summary><c>404</c> on a request scoped to one course — the course is skipped.</summary>
     CourseGone,
 
+    /// <summary>
+    /// US-057 spec FR-001: a coursework maximum, an assigned grade or a draft grade of one course lies beyond the
+    /// <c>decimal</c> range — the course is skipped. Carries no value and no identifier (SC-10).
+    /// </summary>
+    ValueOutOfRange,
+
     /// <summary>Anything else.</summary>
     Unexpected,
 }

@@ -283,6 +283,12 @@ public sealed partial class SynchronizationBackgroundService(
             LogCourseGone(logger, runId, GoogleLogValue.Bounded(googleId));
         }
 
+        // US-057 spec FR-003: Classroom returned points beyond the range the program holds; the value is never logged.
+        foreach (var googleId in outcome.CoursesValueOutOfRange)
+        {
+            LogCourseValueOutOfRange(logger, runId, GoogleLogValue.Bounded(googleId));
+        }
+
         // US-017 spec FR-012, FR-010: the course's name is blank.
         foreach (var googleId in outcome.CoursesWithBlankName)
         {
@@ -411,6 +417,13 @@ public sealed partial class SynchronizationBackgroundService(
         Level = LogLevel.Warning,
         Message = "Synchronization run {RunId} skipped course {CourseGoogleId}: Classroom reports it gone")]
     private static partial void LogCourseGone(ILogger logger, Guid runId, string courseGoogleId);
+
+    [LoggerMessage(
+        EventId = 5135,
+        EventName = "SyncCourseValueOutOfRange",
+        Level = LogLevel.Warning,
+        Message = "Synchronization run {RunId} skipped course {CourseGoogleId}: Classroom returned points or a grade beyond the range the program holds")]
+    private static partial void LogCourseValueOutOfRange(ILogger logger, Guid runId, string courseGoogleId);
 
     [LoggerMessage(
         EventId = 5131,

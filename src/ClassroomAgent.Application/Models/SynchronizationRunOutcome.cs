@@ -36,7 +36,8 @@ public sealed class SynchronizationRunOutcome
         SyncStep? failedStep = null,
         MeetPullCounts? meet = null,
         MeetLinkingCounts? linking = null,
-        int coursesSkippedUnchanged = 0)
+        int coursesSkippedUnchanged = 0,
+        IReadOnlyList<string>? coursesValueOutOfRange = null)
     {
         RunId = runId;
         ProcessedCount = processedCount;
@@ -55,6 +56,7 @@ public sealed class SynchronizationRunOutcome
         Meet = meet;
         Linking = linking;
         CoursesSkippedUnchanged = coursesSkippedUnchanged;
+        CoursesValueOutOfRange = coursesValueOutOfRange ?? [];
     }
 
     public Guid? RunId { get; }
@@ -116,6 +118,12 @@ public sealed class SynchronizationRunOutcome
     /// </summary>
     public int CoursesSkippedUnchanged { get; }
 
+    /// <summary>
+    /// US-057 spec FR-002.2, FR-003: the Google ids of courses skipped because Classroom returned points beyond the range
+    /// the program holds, reported whether the run completed or stopped — identifiers only, never a value (SC-10).
+    /// </summary>
+    public IReadOnlyList<string> CoursesValueOutOfRange { get; }
+
     public bool Failed => Error is not null;
 
     public static SynchronizationRunOutcome Ran(
@@ -130,7 +138,8 @@ public sealed class SynchronizationRunOutcome
         IReadOnlyList<string>? coursesWithBlankName = null,
         MeetPullCounts? meet = null,
         MeetLinkingCounts? linking = null,
-        int coursesSkippedUnchanged = 0) =>
+        int coursesSkippedUnchanged = 0,
+        IReadOnlyList<string>? coursesValueOutOfRange = null) =>
         new(
             runId,
             processedCount,
@@ -148,7 +157,8 @@ public sealed class SynchronizationRunOutcome
             null,
             meet,
             linking,
-            coursesSkippedUnchanged);
+            coursesSkippedUnchanged,
+            coursesValueOutOfRange);
 
     /// <summary>
     /// A run that stopped with a diagnosis (US-017 spec FR-005, FR-006): <see cref="Error"/> is the diagnosis name,
@@ -165,7 +175,8 @@ public sealed class SynchronizationRunOutcome
         IReadOnlyList<string>? coursesWithBlankName = null,
         SyncStep? failedStep = null,
         MeetPullCounts? meet = null,
-        int coursesSkippedUnchanged = 0) =>
+        int coursesSkippedUnchanged = 0,
+        IReadOnlyList<string>? coursesValueOutOfRange = null) =>
         new(
             runId,
             processedCount,
@@ -183,7 +194,8 @@ public sealed class SynchronizationRunOutcome
             failedStep,
             meet,
             null,
-            coursesSkippedUnchanged);
+            coursesSkippedUnchanged,
+            coursesValueOutOfRange);
 
     public static SynchronizationRunOutcome SkippedReadOnly(LegitimacyModeReason reason) =>
         new(null, null, null, reason, null);
