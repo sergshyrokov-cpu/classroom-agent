@@ -4,19 +4,22 @@
 version: 1
 story: US-055
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: '2026-10-25T11:20:00Z'
+  verdict: PASS
+  stage: DB_DESIGN
+  recorded_at: '2026-10-25T11:50:00Z'
 last_artifacts:
-- type: api_design
-  path: docs/designs/api/US-055-api-design.md
+- type: database_design
+  path: docs/designs/database/US-055-db-design.md
+  version: 1
+- type: entity_model
+  path: docs/designs/database/US-055-entity-model.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
@@ -24,7 +27,7 @@ non_blocking_findings:
 - 'SPEC_REVIEW m-1: I-3 overflow argument covers only AC values; scale-template points/max*100 can overflow decimal for an extreme pair (unrealistic) — TEST_WRITING may add a scale-template case.'
 - 'SPEC_REVIEW m-2: AC-006a does not name the export layout (table vs shipped blank form; both use GradingCell) — TEST_WRITING states the layout.'
 - 'SPEC_REVIEW m-3: Razor line refs off by one (Journal 145, Report 269).'
-- 'SPECIFICATION: DB_DESIGN must state whether the type change rewrites submission (821 810 rows in rehearsal) and the lock time (section 9).'
+- 'DB_DESIGN: three columns -> unconstrained numeric, migration WidenGradeColumns; no table rewrite (filenode unchanged), CHECK re-validation scan only, measured 127-154 ms per ALTER on 2M rows (postgres:17); Down is lossy, not run by deployment; no C# signature change, no skeleton.'
 started_at: '2026-10-25T09:57:15Z'
-updated_at: '2026-10-25T11:20:00Z'
+updated_at: '2026-10-25T11:50:00Z'
 completed_at: null
