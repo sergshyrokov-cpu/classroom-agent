@@ -1,10 +1,10 @@
 ---
 artifact_type: specification
 story: US-057
-version: 1
+version: 2
 status: APPROVED
 created_at: 2026-10-25T18:05:00Z
-updated_at: 2026-10-25T18:05:00Z
+updated_at: 2026-10-25T18:40:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-057-out-of-range-grades-do-not-stop-sync.md
@@ -12,8 +12,10 @@ inputs:
   - path: trebovaniya.md
     version: 98
   - path: docs/decisions/US-057-open-decisions.md
+    version: 2
+  - path: docs/designs/database/US-057-db-design.md
     version: 1
-supersedes: null
+supersedes: docs/specifications/US-057-spec.md@v1
 ---
 
 # US-057 Specification — A course with points beyond the program's range is skipped, and the school scale never fails a report
@@ -21,6 +23,11 @@ supersedes: null
 Delegation: none. The `trebovaniya.md` passages (§4 Epic 1 "Когда повторы не помогли",
 "Инкрементальная синхронизация"; §4 Epic 3 "Перевод в шкалу школы"; v98 changelog) and the
 code facts below were read directly by the spec writer.
+
+**Version 2** (loop-back from DB_DESIGN, BLOCKED B-1/B-2): the stored-value framing of AC-007
+and the negative half of AC-010 cannot be met under the existing non-negative constraints. The
+Owner kept the schema (OD-001). Changed: §1 code facts, FR-005 note, AC-007, AC-010, VR-002,
+§8, §10, §11 (OD-001, I-6, L-1), §12. Everything else is v1 unchanged.
 
 ## 1. Overview
 
@@ -49,6 +56,13 @@ Code facts this Specification must not contradict (read 2026-10-25 at `bb67ffb`)
 - The host writes one Warning per gone course, event 5130 `SyncCourseGone`
   (`SynchronizationBackgroundService.cs:281–284`, `:408–413`). Event ids 5130–5134 are used;
   5135 is free.
+- The database refuses negative points: `ck_course_work_max_points_non_negative`
+  (`max_points IS NULL OR max_points >= 0`) and `ck_submission_grades_non_negative` (both grades
+  `IS NULL OR >= 0`), in force since US-015 and re-pinned by US-055. The Domain entities do not
+  check the sign; the constraint is the only guard, so a negative value fails the course's
+  transaction (DB design v1 §1). This Story keeps both constraints (OD-001).
+- `ReportBuilder` reads its cells from the `IJournalSource` / `IJournalFieldSource` ports
+  (`Application/Ports`), so a report can be built from a pair that no table holds.
 - The school-scale percent is computed in one place, `ReportBuilder.Grade`
   (`ReportBuilder.cs:256–270`), as `points / max * 100`, rounded and then clamped. The on-screen
   report (`GetReportQuery`) and the export (`ExportJournalCommand`) both use `ReportBuilder`.
@@ -153,6 +167,10 @@ on-screen report and every export built by `ReportBuilder`.
 For every pair that does not overflow today, rules 1–3 give the same percent as today's code
 (today's clamp maps `>= 100` to 100 and `<= 0` to 0), so no existing report changes.
 
+Rule 2 is stated for any `decimal` the function receives. A negative stored value cannot exist
+(§1, OD-001), so in a report read from the database rule 2 is reached only by points 0; the
+negative half is proved where the report is built from a substituted journal port (AC-007b).
+
 ## 5. Acceptance Criteria
 
 | AC | Story AC | Statement |
@@ -163,14 +181,15 @@ For every pair that does not overflow today, rules 1–3 give the same percent a
 | AC-004 | AC-004 | With AC-001's data the run log has exactly one `SyncCourseValueOutOfRange` Warning (event 5135) naming the run id and course 2's Google id; no log line of the run contains the value (in any formatting the test checks, at least `1E+30` and `1000000000000000000000000000000`), the item's id or title, a student's name, email or id, or a submission id. |
 | AC-005 | AC-005 | An archived course skipped by the rule of AC-001 on its first appearance; the next (not weekly-full) run lists it with the **same** `updateTime` and in-range values: the course is read in full and stored. |
 | AC-006 | AC-006 | A school-scale template, a stored grade of 7·10²⁸ points against a maximum of 0.0001 (synthetic): the on-screen report and the export both show the scale label for 100 % and neither fails. Same for a draft grade with the same values. |
-| AC-007 | AC-007 | A school-scale template, a stored grade of −7·10²⁸ against a maximum of 0.0001: both show the scale label for 0 % and neither fails. |
+| AC-007 | AC-007 (restated, OD-001) | **a)** A school-scale template, a stored grade of 0 points against a maximum of 0.0001: the on-screen report and the export both show the scale label for 0 % and neither fails. **b)** A school-scale template and a grade of −7·10²⁸ against a maximum of 0.0001 delivered by a substituted journal port (no stored row): the report built by `ReportBuilder` — through the on-screen report and the export use cases — shows the scale label for 0 % and does not fail. Same for a draft grade with the same values in both parts. |
 | AC-008 | AC-008 | A school-scale template (12-point preset), grades 6 of 12, 12 of 12 and 0 of 12: the report shows the labels for 50 %, 100 % and 0 % (`6`, `12`, `1`), as before this Story. |
 | AC-009 | derived (FR-002.2) | A run that skips a course for an out-of-range value and is then stopped by another failure (e.g. a transient failure on a later course) still reports the skipped course: its `SyncCourseValueOutOfRange` line is written, and the run is `failed` with that other failure's diagnosis, not `Unexpected` because of the skip. |
-| AC-010 | derived (FR-001) | A coursework `maxPoints`, an `assignedGrade` and a `draftGrade` just inside the range (7.9·10²⁸ and −7.9·10²⁸, synthetic) are stored as today's conversion gives them, and the course is not skipped. |
+| AC-010 | derived (FR-001; restated v2, OD-001) | A coursework `maxPoints`, an `assignedGrade` and a `draftGrade` just inside the upper bound (7.9·10²⁸, synthetic) are stored as today's conversion gives them, and the course is not skipped. The lower bound is not tested by storing: a negative value is refused by the database (L-1). |
 
 AC-009 and AC-010 are derived: AC-009 pins the "reported whether the run completes or stops"
 behaviour that `CoursesGone` already has; AC-010 pins the boundary so the check does not skip
-valid values.
+valid values. AC-007 and AC-010 are restated in v2 by OD-001: the Story's AC-007 Given (a
+**stored** −7·10²⁸) cannot be set up under the kept constraint.
 
 ## 6. Validation Rules
 
@@ -179,8 +198,10 @@ valid values.
   conversion otherwise reports overflow. The check is applied to coursework `maxPoints`,
   submission `assignedGrade` and submission `draftGrade` — the only `double` → `decimal`
   conversions in the reader. Absent values stay absent.
-- VR-002 Report: `points` and `max` are stored `decimal` values (any value the column holds,
-  US-055); no further validation is added. `max` ≤ 0 or absent keeps the raw-points path.
+- VR-002 Report: `points` and `max` are `decimal` values; read from the database they are any
+  value the column holds — unconstrained `numeric` since US-055, but never negative
+  (`ck_*_non_negative`, kept by OD-001). FR-005 accepts any `decimal`, negatives included; no
+  further validation is added. `max` ≤ 0 or absent keeps the raw-points path.
 - No user input, request body, route or query parameter is added or changed.
 
 ## 7. Security Requirements
@@ -205,6 +226,7 @@ valid values.
 | Another failure later in the same run | Handled as today; the skipped course is still reported (AC-009) |
 | Extreme stored pair in a school-scale report | 100 % or 0 % without dividing (FR-005); page and export are built |
 | Any other exception | Unchanged: the run stops with `Unexpected` |
+| In-range negative value from Google (e.g. −1) | Unchanged: the database refuses it and the run stops with `Unexpected` (L-1, out of scope) |
 
 ## 9. Non-Functional Requirements
 
@@ -222,11 +244,19 @@ valid values.
 - The "no conversion" mode — it already shows raw points out of the maximum.
 - Precision loss of in-range values (e.g. a tiny `double` below `decimal` resolution becoming 0) —
   that is today's conversion, unchanged.
+- Any schema change: the non-negative constraints stay (OD-001); no migration.
+- An in-range negative value from Google (L-1) — still stops the run; a possible new
+  `trebovaniya.md` §7 item for the Owner, not resolved here.
 
 ## 11. Open Decisions
 
-None. The Story has none; §7 of `trebovaniya.md` holds no open item this Story depends on. See
-`docs/decisions/US-057-open-decisions.md`.
+None open. The Story has none; §7 of `trebovaniya.md` holds no open item this Story depends on.
+One decision is recorded as resolved in `docs/decisions/US-057-open-decisions.md` v2:
+
+- **OD-001 Keep the non-negative constraints, or store negatives? — RESOLVED (a), the Owner,
+  2026-10-25.** The schema is kept. Impact: AC-007 restated (a stored 0, plus a negative pair
+  through a substituted journal port); AC-010 restated to the upper bound; VR-002 and FR-005
+  note; no migration (DB_DESIGN expected NOT_APPLICABLE).
 
 Interpretations made here (visible for SPEC_REVIEW and the Owner):
 
@@ -240,6 +270,17 @@ Interpretations made here (visible for SPEC_REVIEW and the Owner):
   its complete-read `updateTime`; no new stored marker. (FR-004)
 - I-5 "Отрицательные — 0 %" is applied as "points ≤ 0 → 0 %", which equals today's result for 0.
   (FR-005)
+- I-6 "Отчёт строится при любых сохранённых баллах" is met for every value the database can
+  hold (non-negative); the negative rule of §4 v98 is met by FR-005 for any value it receives and
+  proved without a stored row (AC-007b). (FR-005, AC-007, OD-001)
+
+Known limitation (for the Owner, not resolved here):
+
+- L-1 An **in-range** negative maximum or grade from Google (e.g. −1) is not skipped by FR-001
+  — it is within the `decimal` range — and the database refuses it, so the course's transaction
+  fails and the whole run stops as `Unexpected`, the pattern v98 removes for out-of-range values.
+  Whether Classroom can send a negative value at all is not established in the requirements. If
+  it matters, it is a new `trebovaniya.md` §7 item (DB design v1 §4).
 
 ## 12. Traceability
 
@@ -251,7 +292,7 @@ Interpretations made here (visible for SPEC_REVIEW and the Owner):
 | AC-004 | FR-003, §7 | same ("пишется номер курса без самих значений"); SC-10 |
 | AC-005 | FR-004 | same ("следующий прогон читает курс снова"); §4 "Инкрементальная синхронизация" (v90) |
 | AC-006 | FR-005.1 | §4 Epic 3 "Перевод в шкалу школы" (v98) |
-| AC-007 | FR-005.2 | same |
+| AC-007 | FR-005.2, VR-002 | same; OD-001 |
 | AC-008 | FR-005.3 | same (v84 preset) |
 | AC-009 | FR-002.2 | §4 Epic 1 (skip ≠ run failure) |
-| AC-010 | FR-001, VR-001 | §4 Epic 1 ("больше примерно 7,9·10²⁸") |
+| AC-010 | FR-001, VR-001 | §4 Epic 1 ("больше примерно 7,9·10²⁸"); OD-001 |

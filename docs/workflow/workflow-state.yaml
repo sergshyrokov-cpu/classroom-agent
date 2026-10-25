@@ -4,23 +4,40 @@
 version: 1
 story: US-057
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: spec-verifier
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: '2026-10-25T18:19:24Z'
+  verdict: PASS
+  stage: SPEC_REVIEW
+  recorded_at: '2026-10-25T18:48:00Z'
 last_artifacts:
-- type: api_design
-  path: docs/designs/api/US-057-api-design.md
-  version: 1
+- type: specification_review
+  path: docs/reviews/specifications/US-057-spec-review.md
+  version: 2
+- type: specification
+  path: docs/specifications/US-057-spec.md
+  version: 2
+- type: spec_digest
+  path: docs/specifications/US-057-spec-digest.ru.md
+  version: 2
+- type: open_decisions
+  path: docs/decisions/US-057-open-decisions.md
+  version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
+- 'HUMAN_SPEC_APPROVAL (attempt 2): approved by Serhii SHYROKOV (/so:approve) 2026-10-25T18:58:00Z, no comment; spec, digest, open decisions v2 APPROVED. Owner 2026-10-25: Dean-visible highlight of grades above maximum goes to a separate Story after US-057 (trebovaniya v99 first).'
+- 'SPEC_REVIEW v2 m-1 (carried): digest says the next run reads the course again without FR-004 unreachable exception.'
+- 'SPEC_REVIEW v2 m-2 (carried): FR-001 does not name the Diagnosis of ValueOutOfRange (null like CourseGone) — decide at IMPLEMENTATION.'
+- 'SPEC_REVIEW v2 m-3: Story AC-007 still says a stored −7·10²⁸; spec restates under OD-001; Owner may amend the Story file.'
+- 'SPEC_REVIEW v2 m-4: L-1 in-range negative from Google still stops the run; Owner to decide on a trebovaniya §7 item before the pilot.'
+- 'SPECIFICATION attempt 2: spec, digest, open decisions v2 DRAFT. OD-001 RESOLVED (a) keep schema; AC-007 restated (a stored 0, b negative pair via substituted journal port, no stored row); AC-010 upper bound only; new I-6, limitation L-1 (in-range negative from Google still stops the run, possible trebovaniya §7 item).'
+- 'OWNER DECISION 2026-10-25T18:25:56Z (Serhii SHYROKOV, in conversation): DB_DESIGN B-1/B-2 resolved by option 1 — keep the schema (ck_course_work_max_points_non_negative, ck_submission_grades_non_negative stay); spec v2 restates AC-010 to the positive boundary only and AC-007 to points 0 stored or a negative pair at ReportBuilder level without a stored row; DB_DESIGN expected NOT_APPLICABLE. Record in open_decisions v2. Out of scope: in-range negative value from Google still stops the run (possible new trebovaniya §7 item).'
+- 'DB_DESIGN v1 BLOCKED B-1 (AC-010 negative boundary unstorable), B-2 (AC-007 stored negative grade impossible); spec review v1 missed the table constraints.'
 - 'API_DESIGN: NOT_APPLICABLE — spec §6, §7, §9 state no endpoint, route, body or policy change; no openapi file by design.'
 - 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) 2026-10-25T18:15:00Z, no comment; spec, digest, open decisions v1 APPROVED.'
 - 'SPECIFICATION: spec v1 FR-001…005, AC-001…010 (009, 010 derived), I-1…I-5; no Open Decisions; new failure kind ValueOutOfRange, log event 5135 SyncCourseValueOutOfRange; API/DB expected N/A.'
@@ -28,5 +45,5 @@ non_blocking_findings:
 - 'SPEC_REVIEW m-2: FR-001 does not name the Diagnosis the ValueOutOfRange exception carries (null like CourseGone) — decide at IMPLEMENTATION.'
 - 'SPEC_REVIEW m-3: digest bullet 1 omits "if nothing else fails" for the completed run.'
 started_at: '2026-10-25T17:56:59Z'
-updated_at: '2026-10-25T18:19:24Z'
+updated_at: '2026-10-25T18:58:00Z'
 completed_at: null
