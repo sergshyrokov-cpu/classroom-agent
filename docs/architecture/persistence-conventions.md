@@ -139,8 +139,11 @@ resulting migration must both match them.
   submissions of a person it never saw on the course's roster (they left before
   the first synchronization), it creates a `student` membership with `on_roster`
   false and `first_seen_at` = `last_seen_at` = that run's date, so the leaver
-  expiry (PC-11) covers them (`trebovaniya.md` section 3, v56). Journal and Meet queries filter by
-  these dates, so they are indexed with the course (PC-7).
+  expiry (PC-11) covers them (`trebovaniya.md` section 3, v56). A membership's
+  start for journal and Meet queries is the course's `creationTime` for members
+  seen in the run that first loaded the course, otherwise `first_seen_at`
+  (BR-051, v98); whether the start is stored or derived is the DB design's call. Journal
+  and Meet queries filter by these dates, so they are indexed with the course (PC-7).
 - `MeetingCodeLink` maps a meeting code to one `Course`: unique on the code,
   several codes per course (a reset Classroom link gets a new code). `MeetSession`
   reaches its course only through this link and has no course column of its own,

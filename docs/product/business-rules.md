@@ -252,7 +252,10 @@ are retried with exponential backoff: at most 4 attempts, pauses of about 2 s, 8
 and 30 s with jitter, or Google's own requested delay capped at 2 minutes. When the
 attempts run out, or on a permission failure (BR-034), the run ends as failed; work
 already loaded stays and the next run keeps the normal schedule. A course that
-disappears mid-run (`404`) is skipped. *(Epic 1, v80)*
+disappears mid-run (`404`) is skipped. So is a course where Google returns points,
+a grade or maximum points larger than the system can store (above about 7.9·10²⁸):
+its already loaded data stays as it was, the run's log records the course id
+without the values, and the next run reads the course again. *(Epic 1, v80, v98)*
 
 **BR-044** `SyncState` is the only source of synchronization progress, status,
 last error and last successful run. *(§3, Epic 5)*
@@ -269,10 +272,17 @@ roster, and whether they are on it now. A membership is never deleted when the
 person leaves the roster. Someone with submissions who was never seen on the
 roster (they left before the first synchronization) gets a student membership
 marked off the roster, first and last seen on that run's date, so the leaver
-expiry applies from that date (v56). A period's journal lists students on the roster for at
-least part of the period plus anyone with submissions in it; in Meet reports, a
-course's students and teachers are those on the roster on the meeting's date.
-*(§3, §4 Epic 3, Epic 4, v31)*
+expiry applies from that date (v56). A membership's start — the day from which
+the person counts as a course member in journals and Meet reports — is the
+course's Google `creationTime` for everyone on the roster or found through
+submissions in the run that first loaded the course (that run's date when Google
+gave no `creationTime`), and the first-seen date for everyone who appears later;
+this applies to every course and to memberships stored before v98. Its end is the
+last-seen date. Known limitation: in a course that lives for years with changing
+students, current members count from the course's creation (v98). A period's
+journal lists students who were members for at least part of the period plus
+anyone with submissions in it; in Meet reports, a course's students and teachers
+are its members on the meeting's date. *(§3, §4 Epic 3, Epic 4, v31, v98)*
 
 **BR-052** A course item is one of three kinds, and journals distinguish them:
 graded work (a `courseWork` with maximum points — submissions and grades),
