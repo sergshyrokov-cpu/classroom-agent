@@ -4,19 +4,19 @@
 version: 1
 story: US-055
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-verifier
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: PASS
-  stage: SPEC_REVIEW
-  recorded_at: '2026-10-25T10:40:00Z'
+  verdict: NOT_APPLICABLE
+  stage: API_DESIGN
+  recorded_at: '2026-10-25T11:20:00Z'
 last_artifacts:
-- type: specification_review
-  path: docs/reviews/specifications/US-055-spec-review.md
+- type: api_design
+  path: docs/designs/api/US-055-api-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
@@ -26,5 +26,5 @@ non_blocking_findings:
 - 'SPEC_REVIEW m-3: Razor line refs off by one (Journal 145, Report 269).'
 - 'SPECIFICATION: DB_DESIGN must state whether the type change rewrites submission (821 810 rows in rehearsal) and the lock time (section 9).'
 started_at: '2026-10-25T09:57:15Z'
-updated_at: '2026-10-25T11:00:00Z'
+updated_at: '2026-10-25T11:20:00Z'
 completed_at: null
