@@ -236,6 +236,15 @@ stories:
     # (aligned with v97). Origin: deployment rehearsal P-9 (numeric(10,4)
     # overflow stopped the college's first full sync). Owner 2026-10-25: (a)
     # widen the columns only, the run-stops rule unchanged. Pre-pilot blocker.
+  - id: US-056
+    epic: EPIC-1
+    title: Members seen when a course is first loaded count from the course's creation
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-056-membership-starts-at-course-creation.md
+    # (aligned with v98). Origin: deployment rehearsal P-14 (no members before the
+    # first sync: empty teacher line, Meet reports without course members). Owner
+    # 2026-10-23 option 1, 2026-10-25 1a-5a. Pre-pilot blocker.
   - id: US-046
     epic: EPIC-6
     title: Page-search hint on teaching-data pages
