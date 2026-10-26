@@ -2,46 +2,31 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-057
+story: US-058
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
+last_invoked_skill: spec-verifier
 last_result:
   verdict: PASS
-  stage: SECURITY_REVIEW
-  recorded_at: '2026-10-25T22:30:00Z'
+  stage: SPEC_REVIEW
+  recorded_at: '2026-10-26T19:42:31Z'
 last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-057-security-review.md
+- type: specification_review
+  path: docs/reviews/specifications/US-058-spec-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-- 'HUMAN_PR_APPROVAL: approved by Serhii SHYROKOV (/so:approve) 2026-10-25T20:08:25Z, no comment; implementation report v1, implementation verification v1 PASS, security review v1 PASS. Approved, not Done until the final commit lands on master.'
-- 'SECURITY_REVIEW: PASS (0/0/0, 4 INFO); build 0/0, full suite 6221/6221, no vulnerable packages. INFO-1 NaN/infinity also classify as ValueOutOfRange (benign); INFO-2 event 5135 logs course id like SyncCourseGone; INFO-3 = N-1 stale GoogleReadFailedException summary; INFO-4 = N-4 LF endings, stage only Story files.'
-- 'IMPLEMENTATION_VERIFICATION: PASS (0/0/4); story tests 53/53 (cheap-worker), build 0/0. D-1 Diagnosis null accepted, D-2 cast-based overflow detection accepted, D-3 NaN/infinity noted. N-1 GoogleReadFailedException summary names only CourseGone as diagnosis-free (stale comment, file outside change set); N-2 AC-005 tested for never-stored course only, stored-course FR-004 case structural; N-3 full suite not rerun; N-4 LF in 3 modified src files.'
-- 'IMPLEMENTATION: PASS; 6 src files (reader Points helper, use-case catch + CoursesValueOutOfRange, outcome list on both paths, host event 5135, ReportBuilder.Grade bounds); 53/53 story tests, full suite 6221/6221, build 0/0, format clean on changed files. m-2 decided: ValueOutOfRange Diagnosis null like CourseGone. Overflow detected by the cast, rethrown without inner exception. NaN/infinity would also classify as ValueOutOfRange (out of scope). No delegation at this stage (reason in report §5).'
-- 'TEST_WRITING: PASS; 53 cases in 5 classes (GoogleClassroomReaderValueRangeTests, ValueOutOfRangeSkipTests, ValueOutOfRangeSyncTests, ReportScaleBoundsTests, ScaleBoundsReportPageTests), 36 red for the missing behaviour, 17 green by design; full suite 6221 = 6185 passed + the 36 new red, 0 regressions. Skeleton: GoogleReadFailureKind.ValueOutOfRange only (FR-002.2 outcome list unnamed by any artifact, observed through log 5135). New test infra GoogleClassroomScript runs the real GoogleClassroomReader in the host over a routed scripted transport. AC-009 uses a configuration 403 as the other failure. m-2 Diagnosis still open for IMPLEMENTATION.'
-- 'DB_DESIGN v2: NOT_APPLICABLE (spec v2 §9, §10, OD-001 a); every stored value of spec v2 ACs passes ck_*_non_negative; new outcome list is in-memory like CoursesGone; no entity model, no migration; v1 B-1/B-2 kept as history.'
-- 'API_DESIGN v2: NOT_APPLICABLE re-checked against spec v2 (§6, §7, §9: no endpoint, route, body or policy change; AC-007b uses a substituted journal port, no HTTP operation); no openapi file by design.'
-- 'HUMAN_SPEC_APPROVAL (attempt 2): approved by Serhii SHYROKOV (/so:approve) 2026-10-25T18:58:00Z, no comment; spec, digest, open decisions v2 APPROVED. Owner 2026-10-25: Dean-visible highlight of grades above maximum goes to a separate Story after US-057 (trebovaniya v99 first).'
-- 'SPEC_REVIEW v2 m-1 (carried): digest says the next run reads the course again without FR-004 unreachable exception.'
-- 'SPEC_REVIEW v2 m-2 (carried): FR-001 does not name the Diagnosis of ValueOutOfRange (null like CourseGone) — decide at IMPLEMENTATION.'
-- 'SPEC_REVIEW v2 m-3: Story AC-007 still says a stored −7·10²⁸; spec restates under OD-001; Owner may amend the Story file.'
-- 'SPEC_REVIEW v2 m-4: L-1 in-range negative from Google still stops the run; Owner to decide on a trebovaniya §7 item before the pilot.'
-- 'SPECIFICATION attempt 2: spec, digest, open decisions v2 DRAFT. OD-001 RESOLVED (a) keep schema; AC-007 restated (a stored 0, b negative pair via substituted journal port, no stored row); AC-010 upper bound only; new I-6, limitation L-1 (in-range negative from Google still stops the run, possible trebovaniya §7 item).'
-- 'OWNER DECISION 2026-10-25T18:25:56Z (Serhii SHYROKOV, in conversation): DB_DESIGN B-1/B-2 resolved by option 1 — keep the schema (ck_course_work_max_points_non_negative, ck_submission_grades_non_negative stay); spec v2 restates AC-010 to the positive boundary only and AC-007 to points 0 stored or a negative pair at ReportBuilder level without a stored row; DB_DESIGN expected NOT_APPLICABLE. Record in open_decisions v2. Out of scope: in-range negative value from Google still stops the run (possible new trebovaniya §7 item).'
-- 'DB_DESIGN v1 BLOCKED B-1 (AC-010 negative boundary unstorable), B-2 (AC-007 stored negative grade impossible); spec review v1 missed the table constraints.'
-- 'API_DESIGN: NOT_APPLICABLE — spec §6, §7, §9 state no endpoint, route, body or policy change; no openapi file by design.'
-- 'HUMAN_SPEC_APPROVAL: approved by Serhii SHYROKOV (/so:approve) 2026-10-25T18:15:00Z, no comment; spec, digest, open decisions v1 APPROVED.'
-- 'SPECIFICATION: spec v1 FR-001…005, AC-001…010 (009, 010 derived), I-1…I-5; no Open Decisions; new failure kind ValueOutOfRange, log event 5135 SyncCourseValueOutOfRange; API/DB expected N/A.'
-- 'SPEC_REVIEW m-1: digest says the next run always re-reads the course; FR-004 carries an unreachable exception (archived course with the same complete-read updateTime).'
-- 'SPEC_REVIEW m-2: FR-001 does not name the Diagnosis the ValueOutOfRange exception carries (null like CourseGone) — decide at IMPLEMENTATION.'
-- 'SPEC_REVIEW m-3: digest bullet 1 omits "if nothing else fails" for the completed run.'
-started_at: '2026-10-25T17:56:59Z'
-updated_at: '2026-10-25T20:08:25Z'
-completed_at: '2026-10-25T20:08:25Z'
+- 'HUMAN_SPEC_APPROVAL: APPROVED by Serhii SHYROKOV at 2026-10-26T19:49:19Z; interpretations I-1…I-7 confirmed (I-1 with the m-1 edge case); spec, digest, open decisions v1 set APPROVED.'
+- 'SPECIFICATION: spec, digest, open decisions v1 DRAFT. FR-001…008, AC-001…012 + derived AC-013, AC-014, AC-015; I-1…I-7. OD-001 RESOLVED (a) by the Owner in conversation 2026-10-26T19:40:06Z: this Story stores the last-successful-read instant (FR-008/AC-013 kept); recorded in spec, digest, open decisions v1 before SPEC_REVIEW.'
+- 'SPEC_REVIEW m-1: I-1 (404 not recorded) assumes the course leaves the list; a course listed but persistently 404 would be invisible.'
+- 'SPEC_REVIEW m-2: spec §7 / digest say skip records hold no personal data; a course name may contain a teacher name. FIXED in spec §7, I-6 and digest §2 at the Owner request 2026-10-26T19:48:00Z (versions unchanged, still DRAFT).'
+- 'SPEC_REVIEW m-3: an unknown-state course may be recorded with no name; Story 3 needs a fallback.'
+- 'SPEC_REVIEW m-4: AC-006 can pass vacuously; test must start from existing marks and ideally fail inside the transaction.'
+started_at: '2026-10-26T19:32:53Z'
+updated_at: '2026-10-26T19:49:19Z'
+completed_at: null

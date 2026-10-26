@@ -257,7 +257,7 @@ stories:
   - id: US-058
     epic: EPIC-1
     title: Synchronization marks items no longer in Classroom and records the courses it skips
-    state: READY
+    state: IN_PROGRESS
     blocked_by: null
     # Story file authored: docs/stories/US-058-sync-marks-items-gone-and-records-skipped-courses.md
     # (aligned with v99). First of three v99 Stories (data; marks in journal/report/
