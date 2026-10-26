@@ -4,19 +4,19 @@
 version: 1
 story: US-058
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-verifier
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: PASS
-  stage: SPEC_REVIEW
-  recorded_at: '2026-10-26T19:42:31Z'
+  verdict: NOT_APPLICABLE
+  stage: API_DESIGN
+  recorded_at: '2026-10-26T19:50:52Z'
 last_artifacts:
-- type: specification_review
-  path: docs/reviews/specifications/US-058-spec-review.md
+- type: api_design
+  path: docs/designs/api/US-058-api-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
@@ -27,6 +27,7 @@ non_blocking_findings:
 - 'SPEC_REVIEW m-2: spec §7 / digest say skip records hold no personal data; a course name may contain a teacher name. FIXED in spec §7, I-6 and digest §2 at the Owner request 2026-10-26T19:48:00Z (versions unchanged, still DRAFT).'
 - 'SPEC_REVIEW m-3: an unknown-state course may be recorded with no name; Story 3 needs a fallback.'
 - 'SPEC_REVIEW m-4: AC-006 can pass vacuously; test must start from existing marks and ideally fail inside the transaction.'
+- 'API_DESIGN: NOT_APPLICABLE — spec §7/§10 no endpoint; no openapi.yaml by design.'
 started_at: '2026-10-26T19:32:53Z'
-updated_at: '2026-10-26T19:49:19Z'
+updated_at: '2026-10-26T19:50:52Z'
 completed_at: null
