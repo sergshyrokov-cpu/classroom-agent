@@ -143,6 +143,9 @@ public static class InstallationServices
         services.AddScoped<ICourseWorkRepository, CourseWorkRepository>();
         services.AddScoped<ISubmissionRepository, SubmissionRepository>();
 
+        // US-058 entity model §4: the skip records of the synchronization state.
+        services.AddScoped<ISyncSkippedCourseRepository, SyncSkippedCourseRepository>();
+
         // US-015 spec FR-012: the retention period the FR-011 age rule compares against, as its own narrow record
         // rather than the whole settings object, which SC-7 keeps out of the container (US-013 security review F-1).
         services.AddSingleton(new RetentionSettings(settings.RetentionYears));

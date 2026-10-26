@@ -37,6 +37,9 @@ public sealed class CourseConfiguration : IEntityTypeConfiguration<Course>
 
         // US-018 db-design §2: sync bookkeeping beside the mirror, nullable, no index (uq_course_google_id serves it).
         builder.Property(c => c.CompleteReadUpdateTime);
+
+        // US-058 db-design §3: the run instant of the last committed full read, nullable, no index.
+        builder.Property(c => c.LastCompleteReadAt);
         builder.Property(c => c.State)
             .HasColumnName("course_state")
             .HasMaxLength(16)

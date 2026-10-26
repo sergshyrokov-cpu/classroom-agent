@@ -34,7 +34,8 @@ public sealed class SubmitterWithoutRosterTests
             world.MeetSessions,
             world.Erasures,
             world.Erasures,
-            world.Erasures);
+            world.Erasures,
+            world.SkippedCourses);
 
     /// <summary>AC-004, FR-007: a submitter never seen on the roster gets a <c>student</c> membership marked off it.</summary>
     [Fact]

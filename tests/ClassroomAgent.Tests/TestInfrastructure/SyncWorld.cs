@@ -82,6 +82,9 @@ public sealed class SyncWorld
     /// </summary>
     public NoErasures Erasures { get; } = new();
 
+    /// <summary>The <c>sync_skipped_course</c> port, in memory (US-058 entity model §4).</summary>
+    public SkippedCourseRepository SkippedCourses { get; } = new();
+
     public RunSynchronizationUseCase Run =>
         new(
             States,
@@ -100,7 +103,8 @@ public sealed class SyncWorld
             MeetSessions,
             Erasures,
             Erasures,
-            Erasures);
+            Erasures,
+            skippedCourses: SkippedCourses);
 
     /// <summary>
     /// The run use case over this world's stores but another Classroom reader — a later run that sees different
@@ -124,7 +128,8 @@ public sealed class SyncWorld
             MeetSessions,
             Erasures,
             Erasures,
-            Erasures);
+            Erasures,
+            skippedCourses: SkippedCourses);
 
     /// <summary>A run identifier the assertions can recognise.</summary>
     public static Guid RunId(int ordinal) => new($"00000000-0000-0000-0000-{ordinal:D12}");
@@ -707,6 +712,41 @@ public sealed class SyncWorld
         /// <summary>Every stored participation, across sessions.</summary>
         public IReadOnlyList<MeetParticipation> AllParticipations =>
             Stored.Values.SelectMany(session => session.Participations).ToList();
+    }
+
+    /// <summary>
+    /// The skip records, in memory, unique on the Google course id as <c>uq_sync_skipped_course_course_google_id</c>
+    /// fixes it (US-058 db-design §4). An insert of a second record for the same course fails, as the index would.
+    /// </summary>
+    public sealed class SkippedCourseRepository : ISyncSkippedCourseRepository
+    {
+        private long _nextId = 1;
+
+        /// <summary>The stored records by Google course id, as the database would hold them.</summary>
+        public Dictionary<string, SyncSkippedCourse> Stored { get; } = new(StringComparer.Ordinal);
+
+        /// <summary>How many times every record was loaded (entity model §4: once per run).</summary>
+        public int Reads { get; private set; }
+
+        public Task<IReadOnlyList<SyncSkippedCourse>> GetAllAsync(CancellationToken cancellationToken)
+        {
+            Reads++;
+            IReadOnlyList<SyncSkippedCourse> all = Stored.Values.ToList();
+            return Task.FromResult(all);
+        }
+
+        public void Add(SyncSkippedCourse skippedCourse)
+        {
+            if (Stored.ContainsKey(skippedCourse.CourseGoogleId))
+            {
+                throw new InvalidOperationException("uq_sync_skipped_course_course_google_id: a second record for one course.");
+            }
+
+            Identity.Assign(skippedCourse, _nextId++);
+            Stored[skippedCourse.CourseGoogleId] = skippedCourse;
+        }
+
+        public void Remove(SyncSkippedCourse skippedCourse) => Stored.Remove(skippedCourse.CourseGoogleId);
     }
 
     /// <summary>

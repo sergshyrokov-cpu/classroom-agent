@@ -194,7 +194,7 @@ public sealed class IncrementalSyncPersistenceTests(PostgreSqlFixture database)
         var course = Course.Import(CourseTestData.CourseId(1), CourseState.Archived, Details(updateTime));
         if (recordCompleteRead)
         {
-            course.RecordCompleteRead();
+            course.RecordCompleteRead(T);
         }
 
         scope.ServiceProvider.GetRequiredService<ICourseRepository>().Add(course);

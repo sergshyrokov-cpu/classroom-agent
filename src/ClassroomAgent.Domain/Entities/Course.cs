@@ -85,6 +85,12 @@ public sealed class Course
     /// </summary>
     public DateTimeOffset? CompleteReadUpdateTime { get; private set; }
 
+    /// <summary>
+    /// US-058 FR-008: the run instant of the course's last committed full read; null until the first one. Bookkeeping,
+    /// not mirror, like <see cref="CompleteReadUpdateTime"/>.
+    /// </summary>
+    public DateTimeOffset? LastCompleteReadAt { get; private set; }
+
     /// <summary>Closed enum (§2).</summary>
     public CourseState State { get; private set; }
 
@@ -113,16 +119,19 @@ public sealed class Course
     }
 
     /// <summary>
+    /// US-018 entity model §2 + US-058 FR-008: the course has just been read completely in this transaction —
+    /// remembers the listed UpdateTime (as before) and the run instant of this read. The only writer of both.
+    /// </summary>
+    public void RecordCompleteRead(DateTimeOffset readAt)
+    {
+        CompleteReadUpdateTime = UpdateTime is { } listed ? IncrementalSyncRule.ToStoragePrecision(listed) : null;
+        LastCompleteReadAt = readAt;
+    }
+
+    /// <summary>
     /// The upsert's update half. The surrogate identity and <see cref="GoogleId"/> are untouched, so every
     /// reference to the course survives (FR-008).
     /// </summary>
-    /// <summary>
-    /// US-018 entity model §2: the course has just been read completely in this transaction — remembers the
-    /// <see cref="UpdateTime"/> this run's listing applied. Takes no argument, so it cannot remember anything else.
-    /// </summary>
-    public void RecordCompleteRead() =>
-        CompleteReadUpdateTime = UpdateTime is { } listed ? IncrementalSyncRule.ToStoragePrecision(listed) : null;
-
     public void UpdateFrom(CourseState state, CourseDetails details)
     {
         ArgumentNullException.ThrowIfNull(details);

@@ -485,6 +485,10 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(64)")
                         .HasColumnName("google_id");
 
+                    b.Property<DateTimeOffset?>("LastCompleteReadAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_complete_read_at");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(750)
@@ -656,6 +660,10 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                     b.Property<decimal?>("MaxPoints")
                         .HasColumnType("numeric")
                         .HasColumnName("max_points");
+
+                    b.Property<DateTimeOffset?>("NotInClassroomSince")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("not_in_classroom_since");
 
                     b.Property<string>("Resource")
                         .IsRequired()
@@ -1349,6 +1357,61 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_submission_raw_state", "(state = 'unrecognised') = (raw_state IS NOT NULL)");
 
                             t.HasCheckConstraint("ck_submission_state", "state IN ('new', 'created', 'turned_in', 'returned', 'reclaimed_by_student', 'student_edited_after_turn_in', 'unrecognised')");
+                        });
+                });
+
+            modelBuilder.Entity("ClassroomAgent.Domain.Entities.SyncSkippedCourse", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("CourseGoogleId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("course_google_id");
+
+                    b.Property<string>("CourseName")
+                        .HasMaxLength(750)
+                        .HasColumnType("character varying(750)")
+                        .HasColumnName("course_name");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("reason");
+
+                    b.Property<DateTimeOffset>("SkippedSince")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("skipped_since");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_sync_skipped_course");
+
+                    b.HasIndex("CourseGoogleId")
+                        .IsUnique()
+                        .HasDatabaseName("uq_sync_skipped_course_course_google_id");
+
+                    b.ToTable("sync_skipped_course", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_sync_skipped_course_google_id", "char_length(course_google_id) >= 1");
+
+                            t.HasCheckConstraint("ck_sync_skipped_course_name", "course_name IS NULL OR char_length(course_name) >= 1");
+
+                            t.HasCheckConstraint("ck_sync_skipped_course_reason", "reason IN ('value_out_of_range', 'unknown_course_state')");
                         });
                 });
 

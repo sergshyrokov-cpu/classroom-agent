@@ -90,6 +90,20 @@ public sealed class FakeClassroomReader : IClassroomReader
         return this;
     }
 
+    /// <summary>
+    /// US-058: Classroom no longer returns one item of a course (deleted or returned to draft) — the next run's full read
+    /// does not see it. Called only between runs, never while one is reading.
+    /// </summary>
+    public FakeClassroomReader WithoutCourseWork(string courseGoogleId, string itemGoogleId)
+    {
+        if (_courseWork.TryGetValue(courseGoogleId, out var items))
+        {
+            items.RemoveAll(item => string.Equals(item.GoogleId, itemGoogleId, StringComparison.Ordinal));
+        }
+
+        return this;
+    }
+
     /// <summary>Seeds one submission, as <see cref="SyncWorld.ClassroomReader.WithSubmission"/> does.</summary>
     public FakeClassroomReader WithSubmission(
         string courseGoogleId,

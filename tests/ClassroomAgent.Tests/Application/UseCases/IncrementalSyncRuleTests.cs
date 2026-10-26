@@ -153,7 +153,7 @@ public sealed class IncrementalSyncRuleTests
     {
         var course = Course.Import("100000000001", CourseState.Archived, Details(T.AddTicks(4)));
 
-        course.RecordCompleteRead();
+        course.RecordCompleteRead(T);
 
         Assert.Equal(T, course.CompleteReadUpdateTime);
         Assert.Equal(TimeSpan.Zero, course.CompleteReadUpdateTime!.Value.Offset);
@@ -164,10 +164,10 @@ public sealed class IncrementalSyncRuleTests
     public void RecordingACompleteRead_WithoutAnUpdateTime_RemembersNone()
     {
         var course = Course.Import("100000000001", CourseState.Archived, Details(T));
-        course.RecordCompleteRead();
+        course.RecordCompleteRead(T);
 
         course.UpdateFrom(CourseState.Archived, Details(null));
-        course.RecordCompleteRead();
+        course.RecordCompleteRead(T);
 
         Assert.Null(course.CompleteReadUpdateTime);
     }
@@ -177,7 +177,7 @@ public sealed class IncrementalSyncRuleTests
     public void UpdatingFromTheListing_LeavesTheRememberedValue()
     {
         var course = Course.Import("100000000001", CourseState.Archived, Details(T));
-        course.RecordCompleteRead();
+        course.RecordCompleteRead(T);
 
         course.UpdateFrom(CourseState.Active, Details(T.AddHours(5), "Renamed"));
 

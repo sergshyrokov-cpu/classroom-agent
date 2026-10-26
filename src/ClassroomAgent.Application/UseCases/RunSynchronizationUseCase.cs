@@ -33,6 +33,11 @@ namespace ClassroomAgent.Application.UseCases;
 /// completed. It is optional in the constructor so the Application tests that predate it build the run without it; the
 /// host always supplies it.
 /// </para>
+/// <para>
+/// US-058 adds two durable facts of the Classroom step: a full read of a course marks its stored items Google no longer
+/// returns and unmarks the ones that came back (spec FR-001 … FR-003), and a course skipped for out-of-range values or
+/// an unknown state is recorded until the problem is gone (spec FR-005 … FR-007).
+/// </para>
 /// </remarks>
 public sealed class RunSynchronizationUseCase(
     ISyncStateRepository syncStates,
@@ -52,6 +57,7 @@ public sealed class RunSynchronizationUseCase(
     IErasureFence fence,
     IErasedParticipantRepository exclusions,
     IErasureSaltStore salts,
+    ISyncSkippedCourseRepository skippedCourses,
     LinkMeetCodesStep? linking = null)
 {
     /// <summary>The operation name the read-only refusal carries (US-007 spec VR-001).</summary>
@@ -123,7 +129,9 @@ public sealed class RunSynchronizationUseCase(
                 meetPull.ToCounts(),
                 linked,
                 import.CoursesSkippedUnchanged,
-                import.CoursesValueOutOfRange);
+                import.CoursesValueOutOfRange,
+                import.CourseWorkMarked,
+                import.CourseWorkUnmarked);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -154,7 +162,9 @@ public sealed class RunSynchronizationUseCase(
                 step,
                 step is SyncStep.Meet or SyncStep.Linking ? meetPull.ToCounts() : null,
                 import.CoursesSkippedUnchanged,
-                import.CoursesValueOutOfRange);
+                import.CoursesValueOutOfRange,
+                import.CourseWorkMarked,
+                import.CourseWorkUnmarked);
         }
     }
 
@@ -461,14 +471,27 @@ public sealed class RunSynchronizationUseCase(
         // (spec VR-006, I-8).
         var observedAt = timeProvider.GetUtcNow();
 
+        // US-058 entity model §4: every skip record, once per run, keyed as it is stored; and every course id the list
+        // yields, so the records of courses that left the list can be removed once it has been read to its end (FR-007.3).
+        var records = (await skippedCourses.GetAllAsync(cancellationToken))
+            .ToDictionary(r => r.CourseGoogleId, StringComparer.Ordinal);
+        var listed = new HashSet<string>(StringComparer.Ordinal);
+
         await foreach (var snapshot in classroom.ReadCoursesAsync(impersonationUser, cancellationToken)
             .WithCancellation(cancellationToken))
         {
+            var recordKey = RecordKeyOf(snapshot.GoogleId);
+            if (recordKey is not null)
+            {
+                listed.Add(recordKey);
+            }
+
             if (!TryParseState(snapshot.State, out var state))
             {
                 // The one course is skipped and the run completes with the others (spec FR-003, OD-010). It is not
                 // counted, so the counter never overstates what was imported (I-5).
                 progress.SkippedCourses.Add(new SkippedCourse(snapshot.GoogleId, snapshot.State));
+                await RecordSkipAsync(records, recordKey, snapshot, CourseSkipReason.UnknownCourseState, observedAt, cancellationToken);
                 continue;
             }
 
@@ -523,9 +546,11 @@ public sealed class RunSynchronizationUseCase(
                 // gone course — before its transaction, so nothing of it is written (its complete-read updateTime
                 // included, so the next run reads it again) and it is not counted (FR-002.3).
                 progress.CoursesValueOutOfRange.Add(snapshot.GoogleId);
+                await RecordSkipAsync(records, recordKey, snapshot, CourseSkipReason.ValueOutOfRange, observedAt, cancellationToken);
                 continue;
             }
 
+            var record = recordKey is not null && records.TryGetValue(recordKey, out var found) ? found : null;
             var result = default(CourseResult);
             await unitOfWork.ExecuteInTransactionAsync(
                 async transaction => result = await ImportCourseAsync(
@@ -535,8 +560,15 @@ public sealed class RunSynchronizationUseCase(
                     items,
                     submissionSnapshots,
                     observedAt,
+                    record,
                     transaction),
                 cancellationToken);
+
+            // US-058 FR-007.1, FR-007.2: the record went with the course's committed transaction.
+            if (record is not null)
+            {
+                records.Remove(record.CourseGoogleId);
+            }
 
             if (result.SkippedByAge)
             {
@@ -548,8 +580,69 @@ public sealed class RunSynchronizationUseCase(
 
             progress.MembershipsMarkedOffRoster += result.MembershipsMarkedOffRoster;
             progress.UnrecognisedSubmissions.AddRange(result.UnrecognisedSubmissions);
+            progress.CourseWorkMarked += result.CourseWorkMarked;
+            progress.CourseWorkUnmarked += result.CourseWorkUnmarked;
             progress.ProcessedCount++;
         }
+
+        // US-058 FR-007.3: reached only when the list was read to its end — a run that stops removes none this way.
+        var unlisted = records.Values.Where(r => !listed.Contains(r.CourseGoogleId)).ToList();
+        if (unlisted.Count > 0)
+        {
+            foreach (var gone in unlisted)
+            {
+                skippedCourses.Remove(gone);
+            }
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// US-058 FR-005, FR-006, db-design §4.1: the skip of a course for out-of-range values or an unknown state is recorded
+    /// right after the decision and saved on its own, outside any course transaction. A repeated skip keeps the record's
+    /// instant and takes this run's name and reason. A course with no usable id gets no record (db-design §4).
+    /// </summary>
+    private async Task RecordSkipAsync(
+        Dictionary<string, SyncSkippedCourse> records,
+        string? recordKey,
+        CourseSnapshot snapshot,
+        CourseSkipReason reason,
+        DateTimeOffset observedAt,
+        CancellationToken cancellationToken)
+    {
+        if (recordKey is null)
+        {
+            return;
+        }
+
+        if (records.TryGetValue(recordKey, out var record))
+        {
+            record.SkipAgain(snapshot.Details.Name, reason);
+        }
+        else
+        {
+            record = SyncSkippedCourse.Record(recordKey, snapshot.Details.Name, reason, observedAt);
+            skippedCourses.Add(record);
+            records[recordKey] = record;
+        }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// US-058 VR-001: the Google course id as a skip record stores it — trimmed and cut as <see cref="Course.Import"/>
+    /// cuts it — or null when it is blank and the course cannot be recorded.
+    /// </summary>
+    private static string? RecordKeyOf(string? googleId)
+    {
+        var trimmed = googleId?.Trim();
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            return null;
+        }
+
+        return trimmed.Length <= Course.MaxGoogleIdLength ? trimmed : trimmed[..Course.MaxGoogleIdLength];
     }
 
     /// <summary>
@@ -563,6 +656,7 @@ public sealed class RunSynchronizationUseCase(
         CourseWorkPage items,
         IReadOnlyList<SubmissionSnapshot> submissionSnapshots,
         DateTimeOffset observedAt,
+        SyncSkippedCourse? record,
         CancellationToken cancellationToken)
     {
         // US-038 spec FR-011, db-design §7.3: the shared fence first, so an erasure committing meanwhile is waited for
@@ -578,6 +672,14 @@ public sealed class RunSynchronizationUseCase(
         // by recent Meet sessions would have its roster go stale.
         if (course is null && IsOlderThanRetention(snapshot, items, submissionSnapshots, observedAt))
         {
+            // US-058 FR-007.2, I-5: not loaded by policy, not because of a problem — the course's record goes, the only
+            // write this transaction makes.
+            if (record is not null)
+            {
+                skippedCourses.Remove(record);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+
             return CourseResult.AgedOut;
         }
 
@@ -648,7 +750,7 @@ public sealed class RunSynchronizationUseCase(
         // the rows that reference them; everything still commits inside the one transaction of OD-003.
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var storedItems = await ImportCourseWorkAsync(course.Id, items, cancellationToken);
+        var (storedItems, itemsMarked, itemsUnmarked) = await ImportCourseWorkAsync(course.Id, items, observedAt, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var unrecognised = await ImportSubmissionsAsync(
@@ -660,11 +762,17 @@ public sealed class RunSynchronizationUseCase(
             cancellationToken);
 
         // US-018 spec FR-002: staged with the transaction's last write, so the remembered value advances only when the
-        // course commits and a rollback leaves the previous one.
-        course.RecordCompleteRead();
+        // course commits and a rollback leaves the previous one. US-058 FR-008.1, FR-007.1: the run instant of this read
+        // and the removal of the course's skip record ride on the same write.
+        course.RecordCompleteRead(observedAt);
+        if (record is not null)
+        {
+            skippedCourses.Remove(record);
+        }
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new CourseResult(false, marked, unrecognised);
+        return new CourseResult(false, marked, unrecognised, itemsMarked, itemsUnmarked);
     }
 
     /// <summary>
@@ -698,21 +806,35 @@ public sealed class RunSynchronizationUseCase(
     /// natural key Specification v2 fixes — (course, resource, Google id). Returns them by that key, so the
     /// submissions can be attributed without a second query.
     /// </summary>
-    private async Task<Dictionary<(CourseWorkResource Resource, string GoogleId), CourseWork>> ImportCourseWorkAsync(
+    /// <remarks>
+    /// US-058 FR-001 … FR-003: called only in a full read of the course, so a stored item Google did not return here is
+    /// absent from Classroom and is marked with the run's instant; one returned again loses its mark. Returns how many
+    /// items were newly marked and unmarked, for the run's one log line (FR-004, I-4).
+    /// </remarks>
+    private async Task<(Dictionary<(CourseWorkResource Resource, string GoogleId), CourseWork> Items, int Marked, int Unmarked)> ImportCourseWorkAsync(
         long courseId,
         CourseWorkPage items,
+        DateTimeOffset observedAt,
         CancellationToken cancellationToken)
     {
         var existing = await courseWork.GetByCourseAsync(courseId, cancellationToken);
         var byKey = existing.ToDictionary(i => (i.Resource, i.GoogleId));
+        var returned = new HashSet<(CourseWorkResource Resource, string GoogleId)>();
+        var unmarked = 0;
 
         foreach (var snapshot in items.Items)
         {
             var key = (snapshot.Resource, snapshot.GoogleId);
+            returned.Add(key);
             if (byKey.TryGetValue(key, out var item))
             {
                 // The same row is updated, so an item that gained or lost maximum points keeps its identity and
-                // simply changes the kind it derives (spec FR-005, FR-010, PC-3).
+                // simply changes the kind it derives (spec FR-005, FR-010, PC-3). The update also clears a mark.
+                if (item.NotInClassroomSince is not null)
+                {
+                    unmarked++;
+                }
+
                 item.UpdateFrom(snapshot.Details);
             }
             else
@@ -723,7 +845,16 @@ public sealed class RunSynchronizationUseCase(
             }
         }
 
-        return byKey;
+        var marked = 0;
+        foreach (var item in existing)
+        {
+            if (!returned.Contains((item.Resource, item.GoogleId)) && item.MarkNotInClassroom(observedAt))
+            {
+                marked++;
+            }
+        }
+
+        return (byKey, marked, unmarked);
     }
 
     /// <summary>
@@ -923,6 +1054,12 @@ public sealed class RunSynchronizationUseCase(
         public List<string> CoursesValueOutOfRange { get; } = [];
 
         public List<string> CoursesWithBlankName { get; } = [];
+
+        /// <summary>US-058 FR-004: items newly marked "not in Classroom" in the courses this run committed.</summary>
+        public int CourseWorkMarked { get; set; }
+
+        /// <summary>US-058 FR-004: marked items Google returned again, in the courses this run committed.</summary>
+        public int CourseWorkUnmarked { get; set; }
     }
 
     /// <summary>What the Meet step did so far, for the outcome the host logs (US-031 spec FR-012).</summary>
@@ -992,11 +1129,13 @@ public sealed class RunSynchronizationUseCase(
                 new Dictionary<MeetEventRejection, int>(_skipped));
     }
 
-    /// <summary>What one course's transaction did (US-015 spec FR-011, FR-016, OD-005).</summary>
+    /// <summary>What one course's transaction did (US-015 spec FR-011, FR-016, OD-005; US-058 FR-004).</summary>
     private readonly record struct CourseResult(
         bool SkippedByAge,
         int MembershipsMarkedOffRoster,
-        IReadOnlyList<UnrecognisedSubmission> UnrecognisedSubmissions)
+        IReadOnlyList<UnrecognisedSubmission> UnrecognisedSubmissions,
+        int CourseWorkMarked = 0,
+        int CourseWorkUnmarked = 0)
     {
         /// <summary>Nothing was written for the course, so it is not counted (spec FR-011, I-5).</summary>
         public static CourseResult AgedOut => new(true, 0, []);

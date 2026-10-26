@@ -27,8 +27,8 @@ public sealed class CourseSchemaTests(PostgreSqlFixture database)
             r => (Name: r.GetString(0), Nullable: r.GetString(1), Length: r.IsDBNull(2) ? (int?)null : r.GetInt32(2)),
             ct);
 
-        // US-018 db-design §2 adds complete_read_update_time.
-        Assert.Equal(18, columns.Count);
+        // US-018 db-design §2 adds complete_read_update_time; US-058 db-design §3 adds last_complete_read_at.
+        Assert.Equal(19, columns.Count);
         Assert.Contains(columns, c => c.Name == "id" && c.Nullable == "NO");
         Assert.Contains(columns, c => c.Name == "google_id" && c.Nullable == "NO" && c.Length == 64);
         Assert.Contains(columns, c => c.Name == "name" && c.Nullable == "NO" && c.Length == 750);
@@ -40,6 +40,7 @@ public sealed class CourseSchemaTests(PostgreSqlFixture database)
         Assert.Contains(columns, c => c.Name == "creation_time" && c.Nullable == "YES");
         Assert.Contains(columns, c => c.Name == "update_time" && c.Nullable == "YES");
         Assert.Contains(columns, c => c.Name == "complete_read_update_time" && c.Nullable == "YES");
+        Assert.Contains(columns, c => c.Name == "last_complete_read_at" && c.Nullable == "YES");
         Assert.Contains(columns, c => c.Name == "course_state" && c.Nullable == "NO" && c.Length == 16);
         Assert.Contains(columns, c => c.Name == "alternate_link" && c.Nullable == "YES" && c.Length == 2048);
         Assert.Contains(columns, c => c.Name == "teacher_folder_id" && c.Nullable == "YES" && c.Length == 128);

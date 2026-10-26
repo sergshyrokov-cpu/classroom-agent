@@ -43,6 +43,7 @@ public sealed class TimestampInterceptor(TimeProvider timeProvider) : SaveChange
             // US-027 db-design §2 adds the template aggregate, stamped the same way.
             // US-031 db-design §2.1, §3.1 add meet_session and meet_participation, stamped the same way (PC-6).
             // US-032 db-design §2.1 adds meeting_code_link, stamped the same way.
+            // US-058 db-design §4 adds sync_skipped_course, stamped the same way.
             if (entry.Entity is not (LegitimacyState
                 or AppUser
                 or AuditEvent
@@ -56,7 +57,8 @@ public sealed class TimestampInterceptor(TimeProvider timeProvider) : SaveChange
                 or ReportTemplateScaleRow
                 or MeetSession
                 or MeetParticipation
-                or MeetingCodeLink))
+                or MeetingCodeLink
+                or SyncSkippedCourse))
             {
                 continue;
             }

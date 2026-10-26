@@ -135,6 +135,7 @@ public sealed class AccessCheckAuditSchemaTests(PostgreSqlFixture database)
                 "report_template_mark",
                 "report_template_scale_row",
                 "submission",
+                "sync_skipped_course",
                 "sync_state",
                 "workspace_connection",
             },

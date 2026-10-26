@@ -55,6 +55,7 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
                 "report_template",
                 "report_template_mark",
                 "report_template_scale_row",
+                "sync_skipped_course",
                 "sync_state",
                 "workspace_connection",
             }.Order(StringComparer.Ordinal),
@@ -67,8 +68,9 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
         // table (US-020 db-design §5). US-018 adds AddIncrementalSync, the last one, columns only (US-018 db-design §4).
         // US-038 adds AddParticipantErasure (US-038 db-design §11); US-051 adds AddNotAnAdminAccountRefusal, amending
         // audit_event's checks only (US-051 db-design §4). US-055 adds WidenGradeColumns, the last one, changing three
-        // column types only (US-055 db-design §3.2).
-        Assert.Equal(21, migrations.Count);
+        // column types only (US-055 db-design §3.2). US-058 adds AddSyncDataHealthRecords, the last one, with the table
+        // sync_skipped_course and two columns (US-058 db-design §5).
+        Assert.Equal(22, migrations.Count);
         Assert.EndsWith("_InitialLegitimacyState", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_InitialAppUserAndAuditEvent", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_AddWorkspaceConnection", migrations[2], StringComparison.Ordinal);
@@ -86,6 +88,7 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
         Assert.EndsWith(ErasureTestData.Names.Migration, migrations[18], StringComparison.Ordinal);
         Assert.EndsWith("_AddNotAnAdminAccountRefusal", migrations[19], StringComparison.Ordinal);
         Assert.EndsWith("_WidenGradeColumns", migrations[20], StringComparison.Ordinal);
+        Assert.EndsWith("_AddSyncDataHealthRecords", migrations[21], StringComparison.Ordinal);
     }
 
     /// <summary>db-design 7.1: the migration seeds nothing — the first account appears when a person signs in.</summary>

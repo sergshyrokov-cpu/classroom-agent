@@ -184,6 +184,13 @@ public sealed partial class SynchronizationBackgroundService(
             LogSkippedCourses(runId, outcome);
             LogMeetSkipped(runId, outcome);
 
+            // US-058 FR-004, I-4: one line with the two counts of the committed courses, whether the run completed or
+            // stopped, and none when both are zero. Numbers only — no item, course, person or grade (SC-10).
+            if (outcome.CourseWorkMarked > 0 || outcome.CourseWorkUnmarked > 0)
+            {
+                LogCourseWorkPresenceChanged(logger, runId, outcome.CourseWorkMarked, outcome.CourseWorkUnmarked);
+            }
+
             if (outcome.Failed)
             {
                 LogFailure(runId, outcome);
@@ -424,6 +431,13 @@ public sealed partial class SynchronizationBackgroundService(
         Level = LogLevel.Warning,
         Message = "Synchronization run {RunId} skipped course {CourseGoogleId}: Classroom returned points or a grade beyond the range the program holds")]
     private static partial void LogCourseValueOutOfRange(ILogger logger, Guid runId, string courseGoogleId);
+
+    [LoggerMessage(
+        EventId = 5136,
+        EventName = "SyncCourseWorkPresenceChanged",
+        Level = LogLevel.Information,
+        Message = "Synchronization run {RunId} marked {MarkedCount} items as no longer in Classroom and {UnmarkedCount} as back in Classroom")]
+    private static partial void LogCourseWorkPresenceChanged(ILogger logger, Guid runId, int markedCount, int unmarkedCount);
 
     [LoggerMessage(
         EventId = 5131,

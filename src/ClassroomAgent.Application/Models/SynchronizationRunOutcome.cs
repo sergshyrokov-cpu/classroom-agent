@@ -37,7 +37,9 @@ public sealed class SynchronizationRunOutcome
         MeetPullCounts? meet = null,
         MeetLinkingCounts? linking = null,
         int coursesSkippedUnchanged = 0,
-        IReadOnlyList<string>? coursesValueOutOfRange = null)
+        IReadOnlyList<string>? coursesValueOutOfRange = null,
+        int courseWorkMarked = 0,
+        int courseWorkUnmarked = 0)
     {
         RunId = runId;
         ProcessedCount = processedCount;
@@ -57,6 +59,8 @@ public sealed class SynchronizationRunOutcome
         Linking = linking;
         CoursesSkippedUnchanged = coursesSkippedUnchanged;
         CoursesValueOutOfRange = coursesValueOutOfRange ?? [];
+        CourseWorkMarked = courseWorkMarked;
+        CourseWorkUnmarked = courseWorkUnmarked;
     }
 
     public Guid? RunId { get; }
@@ -124,6 +128,15 @@ public sealed class SynchronizationRunOutcome
     /// </summary>
     public IReadOnlyList<string> CoursesValueOutOfRange { get; }
 
+    /// <summary>
+    /// US-058 FR-004: items newly marked "not in Classroom" in the courses this run committed, reported whether the run
+    /// completed or stopped — a count only (SC-10).
+    /// </summary>
+    public int CourseWorkMarked { get; }
+
+    /// <summary>US-058 FR-004: marked items Google returned again in the courses this run committed — a count only.</summary>
+    public int CourseWorkUnmarked { get; }
+
     public bool Failed => Error is not null;
 
     public static SynchronizationRunOutcome Ran(
@@ -139,7 +152,9 @@ public sealed class SynchronizationRunOutcome
         MeetPullCounts? meet = null,
         MeetLinkingCounts? linking = null,
         int coursesSkippedUnchanged = 0,
-        IReadOnlyList<string>? coursesValueOutOfRange = null) =>
+        IReadOnlyList<string>? coursesValueOutOfRange = null,
+        int courseWorkMarked = 0,
+        int courseWorkUnmarked = 0) =>
         new(
             runId,
             processedCount,
@@ -158,7 +173,9 @@ public sealed class SynchronizationRunOutcome
             meet,
             linking,
             coursesSkippedUnchanged,
-            coursesValueOutOfRange);
+            coursesValueOutOfRange,
+            courseWorkMarked,
+            courseWorkUnmarked);
 
     /// <summary>
     /// A run that stopped with a diagnosis (US-017 spec FR-005, FR-006): <see cref="Error"/> is the diagnosis name,
@@ -176,7 +193,9 @@ public sealed class SynchronizationRunOutcome
         SyncStep? failedStep = null,
         MeetPullCounts? meet = null,
         int coursesSkippedUnchanged = 0,
-        IReadOnlyList<string>? coursesValueOutOfRange = null) =>
+        IReadOnlyList<string>? coursesValueOutOfRange = null,
+        int courseWorkMarked = 0,
+        int courseWorkUnmarked = 0) =>
         new(
             runId,
             processedCount,
@@ -195,7 +214,9 @@ public sealed class SynchronizationRunOutcome
             meet,
             null,
             coursesSkippedUnchanged,
-            coursesValueOutOfRange);
+            coursesValueOutOfRange,
+            courseWorkMarked,
+            courseWorkUnmarked);
 
     public static SynchronizationRunOutcome SkippedReadOnly(LegitimacyModeReason reason) =>
         new(null, null, null, reason, null);

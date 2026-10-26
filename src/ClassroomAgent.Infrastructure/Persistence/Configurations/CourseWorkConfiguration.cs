@@ -53,6 +53,9 @@ public sealed class CourseWorkConfiguration : IEntityTypeConfiguration<CourseWor
 
         builder.Ignore(c => c.Kind);
 
+        // US-058 db-design §2: the "not in Classroom" mark, nullable, no index (Story 2/3 add the one they need).
+        builder.Property(c => c.NotInClassroomSince);
+
         builder.HasOne<Course>()
             .WithMany()
             .HasForeignKey(c => c.CourseId)

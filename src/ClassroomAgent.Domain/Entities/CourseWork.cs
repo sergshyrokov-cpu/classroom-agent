@@ -66,6 +66,12 @@ public sealed class CourseWork
     public DateTimeOffset UpdatedAt { get; private set; }
 
     /// <summary>
+    /// US-058 FR-001 … FR-003: null while the item is in Classroom; otherwise the run instant that first found it absent
+    /// from a full read. A synchronization record beside the Google-sourced fields, never one of them (v83, v99).
+    /// </summary>
+    public DateTimeOffset? NotInClassroomSince { get; private set; }
+
+    /// <summary>
     /// BR-052's three kinds, <b>computed and never stored</b> (PC-3, §3 v32): the material resource is always a
     /// material, and otherwise the presence of maximum points decides. A teacher adding points later therefore
     /// changes the kind without changing the row's identity.
@@ -96,10 +102,27 @@ public sealed class CourseWork
     /// The upsert's update half (FR-010). The surrogate identity, the course, the resource and
     /// <see cref="GoogleId"/> are untouched, so anything referring to the item survives.
     /// </summary>
+    /// <remarks>US-058 FR-003: an item Google returned is in Classroom by definition, so its mark is cleared here.</remarks>
     public void UpdateFrom(CourseWorkDetails details)
     {
         ArgumentNullException.ThrowIfNull(details);
         Apply(details);
+        NotInClassroomSince = null;
+    }
+
+    /// <summary>
+    /// FR-001, FR-002: marks the item absent from a full read. Returns true when the mark is new; an item
+    /// already marked keeps its first instant and the call returns false. No Google-sourced field changes.
+    /// </summary>
+    public bool MarkNotInClassroom(DateTimeOffset noticedAt)
+    {
+        if (NotInClassroomSince is not null)
+        {
+            return false;
+        }
+
+        NotInClassroomSince = noticedAt;
+        return true;
     }
 
     private static string Cut(string value, int maxLength) =>
