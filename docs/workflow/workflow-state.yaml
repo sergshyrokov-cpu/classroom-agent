@@ -4,19 +4,22 @@
 version: 1
 story: US-058
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: '2026-10-26T19:50:52Z'
+  verdict: PASS
+  stage: DB_DESIGN
+  recorded_at: '2026-10-26T19:55:22Z'
 last_artifacts:
-- type: api_design
-  path: docs/designs/api/US-058-api-design.md
+- type: database_design
+  path: docs/designs/database/US-058-db-design.md
+  version: 1
+- type: entity_model
+  path: docs/designs/database/US-058-entity-model.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
@@ -28,6 +31,7 @@ non_blocking_findings:
 - 'SPEC_REVIEW m-3: an unknown-state course may be recorded with no name; Story 3 needs a fallback.'
 - 'SPEC_REVIEW m-4: AC-006 can pass vacuously; test must start from existing marks and ideally fail inside the transaction.'
 - 'API_DESIGN: NOT_APPLICABLE — spec §7/§10 no endpoint; no openapi.yaml by design.'
+- 'DB_DESIGN PASS: course_work.not_in_classroom_since, course.last_complete_read_at, new table sync_skipped_course; migration AddSyncDataHealthRecords. RecordCompleteRead gains a DateTimeOffset parameter (2 existing test files adapt at TEST_WRITING). No index on the mark (Story 2/3).'
 started_at: '2026-10-26T19:32:53Z'
-updated_at: '2026-10-26T19:50:52Z'
+updated_at: '2026-10-26T19:55:22Z'
 completed_at: null
