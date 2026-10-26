@@ -260,6 +260,46 @@ without the values, and the next run reads the course again. *(Epic 1, v80, v98)
 **BR-044** `SyncState` is the only source of synchronization progress, status,
 last error and last successful run. *(§3, Epic 5)*
 
+**BR-045** A stored coursework item or material that Google no longer returns in a
+full read of its course is never deleted: synchronization marks it "not in
+Classroom" with the date it noticed, and its submissions and grades stay. Google's
+answer cannot tell a deleted item from one returned to draft, hence the wording. If
+the item comes back, the mark is removed. A skipped course and an unchanged archived
+course are not re-read, so their items neither gain nor lose the mark. The mark is
+a synchronization record, not an edit of the mirror. *(§3, Epic 1, v99)*
+
+**BR-046** A course that synchronization skips (BR-043, or a course state the
+system does not know) stays recorded in `SyncState` — Google course id, the name
+from Google's course list, the reason and since when — until a run reads it
+successfully. A course never loaded is shown by that name; a loaded one is marked
+in its journal and report as "data not updated since" the date of its last
+successful read. *(§3, Epic 1, v99)*
+
+**BR-047** Data-health notices tell Admin and Dean about problems synchronization
+left behind. Two kinds:
+- **teaching** — fixed by a teacher in Classroom, shown to the Dean in detail:
+  points above the coursework's maximum (BR-067), items "not in Classroom"
+  (BR-045), a course skipped for out-of-range values (BR-043), with the hint to
+  contact the teacher;
+- **technical** — fixed by the Admin: the last run failed (a permission error is
+  one such case); no successful run for more than 24 hours, or none yet; a course
+  skipped for an unknown state. The Dean sees that the problem exists and the hint
+  to tell the Admin; the Admin sees the details, worded as in the synchronization
+  state (Epic 6). In read-only mode the staleness notice is not raised.
+
+A banner at the top of every installation page, while any problem exists, shows
+"N technical problems, M teaching" and links to the «Стан даних» page with the
+details of each, linking to the course's journal. One course × one kind of problem
+counts as one; a problem without a course (failed run, staleness) counts as one.
+Notices show the current state only: a notice disappears when its problem is gone,
+with no expiry and no "read" mark; history is in the log and audit. Archived
+courses are not counted — Google allows no change there — but keep their marks and
+are listed separately on «Стан даних». The Dean sees the problems of the courses
+visible to them (all courses in the first version) and technical ones without
+details; the Admin sees all, technical ones with details. Notices are built from
+stored data, never by calling Google, and are visible in read-only mode. The banner
+is restrained — colour only, no sound, pop-up or blinking. *(§2, Epic 1, v99)*
+
 ## Data model
 
 **BR-050** A person's Classroom role (`teacher` / `student`) belongs to their
@@ -330,6 +370,14 @@ and turned in again shows the second date. *(§3, §4 Epic 3)*
 
 **BR-059** Only the fact of submission is kept — never its content, the history
 of grade changes, or rubric grades (Epic 12). *(§3)*
+**BR-067** A grade or draft grade above the coursework's maximum points —
+usually a teacher's entry error — is highlighted in the on-screen journal and
+report and labelled "above maximum". In the school's scale it stays 100 %
+(v98), so an export keeps the scale value in the cell, highlights the cell with a
+colour and adds a note with the raw points and maximum. An item "not in
+Classroom" (BR-045) keeps its column with its grades in the journal, report and
+export, marked in the header and, on the «Теми занять» sheet, next to the topic.
+*(§4 Epic 3, v99)*
 
 ## Meet activity statistics
 
