@@ -254,6 +254,14 @@ stories:
     # (aligned with v98). Origin: US-055 security review INFO-1 (sync stops on a
     # value beyond decimal) and INFO-2 (scale percent overflow). Owner 2026-10-25:
     # settle both in the requirements first (v98 88183e2).
+  - id: US-058
+    epic: EPIC-1
+    title: Synchronization marks items no longer in Classroom and records the courses it skips
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-058-sync-marks-items-gone-and-records-skipped-courses.md
+    # (aligned with v99). First of three v99 Stories (data; marks in journal/report/
+    # export; banner and «Стан даних»). Owner 2026-10-26: all three before the pilot.
   - id: US-046
     epic: EPIC-6
     title: Page-search hint on teaching-data pages
