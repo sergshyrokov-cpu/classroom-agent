@@ -293,7 +293,7 @@ stories:
   - id: US-062
     epic: EPIC-1
     title: Data-health banner and the «Стан даних» page, with the Admin's confirmation of deleted courses
-    state: READY
+    state: IN_PROGRESS
     blocked_by: null
     # Story file authored: docs/stories/US-062-data-health-banner-and-page.md
     # (aligned with v102). v99 "Story 3" + BR-049 confirmation + v102 empty-list

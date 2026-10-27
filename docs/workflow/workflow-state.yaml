@@ -2,25 +2,46 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-060
+story: US-062
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: HUMAN_SPEC_APPROVAL
+previous_stage: SPEC_REVIEW
+last_completed_stage: SPEC_REVIEW
+status: WAITING_FOR_HUMAN
 attempt: 1
-last_invoked_skill: security-reviewer
+last_invoked_skill: spec-verifier
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_PR_APPROVAL
-  recorded_at: '2026-10-27T15:02:39Z'
+  verdict: PASS
+  stage: SPEC_REVIEW
+  recorded_at: '2026-10-27T18:56:49Z'
 last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-060-security-review.md
+- type: specification_review
+  path: docs/reviews/specifications/US-062-spec-review.md
   version: 1
-pending_human_gate: null
+pending_human_gate:
+  stage: HUMAN_SPEC_APPROVAL
+  status: PENDING
+  required_artifacts:
+  - type: specification
+    path: docs/specifications/US-062-spec.md
+    version: 1
+  - type: spec_digest
+    path: docs/specifications/US-062-spec-digest.ru.md
+    version: 1
+  - type: specification_review
+    path: docs/reviews/specifications/US-062-spec-review.md
+    version: 1
+  automated_verdict: PASS
+  blocking_findings: []
+  requested_at: '2026-10-27T18:56:49Z'
+  decided_at: null
+  decided_by: null
+  comment: null
 blocking_issues: []
-non_blocking_findings: []
-started_at: '2026-10-27T12:59:35Z'
-updated_at: '2026-10-27T15:02:39Z'
-completed_at: '2026-10-27T15:02:39Z'
+non_blocking_findings:
+- 'm-1: FR-004.4 vs FR-002.3 - archived X3 course name on the Dean''s page is unresolved'
+- 'm-2: FR-003.2 zero count always shown; not mentioned in the digest'
+- 'm-3: FR-007 lacks wording for several text variants; Google-id fallback in FR-001.6 unsourced'
+started_at: '2026-10-27T18:37:49Z'
+updated_at: '2026-10-27T18:56:49Z'
+completed_at: null
