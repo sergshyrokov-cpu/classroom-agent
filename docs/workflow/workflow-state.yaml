@@ -4,44 +4,32 @@
 version: 1
 story: US-062
 workflow: story-delivery
-current_stage: HUMAN_SPEC_APPROVAL
-previous_stage: SPEC_REVIEW
-last_completed_stage: SPEC_REVIEW
-status: WAITING_FOR_HUMAN
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-verifier
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: SPEC_REVIEW
-  recorded_at: '2026-10-27T18:56:49Z'
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: '2026-10-27T19:03:57Z'
 last_artifacts:
+- type: specification
+  path: docs/specifications/US-062-spec.md
+  version: 1
+- type: spec_digest
+  path: docs/specifications/US-062-spec-digest.ru.md
+  version: 1
 - type: specification_review
   path: docs/reviews/specifications/US-062-spec-review.md
   version: 1
-pending_human_gate:
-  stage: HUMAN_SPEC_APPROVAL
-  status: PENDING
-  required_artifacts:
-  - type: specification
-    path: docs/specifications/US-062-spec.md
-    version: 1
-  - type: spec_digest
-    path: docs/specifications/US-062-spec-digest.ru.md
-    version: 1
-  - type: specification_review
-    path: docs/reviews/specifications/US-062-spec-review.md
-    version: 1
-  automated_verdict: PASS
-  blocking_findings: []
-  requested_at: '2026-10-27T18:56:49Z'
-  decided_at: null
-  decided_by: null
-  comment: null
+- type: open_decisions
+  path: docs/decisions/US-062-open-decisions.md
+  version: 1
+pending_human_gate: null
 blocking_issues: []
-non_blocking_findings:
-- 'm-1: FR-004.4 vs FR-002.3 - archived X3 course name on the Dean''s page is unresolved'
-- 'm-2: FR-003.2 zero count always shown; not mentioned in the digest'
-- 'm-3: FR-007 lacks wording for several text variants; Google-id fallback in FR-001.6 unsourced'
+non_blocking_findings: []
 started_at: '2026-10-27T18:37:49Z'
-updated_at: '2026-10-27T18:56:49Z'
+updated_at: '2026-10-27T19:03:57Z'
 completed_at: null

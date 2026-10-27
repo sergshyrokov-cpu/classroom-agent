@@ -2,9 +2,9 @@
 artifact_type: spec_digest
 story: US-062
 version: 1
-status: DRAFT
+status: APPROVED
 created_at: 2026-10-27T18:35:09Z
-updated_at: 2026-10-27T18:35:09Z
+updated_at: 2026-10-27T19:03:57Z
 produced_by: spec-writer
 inputs:
   - path: docs/specifications/US-062-spec.md

@@ -2,9 +2,9 @@
 artifact_type: specification
 story: US-062
 version: 1
-status: DRAFT
+status: APPROVED
 created_at: 2026-10-27T18:35:09Z
-updated_at: 2026-10-27T18:35:09Z
+updated_at: 2026-10-27T19:03:57Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-062-data-health-banner-and-page.md
