@@ -4,20 +4,43 @@
 version: 1
 story: US-059
 workflow: story-delivery
-current_stage: SPECIFICATION
-previous_stage: null
-last_completed_stage: null
-status: IN_PROGRESS
+current_stage: HUMAN_SPEC_APPROVAL
+previous_stage: SPEC_REVIEW
+last_completed_stage: SPEC_REVIEW
+status: WAITING_FOR_HUMAN
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: spec-verifier
 last_result:
-  verdict: null
-  stage: null
-  recorded_at: null
-last_artifacts: []
-pending_human_gate: null
+  verdict: PASS
+  stage: SPEC_REVIEW
+  recorded_at: '2026-10-27T10:20:00Z'
+last_artifacts:
+- type: specification_review
+  path: docs/reviews/specifications/US-059-spec-review.md
+  version: 1
+pending_human_gate:
+  stage: HUMAN_SPEC_APPROVAL
+  status: PENDING
+  requested_at: '2026-10-27T10:20:00Z'
+  required_artifacts:
+  - type: specification
+    path: docs/specifications/US-059-spec.md
+    version: 1
+  - type: spec_digest
+    path: docs/specifications/US-059-spec-digest.ru.md
+    version: 1
+  - type: specification_review
+    path: docs/reviews/specifications/US-059-spec-review.md
+    version: 1
+  automated_verdict: PASS
+  blocking_findings: []
+  decided_by: null
+  decided_at: null
+  comment: null
 blocking_issues: []
-non_blocking_findings: []
-started_at: null
-updated_at: '2026-10-27T09:41:31Z'
+non_blocking_findings:
+- 'SPEC_REVIEW m-1: account change saved between the run''s connection read (:86) and observedAt (:472) gives sightings after the change from the old account -> later loss marked "not in Classroom" instead of "not visible"; ms window, advisory for DB_DESIGN/IMPLEMENTATION.'
+- 'SPEC_REVIEW m-2: digest does not say a connection saved before the update has no change instant (FR-002.3), so lost courses then get "not in Classroom".'
+started_at: '2026-10-27T09:47:47Z'
+updated_at: '2026-10-27T10:20:00Z'
 completed_at: null
