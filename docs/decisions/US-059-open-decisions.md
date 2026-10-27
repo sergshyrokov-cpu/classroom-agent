@@ -2,9 +2,9 @@
 artifact_type: open_decisions
 story: US-059
 version: 1
-status: DRAFT
+status: APPROVED
 created_at: 2026-10-27T09:45:51Z
-updated_at: 2026-10-27T09:45:51Z
+updated_at: 2026-10-27T10:45:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-059-sync-marks-courses-gone-and-skips-negative-values.md

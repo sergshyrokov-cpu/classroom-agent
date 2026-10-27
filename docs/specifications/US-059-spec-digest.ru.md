@@ -2,9 +2,9 @@
 artifact_type: spec_digest
 story: US-059
 version: 1
-status: DRAFT
+status: APPROVED
 created_at: 2026-10-27T09:45:51Z
-updated_at: 2026-10-27T09:45:51Z
+updated_at: 2026-10-27T10:45:00Z
 produced_by: spec-writer
 inputs:
   - path: docs/specifications/US-059-spec.md
