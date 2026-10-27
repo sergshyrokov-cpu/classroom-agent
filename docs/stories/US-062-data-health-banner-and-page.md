@@ -11,6 +11,9 @@ source:
 # derived rules BR-047, BR-048, BR-049 in `236832a`). Third of the v99 Stories
 # ("Story 3"); carries the Admin's confirmation (BR-049, v101) moved here from
 # US-059, and the empty-list "since" date (v102 item 3). Before the pilot.
+# AMENDED 2026-10-27 for trebovaniya.md v103 (`5cea77b`, BR-047 in `bcc5447`):
+# the technical problem «нет связи с Control Plane» (Owner chose amending this
+# Story over a separate one, 2026-10-27). AC-013, AC-014 added.
 ---
 
 # User Story
@@ -57,7 +60,14 @@ make them visible; the hints say who fixes what.
   are stored — «Google не повертає жодного курсу з <дати> — перевірте роль
   технічного акаунта» (BR-048, v102); the technical account does not see courses
   the previous one saw — one problem for all such courses, archived ones included
-  (BR-049);
+  (BR-049); **no connection with the Control Plane** (v103) — the last successful
+  legitimacy check (BR-081) was more than 24 hours ago while the grace period
+  (BR-025) still runs: «Нет связи с сервисом с <даты последней успешной
+  проверки>; с <даты конца grace period> программа перейдёт в режим «только
+  чтение», если связь не восстановится»; a shorter outage raises nothing; once
+  read-only mode starts the problem disappears and the read-only message replaces
+  it; it is fixed by the Owner, not the Admin, so the Admin's hint is «сообщите
+  Владельцу», with the `upgrade_required` reason when that is the cause (BR-027);
 - **counting**: one course × one kind of problem = 1; a problem without a course
   = 1; archived courses are not counted (except inside the single BR-049 problem,
   which counts once);
@@ -230,6 +240,29 @@ rule, and no mark changes.
 **Then** the banner and the page are shown, all texts in English, names as Google
 returned them.
 
+
+## AC-013 No connection with the Control Plane during the grace period
+
+**Given** the last successful legitimacy check at C1, the clock at C1 + 25 hours
+(synthetic), the grace period still running
+
+**When** the Dean and then the Admin open a page and «Стан даних»
+
+**Then** the banner counts one technical problem; the page says there has been no
+connection with the service since C1 and that read-only mode starts at the end of
+the grace period (C1 + 7 days) if it is not restored; the Dean sees «сообщите
+Администратору», the Admin sees «сообщите Владельцу»; at C1 + 23 hours there is no
+such problem.
+
+## AC-014 The problem gives way to read-only mode
+
+**Given** the data of AC-013 and the clock past the end of the grace period
+
+**When** the Admin opens a page and «Стан даних»
+
+**Then** there is no "no connection" problem; the read-only message is shown
+instead; with `upgrade_required` as the cause during the grace period, the Admin's
+details name that reason.
 ---
 
 # Open Decisions
@@ -262,6 +295,9 @@ At migration a stored `LastCourseListEmpty = true` has no date.
 
 # Notes
 
+- **Control Plane problem (v103):** `LegitimacyState.LastSuccessfulCheckAt` and
+  `Compatibility`, the grace-period rule `Domain/Rules/GracePeriod.cs`; no schema
+  change expected for it.
 - **Data already stored:** marks and skip records (US-058, US-059), `SyncState`
   (status, last error, last success), `Submission` grades vs `CourseWork.MaxPoints`
   for above-maximum, `Course.State` for archived.

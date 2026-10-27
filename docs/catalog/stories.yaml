@@ -298,7 +298,24 @@ stories:
     # Story file authored: docs/stories/US-062-data-health-banner-and-page.md
     # (aligned with v102). v99 "Story 3" + BR-049 confirmation + v102 empty-list
     # date. OD-001, OD-002 resolved a) by the Owner 2026-10-27. Suggested after
-    # US-060. Before the pilot.
+    # US-060. Before the pilot. Amended 2026-10-27 for v103 (Owner): technical
+    # problem «нет связи с Control Plane» (BR-047), AC-013, AC-014.
+  - id: US-063
+    epic: EPIC-3
+    title: «Сформирован» and «Данные из Google на» in the journal, the report and the Excel export
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-063-generated-and-data-as-of-in-journal-and-export.md
+    # (aligned with v103, BR-084; v103 agenda item 1). OD-001 … OD-003 resolved
+    # a) by the Owner 2026-10-27. Before the pilot.
+  - id: US-064
+    epic: EPIC-6
+    title: A disabled Dean's open session is refused on the next request
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-064-disabled-dean-session-refused-on-next-request.md
+    # (aligned with v103, BR-014, SC-2; v103 agenda item 4). Expected test-only.
+    # OD-001 resolved a) by the Owner 2026-10-27. Before the pilot.
   - id: US-046
     epic: EPIC-6
     title: Page-search hint on teaching-data pages
