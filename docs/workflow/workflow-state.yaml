@@ -4,24 +4,28 @@
 version: 1
 story: US-059
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: '2026-10-27T11:00:00Z'
+  verdict: PASS
+  stage: DB_DESIGN
+  recorded_at: '2026-10-27T11:20:00Z'
 last_artifacts:
-- type: api_design
-  path: docs/designs/api/US-059-api-design.md
+- type: database_design
+  path: docs/designs/database/US-059-db-design.md
+  version: 1
+- type: entity_model
+  path: docs/designs/database/US-059-entity-model.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-- 'OPEN US-059/SPEC_REVIEW/m-1: account change saved between the run''s connection read (:86) and observedAt (:472) -> later loss marked "not in Classroom" instead of "not visible"; address at DB_DESIGN/IMPLEMENTATION or accept.'
+- 'N-1: WorkspaceConnection.ChangeTo gains a DateTimeOffset parameter (one call site); tests adapted at TEST_WRITING.'
+- 'N-2: R1 moves observedAt before the connection read; tests pinning clock-read order (if any) adapted at TEST_WRITING.'
 started_at: '2026-10-27T09:47:47Z'
-updated_at: '2026-10-27T11:00:00Z'
+updated_at: '2026-10-27T11:20:00Z'
 completed_at: null
