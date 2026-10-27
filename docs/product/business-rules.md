@@ -55,7 +55,10 @@ first. On revocation the `AppUser` row is kept for history (until the retention 
 PC-11) but login is refused.
 The installation asks the Control Plane on each login and keeps no copy of the
 list; if the Control Plane does not answer, the Admin login is refused. Dean
-logins and synchronization are unaffected. *(§2, §9, v26)*
+logins and synchronization are unaffected. Known limitation (v103): revocation does
+not end a session already open — it ends on its own expiry, after 60 minutes of
+inactivity and at most 8 hours after sign-in; immediate revocation would need a
+Control Plane call on every Admin request. *(§2, §9, v26, v103)*
 
 **BR-013** An installation may have several Admins, and onboarding requires at
 least two, so one person is never a single point of failure. Admins are school
@@ -75,7 +78,11 @@ and the new password may not equal it (v64). The password and lockout policy is
 `security-conventions.md` SC-2; an Admin reset clears a sign-in lockout but does
 not re-enable a disabled account, and a disabled Dean who enters the correct
 password is told the account is disabled (v64) — unless sign-in is locked out,
-which is checked first (v65). *(§2, v38, v62, v64, v65)*
+which is checked first (v65). Disabling takes effect at once (v103): it rotates the
+account's security stamp, which the session cookie is checked against on every
+request (v79), so a Dean who is working at that moment cannot open the next page or
+download an export and is sent to the sign-in page; a request already in progress
+completes. *(§2, v38, v62, v64, v65, v103)*
 
 **BR-015** Teaching data is read on behalf of a **technical account** of the
 school — the impersonation user in `WorkspaceConnection`. The school's
@@ -291,9 +298,17 @@ left behind. Two kinds:
   skipped for an unknown state; Google returned an empty course list while
   courses are stored (BR-048), with the date since which it has (v102); the technical account does not see courses the
   previous one saw (BR-049) — one problem for all such courses, archived ones
-  included, the Admin seeing their list (v101). The Dean sees that the problem exists and the hint
+  included, the Admin seeing their list (v101); **no connection with the Control
+  Plane** (v103) — the last successful legitimacy check (BR-081) was more than 24
+  hours ago while the grace period (BR-025) still runs, shown with the date of the
+  last successful check and the date read-only mode will start if the connection is
+  not restored. A shorter outage raises nothing (the check retries every 15
+  minutes); once read-only mode starts the problem disappears and the read-only
+  message replaces it. The Dean sees that the problem exists and the hint
   to tell the Admin; the Admin sees the details, worded as in the synchronization
-  state (Epic 6). In read-only mode the staleness notice is not raised.
+  state (Epic 6) — for the Control Plane problem the hint is to tell the Owner, who
+  fixes it, and the `upgrade_required` reason when that is the cause (BR-027). In
+  read-only mode the staleness notice is not raised.
 
 A banner at the top of every installation page, while any problem exists, shows
 "N technical problems, M teaching" and links to the «Стан даних» page with the
@@ -308,7 +323,7 @@ details; the Admin sees all, technical ones with details. Notices are built from
 stored data, never by calling Google, and are visible in read-only mode. The banner
 is restrained — colour only, no sound, pop-up or blinking. Next to the teaching
 problems on «Стан даних» the Dean sees the hint to contact the Admin if the
-problem could not be solved with the teacher (v100). *(§2, Epic 1, v99, v100, v102)*
+problem could not be solved with the teacher (v100). *(§2, Epic 1, v99, v100, v102, v103)*
 
 **BR-048** A stored course missing from a course list read to its end is never
 deleted: synchronization marks it "not in Classroom" with the date it noticed.
@@ -450,6 +465,24 @@ Classroom" in the course list in place of its teachers — for example, the teac
 left and their account was deleted. The course card lists the teachers who left.
 Known limitation: a teacher whose data was erased on request (BR-076) is unknown
 to the system, so their course gets the mark too. *(§4 Epic 2, v101)*
+
+**BR-084** A journal and a report show "generated: <date, time>" — the moment the
+cells are built for, the same moment "due" is judged against (BR-056) — and "data
+from Google as of: <date, time of the course's last successful read>", in the
+school's time zone, labels in the user's language. On screen both lines are in the
+journal and report header. In an Excel export — journal, report by template and
+the blanks built from it — both go into a **note on the course-name cell**, not
+into a printed cell: the export replaces the paper academic journal and this
+information is not printed. A downloaded file thus shows how old it is; a grade
+changed later is not marked anywhere, because the previous value is not kept
+(BR-059, mirror). *(§4 Epic 3, v103)*
+
+**BR-085** A course and a person are identified by their Google id (BR-041), so
+after a course, surname or email is renamed in Google the next synchronization
+shows the new name on every screen and in new exports — the same course or person,
+with the same grades and links. Known limitation: the previous name is not kept
+(mirror, v83), so a person cannot be found by a former surname or email, by search
+or on a page; files already exported keep the old name. *(§4 Epic 2, v103)*
 
 ## Meet activity statistics
 

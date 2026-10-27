@@ -118,6 +118,13 @@ area as production severity.
   minutes** for an Admin or a Dean (sliding) — and in any case **8 hours** after
   sign-in. A persistent session cookie, a longer or missing expiry, or a
   "remember me" option is a finding.
+- **The session is checked against the account on every request**
+  (`trebovaniya.md` §2, v79, v103): signing out and an Admin disabling a Dean
+  account both rotate the account's security stamp, and the session cookie is
+  validated against the stored stamp and the disabled state on every request, so
+  the old cookie stops working on the next request. A periodic validation interval
+  (such as ASP.NET Core Identity's default 30 minutes) instead of a per-request
+  check is a finding.
 - **Cookie attributes are fixed per host** (`trebovaniya.md` §8, v61):
   - the installation session cookie is `SameSite=Lax` — `Strict` would drop the
     session on the first page after returning from Google; the antiforgery token
@@ -163,6 +170,9 @@ Admin's account (BR-015, SC-8).
   Control Plane does not answer, the Admin login is refused with a plain message;
   Dean logins and synchronization are unaffected (`trebovaniya.md` §2, v26).
   Falling back to a cached or earlier answer is a Critical finding.
+- **Revocation does not end an open session** — a known limitation
+  (`trebovaniya.md` §2, v103): the revoked Admin's session ends on its own expiry
+  (SC-2), at most 8 hours after sign-in. This is not a finding.
 - **At least two Admins per school** are required at onboarding, so one person
   is never a single point of failure. Admins are school staff on personal domain
   administrator accounts — ideally a separate admin account, not the one used
