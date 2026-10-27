@@ -276,7 +276,7 @@ stories:
   - id: US-060
     epic: EPIC-3
     title: Marks in the course list, course card, journal, report and export
-    state: READY
+    state: IN_PROGRESS
     blocked_by: null
     # Story file authored: docs/stories/US-060-marks-in-course-list-journal-report-and-export.md
     # (aligned with v102). v99 "Story 2"; carries v100/v101/v102 display marks.
