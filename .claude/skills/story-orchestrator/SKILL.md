@@ -136,7 +136,7 @@ When `current_stage` is a human gate:
 1. Do not invoke any Skill.
 2. Set workflow `status: WAITING_FOR_HUMAN`.
 3. Build `pending_human_gate` in `workflow-state.yaml` per `state-schema.md`:
-   - `stage`, `status: PENDING`, `requested_at` (runtime timestamp);
+   - `stage`, `status: PENDING`, `requested_at` (see Timestamps);
    - `required_artifacts`: the gate's `required_artifacts` from `stage-map.yaml`,
      each resolved to `{type, path, version}` via `artifact-paths.yaml` +
      the artifact's front matter;
@@ -225,6 +225,29 @@ first stage of every Story is `SPECIFICATION`.
 
 ---
 
+# Timestamps
+
+Every time this Skill writes — `timestamp` in `history.jsonl` and
+`findings.jsonl`, `activated_at`, `requested_at`, `decided_at`, `recorded_at`,
+`started_at`, `updated_at`, `completed_at` — is taken from the output of
+
+```
+date -u +%Y-%m-%dT%H:%M:%SZ
+```
+
+run once at the moment the step records its result, and that one value is used
+for every file written in the same step. Never estimate, round or reuse a time
+from memory, chat history or an artifact; an invented time has already put
+approvals hours after the commit they preceded.
+
+Before appending, compare the value with the `timestamp` of the last line of
+the file being appended to. If the new value is earlier, stop: write nothing,
+report both values and ask the human. Never correct an earlier line — the logs
+are append-only. The hook `.claude/hooks/check-log-timestamps.py` checks the
+same after every write and reports a violation back to the agent.
+
+---
+
 # Recording a Transition
 
 After a valid result, update `workflow-state.yaml` (per `state-schema.md`):
@@ -244,7 +267,7 @@ After a valid result, update `workflow-state.yaml` (per `state-schema.md`):
 Then append one line to `docs/workflow/history.jsonl`:
 
 ```json
-{"timestamp":"<runtime>","story":"US-001","from_stage":"<old>","to_stage":"<new>","skill":"<skill-or-null>","verdict":"<verdict>","artifacts":[],"attempt":<n>}
+{"timestamp":"<date -u, see Timestamps>","story":"US-001","from_stage":"<old>","to_stage":"<new>","skill":"<skill-or-null>","verdict":"<verdict>","artifacts":[],"attempt":<n>}
 ```
 
 Preserve all prior history. Never rewrite `history.jsonl`.

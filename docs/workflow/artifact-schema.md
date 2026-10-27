@@ -12,8 +12,8 @@ artifact_type: <canonical-artifact-type>   # a key from docs/workflow/artifact-p
 story: US-001
 version: 1                                  # integer, starts at 1, +1 per revision
 status: DRAFT                               # artifact lifecycle status (artifact-lifecycle.md §1)
-created_at: <ISO-8601 timestamp, runtime>   # never hard-coded
-updated_at: <ISO-8601 timestamp, runtime>
+created_at: <ISO-8601 UTC from date -u>     # never estimated
+updated_at: <ISO-8601 UTC from date -u>
 produced_by: <skill-name>                   # the owning Skill from artifact-paths.yaml
 inputs:                                     # every artifact this one consumed
   - path: <relative-path>
@@ -30,7 +30,7 @@ supersedes: null                            # or the relative path of the prior 
 | `story` | Canonical Story id. Must equal `workflow-state.yaml.story`. |
 | `version` | `1` on first creation. A re-run that changes content increments it. |
 | `status` | One of `DRAFT, IN_REVIEW, APPROVED, SUPERSEDED` (`artifact-lifecycle.md` §1). New artifacts start `DRAFT`. A review stage may set an input's `status` progression only through the orchestrator-recorded result; Skills do not silently flip other artifacts' status. |
-| `created_at` / `updated_at` | Generated at runtime from the system clock. Example dates in Skill docs are illustrative only and must be labelled as such. |
+| `created_at` / `updated_at` | Taken from the output of `date -u +%Y-%m-%dT%H:%M:%SZ` run when the artifact is written — never estimated, rounded or copied from another artifact. `updated_at` is not earlier than `created_at`. Example dates in Skill docs are illustrative only and must be labelled as such. |
 | `produced_by` | The Skill named as `owner` of this `artifact_type` in `artifact-paths.yaml`. |
 | `inputs[]` | One entry per consumed artifact, with the version that was read. Enables stale-input detection. |
 | `supersedes` | `null` unless this revision replaces an earlier one; then the earlier file's path. The earlier file's `status` becomes `SUPERSEDED`. |

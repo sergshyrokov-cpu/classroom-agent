@@ -113,6 +113,12 @@ One JSON object per line, append-only. Owned by `story-orchestrator`
 (registry key `workflow_history`). Separate from `docs/hooks/tool-usage.jsonl`
 (tool telemetry).
 
+Every timestamp in this document is UTC from `date -u +%Y-%m-%dT%H:%M:%SZ` at
+the moment of writing, never estimated, and a new line's `timestamp` is not
+earlier than the previous line's (`story-orchestrator` SKILL.md, Timestamps).
+Lines written before 2026-10-27 may hold estimated times and run out of order;
+they are left as written.
+
 ```json
 {
   "timestamp": "<ISO-8601 runtime>",

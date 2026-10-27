@@ -33,7 +33,7 @@ Write `docs/workflow/active-story.yaml` and `docs/workflow/workflow-state.yaml`
 per `docs/workflow/state-schema.md`:
 
 - `active-story.yaml`: `active_story`, resolved `story_path`, `source` (nulls if
-  no GitHub), `status: IN_PROGRESS`, `activated_at` (runtime), `activated_by`.
+  no GitHub), `status: IN_PROGRESS`, `activated_at` (from `date -u`, SKILL.md Timestamps), `activated_by`.
 - `workflow-state.yaml`: `story`, `workflow: story-delivery`,
   `current_stage: SPECIFICATION`, `previous_stage`/`last_completed_stage`
   accordingly, `status: IN_PROGRESS`, `attempt: 1`, remaining fields

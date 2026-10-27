@@ -64,3 +64,4 @@ obj/
 # Телеметрия хука — локальная, в репозиторий не идёт
 /docs/hooks/tool-usage.jsonl
 **/docs/hooks/tool-usage.jsonl
+/docs/hooks/log-timestamps-state.json

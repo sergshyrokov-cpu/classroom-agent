@@ -19,7 +19,8 @@ Requirements:
 - confirm every artifact in the gate's `required_artifacts` exists, is current
   (not SUPERSEDED), and its recorded automated verdict is PASS with
   no blocking findings; if not, refuse and report what is missing;
-- set pending_human_gate.status = APPROVED, decided_at (runtime), decided_by;
+- set pending_human_gate.status = APPROVED, decided_at (from `date -u +%Y-%m-%dT%H:%M:%SZ`, never estimated —
+  story-orchestrator SKILL.md, Timestamps), decided_by;
   store the comment;
 - append a docs/workflow/history.jsonl event with verdict "HUMAN_APPROVED";
 - append to docs/workflow/findings.jsonl a CLOSED event (`by: human`) for each
