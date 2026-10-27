@@ -253,9 +253,10 @@ and 30 s with jitter, or Google's own requested delay capped at 2 minutes. When 
 attempts run out, or on a permission failure (BR-034), the run ends as failed; work
 already loaded stays and the next run keeps the normal schedule. A course that
 disappears mid-run (`404`) is skipped. So is a course where Google returns points,
-a grade or maximum points larger than the system can store (above about 7.9·10²⁸):
-its already loaded data stays as it was, the run's log records the course id
-without the values, and the next run reads the course again. *(Epic 1, v80, v98)*
+a grade or maximum points larger than the system can store (above about 7.9·10²⁸),
+or negative (v100): its already loaded data stays as it was, the run's log records
+the course id without the values, and the next run reads the course again.
+*(Epic 1, v80, v98, v100)*
 
 **BR-044** `SyncState` is the only source of synchronization progress, status,
 last error and last successful run. *(§3, Epic 5)*
@@ -279,11 +280,13 @@ successful read. *(§3, Epic 1, v99)*
 left behind. Two kinds:
 - **teaching** — fixed by a teacher in Classroom, shown to the Dean in detail:
   points above the coursework's maximum (BR-067), items "not in Classroom"
-  (BR-045), a course skipped for out-of-range values (BR-043), with the hint to
-  contact the teacher;
+  (BR-045), a course skipped for out-of-range or negative values (BR-043), with
+  the hint to contact the teacher; a course "not in Classroom" (BR-048), with
+  the hint that it was deleted or hidden in Classroom and to ask the teacher;
 - **technical** — fixed by the Admin: the last run failed (a permission error is
   one such case); no successful run for more than 24 hours, or none yet; a course
-  skipped for an unknown state. The Dean sees that the problem exists and the hint
+  skipped for an unknown state; Google returned an empty course list while
+  courses are stored (BR-048). The Dean sees that the problem exists and the hint
   to tell the Admin; the Admin sees the details, worded as in the synchronization
   state (Epic 6). In read-only mode the staleness notice is not raised.
 
@@ -298,7 +301,28 @@ are listed separately on «Стан даних». The Dean sees the problems of 
 visible to them (all courses in the first version) and technical ones without
 details; the Admin sees all, technical ones with details. Notices are built from
 stored data, never by calling Google, and are visible in read-only mode. The banner
-is restrained — colour only, no sound, pop-up or blinking. *(§2, Epic 1, v99)*
+is restrained — colour only, no sound, pop-up or blinking. Next to the teaching
+problems on «Стан даних» the Dean sees the hint to contact the Admin if the
+problem could not be solved with the teacher (v100). *(§2, Epic 1, v99, v100)*
+
+**BR-048** A stored course missing from a course list read to its end is never
+deleted: synchronization marks it "not in Classroom" with the date it noticed.
+Google's answer cannot tell a deleted course from one that left the technical
+account's view, hence the wording. Its roster, items, submissions and grades stay,
+it counts in reports as before, and its status is the last one stored; its items
+get no mark of their own, since the course is no longer read. If the course comes
+back on the list, the mark is removed. A course that disappears mid-run (`404`) is
+only skipped (BR-043) and is marked only if the next course list lacks it. The
+mark is a synchronization record, not an edit of the mirror. If Google returns an
+empty course list without an error while courses are stored, nothing is marked —
+the technical account has most likely lost its super-admin role — and the run
+records a technical problem (BR-047). A partial loss is not told apart from a real
+deletion and there is no threshold: it would be hard to explain and would hide a
+real year-end deletion of archived courses; the worst case, a one-run Google
+glitch, leaves false marks until the next run. The mark is shown next to the
+status in the course list and course card (no separate filter), and in the
+header of the journal and report on screen and in the export.
+*(§3, Epic 1, Epic 2, Epic 3, v100)*
 
 ## Data model
 
@@ -463,7 +487,8 @@ never appears in an HTTP error body. *(§5,
 between the school and the Owner and set at deployment. Deletion is from the
 installation's own database only — nothing is ever deleted in Google. The unit is
 the course: a course and everything under it is deleted once its last activity is
-more than N years ago, whatever its state. Last activity is the latest of: a change
+more than N years ago, whatever its state — a course "not in Classroom" (BR-048)
+included. Last activity is the latest of: a change
 to the course, any coursework or material created or changed, any submission
 changed, any Meet meeting linked to the course. Synchronization does not import a
 new course whose last activity in Google (course, coursework and materials,
