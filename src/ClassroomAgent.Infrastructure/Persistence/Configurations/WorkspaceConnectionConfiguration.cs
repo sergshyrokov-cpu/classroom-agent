@@ -53,6 +53,9 @@ public sealed class WorkspaceConnectionConfiguration : IEntityTypeConfiguration<
         builder.Property(c => c.CreatedAt).IsRequired();
         builder.Property(c => c.UpdatedAt).IsRequired();
 
+        // US-059 db-design §3: the technical account's last change; null until one.
+        builder.Property(c => c.TechnicalAccountChangedAt);
+
         builder.HasIndex(Singleton).IsUnique().HasDatabaseName("uq_workspace_connection_singleton");
     }
 }

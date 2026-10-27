@@ -25,4 +25,8 @@ public sealed class CourseRepository(ClassroomAgentDbContext db) : ICourseReposi
             .Where(c => c.GoogleId == googleId)
             .Select(c => c.CompleteReadUpdateTime)
             .SingleOrDefaultAsync(cancellationToken);
+
+    /// <summary>US-059 entity model §6: tracked, because the end of a complete list marks, unmarks and sights them.</summary>
+    public async Task<IReadOnlyList<Course>> GetAllAsync(CancellationToken cancellationToken) =>
+        await db.Courses.ToListAsync(cancellationToken);
 }

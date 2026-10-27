@@ -121,7 +121,8 @@ public sealed class SaveWorkspaceConnectionUseCase(
                 }
                 else
                 {
-                    existing.ChangeTo(domain, email);
+                    // US-059 FR-002: a different technical account records this save's instant as its last change.
+                    existing.ChangeTo(domain, email, now);
                     await unitOfWork.SaveChangesAsync(token);
                 }
 

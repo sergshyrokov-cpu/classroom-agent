@@ -18,4 +18,10 @@ public interface ICourseRepository
     /// untracked; null when the course is unknown or has no value (db-design §6, spec FR-001 (c)).
     /// </summary>
     Task<DateTimeOffset?> GetCompleteReadUpdateTimeAsync(string googleId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// US-059 entity model §6: every stored course, tracked for a change — read once per run at the end of a complete
+    /// course list (a few hundred rows per school).
+    /// </summary>
+    Task<IReadOnlyList<Course>> GetAllAsync(CancellationToken cancellationToken);
 }

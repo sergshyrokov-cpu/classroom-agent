@@ -265,7 +265,7 @@ stories:
   - id: US-059
     epic: EPIC-1
     title: Synchronization marks courses no longer in Classroom or hidden from a new technical account, guards against an empty course list, and skips a course with negative values
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: null
     # Story file authored: docs/stories/US-059-sync-marks-courses-gone-and-skips-negative-values.md
     # (aligned with v100). Sync part of v100; display of the course mark joins v99

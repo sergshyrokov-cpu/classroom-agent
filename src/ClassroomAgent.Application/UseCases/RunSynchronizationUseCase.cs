@@ -38,6 +38,12 @@ namespace ClassroomAgent.Application.UseCases;
 /// returns and unmarks the ones that came back (spec FR-001 … FR-003), and a course skipped for out-of-range values or
 /// an unknown state is recorded until the problem is gone (spec FR-005 … FR-007).
 /// </para>
+/// <para>
+/// US-059 adds the end of a course list read to its end: stored courses the list no longer yields are marked "not in
+/// Classroom" or "not visible to the technical account", listed ones record the run's instant and lose their mark, and
+/// an empty list while courses are stored marks nothing and sets the <see cref="SyncState"/> flag (spec FR-001 …
+/// FR-006). The run's one instant is taken before the connection is read (db-design §6 R1).
+/// </para>
 /// </remarks>
 public sealed class RunSynchronizationUseCase(
     ISyncStateRepository syncStates,
@@ -58,6 +64,7 @@ public sealed class RunSynchronizationUseCase(
     IErasedParticipantRepository exclusions,
     IErasureSaltStore salts,
     ISyncSkippedCourseRepository skippedCourses,
+    IWorkspaceConnectionRepository workspaceConnections,
     LinkMeetCodesStep? linking = null)
 {
     /// <summary>The operation name the read-only refusal carries (US-007 spec VR-001).</summary>
@@ -83,6 +90,9 @@ public sealed class RunSynchronizationUseCase(
             return SynchronizationRunOutcome.SkippedReadOnly(refusal.Reason);
         }
 
+        // US-059 db-design §6 R1: the run's one instant for every observation (US-014 VR-006) is taken before the
+        // technical account is fixed, so no sighting of this run is later than the account it read as.
+        var observedAt = timeProvider.GetUtcNow();
         var connection = await connectionQuery.ExecuteAsync(cancellationToken);
 
         // The technical account every Classroom call is made on behalf of (BR-015, spec S-03). A usable connection
@@ -101,7 +111,7 @@ public sealed class RunSynchronizationUseCase(
         var step = SyncStep.Classroom;
         try
         {
-            await ImportCoursesAsync(impersonationUser, import, cancellationToken);
+            await ImportCoursesAsync(impersonationUser, state, observedAt, import, cancellationToken);
 
             // US-031 spec FR-001: reached only when the Classroom step did not stop the run.
             step = SyncStep.Meet;
@@ -131,7 +141,8 @@ public sealed class RunSynchronizationUseCase(
                 import.CoursesSkippedUnchanged,
                 import.CoursesValueOutOfRange,
                 import.CourseWorkMarked,
-                import.CourseWorkUnmarked);
+                import.CourseWorkUnmarked,
+                import.CourseList);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -164,7 +175,8 @@ public sealed class RunSynchronizationUseCase(
                 import.CoursesSkippedUnchanged,
                 import.CoursesValueOutOfRange,
                 import.CourseWorkMarked,
-                import.CourseWorkUnmarked);
+                import.CourseWorkUnmarked,
+                import.CourseList);
         }
     }
 
@@ -464,13 +476,11 @@ public sealed class RunSynchronizationUseCase(
     /// </summary>
     private async Task ImportCoursesAsync(
         string impersonationUser,
+        SyncState syncState,
+        DateTimeOffset observedAt,
         ImportProgress progress,
         CancellationToken cancellationToken)
     {
-        // One instant for every observation of the run, so "seen in the same run" is expressible in a query
-        // (spec VR-006, I-8).
-        var observedAt = timeProvider.GetUtcNow();
-
         // US-058 entity model §4: every skip record, once per run, keyed as it is stored; and every course id the list
         // yields, so the records of courses that left the list can be removed once it has been read to its end (FR-007.3).
         var records = (await skippedCourses.GetAllAsync(cancellationToken))
@@ -585,17 +595,78 @@ public sealed class RunSynchronizationUseCase(
             progress.ProcessedCount++;
         }
 
-        // US-058 FR-007.3: reached only when the list was read to its end — a run that stops removes none this way.
-        var unlisted = records.Values.Where(r => !listed.Contains(r.CourseGoogleId)).ToList();
-        if (unlisted.Count > 0)
-        {
-            foreach (var gone in unlisted)
-            {
-                skippedCourses.Remove(gone);
-            }
+        // Reached only when the list was read to its end — a run that stops marks, unmarks, sights and removes nothing
+        // here (US-059 FR-001.4, FR-005.4; US-058 FR-007.3).
+        await CloseCourseListAsync(syncState, observedAt, listed, records, progress, cancellationToken);
+    }
 
+    /// <summary>
+    /// US-059 FR-001 … FR-006, db-design §5: the end of a course list read to its end, saved at once. An empty list while
+    /// courses are stored only sets the flag (FR-005.2). Otherwise each stored listed course records the sighting and
+    /// loses its mark, each stored unlisted unmarked course gets the mark <see cref="CourseAbsenceRule"/> chooses from the
+    /// account-change instant read now (db-design §6 R2), the flag is cleared, and the skip records of unlisted courses
+    /// go (US-058 FR-007.3).
+    /// </summary>
+    private async Task CloseCourseListAsync(
+        SyncState state,
+        DateTimeOffset observedAt,
+        HashSet<string> listed,
+        Dictionary<string, SyncSkippedCourse> records,
+        ImportProgress progress,
+        CancellationToken cancellationToken)
+    {
+        var stored = await courses.GetAllAsync(cancellationToken);
+        if (listed.Count == 0 && stored.Count > 0)
+        {
+            state.RecordCourseListRead(true);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+            progress.CourseList = new CourseListMarkCounts(0, 0, 0, stored.Count);
+            return;
+        }
+
+        var flagWasSet = state.LastCourseListEmpty;
+        var changedAt = (await workspaceConnections.GetForReadAsync(cancellationToken))?.TechnicalAccountChangedAt;
+        int notInClassroom = 0, notVisible = 0, unmarked = 0;
+        foreach (var course in stored)
+        {
+            if (listed.Contains(course.GoogleId))
+            {
+                if (course.RecordListed(observedAt))
+                {
+                    unmarked++;
+                }
+            }
+            else if (course.AbsenceMark is null)
+            {
+                // FR-006.5: a course already marked keeps the mark it has.
+                var mark = CourseAbsenceRule.MarkFor(course.LastListedAt, changedAt);
+                course.MarkAbsent(mark, observedAt);
+                if (mark == CourseAbsenceMark.NotInClassroom)
+                {
+                    notInClassroom++;
+                }
+                else
+                {
+                    notVisible++;
+                }
+            }
+        }
+
+        state.RecordCourseListRead(false);
+        var unlisted = records.Values.Where(r => !listed.Contains(r.CourseGoogleId)).ToList();
+        foreach (var gone in unlisted)
+        {
+            skippedCourses.Remove(gone);
+        }
+
+        // Nothing to write when no course is stored, the flag stays clear and no record goes — an installation's first
+        // runs keep their two commits (US-013 FR-006).
+        if (stored.Count > 0 || flagWasSet || unlisted.Count > 0)
+        {
             await unitOfWork.SaveChangesAsync(cancellationToken);
         }
+
+        progress.CourseList = new CourseListMarkCounts(notInClassroom, notVisible, unmarked, null);
     }
 
     /// <summary>
@@ -1060,6 +1131,9 @@ public sealed class RunSynchronizationUseCase(
 
         /// <summary>US-058 FR-004: marked items Google returned again, in the courses this run committed.</summary>
         public int CourseWorkUnmarked { get; set; }
+
+        /// <summary>US-059 FR-007: the course marks of the end of the list; null until the list has been read to its end.</summary>
+        public CourseListMarkCounts? CourseList { get; set; }
     }
 
     /// <summary>What the Meet step did so far, for the outcome the host logs (US-031 spec FR-012).</summary>

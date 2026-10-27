@@ -159,8 +159,9 @@ public sealed class CourseImportTests
     }
 
     /// <summary>
-    /// AC-005, FR-011, I-4: a course Classroom no longer returns is left exactly as it was — not marked, not
-    /// hidden, not deleted. Only the purge deletes a course, by age, in any state (§5 v36).
+    /// AC-005, FR-011, I-4: a course Classroom no longer returns keeps its data — not hidden, not deleted. Only the purge
+    /// deletes a course, by age, in any state (§5 v36). Since v100 it is also marked (US-059 FR-001); this test's later
+    /// run uses a separate world, so it proves only that nothing of the first world's course changes.
     /// </summary>
     [Fact]
     public async Task ACourseClassroomStoppedReturning_IsLeftUntouched()

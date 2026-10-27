@@ -8,10 +8,11 @@ namespace ClassroomAgent.Domain.Entities;
 /// <see cref="GoogleId"/>, which never changes once set and is the upsert key (FR-008).
 /// </summary>
 /// <remarks>
-/// Every setter is private; the entity is changed only through <see cref="Import"/> and <see cref="UpdateFrom"/>.
+/// Every setter is private; the mirror is changed only through <see cref="Import"/> and <see cref="UpdateFrom"/>.
 /// Truncation happens here: each string is bounded by a public constant and a longer value is cut, not refused
-/// (VR-002). There is deliberately no <c>MarkMissing</c> and no <c>Delete</c>: a course Google stopped returning
-/// is left untouched (FR-011, I-4), and deletion belongs to the purge (PC-11, US-037).
+/// (VR-002). There is deliberately no <c>Delete</c>: deletion belongs to the purge (PC-11, US-037). Since v100 a
+/// course Google stopped listing is kept and marked beside the mirror — <see cref="MarkAbsent"/>,
+/// <see cref="RecordListed"/> (US-059 FR-001, FR-004) — and none of its mirrored fields changes.
 /// </remarks>
 public sealed class Course
 {
@@ -91,6 +92,15 @@ public sealed class Course
     /// </summary>
     public DateTimeOffset? LastCompleteReadAt { get; private set; }
 
+    /// <summary>US-059 FR-001, FR-006: the course's mark; null while the course is on the list. Bookkeeping, not mirror.</summary>
+    public CourseAbsenceMark? AbsenceMark { get; private set; }
+
+    /// <summary>US-059: the run instant that set <see cref="AbsenceMark"/>; null exactly when the mark is null.</summary>
+    public DateTimeOffset? AbsentSince { get; private set; }
+
+    /// <summary>US-059 FR-003: the run instant of the latest complete, non-empty list that yielded the course; null until one.</summary>
+    public DateTimeOffset? LastListedAt { get; private set; }
+
     /// <summary>Closed enum (§2).</summary>
     public CourseState State { get; private set; }
 
@@ -126,6 +136,45 @@ public sealed class Course
     {
         CompleteReadUpdateTime = UpdateTime is { } listed ? IncrementalSyncRule.ToStoragePrecision(listed) : null;
         LastCompleteReadAt = readAt;
+    }
+
+    /// <summary>
+    /// FR-001.2, FR-006.5: marks the course absent from the list. Returns true when the mark is new; a course already
+    /// carrying either mark keeps its kind and instant and the call returns false. No Google-sourced field changes.
+    /// An undefined <paramref name="mark"/> is refused (ArgumentOutOfRangeException).
+    /// </summary>
+    public bool MarkAbsent(CourseAbsenceMark mark, DateTimeOffset noticedAt)
+    {
+        if (!Enum.IsDefined(mark))
+        {
+            throw new ArgumentOutOfRangeException(nameof(mark), mark, null);
+        }
+
+        if (AbsenceMark is not null)
+        {
+            return false;
+        }
+
+        AbsenceMark = mark;
+        AbsentSince = noticedAt;
+        return true;
+    }
+
+    /// <summary>
+    /// FR-003.1, FR-004.1: the course was on the list — records <paramref name="listedAt"/> as its last sighting and
+    /// removes any mark. Returns true when a mark was removed (for the FR-007 count).
+    /// </summary>
+    public bool RecordListed(DateTimeOffset listedAt)
+    {
+        LastListedAt = listedAt;
+        if (AbsenceMark is null)
+        {
+            return false;
+        }
+
+        AbsenceMark = null;
+        AbsentSince = null;
+        return true;
     }
 
     /// <summary>

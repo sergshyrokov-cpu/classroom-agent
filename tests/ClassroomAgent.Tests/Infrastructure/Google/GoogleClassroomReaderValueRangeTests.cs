@@ -14,6 +14,10 @@ namespace ClassroomAgent.Tests.Infrastructure.Google;
 /// <see cref="GoogleReadFailureKind.ValueOutOfRange"/> failure that carries neither the value nor an identifier, and
 /// keeps today's conversion for every value within the range. Driven offline through a scripted transport with the
 /// value sent as the JSON number Google would send (TC-4).
+/// <para>
+/// US-059 spec FR-008, VR-005, AC-009 (BR-043 v100): a value below zero is refused by the same conversion, as the same
+/// failure; zero stays a value. A negative value just inside the <c>decimal</c> range, which US-057 kept, is now refused.
+/// </para>
 /// </summary>
 public sealed class GoogleClassroomReaderValueRangeTests
 {
@@ -45,7 +49,10 @@ public sealed class GoogleClassroomReaderValueRangeTests
         }
     }
 
-    /// <summary>Just inside the range in both directions (AC-010; the lower bound only at the reader, L-1).</summary>
+    /// <summary>
+    /// Just inside the range (US-057 AC-010). US-059 FR-008 refuses every negative value, so the lower bound −7.9·10²⁸
+    /// moved to <see cref="Negative"/>.
+    /// </summary>
     public static TheoryData<string, double> JustInside
     {
         get
@@ -54,7 +61,24 @@ public sealed class GoogleClassroomReaderValueRangeTests
             foreach (var name in new[] { "maxPoints", "assignedGrade", "draftGrade" })
             {
                 data.Add(name, 7.9e28);
-                data.Add(name, -7.9e28);
+            }
+
+            return data;
+        }
+    }
+
+    /// <summary>US-059 VR-005: strictly below zero — the smallest step, an ordinary value and the old lower bound.</summary>
+    public static TheoryData<string, double> Negative
+    {
+        get
+        {
+            var data = new TheoryData<string, double>();
+            foreach (var name in new[] { "maxPoints", "assignedGrade", "draftGrade" })
+            {
+                foreach (var value in new[] { -1e-6, -0.25, -1, -7.9e28 })
+                {
+                    data.Add(name, value);
+                }
             }
 
             return data;
@@ -168,6 +192,58 @@ public sealed class GoogleClassroomReaderValueRangeTests
         {
             Assert.DoesNotContain(forbidden, text, StringComparison.OrdinalIgnoreCase);
         }
+    }
+
+    /// <summary>
+    /// US-059 FR-008.1, FR-008.2, VR-005, AC-009: a value below zero fails the course's read as
+    /// <see cref="GoogleReadFailureKind.ValueOutOfRange"/> — the out-of-range path — so no negative value reaches the
+    /// Application and the database check constraint is never what stops the run.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(Negative))]
+    public async Task ANegativeValue_IsAValueOutOfRangeFailure(string field, double value)
+    {
+        var ct = TestContext.Current.CancellationToken;
+
+        var failure = await Assert.ThrowsAsync<GoogleReadFailedException>(
+            () => ReadAsync(field, value, ct).WaitAsync(ManualTimeProvider.RealTimeLimit, ct));
+
+        Assert.Equal(GoogleReadFailureKind.ValueOutOfRange, failure.Kind);
+    }
+
+    /// <summary>US-059 FR-008, SC-10: the failure for a negative value carries neither the value nor an identifier.</summary>
+    [Theory]
+    [MemberData(nameof(Fields))]
+    public async Task TheNegativeValueFailure_CarriesNoValueAndNoIdentifier(string field)
+    {
+        var ct = TestContext.Current.CancellationToken;
+
+        var failure = await Assert.ThrowsAsync<GoogleReadFailedException>(
+            () => ReadAsync(field, -3.75, ct).WaitAsync(ManualTimeProvider.RealTimeLimit, ct));
+
+        var text = failure.ToString();
+        foreach (var forbidden in new[]
+                 {
+                     "3.75", "3,75",
+                     CourseWorkTestData.ItemId(2), CourseWorkTestData.Title(2),
+                     CourseWorkTestData.SubmissionId(2), CourseTestData.UserId(2),
+                 })
+        {
+            Assert.DoesNotContain(forbidden, text, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    /// <summary>
+    /// US-059 FR-008.3: zero is a valid value and is converted as today. Green before the change by design — it pins
+    /// that the check is strictly below zero.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(Fields))]
+    public async Task Zero_IsConvertedAsToday(string field)
+    {
+        var ct = TestContext.Current.CancellationToken;
+
+        Assert.Equal(0m, await ReadAsync(field, 0, ct));
     }
 
     /// <summary>

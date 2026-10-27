@@ -27,8 +27,9 @@ public sealed class CourseSchemaTests(PostgreSqlFixture database)
             r => (Name: r.GetString(0), Nullable: r.GetString(1), Length: r.IsDBNull(2) ? (int?)null : r.GetInt32(2)),
             ct);
 
-        // US-018 db-design §2 adds complete_read_update_time; US-058 db-design §3 adds last_complete_read_at.
-        Assert.Equal(19, columns.Count);
+        // US-018 db-design §2 adds complete_read_update_time; US-058 db-design §3 adds last_complete_read_at; US-059
+        // db-design §2 adds absence_mark, absent_since and last_listed_at.
+        Assert.Equal(22, columns.Count);
         Assert.Contains(columns, c => c.Name == "id" && c.Nullable == "NO");
         Assert.Contains(columns, c => c.Name == "google_id" && c.Nullable == "NO" && c.Length == 64);
         Assert.Contains(columns, c => c.Name == "name" && c.Nullable == "NO" && c.Length == 750);
@@ -41,6 +42,9 @@ public sealed class CourseSchemaTests(PostgreSqlFixture database)
         Assert.Contains(columns, c => c.Name == "update_time" && c.Nullable == "YES");
         Assert.Contains(columns, c => c.Name == "complete_read_update_time" && c.Nullable == "YES");
         Assert.Contains(columns, c => c.Name == "last_complete_read_at" && c.Nullable == "YES");
+        Assert.Contains(columns, c => c.Name == "absence_mark" && c.Nullable == "YES" && c.Length == 40);
+        Assert.Contains(columns, c => c.Name == "absent_since" && c.Nullable == "YES");
+        Assert.Contains(columns, c => c.Name == "last_listed_at" && c.Nullable == "YES");
         Assert.Contains(columns, c => c.Name == "course_state" && c.Nullable == "NO" && c.Length == 16);
         Assert.Contains(columns, c => c.Name == "alternate_link" && c.Nullable == "YES" && c.Length == 2048);
         Assert.Contains(columns, c => c.Name == "teacher_folder_id" && c.Nullable == "YES" && c.Length == 128);
@@ -163,15 +167,18 @@ public sealed class CourseSchemaTests(PostgreSqlFixture database)
         Assert.Empty(keys);
     }
 
-    /// <summary>db-design §3.2: the state vocabulary is the table's only check constraint.</summary>
+    /// <summary>
+    /// db-design §3.2: the state vocabulary is a check constraint of the table; US-059 db-design §2 adds the second, the
+    /// absence mark's kind and instant together.
+    /// </summary>
     [Fact]
-    public async Task TheOnlyCheckConstraint_IsTheStateVocabulary()
+    public async Task TheCheckConstraints_AreTheStateVocabularyAndTheAbsenceMark()
     {
         var ct = TestContext.Current.CancellationToken;
         await using var host = await InstallationTestHost.CreateAsync(database, ct);
 
         var constraints = await InstallationSchemaQueries.CheckConstraintsAsync(host, CourseTestData.CourseTable, ct);
 
-        Assert.Equal(new[] { CourseTestData.Constraints.CourseState }, constraints);
+        Assert.Equal(new[] { "ck_course_absence_mark", CourseTestData.Constraints.CourseState }, constraints);
     }
 }

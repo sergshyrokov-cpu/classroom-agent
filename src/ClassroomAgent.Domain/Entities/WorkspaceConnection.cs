@@ -37,6 +37,9 @@ public sealed class WorkspaceConnection
 
     public DateTimeOffset UpdatedAt { get; private set; }
 
+    /// <summary>US-059 FR-002: the instant of the last save that changed the technical account; null until one.</summary>
+    public DateTimeOffset? TechnicalAccountChangedAt { get; private set; }
+
     /// <summary>The first save (US-009 spec FR-006).</summary>
     public static WorkspaceConnection Create(string domain, string impersonationUserEmail)
     {
@@ -48,10 +51,19 @@ public sealed class WorkspaceConnection
         };
     }
 
-    /// <summary>A change of the stored connection; the record keeps its identity (spec FR-006, AC-007).</summary>
-    public void ChangeTo(string domain, string impersonationUserEmail)
+    /// <summary>
+    /// A change of the stored connection; the record keeps its identity (US-009 FR-006). When the normalised email differs
+    /// from the stored one (ordinal, VR-002), <paramref name="changedAt"/> becomes <see cref="TechnicalAccountChangedAt"/>;
+    /// the same email in other letter case or with spaces leaves it unchanged.
+    /// </summary>
+    public void ChangeTo(string domain, string impersonationUserEmail, DateTimeOffset changedAt)
     {
         var (normalizedDomain, normalizedEmail) = Normalize(domain, impersonationUserEmail);
+        if (!string.Equals(normalizedEmail, ImpersonationUserEmail, StringComparison.Ordinal))
+        {
+            TechnicalAccountChangedAt = changedAt;
+        }
+
         Domain = normalizedDomain;
         ImpersonationUserEmail = normalizedEmail;
     }

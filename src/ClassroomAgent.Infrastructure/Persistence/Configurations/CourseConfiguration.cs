@@ -2,6 +2,7 @@ using ClassroomAgent.Domain.Entities;
 using ClassroomAgent.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ClassroomAgent.Infrastructure.Persistence.Configurations;
 
@@ -19,9 +20,19 @@ public sealed class CourseConfiguration : IEntityTypeConfiguration<Course>
 {
     public void Configure(EntityTypeBuilder<Course> builder)
     {
-        builder.ToTable("course", table => table.HasCheckConstraint(
-            "ck_course_course_state",
-            "course_state IN ('active', 'archived', 'provisioned', 'declined', 'suspended')"));
+        builder.ToTable("course", table =>
+        {
+            table.HasCheckConstraint(
+                "ck_course_course_state",
+                "course_state IN ('active', 'archived', 'provisioned', 'declined', 'suspended')");
+
+            // US-059 db-design §2, VR-003: no mark, or a kind of the closed set together with its instant. The explicit
+            // "absence_mark IS NOT NULL" keeps an instant without a kind from passing: NULL IN (...) is NULL, which a
+            // CHECK accepts.
+            table.HasCheckConstraint(
+                "ck_course_absence_mark",
+                "(absence_mark IS NULL AND absent_since IS NULL) OR (absence_mark IS NOT NULL AND absence_mark IN ('not_in_classroom', 'not_visible_to_technical_account') AND absent_since IS NOT NULL)");
+        });
 
         builder.HasKey(c => c.Id).HasName("pk_course");
         builder.Property(c => c.Id).UseIdentityByDefaultColumn();
@@ -40,6 +51,14 @@ public sealed class CourseConfiguration : IEntityTypeConfiguration<Course>
 
         // US-058 db-design §3: the run instant of the last committed full read, nullable, no index.
         builder.Property(c => c.LastCompleteReadAt);
+
+        // US-059 db-design §2: the course's mark beside the mirror — a lower-case code and its instant — and the last
+        // sighting on a complete list; all nullable, no index.
+        builder.Property(c => c.AbsenceMark)
+            .HasMaxLength(40)
+            .HasConversion(new ValueConverter<CourseAbsenceMark, string>(v => MarkCode(v), code => MarkFromCode(code)));
+        builder.Property(c => c.AbsentSince);
+        builder.Property(c => c.LastListedAt);
         builder.Property(c => c.State)
             .HasColumnName("course_state")
             .HasMaxLength(16)
@@ -75,6 +94,20 @@ public sealed class CourseConfiguration : IEntityTypeConfiguration<Course>
         "provisioned" => CourseState.Provisioned,
         "declined" => CourseState.Declined,
         "suspended" => CourseState.Suspended,
+        _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
+    };
+
+    private static string MarkCode(CourseAbsenceMark value) => value switch
+    {
+        CourseAbsenceMark.NotInClassroom => "not_in_classroom",
+        CourseAbsenceMark.NotVisibleToTechnicalAccount => "not_visible_to_technical_account",
+        _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
+    };
+
+    private static CourseAbsenceMark MarkFromCode(string code) => code switch
+    {
+        "not_in_classroom" => CourseAbsenceMark.NotInClassroom,
+        "not_visible_to_technical_account" => CourseAbsenceMark.NotVisibleToTechnicalAccount,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 }

@@ -392,12 +392,19 @@ public sealed partial class GoogleClassroomReader : IClassroomReader
     /// either direction fails the course's read as <see cref="GoogleReadFailureKind.ValueOutOfRange"/> — with no value,
     /// no identifier and no inner exception (SC-10) — instead of letting <see cref="OverflowException"/> escape
     /// unclassified. A value within the range keeps the plain conversion.
+    /// US-059 FR-008, VR-005: a value below zero fails the same way, so no negative value reaches the Application and the
+    /// course is skipped like one beyond the range; zero is a value.
     /// </summary>
     private static decimal? Points(double? value)
     {
         if (value is not { } points)
         {
             return null;
+        }
+
+        if (points < 0)
+        {
+            throw new GoogleReadFailedException(GoogleReadFailureKind.ValueOutOfRange, null);
         }
 
         try

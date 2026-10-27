@@ -72,6 +72,9 @@ public sealed class SyncStateConfiguration : IEntityTypeConfiguration<SyncState>
         builder.Property(s => s.LastSuccessfulRunAt);
         builder.Property(s => s.MeetLoadedUpTo);
         builder.Property(s => s.LastFullRunAt);
+
+        // US-059 db-design §4: the empty-list flag; the existing row gets false.
+        builder.Property(s => s.LastCourseListEmpty).IsRequired().HasDefaultValue(false);
         builder.Property(s => s.FailedStep)
             .HasMaxLength(16)
             .HasConversion(new ValueConverter<SyncStep, string>(v => StepCode(v), code => StepFromCode(code)));

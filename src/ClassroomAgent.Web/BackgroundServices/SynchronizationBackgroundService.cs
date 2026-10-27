@@ -191,6 +191,23 @@ public sealed partial class SynchronizationBackgroundService(
                 LogCourseWorkPresenceChanged(logger, runId, outcome.CourseWorkMarked, outcome.CourseWorkUnmarked);
             }
 
+            // US-059 FR-007: one line for the course marks of a list read to its end, whether the run then completed or
+            // stopped — none when nothing changed — or one line for an empty list while courses are stored. Counts only:
+            // no course name or id, person, e-mail or grade (SC-10).
+            if (outcome.CourseList is { EmptyListStoredCourses: { } storedCourses })
+            {
+                LogCourseListEmpty(logger, runId, storedCourses);
+            }
+            else if (outcome.CourseList is { AnyChange: true } courseList)
+            {
+                LogCourseListPresenceChanged(
+                    logger,
+                    runId,
+                    courseList.MarkedNotInClassroom,
+                    courseList.MarkedNotVisibleToTechnicalAccount,
+                    courseList.Unmarked);
+            }
+
             if (outcome.Failed)
             {
                 LogFailure(runId, outcome);
@@ -438,6 +455,25 @@ public sealed partial class SynchronizationBackgroundService(
         Level = LogLevel.Information,
         Message = "Synchronization run {RunId} marked {MarkedCount} items as no longer in Classroom and {UnmarkedCount} as back in Classroom")]
     private static partial void LogCourseWorkPresenceChanged(ILogger logger, Guid runId, int markedCount, int unmarkedCount);
+
+    [LoggerMessage(
+        EventId = 5137,
+        EventName = "SyncCourseListPresenceChanged",
+        Level = LogLevel.Information,
+        Message = "Synchronization run {RunId} marked {NotInClassroomCount} courses as no longer in Classroom, {NotVisibleCount} as not visible to the technical account, and {UnmarkedCount} as back on the course list")]
+    private static partial void LogCourseListPresenceChanged(
+        ILogger logger,
+        Guid runId,
+        int notInClassroomCount,
+        int notVisibleCount,
+        int unmarkedCount);
+
+    [LoggerMessage(
+        EventId = 5138,
+        EventName = "SyncCourseListEmpty",
+        Level = LogLevel.Warning,
+        Message = "Synchronization run {RunId} read an empty course list while {StoredCourseCount} courses are stored; no course was marked")]
+    private static partial void LogCourseListEmpty(ILogger logger, Guid runId, int storedCourseCount);
 
     [LoggerMessage(
         EventId = 5131,

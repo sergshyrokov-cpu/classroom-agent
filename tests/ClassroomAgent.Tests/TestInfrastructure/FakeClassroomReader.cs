@@ -104,6 +104,16 @@ public sealed class FakeClassroomReader : IClassroomReader
         return this;
     }
 
+    /// <summary>
+    /// US-059: the course is no longer in Google's course list — the next run does not see it. Its roster, items and
+    /// submissions stay seeded, so a later <see cref="WithCourse"/> brings it back as it was. Called only between runs.
+    /// </summary>
+    public FakeClassroomReader WithoutCourse(string googleId)
+    {
+        _courses.RemoveAll(course => string.Equals(course.GoogleId, googleId, StringComparison.Ordinal));
+        return this;
+    }
+
     /// <summary>Seeds one submission, as <see cref="SyncWorld.ClassroomReader.WithSubmission"/> does.</summary>
     public FakeClassroomReader WithSubmission(
         string courseGoogleId,

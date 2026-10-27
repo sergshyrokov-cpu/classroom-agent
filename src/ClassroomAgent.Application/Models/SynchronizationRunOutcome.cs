@@ -39,7 +39,8 @@ public sealed class SynchronizationRunOutcome
         int coursesSkippedUnchanged = 0,
         IReadOnlyList<string>? coursesValueOutOfRange = null,
         int courseWorkMarked = 0,
-        int courseWorkUnmarked = 0)
+        int courseWorkUnmarked = 0,
+        CourseListMarkCounts? courseList = null)
     {
         RunId = runId;
         ProcessedCount = processedCount;
@@ -61,6 +62,7 @@ public sealed class SynchronizationRunOutcome
         CoursesValueOutOfRange = coursesValueOutOfRange ?? [];
         CourseWorkMarked = courseWorkMarked;
         CourseWorkUnmarked = courseWorkUnmarked;
+        CourseList = courseList;
     }
 
     public Guid? RunId { get; }
@@ -137,6 +139,12 @@ public sealed class SynchronizationRunOutcome
     /// <summary>US-058 FR-004: marked items Google returned again in the courses this run committed — a count only.</summary>
     public int CourseWorkUnmarked { get; }
 
+    /// <summary>
+    /// US-059 FR-007: the course marks of the end of the list, reported whether the run completed or stopped later; null
+    /// when the run stopped before the list was read to its end.
+    /// </summary>
+    public CourseListMarkCounts? CourseList { get; }
+
     public bool Failed => Error is not null;
 
     public static SynchronizationRunOutcome Ran(
@@ -154,7 +162,8 @@ public sealed class SynchronizationRunOutcome
         int coursesSkippedUnchanged = 0,
         IReadOnlyList<string>? coursesValueOutOfRange = null,
         int courseWorkMarked = 0,
-        int courseWorkUnmarked = 0) =>
+        int courseWorkUnmarked = 0,
+        CourseListMarkCounts? courseList = null) =>
         new(
             runId,
             processedCount,
@@ -175,7 +184,8 @@ public sealed class SynchronizationRunOutcome
             coursesSkippedUnchanged,
             coursesValueOutOfRange,
             courseWorkMarked,
-            courseWorkUnmarked);
+            courseWorkUnmarked,
+            courseList);
 
     /// <summary>
     /// A run that stopped with a diagnosis (US-017 spec FR-005, FR-006): <see cref="Error"/> is the diagnosis name,
@@ -195,7 +205,8 @@ public sealed class SynchronizationRunOutcome
         int coursesSkippedUnchanged = 0,
         IReadOnlyList<string>? coursesValueOutOfRange = null,
         int courseWorkMarked = 0,
-        int courseWorkUnmarked = 0) =>
+        int courseWorkUnmarked = 0,
+        CourseListMarkCounts? courseList = null) =>
         new(
             runId,
             processedCount,
@@ -216,7 +227,8 @@ public sealed class SynchronizationRunOutcome
             coursesSkippedUnchanged,
             coursesValueOutOfRange,
             courseWorkMarked,
-            courseWorkUnmarked);
+            courseWorkUnmarked,
+            courseList);
 
     public static SynchronizationRunOutcome SkippedReadOnly(LegitimacyModeReason reason) =>
         new(null, null, null, reason, null);

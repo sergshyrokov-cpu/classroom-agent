@@ -104,7 +104,8 @@ public sealed class SyncWorld
             Erasures,
             Erasures,
             Erasures,
-            skippedCourses: SkippedCourses);
+            skippedCourses: SkippedCourses,
+            workspaceConnections: Connections);
 
     /// <summary>
     /// The run use case over this world's stores but another Classroom reader — a later run that sees different
@@ -129,7 +130,8 @@ public sealed class SyncWorld
             Erasures,
             Erasures,
             Erasures,
-            skippedCourses: SkippedCourses);
+            skippedCourses: SkippedCourses,
+            workspaceConnections: Connections);
 
     /// <summary>A run identifier the assertions can recognise.</summary>
     public static Guid RunId(int ordinal) => new($"00000000-0000-0000-0000-{ordinal:D12}");
@@ -229,7 +231,7 @@ public sealed class SyncWorld
     /// <summary>The stored connection, seeded into one of the states of US-009 spec FR-002.</summary>
     public sealed class ConnectionRepository : IWorkspaceConnectionRepository
     {
-        private readonly WorkspaceConnection? _connection;
+        private WorkspaceConnection? _connection;
 
         public ConnectionRepository(SeededConnection seeded)
         {
@@ -248,9 +250,25 @@ public sealed class SyncWorld
 
         public int Reads { get; private set; }
 
+        /// <summary>The stored connection, as the database would hold it (US-059: its account-change instant).</summary>
+        public WorkspaceConnection? Stored => _connection;
+
+        /// <summary>
+        /// US-059 db-design §6: runs on every <see cref="GetForReadAsync"/> before it answers — lets a test move the clock
+        /// while the connection is being read (R1) or see how often it is read.
+        /// </summary>
+        public Action? OnRead { get; set; }
+
+        /// <summary>
+        /// US-059 db-design §6 R2: the database now holds another row object — a save made elsewhere. A run that read the
+        /// connection earlier still holds the old object; only a later read sees this one.
+        /// </summary>
+        public void Replace(WorkspaceConnection connection) => _connection = connection;
+
         public Task<WorkspaceConnection?> GetForReadAsync(CancellationToken cancellationToken)
         {
             Reads++;
+            OnRead?.Invoke();
             return Task.FromResult(_connection);
         }
 
@@ -300,6 +318,12 @@ public sealed class SyncWorld
 
         /// <summary>Set to make <see cref="ReadCoursesAsync"/> fail part-way; the courses before it are yielded.</summary>
         public Exception? FailAfterCourses { get; set; }
+
+        /// <summary>
+        /// US-059 db-design §6 R2: runs once every course has been yielded, before the enumeration ends — something that
+        /// happens elsewhere while the run is still going through the list (an Admin saving the connection).
+        /// </summary>
+        public Action? AfterCourses { get; set; }
 
         /// <summary>
         /// Set to make <see cref="ReadCoursesAsync"/> fail <b>before</b> yielding any course (US-017 spec FR-005: a
@@ -478,6 +502,7 @@ public sealed class SyncWorld
                 await Task.Yield();
             }
 
+            AfterCourses?.Invoke();
             if (FailAfterCourses is not null)
             {
                 throw FailAfterCourses;
@@ -553,6 +578,16 @@ public sealed class SyncWorld
         {
             CompleteReadLookups.Add(googleId);
             return Task.FromResult(Stored.TryGetValue(googleId, out var course) ? course.CompleteReadUpdateTime : null);
+        }
+
+        /// <summary>How many times every course was loaded (US-059 entity model §6: once per complete list).</summary>
+        public int AllReads { get; private set; }
+
+        public Task<IReadOnlyList<Course>> GetAllAsync(CancellationToken cancellationToken)
+        {
+            AllReads++;
+            IReadOnlyList<Course> all = Stored.Values.ToList();
+            return Task.FromResult(all);
         }
     }
 

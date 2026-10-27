@@ -75,12 +75,16 @@ public sealed class ValueOutOfRangeSyncTests(PostgreSqlFixture database)
     private static Task<long> CountAsync(InstallationTestHost host, string table, string googleId, CancellationToken ct) =>
         host.CountAsync(table, ct, "google_id = @id", ("id", googleId));
 
-    /// <summary>Everything stored of one course, as text: the course row and its items, memberships and submissions.</summary>
+    /// <summary>
+    /// Everything stored of one course, as text: the course row and its items, memberships and submissions. The course
+    /// row's <c>updated_at</c> is left out: US-059 FR-003.1 records a listed course's sighting on that row even when the
+    /// run skips it, which moves the timestamp but no mirrored value.
+    /// </summary>
     private static Task<string?> FingerprintAsync(InstallationTestHost host, string courseGoogleId, CancellationToken ct) =>
         host.ScalarAsync<string>(
             """
             SELECT concat_ws(' | ',
-                concat_ws(',', c.name, c.course_state, c.update_time, c.complete_read_update_time, c.updated_at),
+                concat_ws(',', c.name, c.course_state, c.update_time, c.complete_read_update_time),
                 (SELECT string_agg(concat_ws(',', w.google_id, w.title, w.max_points, w.updated_at), ';' ORDER BY w.id)
                  FROM course_work w WHERE w.course_id = c.id),
                 (SELECT string_agg(concat_ws(',', m.participant_id, m.role, m.on_roster, m.first_seen_at, m.last_seen_at, m.updated_at), ';' ORDER BY m.participant_id)

@@ -28,8 +28,9 @@ public sealed class SyncStateSchemaTests(PostgreSqlFixture database)
             r => (Name: r.GetString(0), Nullable: r.GetString(1), Type: r.GetString(2), Length: r.IsDBNull(3) ? (int?)null : r.GetInt32(3)),
             ct);
 
-        // US-031 db-design §4.1 adds meet_loaded_up_to and failed_step; US-018 db-design §3 adds last_full_run_at.
-        Assert.Equal(14, columns.Count);
+        // US-031 db-design §4.1 adds meet_loaded_up_to and failed_step; US-018 db-design §3 adds last_full_run_at;
+        // US-059 db-design §4 adds last_course_list_empty.
+        Assert.Equal(15, columns.Count);
         Assert.Contains(columns, c => c.Name == "id" && c.Nullable == "NO");
         Assert.Contains(columns, c => c.Name == "singleton" && c.Nullable == "NO");
         Assert.Contains(columns, c => c.Name == "status" && c.Nullable == "NO" && c.Length == 16);
@@ -42,6 +43,7 @@ public sealed class SyncStateSchemaTests(PostgreSqlFixture database)
         Assert.Contains(columns, c => c.Name == "meet_loaded_up_to" && c.Nullable == "YES");
         Assert.Contains(columns, c => c.Name == "failed_step" && c.Nullable == "YES" && c.Length == 16);
         Assert.Contains(columns, c => c.Name == "last_full_run_at" && c.Nullable == "YES");
+        Assert.Contains(columns, c => c.Name == "last_course_list_empty" && c.Nullable == "NO" && c.Type == "boolean");
         Assert.Contains(columns, c => c.Name == "created_at" && c.Nullable == "NO");
         Assert.Contains(columns, c => c.Name == "updated_at" && c.Nullable == "NO");
     }

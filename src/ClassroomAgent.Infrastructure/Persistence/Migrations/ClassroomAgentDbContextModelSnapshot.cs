@@ -447,6 +447,15 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("AbsenceMark")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("absence_mark");
+
+                    b.Property<DateTimeOffset?>("AbsentSince")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("absent_since");
+
                     b.Property<string>("AlternateLink")
                         .HasMaxLength(2048)
                         .HasColumnType("character varying(2048)")
@@ -488,6 +497,10 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("LastCompleteReadAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_complete_read_at");
+
+                    b.Property<DateTimeOffset?>("LastListedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_listed_at");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -546,6 +559,8 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                     b.ToTable("course", null, t =>
                         {
+                            t.HasCheckConstraint("ck_course_absence_mark", "(absence_mark IS NULL AND absent_since IS NULL) OR (absence_mark IS NOT NULL AND absence_mark IN ('not_in_classroom', 'not_visible_to_technical_account') AND absent_since IS NOT NULL)");
+
                             t.HasCheckConstraint("ck_course_course_state", "course_state IN ('active', 'archived', 'provisioned', 'declined', 'suspended')");
                         });
                 });
@@ -1437,6 +1452,12 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("finished_at");
 
+                    b.Property<bool>("LastCourseListEmpty")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("last_course_list_empty");
+
                     b.Property<string>("LastError")
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)")
@@ -1507,7 +1528,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_sync_state_status", "status IN ('running', 'completed', 'failed')");
 
-                            t.HasCheckConstraint("ck_sync_state_terminal_fields", "(status = 'running' AND finished_at IS NULL AND last_error IS NULL)\nOR (status = 'completed' AND finished_at IS NOT NULL AND last_error IS NULL)\nOR (status = 'failed' AND finished_at IS NOT NULL AND last_error IS NOT NULL)");
+                            t.HasCheckConstraint("ck_sync_state_terminal_fields", "(status = 'running' AND finished_at IS NULL AND last_error IS NULL)\r\nOR (status = 'completed' AND finished_at IS NOT NULL AND last_error IS NULL)\r\nOR (status = 'failed' AND finished_at IS NOT NULL AND last_error IS NOT NULL)");
                         });
                 });
 
@@ -1541,6 +1562,10 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("singleton");
+
+                    b.Property<DateTimeOffset?>("TechnicalAccountChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("technical_account_changed_at");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
