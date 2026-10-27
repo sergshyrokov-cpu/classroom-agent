@@ -50,6 +50,12 @@
     <button type="submit">@T[JournalTextKeys.Show]</button>
 </form>
 
+@* US-060 spec FR-003.2, I-1: the selected course's header line, above the journal table. *@
+@if (Model.Notice is { } notice)
+{
+    <p id="journal-notice">@DataMarksTexts.Notice(T, notice)</p>
+}
+
 @if (Model.EmptyStateKey is { } empty)
 {
     <p id="journal-empty">@T[JournalTextKeys.Empty(empty)]</p>
@@ -84,6 +90,10 @@
                             {
                                 <br /><span>@T[JournalTextKeys.Material]</span>
                             }
+                            @if (column.NotInClassroom)
+                            {
+                                <br /><span>@T[DataMarksTextKeys.ItemNotInClassroom]</span>
+                            }
                         </th>
                     }
                 </tr>
@@ -92,10 +102,12 @@
                 @foreach (var row in journal.Rows)
                 {
                     <tr>
-                        <th scope="row">@(row.NameKind == JournalNameKind.Unnamed ? T[JournalTextKeys.Unnamed].Value : row.DisplayName)</th>
+                        <th scope="row">@(row.NameKind == JournalNameKind.Unnamed ? T[JournalTextKeys.Unnamed].Value : row.DisplayName)@if (row.Left is { } left) {<br /><span>@DataMarksTexts.Left(T, left)</span>}</th>
                         @foreach (var cell in row.Cells)
                         {
-                            <td>
+                            var above = cell.PointsAboveMaximum || cell.DraftAboveMaximum;
+                            @* US-060 spec FR-004.2, FR-004.5: a highlight and always the label, never colour alone. *@
+                            <td class="@(above ? "mark-above-maximum" : null)">
                                 @switch (cell.State)
                                 {
                                     case JournalCellState.Empty:
@@ -121,6 +133,10 @@
                                 @if (cell.TurnedInOn is { } turnedInOn)
                                 {
                                     <br /><span>@T[JournalTextKeys.TurnedInOn] @turnedInOn.ToString("d", culture)</span>
+                                }
+                                @if (above)
+                                {
+                                    <br /><span>@T[DataMarksTextKeys.AboveMaximum]</span>
                                 }
                             </td>
                         }

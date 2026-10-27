@@ -25,6 +25,15 @@ public enum ReportText
     NothingPublished,
     NoStudents,
     CourseFallback,
+    // US-060 spec FR-009: the marks of the report export ({0} a date; for the notes {0} points, {1} the maximum).
+    DataHeaderNotInClassroomSince,
+    DataHeaderNotUpdatedSince,
+    DataHeaderNotUpdated,
+    DataItemNotInClassroom,
+    DataNotePoints,
+    DataNoteDraft,
+    DataLeftOn,
+    DataLeft,
 
     // US-044 spec FR-015: the program texts of the Meet export that US-033 has no key for.
     MeetSheetSummary,

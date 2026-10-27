@@ -65,7 +65,8 @@ public sealed class GetCourseCardQuery(ICourseCardSource source, SchoolTimeZone 
             Given(course.DescriptionHeading),
             Given(course.Description),
             LocalTime(course.CreationTime),
-            LocalTime(course.UpdateTime));
+            LocalTime(course.UpdateTime),
+            DataMarkRules.Absence(course.AbsenceMark, course.AbsentSince, schoolTimeZone.Zone));
         // Spec FR-010, api-design §2.1: the card sits under the course list; the parsed id in invariant decimal form.
         var returnPath = CourseListUrl.Path + "/" + courseId.ToString(CultureInfo.InvariantCulture);
         return new CourseCardResult(

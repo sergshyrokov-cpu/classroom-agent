@@ -49,6 +49,50 @@ public static partial class ReportWorkbookMapper
             ? texts.Get(ReportText.StudentUnnamed)
             : student.DisplayName ?? string.Empty;
 
+    /// <summary>US-060 spec FR-007.4, FR-008.2: the name cell keeps the name; a leaver's carries the "left" note.</summary>
+    internal static WorkbookCell StudentCell(GradingRow row, IReportTexts texts, CultureInfo culture) =>
+        WorkbookCell.OfText(StudentText(row.Student, texts)) with { Note = LeftText(row.Left, texts, culture) };
+
+    /// <summary>US-060 spec FR-003.1, FR-007.1, FR-008.3: the course's header line, or null when it has none.</summary>
+    internal static string? NoticeText(CourseDataNotice? notice, IReportTexts texts, CultureInfo culture) => notice switch
+    {
+        null => null,
+        { Kind: CourseDataNoticeKind.NotInClassroom, Since: { } since } =>
+            string.Format(culture, texts.Get(ReportText.DataHeaderNotInClassroomSince), since.ToString("d", culture)),
+        { Since: { } since } =>
+            string.Format(culture, texts.Get(ReportText.DataHeaderNotUpdatedSince), since.ToString("d", culture)),
+        _ => texts.Get(ReportText.DataHeaderNotUpdated),
+    };
+
+    /// <summary>US-060 spec FR-005.2, FR-005.3, I-5: the item mark, no date.</summary>
+    internal static string ItemMarkText(IReportTexts texts) => texts.Get(ReportText.DataItemNotInClassroom);
+
+    /// <summary>US-060 spec FR-006.1: "left" with the last-seen date, or alone for a student known only through submissions.</summary>
+    private static string? LeftText(LeftMark? left, IReportTexts texts, CultureInfo culture) => left switch
+    {
+        null => null,
+        { LastSeenOn: { } date } => string.Format(culture, texts.Get(ReportText.DataLeftOn), date.ToString("d", culture)),
+        _ => texts.Get(ReportText.DataLeft),
+    };
+
+    /// <summary>US-060 spec FR-007.3: one line per above-maximum value the cell shows — the grade, then the draft.</summary>
+    private static string AboveMaximumNote(ReportAboveMaximum above, IReportTexts texts, CultureInfo culture)
+    {
+        var lines = new List<string>();
+        var max = Points(above.MaxPoints, culture);
+        if (above.Points is { } points)
+        {
+            lines.Add(string.Format(culture, texts.Get(ReportText.DataNotePoints), Points(points, culture), max));
+        }
+
+        if (above.DraftPoints is { } draft)
+        {
+            lines.Add(string.Format(culture, texts.Get(ReportText.DataNoteDraft), Points(draft, culture), max));
+        }
+
+        return string.Join('\n', lines);
+    }
+
     /// <summary>Entity model §2.2: the UI culture's short date pattern with Excel's month letter.</summary>
     private static string DateFormat(CultureInfo culture) => culture.DateTimeFormat.ShortDatePattern.Replace('M', 'm');
 
@@ -70,8 +114,11 @@ public static partial class ReportWorkbookMapper
 
         // Spec FR-004.3, I-3: title, date and the material marker of a column in one heading cell, as on screen.
         var heading = new List<WorkbookCell> { WorkbookCell.OfText(texts.Get(ReportText.StudentHeading), isHeading: true) };
+        // US-060 spec FR-007.2: the "not in Classroom" item mark after a line break, last.
         heading.AddRange(grading.Columns.Select(c => WorkbookCell.OfText(
-            c.Title + "\n" + c.LessonDate.ToString("d", culture) + (c.IsMaterial ? "\n" + texts.Get(ReportText.Material) : string.Empty),
+            c.Title + "\n" + c.LessonDate.ToString("d", culture)
+            + (c.IsMaterial ? "\n" + texts.Get(ReportText.Material) : string.Empty)
+            + (c.NotInClassroom ? "\n" + ItemMarkText(texts) : string.Empty),
             isHeading: true)));
         rows.Add(new WorksheetRow(heading));
 
@@ -79,7 +126,7 @@ public static partial class ReportWorkbookMapper
         {
             var cells = new List<WorkbookCell>
             {
-                WorkbookCell.OfText(StudentText(row.Student, texts)),
+                StudentCell(row, texts, culture),
             };
             cells.AddRange(row.Cells.Select(c => GradingCell(c, texts, culture)));
             rows.Add(new WorksheetRow(cells));
@@ -112,7 +159,7 @@ public static partial class ReportWorkbookMapper
             rows.Add(new WorksheetRow(
             [
                 WorkbookCell.OfDate(topic.LessonDate),
-                WorkbookCell.OfText(topic.Title),
+                WorkbookCell.OfText(topic.NotInClassroom ? topic.Title + "\n" + ItemMarkText(texts) : topic.Title),
                 WorkbookCell.OfNumber(topic.Hours),
                 WorkbookCell.OfText(teachers),
                 WorkbookCell.Empty(),
@@ -130,10 +177,17 @@ public static partial class ReportWorkbookMapper
         var course = CourseText(header);
         var period = header.From.ToString("d", culture) + " – " + header.To.ToString("d", culture);
 
+        // US-060 spec FR-007.1, I-3: the header line in the third cell of the Course row, so the table does not move.
+        var courseRow = Labelled(texts.Get(ReportText.HeaderCourse), course);
+        if (NoticeText(header.Notice, texts, culture) is { } notice)
+        {
+            courseRow = new WorksheetRow([.. courseRow.Cells, WorkbookCell.OfText(notice)]);
+        }
+
         return
         [
             Labelled(texts.Get(ReportText.HeaderTemplate), template),
-            Labelled(texts.Get(ReportText.HeaderCourse), course),
+            courseRow,
             Labelled(texts.Get(ReportText.HeaderPeriod), period),
             Labelled(texts.Get(ReportText.HeaderTeachers), teachers),
             new WorksheetRow([]),
@@ -150,6 +204,16 @@ public static partial class ReportWorkbookMapper
     /// empty; anything else is the screen's text — main part, draft, late mark, turn-in date — one part per line.
     /// </summary>
     internal static WorkbookCell GradingCell(ReportCell cell, IReportTexts texts, CultureInfo culture)
+    {
+        var value = GradingValue(cell, texts, culture);
+
+        // US-060 spec FR-007.3: an above-maximum value keeps the cell's value, gains the fill and the raw-points note.
+        return cell.AboveMaximum is { } above
+            ? value with { Highlighted = true, Note = AboveMaximumNote(above, texts, culture) }
+            : value;
+    }
+
+    private static WorkbookCell GradingValue(ReportCell cell, IReportTexts texts, CultureInfo culture)
     {
         var alone = cell.DraftGrade is null && cell.Late is null && cell.TurnedInOn is null;
         if (alone && cell.Content == ReportCellContent.Empty)

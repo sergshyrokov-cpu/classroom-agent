@@ -79,7 +79,9 @@ public static class GroupLessonsBlankMapper
             throw new InvalidOperationException("The report's lesson columns and lesson topics differ.");
         }
 
-        var course = WorkbookCell.OfText(ReportWorkbookMapper.CourseText(report.Header));
+        // US-060 spec FR-008.3, I-4: the header line as a note on the course cell; the printed text is unchanged.
+        var notice = ReportWorkbookMapper.NoticeText(report.Header.Notice, texts, uiCulture);
+        var course = WorkbookCell.OfText(ReportWorkbookMapper.CourseText(report.Header)) with { Note = notice };
         var teachers = WorkbookCell.OfText(ReportWorkbookMapper.TeachersText(report.Header, texts));
         var groups = Groups(students.Count, studentsPerCopy);
         var blocks = Groups(topics.Count, lessonsPerCopy);
@@ -104,7 +106,7 @@ public static class GroupLessonsBlankMapper
                         BlankFormMarker.StudentName,
                         k,
                         0,
-                        holds ? WorkbookCell.OfText(ReportWorkbookMapper.StudentText(students[student].Student, texts)) : WorkbookCell.Empty()));
+                        holds ? ReportWorkbookMapper.StudentCell(students[student], texts, uiCulture) : WorkbookCell.Empty()));
                 }
 
                 // FR-005.2, FR-005.5: the 24th column never holds a lesson (lessons per copy ≤ 23).
@@ -133,7 +135,7 @@ public static class GroupLessonsBlankMapper
                     BlankFormSheet.Grading, gradingNumber, gradingNumbered, BlankFormFooterSection.Right, placements));
             }
 
-            copies.Add(TopicsCopy(topics, teachers, block, lessonsPerCopy, topicsNumbered));
+            copies.Add(TopicsCopy(topics, teachers, texts, block, lessonsPerCopy, topicsNumbered));
         }
 
         return new BlankFormFill(copies);
@@ -141,7 +143,7 @@ public static class GroupLessonsBlankMapper
 
     /// <summary>Spec FR-005.4: the teachers and the block's lessons, numbered through the file; unused rows cleared.</summary>
     private static BlankFormCopy TopicsCopy(
-        IReadOnlyList<LessonTopicRow> topics, WorkbookCell teachers, int block, int lessonsPerCopy, bool numbered)
+        IReadOnlyList<LessonTopicRow> topics, WorkbookCell teachers, IReportTexts texts, int block, int lessonsPerCopy, bool numbered)
     {
         var placements = new List<BlankFormPlacement> { new(BlankFormMarker.Teachers, 0, 0, teachers) };
         for (var r = 0; r < TopicRows; r++)
@@ -153,7 +155,10 @@ public static class GroupLessonsBlankMapper
                 placements.Add(new(BlankFormMarker.TopicNumber, r, 0, WorkbookCell.OfNumber(lesson + 1)));
                 placements.Add(new(BlankFormMarker.TopicDate, r, 0, WorkbookCell.OfDate(topic.LessonDate)));
                 placements.Add(new(BlankFormMarker.TopicHours, r, 0, WorkbookCell.OfNumber(topic.Hours)));
-                placements.Add(new(BlankFormMarker.TopicTitle, r, 0, WorkbookCell.OfText(topic.Title)));
+                // US-060 spec FR-008.4: the item mark as a note on its topic title; the grading sheet has no title cell.
+                var mark = topic.NotInClassroom ? ReportWorkbookMapper.ItemMarkText(texts) : null;
+                var title = WorkbookCell.OfText(topic.Title) with { Note = mark };
+                placements.Add(new(BlankFormMarker.TopicTitle, r, 0, title));
             }
             else
             {

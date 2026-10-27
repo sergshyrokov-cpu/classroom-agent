@@ -40,7 +40,16 @@ internal static class JournalCellRule
         var graded = item.Kind == CourseWorkKind.GradedWork;
         if (graded && submission.AssignedGrade is { } grade)
         {
-            return new JournalCell(JournalCellState.Grade, grade, item.MaxPoints, null, submission.Late, null, turnedInOn);
+            // US-060 spec FR-004.3: the raw points stay as stored; the flag only marks them.
+            return new JournalCell(
+                JournalCellState.Grade,
+                grade,
+                item.MaxPoints,
+                null,
+                submission.Late,
+                null,
+                turnedInOn,
+                PointsAboveMaximum: DataMarkRules.IsAboveMaximum(grade, item.MaxPoints));
         }
 
         var state = submission.State switch
@@ -53,7 +62,15 @@ internal static class JournalCellRule
             _ => JournalCellState.NotDueYet,
         };
         var draft = full && graded ? submission.DraftGrade : null;
-        return new JournalCell(state, null, null, null, submission.Late, draft, turnedInOn);
+        return new JournalCell(
+            state,
+            null,
+            null,
+            null,
+            submission.Late,
+            draft,
+            turnedInOn,
+            DraftAboveMaximum: DataMarkRules.IsAboveMaximum(draft, item.MaxPoints));
     }
 
     /// <summary>An instant as a calendar date of the school's zone (NFR-074).</summary>

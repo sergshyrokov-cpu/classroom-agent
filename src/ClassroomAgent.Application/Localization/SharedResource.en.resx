@@ -563,4 +563,17 @@
   <data name="Erasure.Confirmation.MarkRequired" xml:space="preserve"><value>Confirm that erasure is irreversible.</value></data>
   <data name="Erasure.Role.Teacher" xml:space="preserve"><value>teacher</value></data>
   <data name="Erasure.Role.Student" xml:space="preserve"><value>student</value></data>
+  <!-- US-060 spec FR-009: the marks of the course list, card, journal, report and export. -->
+  <data name="DataMarks.Course.NotInClassroomSince" xml:space="preserve"><value>not in Classroom since {0}</value></data>
+  <data name="DataMarks.Course.NotVisibleSince" xml:space="preserve"><value>not visible to the technical account since {0}</value></data>
+  <data name="DataMarks.Course.NoTeacher" xml:space="preserve"><value>no teacher in Classroom</value></data>
+  <data name="DataMarks.Header.NotInClassroomSince" xml:space="preserve"><value>Course not in Classroom since {0}</value></data>
+  <data name="DataMarks.Header.NotUpdatedSince" xml:space="preserve"><value>Data not updated since {0}</value></data>
+  <data name="DataMarks.Header.NotUpdated" xml:space="preserve"><value>Data not updated</value></data>
+  <data name="DataMarks.Item.NotInClassroom" xml:space="preserve"><value>not in Classroom</value></data>
+  <data name="DataMarks.AboveMaximum" xml:space="preserve"><value>above maximum</value></data>
+  <data name="DataMarks.Note.Points" xml:space="preserve"><value>Points: {0} of {1}</value></data>
+  <data name="DataMarks.Note.Draft" xml:space="preserve"><value>Draft: {0} of {1}</value></data>
+  <data name="DataMarks.Left.On" xml:space="preserve"><value>left {0}</value></data>
+  <data name="DataMarks.Left" xml:space="preserve"><value>left</value></data>
 </root>

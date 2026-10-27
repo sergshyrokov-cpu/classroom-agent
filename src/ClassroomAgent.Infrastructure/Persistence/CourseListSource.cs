@@ -41,7 +41,7 @@ public sealed class CourseListSource(ClassroomAgentDbContext db) : ICourseListSo
             .ThenBy(c => c.Id)
             .Skip(offset)
             .Take(limit)
-            .Select(c => new CourseListCourseRecord(c.Id, c.Name, c.Section, c.State, c.UpdateTime))
+            .Select(c => new CourseListCourseRecord(c.Id, c.Name, c.Section, c.State, c.UpdateTime, c.AbsenceMark, c.AbsentSince))
             .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<CourseListTeacherRecord>> GetCurrentTeachersAsync(

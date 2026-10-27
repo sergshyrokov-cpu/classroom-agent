@@ -13,11 +13,21 @@ namespace ClassroomAgent.Infrastructure.Persistence.Repositories;
 /// </summary>
 public sealed class JournalSource(ClassroomAgentDbContext db) : IJournalSource
 {
-    /// <summary>Q1 — every stored course, unordered.</summary>
+    /// <summary>
+    /// Q1 — every stored course, unordered, with the US-060 header facts; the skip record is matched by ordinal Google id
+    /// in the same query (spec VR-003, §9: no extra round trip).
+    /// </summary>
     public async Task<IReadOnlyList<JournalCourseRecord>> GetCoursesAsync(CancellationToken cancellationToken) =>
         await db.Courses
             .AsNoTracking()
-            .Select(c => new JournalCourseRecord(c.Id, c.Name, c.Section))
+            .Select(c => new JournalCourseRecord(
+                c.Id,
+                c.Name,
+                c.Section,
+                c.AbsenceMark,
+                c.AbsentSince,
+                c.LastCompleteReadAt,
+                db.SyncSkippedCourses.Any(s => s.CourseGoogleId == c.GoogleId)))
             .ToListAsync(cancellationToken);
 
     /// <summary>
@@ -36,7 +46,7 @@ public sealed class JournalSource(ClassroomAgentDbContext db) : IJournalSource
             .Where(w => w.CourseId == courseId && w.ItemDate >= start && w.ItemDate < endExclusive)
             .ToListAsync(cancellationToken);
         return items
-            .Select(w => new JournalItemRecord(w.Id, w.Title, w.ItemDate, w.DueAt, w.MaxPoints, w.Kind))
+            .Select(w => new JournalItemRecord(w.Id, w.Title, w.ItemDate, w.DueAt, w.MaxPoints, w.Kind, w.NotInClassroomSince != null))
             .ToList();
     }
 
@@ -66,7 +76,8 @@ public sealed class JournalSource(ClassroomAgentDbContext db) : IJournalSource
                 m.LastSeenAt,
                 m.OnRoster,
                 m.FullName,
-                m.Email))
+                m.Email,
+                m.FirstSeenAt == m.LastSeenAt))
             .ToList();
     }
 

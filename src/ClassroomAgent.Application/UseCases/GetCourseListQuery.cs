@@ -84,14 +84,22 @@ public sealed class GetCourseListQuery(ICourseListSource source, SchoolTimeZone 
             var counts = (await source.GetStudentCountsAsync(ids, cancellationToken))
                 .ToDictionary(c => c.CourseId, c => c.StudentCount);
             var rows = courses
-                .Select(c => new CourseListRow(
-                    c.CourseId,
-                    c.Name,
-                    c.Section,
-                    c.State,
-                    teachers.Where(t => t.CourseId == c.CourseId).Select(t => NameOf(t.Teacher)).ToList(),
-                    counts.GetValueOrDefault(c.CourseId),
-                    LocalTime(c.UpdateTime)))
+                .Select(c =>
+                {
+                    var current = teachers.Where(t => t.CourseId == c.CourseId).Select(t => NameOf(t.Teacher)).ToList();
+
+                    // US-060 spec FR-001, FR-002: the stored mark, and "no teacher in Classroom" when none is on the roster.
+                    return new CourseListRow(
+                        c.CourseId,
+                        c.Name,
+                        c.Section,
+                        c.State,
+                        current,
+                        counts.GetValueOrDefault(c.CourseId),
+                        LocalTime(c.UpdateTime),
+                        DataMarkRules.Absence(c.AbsenceMark, c.AbsentSince, schoolTimeZone.Zone),
+                        current.Count == 0);
+                })
                 .ToList();
             list = new CourseListResult(null, total, shown, pageCount, PageSize, rows);
         }

@@ -26,7 +26,9 @@ public sealed class CourseCardSource(ClassroomAgentDbContext db) : ICourseCardSo
                 c.DescriptionHeading,
                 c.Description,
                 c.CreationTime,
-                c.UpdateTime))
+                c.UpdateTime,
+                c.AbsenceMark,
+                c.AbsentSince))
             .SingleOrDefaultAsync(cancellationToken);
 
     /// <summary>

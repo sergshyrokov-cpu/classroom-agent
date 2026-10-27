@@ -40,6 +40,7 @@ public sealed class ClosedXmlReportRenderer : IReportRenderer
             for (var c = 0; c < cells.Count; c++)
             {
                 Write(target.Cell(r + 1, c + 1), cells[c], workbook);
+                ExportMarks.Apply(target.Cell(r + 1, c + 1), cells[c]);
             }
         }
 

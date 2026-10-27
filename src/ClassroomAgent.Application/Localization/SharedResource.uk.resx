@@ -563,4 +563,17 @@
   <data name="Erasure.Confirmation.MarkRequired" xml:space="preserve"><value>Підтвердіть, що видалення незворотне.</value></data>
   <data name="Erasure.Role.Teacher" xml:space="preserve"><value>викладач</value></data>
   <data name="Erasure.Role.Student" xml:space="preserve"><value>учень</value></data>
+  <!-- US-060 spec FR-009: the marks of the course list, card, journal, report and export. -->
+  <data name="DataMarks.Course.NotInClassroomSince" xml:space="preserve"><value>немає в Classroom з {0}</value></data>
+  <data name="DataMarks.Course.NotVisibleSince" xml:space="preserve"><value>не видно технічному акаунту з {0}</value></data>
+  <data name="DataMarks.Course.NoTeacher" xml:space="preserve"><value>викладача немає в Classroom</value></data>
+  <data name="DataMarks.Header.NotInClassroomSince" xml:space="preserve"><value>Курсу немає в Classroom з {0}</value></data>
+  <data name="DataMarks.Header.NotUpdatedSince" xml:space="preserve"><value>Дані не оновлювалися з {0}</value></data>
+  <data name="DataMarks.Header.NotUpdated" xml:space="preserve"><value>Дані не оновлювалися</value></data>
+  <data name="DataMarks.Item.NotInClassroom" xml:space="preserve"><value>немає в Classroom</value></data>
+  <data name="DataMarks.AboveMaximum" xml:space="preserve"><value>більше максимуму</value></data>
+  <data name="DataMarks.Note.Points" xml:space="preserve"><value>Бали: {0} з {1}</value></data>
+  <data name="DataMarks.Note.Draft" xml:space="preserve"><value>Чернетка: {0} з {1}</value></data>
+  <data name="DataMarks.Left.On" xml:space="preserve"><value>вибув(-ла) {0}</value></data>
+  <data name="DataMarks.Left" xml:space="preserve"><value>вибув(-ла)</value></data>
 </root>

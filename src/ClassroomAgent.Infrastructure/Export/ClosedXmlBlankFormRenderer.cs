@@ -63,7 +63,9 @@ public sealed class ClosedXmlBlankFormRenderer : IBlankFormRenderer
                     throw new InvalidOperationException("A marker of the group-lessons blank form is on the wrong sheet.");
                 }
 
-                Write(target.Cell(place.Row + placement.Down, place.Column + placement.Right), placement.Value, place.NumberFormat);
+                var cell = target.Cell(place.Row + placement.Down, place.Column + placement.Right);
+                Write(cell, placement.Value, place.NumberFormat);
+                ExportMarks.Apply(cell, placement.Value);
             }
 
             // FR-006.1, I-13: the copy's number as fixed text in its footer section; the header and the rest stay empty.

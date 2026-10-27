@@ -63,8 +63,13 @@ public sealed class GetJournalQuery(IJournalSource source, SchoolTimeZone school
             .ToList();
         var known = course is { } chosen && records.Any(c => c.Id == chosen) ? course : null;
 
+        // US-060 spec FR-003: the selected course's header line, read with the drop-down (no extra round trip).
+        var notice = known is { } selected
+            ? DataMarkRules.Notice(records.Single(c => c.Id == selected), zone)
+            : null;
+
         JournalPageResult Page(JournalPageOutcome outcome, JournalEmptyStateKey? empty = null, Journal? journal = null) =>
-            new(outcome, new JournalPageModel(courses, records.Count == 0, known, from, to, view, messages, empty, journal));
+            new(outcome, new JournalPageModel(courses, records.Count == 0, known, from, to, view, messages, empty, journal, notice));
 
         if (messages.Count > 0)
         {
@@ -136,7 +141,8 @@ public sealed class GetJournalQuery(IJournalSource source, SchoolTimeZone school
                         view,
                         b,
                         zone))
-                    .ToList()))
+                    .ToList(),
+                DataMarkRules.Left(r.Member.OnRoster, r.Member.SeenOnce, r.Member.LastSeenAt, zone)))
             .ToList();
         if (rows.Count == 0)
         {
@@ -148,7 +154,8 @@ public sealed class GetJournalQuery(IJournalSource source, SchoolTimeZone school
                 i.Title,
                 DateIn(i.ItemDate, zone),
                 i.Kind,
-                i.Kind == CourseWorkKind.GradedWork ? i.MaxPoints : null))
+                i.Kind == CourseWorkKind.GradedWork ? i.MaxPoints : null,
+                i.NotInClassroom))
             .ToList();
         return Page(JournalPageOutcome.Shown, journal: new Journal(journalColumns, rows));
     }

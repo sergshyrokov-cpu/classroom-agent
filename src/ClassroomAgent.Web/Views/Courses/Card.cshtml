@@ -21,7 +21,7 @@
         <dd data-field="section">@course.Section</dd>
     }
     <dt>@T[CoursesTextKeys.CardFieldStatus]</dt>
-    <dd data-field="status">@T[CoursesTextKeys.State(course.State)]</dd>
+    <dd data-field="status">@T[CoursesTextKeys.State(course.State)]@if (course.Absence is { } absence) {<br /><span>@DataMarksTexts.Absence(T, absence)</span>}</dd>
     @if (course.Room is not null)
     {
         <dt>@T[CoursesTextKeys.CardFieldRoom]</dt>

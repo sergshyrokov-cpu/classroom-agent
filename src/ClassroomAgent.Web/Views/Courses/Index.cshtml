@@ -77,8 +77,13 @@
                                     <br /><span>@row.Section</span>
                                 }
                             </td>
-                            <td>@T[CoursesTextKeys.State(row.State)]</td>
+                            <td>@T[CoursesTextKeys.State(row.State)]@if (row.Absence is { } absence) {<br /><span>@DataMarksTexts.Absence(T, absence)</span>}</td>
                             <td>
+                                @* US-060 spec FR-002: in place of the teachers when none is on the roster. *@
+                                @if (row.NoTeacherInClassroom)
+                                {
+                                    <div>@T[DataMarksTextKeys.NoTeacher]</div>
+                                }
                                 @foreach (var teacher in row.Teachers)
                                 {
                                     <div>@PersonText(teacher)</div>

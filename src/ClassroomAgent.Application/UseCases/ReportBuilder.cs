@@ -108,7 +108,8 @@ internal sealed class ReportBuilder(
             courseRecord.Section,
             from,
             to,
-            teachers);
+            teachers,
+            DataMarkRules.Notice(courseRecord, zone));
 
         if (lessons.Count == 0)
         {
@@ -128,11 +129,11 @@ internal sealed class ReportBuilder(
             : ordered;
         var topics = new LessonTopicsPart(ordered
             .Where(l => l.Resource != CourseWorkResource.CourseWorkMaterial)
-            .Select(l => new LessonTopicRow(DateIn(l.LessonDate, zone), l.Title, settings.HoursPerLesson))
+            .Select(l => new LessonTopicRow(DateIn(l.LessonDate, zone), l.Title, settings.HoursPerLesson, l.NotInClassroom))
             .ToList());
         var gradingColumns = columns
             .Select(l => new GradingColumn(
-                DateIn(l.LessonDate, zone), l.Title, l.Resource == CourseWorkResource.CourseWorkMaterial))
+                DateIn(l.LessonDate, zone), l.Title, l.Resource == CourseWorkResource.CourseWorkMaterial, l.NotInClassroom))
             .ToList();
 
         var submissions = await fields.GetLessonSubmissionsAsync(courseId, start, end, cancellationToken);
@@ -170,7 +171,8 @@ internal sealed class ReportBuilder(
                             zone),
                         items[l.Id],
                         settings))
-                    .ToList()))
+                    .ToList(),
+                DataMarkRules.Left(r.Member.OnRoster, r.Member.SeenOnce, r.Member.LastSeenAt, zone)))
             .ToList();
 
         return new ReportBuildResult(
@@ -187,7 +189,8 @@ internal sealed class ReportBuilder(
         lesson.MaxPoints,
         lesson.Resource == CourseWorkResource.CourseWorkMaterial ? CourseWorkKind.Material
         : lesson.MaxPoints is null ? CourseWorkKind.UngradedWork
-        : CourseWorkKind.GradedWork);
+        : CourseWorkKind.GradedWork,
+        lesson.NotInClassroom);
 
     /// <summary>Spec FR-005.4: the journal cell resolved through the template.</summary>
     private static ReportCell ToReportCell(JournalCell cell, JournalItemRecord item, ReportTemplateSettings settings)
@@ -200,6 +203,14 @@ internal sealed class ReportBuilder(
         var late = cell.Late ? LateMark(settings.LateMark) : null;
         var draft = cell.DraftPoints is { } draftPoints ? Grade(draftPoints, item.MaxPoints, settings) : null;
 
+        // US-060 spec FR-004: the raw points above the maximum travel with the cell; its grade is resolved as before.
+        var above = (cell.PointsAboveMaximum || cell.DraftAboveMaximum) && item.MaxPoints is { } max
+            ? new ReportAboveMaximum(
+                cell.PointsAboveMaximum ? cell.Points : null,
+                cell.DraftAboveMaximum ? cell.DraftPoints : null,
+                max)
+            : null;
+
         if (cell.State == JournalCellState.Grade)
         {
             return new ReportCell(
@@ -209,7 +220,8 @@ internal sealed class ReportBuilder(
                 null,
                 late,
                 draft,
-                cell.TurnedInOn);
+                cell.TurnedInOn,
+                above);
         }
 
         var state = cell.State switch
@@ -227,18 +239,18 @@ internal sealed class ReportBuilder(
         var mark = settings.Marks[state];
         if (mark.Kind == ReportMarkKind.Empty)
         {
-            return new ReportCell(ReportCellContent.Empty, null, null, null, late, draft, cell.TurnedInOn);
+            return new ReportCell(ReportCellContent.Empty, null, null, null, late, draft, cell.TurnedInOn, above);
         }
 
         if (mark.Kind == ReportMarkKind.Program && state == ReportCellState.Unrecognised)
         {
-            return new ReportCell(ReportCellContent.RawState, null, null, cell.RawState, late, draft, cell.TurnedInOn);
+            return new ReportCell(ReportCellContent.RawState, null, null, cell.RawState, late, draft, cell.TurnedInOn, above);
         }
 
         var reportMark = mark.Kind == ReportMarkKind.Program
             ? new ReportCellMark(ReportCellMarkKind.Program, state.ToString(), null)
             : new ReportCellMark(ReportCellMarkKind.Own, null, mark.Text);
-        return new ReportCell(ReportCellContent.Mark, null, reportMark, null, late, draft, cell.TurnedInOn);
+        return new ReportCell(ReportCellContent.Mark, null, reportMark, null, late, draft, cell.TurnedInOn, above);
     }
 
     private static ReportCellMark? LateMark(ReportLateMark mark) => mark.Kind switch

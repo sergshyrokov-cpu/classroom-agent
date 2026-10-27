@@ -65,3 +65,6 @@ button {
     opacity: 0.75;
     margin: 0 0 1rem;
 }
+
+/* US-060 spec FR-004.2, BR-047: a light, restrained highlight of a grade above the maximum; the label is always shown too. */
+.mark-above-maximum { background-color: #fff2cc; color: #1f1f1f; }

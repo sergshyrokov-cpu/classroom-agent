@@ -68,6 +68,11 @@
         <p id="report-course-name">@CourseTitle(report.Header)</p>
         <p>@T[ReportTemplateTextKeys.ReportPeriod]: @report.Header.From.ToString("d", culture) – @report.Header.To.ToString("d", culture)</p>
         <p id="report-teachers">@T[ReportTemplateTextKeys.ReportTeachers]: @TeacherNames(report.Header.Teachers)</p>
+        @* US-060 spec FR-003.2: the course's header line. *@
+        @if (report.Header.Notice is { } notice)
+        {
+            <p id="report-notice">@DataMarksTexts.Notice(T, notice)</p>
+        }
     </section>
 
     @* US-042 FR-005, api-design §2.2: two GET links built in Application from validated values; the effective source is
@@ -156,6 +161,10 @@
                                         {
                                             <br /><span>@T[JournalTextKeys.Material]</span>
                                         }
+                                        @if (column.NotInClassroom)
+                                        {
+                                            <br /><span>@T[DataMarksTextKeys.ItemNotInClassroom]</span>
+                                        }
                                     </th>
                                 }
                             </tr>
@@ -164,10 +173,11 @@
                             @foreach (var row in grading.Rows)
                             {
                                 <tr>
-                                    <th scope="row">@(row.Student.NameKind == ReportNameKind.Unnamed ? T[JournalTextKeys.Unnamed].Value : row.Student.DisplayName)</th>
+                                    <th scope="row">@(row.Student.NameKind == ReportNameKind.Unnamed ? T[JournalTextKeys.Unnamed].Value : row.Student.DisplayName)@if (row.Left is { } left) {<br /><span>@DataMarksTexts.Left(T, left)</span>}</th>
                                     @foreach (var cell in row.Cells)
                                     {
-                                        <td>
+                                        @* US-060 spec FR-004.2, FR-004.5: a highlight and always the label. *@
+                                        <td class="@(cell.AboveMaximum is not null ? "mark-above-maximum" : null)">
                                             @switch (cell.Content)
                                             {
                                                 case ReportCellContent.Grade:
@@ -191,6 +201,10 @@
                                             @if (cell.TurnedInOn is { } turnedInOn)
                                             {
                                                 <br /><span>@T[JournalTextKeys.TurnedInOn] @turnedInOn.ToString("d", culture)</span>
+                                            }
+                                            @if (cell.AboveMaximum is not null)
+                                            {
+                                                <br /><span>@T[DataMarksTextKeys.AboveMaximum]</span>
                                             }
                                         </td>
                                     }
@@ -225,7 +239,7 @@
                         {
                             <tr>
                                 <td>@topic.LessonDate.ToString("d", culture)</td>
-                                <td>@topic.Title</td>
+                                <td>@topic.Title@if (topic.NotInClassroom) {<br /><span>@T[DataMarksTextKeys.ItemNotInClassroom]</span>}</td>
                                 <td>@topic.Hours.ToString(culture)</td>
                                 <td>@TeacherNames(report.Header.Teachers)</td>
                                 <td></td>

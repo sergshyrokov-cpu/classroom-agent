@@ -1,6 +1,7 @@
 namespace ClassroomAgent.Application.Models.Dtos;
 
-/// <summary>View DTO of the journal page (US-025 openapi <c>JournalPageModel</c>); no entity crosses into it (AD-8).</summary>
+/// <summary>View DTO of the journal page (US-025 openapi <c>JournalPageModel</c>); no entity crosses into it (AD-8);
+/// <see cref="Notice"/> is the selected course's header line (US-060 spec FR-003).</summary>
 public sealed record JournalPageModel(
     IReadOnlyList<CourseOption> Courses,
     bool NoCoursesStored,
@@ -10,4 +11,5 @@ public sealed record JournalPageModel(
     JournalView View,
     IReadOnlyList<JournalMessageKey> MessageKeys,
     JournalEmptyStateKey? EmptyStateKey,
-    Journal? Journal);
+    Journal? Journal,
+    CourseDataNotice? Notice = null);

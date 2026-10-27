@@ -26,6 +26,12 @@ public sealed record WorkbookCell(
     /// <summary>US-044 entity model §3.2: the Excel number format of a number cell, e.g. <c>0.0</c>; null is Excel's General.</summary>
     public string? NumberFormat { get; init; }
 
+    /// <summary>US-060 spec FR-007.3, FR-007.5: the cell gets the one light highlight fill of both layouts.</summary>
+    public bool Highlighted { get; init; }
+
+    /// <summary>US-060 spec FR-007, FR-008: a note (an Excel comment) on the cell; it is not printed and the value is unchanged.</summary>
+    public string? Note { get; init; }
+
     public static WorkbookCell Empty() => new(WorkbookCellKind.Empty, null, null, null, false, false);
 
     /// <summary>A text value, cut to <see cref="MaxTextLength"/>; formula-like text keeps its value and gains the quote prefix.</summary>
