@@ -273,6 +273,32 @@ stories:
     # US-057 spec review m-4 / L-1 (negative values). Before the pilot.
     # Amended 2026-10-27 for v101 (`f80fe90`): sync part of BR-049 (course
     # "not visible to the technical account"); Admin's confirmation → Story 3.
+  - id: US-060
+    epic: EPIC-3
+    title: Marks in the course list, course card, journal, report and export
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-060-marks-in-course-list-journal-report-and-export.md
+    # (aligned with v102). v99 "Story 2"; carries v100/v101/v102 display marks.
+    # OD-001 (blank form layout), OD-002 (unknown last read) resolved a) by the
+    # Owner 2026-10-27. Before the pilot.
+  - id: US-061
+    epic: EPIC-4
+    title: Meet reports warn about a marked course, and a marked course is not a Meet link candidate
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-061-meet-reports-and-linking-for-marked-courses.md
+    # (aligned with v102, items 1 and 2). OD-001, OD-002 resolved a) by the
+    # Owner 2026-10-27. Before the pilot.
+  - id: US-062
+    epic: EPIC-1
+    title: Data-health banner and the «Стан даних» page, with the Admin's confirmation of deleted courses
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-062-data-health-banner-and-page.md
+    # (aligned with v102). v99 "Story 3" + BR-049 confirmation + v102 empty-list
+    # date. OD-001, OD-002 resolved a) by the Owner 2026-10-27. Suggested after
+    # US-060. Before the pilot.
   - id: US-046
     epic: EPIC-6
     title: Page-search hint on teaching-data pages
