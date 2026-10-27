@@ -1,0 +1,389 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Data-health banner, «Стан даних» and the Admin's confirmation of deleted courses (US-062)
+  version: "1"
+  description: >
+    HTTP contract of US-062 on the installation's public port. Server-rendered
+    pages only — no `/api/v1` operation is added or changed (API conventions
+    preamble: Razor routes are not part of the versioned JSON contract, but are
+    recorded here so policies, status codes and view models are fixed before
+    TEST_WRITING). Three surfaces: the banner in the shared layout (not an
+    endpoint of its own), the «Стан даних» page `GET /workspace/data-health`,
+    and the Admin's confirmation `POST
+    /workspace/data-health/course-deletion-confirmation`. Nothing calls Google,
+    in any mode. Companion document: docs/designs/api/US-062-api-design.md.
+x-story: US-062
+x-source-specification: docs/specifications/US-062-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-062-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 103
+x-produced-by: openapi-designer
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type of
+  the Control Plane channel is added or changed (DC-12).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port. Illustrative."
+
+tags:
+  - name: data-health
+    description: "Data-health banner, page and confirmation (spec FR-001 … FR-008)"
+
+x-layout-changes:
+  - name: banner
+    x-host: ClassroomAgent.Web
+    x-spec: [FR-003]
+    x-acceptance-criteria: [AC-001, AC-002, AC-003, AC-004, AC-012, AC-013, AC-015]
+    description: >
+      `Views/Shared/_Layout.cshtml` renders, between the language switcher and
+      the page title, the banner built from `DataHealthBannerModel`. The model
+      is computed per request by one `Application` query
+      (`GetDataHealthCountsQuery`, counts in the database, spec §9) for a
+      signed-in Admin or Dean, and is null — nothing rendered — when: no
+      session; the request is the forced password change
+      (`/sign-in/change-password`, OD-001 a); both counts are zero; or the
+      computation failed (spec I-4: logged without personal data, the page
+      renders without the banner). Never part of any `/api/v1` response. The
+      whole text is one link to `/workspace/data-health`; a coloured strip, no
+      icon, animation, sound, pop-up or dismiss control (FR-003.3). Shown in
+      read-only mode. Writes nothing.
+    x-view-model:
+      $ref: "#/components/schemas/DataHealthBannerModel"
+
+paths:
+
+  /workspace/data-health:
+
+    get:
+      tags: [data-health]
+      operationId: getDataHealth
+      summary: "The «Стан даних» page"
+      description: >
+        Renders every current problem (spec FR-001) shaped for the caller's role
+        by `GetDataHealthQuery` in `Application` (spec §7 "Detail restriction":
+        the Dean's model carries no technical details — the members marked
+        "Admin only" are null for a Dean; markup hiding is not the mechanism).
+        Sections in order: read-only message (only in read-only mode, FR-004.5),
+        technical problems, teaching problems, archived courses (FR-004.2). A
+        one-shot `message` from TempData `DataHealthMessage` is shown after a
+        confirmation (PRG). The ordinary page-search hint under the title
+        (FR-005). Takes no query parameter; any query string is ignored. Not
+        paginated (`x-pagination-deviation`). Works in read-only mode.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewDataHealth
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: "nothing"
+      x-read-only-mode: "allowed — a view (BR-026); the guard is not called"
+      x-pagination-deviation: >
+        A status page whose job is to show every problem; paginating it would
+        hide problems the banner counts. Bounded in practice: per-course rows by
+        the school's courses, T1 rows by entry errors that teachers fix. As
+        US-012 §2.10 and US-032 §2.6.
+      x-spec: [FR-002, FR-004, FR-005, FR-007, FR-001.6]
+      x-acceptance-criteria: [AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-012, AC-013, AC-014]
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: "The page."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/DataHealthPageModel"
+        "302":
+          description: >
+            No session → `/sign-in`; a Dean on the restricted (temporary
+            password) session → `/sign-in/change-password` (US-040 rule).
+        "500":
+          description: "A failure building the page — the host's translated error page (spec §8)."
+
+  /workspace/data-health/course-deletion-confirmation:
+
+    post:
+      tags: [data-health]
+      operationId: confirmCoursesDeleted
+      summary: "The Admin confirms that courses not visible to the technical account were deleted in Classroom"
+      description: >
+        A Razor form post (BR-049, spec FR-006). Evaluation order (api-design
+        §2.4): authentication → restricted session → policy → antiforgery →
+        read-only guard → shape (VR-001) → in one transaction: state (VR-002) →
+        marks → audit → commit → `302`. All-or-nothing (spec I-5).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ConfirmCoursesDeleted
+      x-antiforgery: required (form field `__RequestVerificationToken`)
+      x-calls-google: false
+      x-writes: >
+        On success, in one transaction: each selected `Course` —
+        `AbsenceMark := NotInClassroom`, `AbsentSince := now`; one `AuditEvent`
+        (`CoursesConfirmedDeleted`, outcome succeeded, actor the Admin, the
+        courses' internal ids, no names). In read-only mode: one `AuditEvent`
+        with outcome refused, refusal category read-only, no course ids
+        (unverified input) — a BR-026 permitted service write, as every audited
+        action does (api-design §2.5). `400` and the stale `409` write nothing.
+      x-read-only-mode: "refused — 409, host error page naming the BR-025 reason (AD-6, BR-026)"
+      x-spec: [FR-006, VR-001, VR-002, VR-003]
+      x-acceptance-criteria: [AC-010, AC-011, AC-017]
+      security:
+        - installationSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/CourseDeletionConfirmationForm"
+      responses:
+        "302":
+          description: >
+            Success → `/workspace/data-health`, TempData `DataHealthMessage` =
+            `Confirmed` with the number of courses marked (OD-003 text
+            «Позначено як видалені в Classroom: N»). Also: no session →
+            `/sign-in`; restricted session → `/sign-in/change-password`.
+        "400":
+          description: >
+            Missing or invalid antiforgery token → host error page
+            `Error.PageExpired` (API-7, SC-4). Shape failure (VR-001: no id, more
+            than 1000 distinct ids, an id not a positive 64-bit integer) → the
+            page re-rendered with `message` = `Invalid`, nothing changed.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/DataHealthPageModel"
+        "403":
+          description: "A Dean (policy) — host error page `Error.Forbidden`; nothing read or written (TC-5, AC-011)."
+        "409":
+          description: >
+            Two kinds, one status (as US-032 §2.7). Read-only mode → host error
+            page naming the BR-025 reason (AC-011). Stale list — an id unknown
+            or no longer `NotVisibleToTechnicalAccount` (VR-002, AC-017) → the
+            page re-rendered with `message` = `ListChanged` («Список змінився —
+            оновіть сторінку»), nothing changed, no audit row.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/DataHealthPageModel"
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: __Host-ca-session
+      description: "The installation session cookie (US-008, API-7)."
+
+  schemas:
+
+    CourseDeletionConfirmationForm:
+      type: object
+      description: >
+        `Application/Models/Requests`. Bound as strings and validated in
+        `Application` (US-027 §2.7). Repeated field, one per ticked checkbox.
+      required: [courseIds]
+      properties:
+        courseIds:
+          type: array
+          description: >
+            Internal `Course` ids. After removing duplicates: 1 … 1000 items
+            (VR-001, I-6); each matches `^[1-9][0-9]{0,18}$` and fits a
+            positive Int64.
+          minItems: 1
+          items: {type: string}
+
+    DataHealthBannerModel:
+      type: object
+      description: "Counts of FR-001.5. Null when no banner is rendered."
+      required: [technicalCount, teachingCount]
+      properties:
+        technicalCount: {type: integer, minimum: 0}
+        teachingCount: {type: integer, minimum: 0}
+      x-rendering: >
+        «N технічних проблем, M навчальних» with the language's plural forms
+        (uk one/few/many, en one/other); both numbers always, zero included
+        (FR-003.2, OD-005 a).
+
+    DataHealthPageModel:
+      type: object
+      required: [isAdmin, technical, teaching, archived, hasNoProblem]
+      properties:
+        isAdmin:
+          type: boolean
+          description: "Selects H3 vs H5 and the confirmation form; enforcement is the model's content and the POST policy."
+        message:
+          type: [string, "null"]
+          enum: [Confirmed, Invalid, ListChanged, null]
+          description: "One-shot message key under `DataHealth.Message.*`."
+        confirmedCount:
+          type: [integer, "null"]
+          description: "With `Confirmed` only."
+        readOnly:
+          oneOf:
+            - {type: "null"}
+            - $ref: "#/components/schemas/ReadOnlyNotice"
+        hasNoProblem:
+          type: boolean
+          description: "True → «Проблем із даними немає» (FR-004.2)."
+        technical:
+          type: array
+          description: "Order X1, X2, X6, X4, X5, X3 (by course culture order)."
+          items: {$ref: "#/components/schemas/TechnicalProblem"}
+        teaching:
+          type: array
+          description: "Courses not archived, by course name in culture order (FR-004.3)."
+          items: {$ref: "#/components/schemas/CourseProblems"}
+        archived:
+          type: array
+          description: "Courses with stored `State = Archived` (FR-004.4); X5 courses are not repeated here."
+          items: {$ref: "#/components/schemas/CourseProblems"}
+
+    ReadOnlyNotice:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          enum: [NotYetConfirmed, SuspendedByOwner, GracePeriodExpired]
+          description: "Rendered with the existing `Landing.ReadOnly.*` texts (FR-004.5, I-3)."
+
+    TechnicalProblem:
+      type: object
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum: [LastRunFailed, NoRecentSuccess, NoSuccessYet, CourseListEmpty, CoursesNotVisible, ControlPlaneUnreachable, UnknownCourseState]
+        emptySince:
+          type: [string, "null"]
+          format: date-time
+          description: "CourseListEmpty: the stored date (FR-008). Shown to both roles — it is the title (FR-007 X4)."
+        lastCheckAt:
+          type: [string, "null"]
+          format: date-time
+          description: "ControlPlaneUnreachable: last successful check; shown to both roles (I-2)."
+        readOnlyFrom:
+          type: [string, "null"]
+          format: date-time
+          description: "ControlPlaneUnreachable: lastCheckAt + 7 days; both roles (I-2)."
+        details:
+          oneOf:
+            - {type: "null"}
+            - $ref: "#/components/schemas/TechnicalDetails"
+          description: "**Admin only** — always null for a Dean (§2 note on row 749, OD-004 a)."
+
+    TechnicalDetails:
+      type: object
+      properties:
+        diagnosis:
+          type: [string, "null"]
+          description: "LastRunFailed: `SyncDiagnosis` name, rendered with `LastSync.Diagnosis.*`; an unknown name → `Unexpected` (VR-004)."
+        failedStep: {type: [string, "null"]}
+        finishedAt: {type: [string, "null"], format: date-time}
+        lastSuccessAt:
+          type: [string, "null"]
+          format: date-time
+          description: "NoRecentSuccess."
+        upgradeRequired:
+          type: [boolean, "null"]
+          description: "ControlPlaneUnreachable: `Compatibility = UpgradeRequired` → the BR-027 reason is named."
+        course:
+          oneOf:
+            - {type: "null"}
+            - $ref: "#/components/schemas/CourseLabel"
+          description: "UnknownCourseState: the course and `skippedSince`."
+        skippedSince: {type: [string, "null"], format: date-time}
+        notVisibleCourses:
+          type: [array, "null"]
+          description: "CoursesNotVisible: every such course, archived included — the confirmation form's checkboxes."
+          items: {$ref: "#/components/schemas/NotVisibleCourse"}
+
+    NotVisibleCourse:
+      type: object
+      required: [courseId, name, state, markedSince]
+      properties:
+        courseId: {type: integer, format: int64, description: "Internal id — the checkbox value."}
+        name: {type: string, description: "As stored."}
+        state: {type: string, description: "Stored Google state, as the course list shows it."}
+        markedSince: {type: string, format: date-time}
+        lastCompleteReadAt: {type: [string, "null"], format: date-time}
+
+    CourseLabel:
+      type: object
+      description: >
+        A loaded course: internal id (journal link) and stored name. A
+        never-loaded skipped course: no id, `SyncSkippedCourse.CourseName`, or
+        «Курс без назви (<Google course id>)» when the name is absent
+        (FR-001.6, OD-003).
+      required: [name]
+      properties:
+        courseId: {type: [integer, "null"], format: int64}
+        name: {type: [string, "null"]}
+        googleCourseId:
+          type: [string, "null"]
+          description: "Only for a never-loaded course without a name."
+
+    CourseProblems:
+      type: object
+      description: "One course and its per-course problems, kinds in the order T4, T3, T2, T1, then X3 (archived section only)."
+      required: [course]
+      properties:
+        course: {$ref: "#/components/schemas/CourseLabel"}
+        journalPath:
+          type: [string, "null"]
+          description: "`/workspace/journal?courseId=<id>` when a `Course` row exists, else null."
+        notInClassroomSince:
+          type: [string, "null"]
+          format: date-time
+          description: "T4 (hint H2)."
+        skipped:
+          oneOf:
+            - {type: "null"}
+            - $ref: "#/components/schemas/SkippedCourse"
+        itemsNotInClassroom:
+          type: array
+          description: "T2, by title."
+          items: {$ref: "#/components/schemas/ItemNotInClassroom"}
+        aboveMaximum:
+          type: array
+          description: "T1, ordered by item then student."
+          items: {$ref: "#/components/schemas/AboveMaximumGrade"}
+        unknownState:
+          type: [boolean, "null"]
+          description: >
+            Archived section only: X3 of an archived course. For a Dean the
+            entry carries no course label — `course.name` null, `journalPath`
+            null — and is rendered as X3's title with H3 (OD-004 a).
+
+    SkippedCourse:
+      type: object
+      description: "T3 (hint H1). Variant by FR-001.6 / OD-003."
+      required: [variant]
+      properties:
+        variant:
+          type: string
+          enum: [Since, NoDate, NeverLoaded]
+        notUpdatedSince: {type: [string, "null"], format: date-time, description: "Since: `LastCompleteReadAt`."}
+        skippedSince: {type: [string, "null"], format: date-time, description: "NeverLoaded: `SkippedSince`."}
+
+    ItemNotInClassroom:
+      type: object
+      required: [title, since]
+      properties:
+        title: {type: string}
+        since: {type: string, format: date-time}
+
+    AboveMaximumGrade:
+      type: object
+      required: [itemTitle, studentName, points, maximum, isDraft]
+      properties:
+        itemTitle: {type: string}
+        studentName: {type: string, description: "As stored; never translated."}
+        points: {type: number}
+        maximum: {type: number}
+        isDraft: {type: boolean}
