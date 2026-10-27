@@ -13,8 +13,10 @@ synced `ClassroomParticipant` data. *(§2, Epic 7)*
 
 **BR-002** Admin and Dean see exactly the same teaching data — all courses, all
 journals, all Meet statistics of the installation. They differ only in the right to
-configure the Workspace connection and to manage accounts. *(§2, permission
-matrix)*
+configure the Workspace connection and to manage accounts, plus the few
+Admin-only actions of the permission matrix: erasing a person's data (BR-076) and
+confirming that courses hidden from the technical account were deleted (BR-049,
+v101). *(§2, permission matrix, v93, v101)*
 
 **BR-003** The Dean creates and edits report templates. Requiring an Admin for a
 layout change is not acceptable. *(§2)*
@@ -170,8 +172,9 @@ Checks are not audited. *(§3, §5, §8, §9, v73)*
 **BR-026** In read-only mode, viewing and exporting already-synced data keep
 working and everything else is blocked for both roles — for example
 synchronization (including pulling Meet data), report template edits, linking
-Meet meeting codes, Dean account management, connection settings and "check
-access". In read-only mode the system makes no call to Google at all; the
+Meet meeting codes, Dean account management, confirming that courses hidden
+from the technical account were deleted (BR-049, v101), connection settings and
+"check access". In read-only mode the system makes no call to Google at all; the
 connection instructions stay viewable (v39). The only
 writes permitted are a closed list of service writes: audit rows; sign-in
 bookkeeping (Identity failed-attempt counting and lockout, recording the time of
@@ -286,7 +289,9 @@ left behind. Two kinds:
 - **technical** — fixed by the Admin: the last run failed (a permission error is
   one such case); no successful run for more than 24 hours, or none yet; a course
   skipped for an unknown state; Google returned an empty course list while
-  courses are stored (BR-048). The Dean sees that the problem exists and the hint
+  courses are stored (BR-048); the technical account does not see courses the
+  previous one saw (BR-049) — one problem for all such courses, archived ones
+  included, the Admin seeing their list (v101). The Dean sees that the problem exists and the hint
   to tell the Admin; the Admin sees the details, worded as in the synchronization
   state (Epic 6). In read-only mode the staleness notice is not raised.
 
@@ -323,6 +328,27 @@ glitch, leaves false marks until the next run. The mark is shown next to the
 status in the course list and course card (no separate filter), and in the
 header of the journal and report on screen and in the export.
 *(§3, Epic 1, Epic 2, Epic 3, v100)*
+
+**BR-049** A new technical account may see fewer courses than the previous one,
+and Google's answer cannot tell that from a deletion. So a stored course missing
+from a course list read to its end, which synchronization last saw on the list
+**before** the technical account was changed (`WorkspaceConnection` records when
+it last changed — a different email saved), does not get the "not in Classroom"
+mark of BR-048: it is marked "not visible to the technical account" with the
+date. Its data stays and it counts in reports as before; the header of its journal
+and report shows "data not updated since <its last successful read>", as for a
+skipped course (BR-046). It is a technical problem, not a teaching one (BR-047). A
+course the new account has seen on the list at least once and then lost is marked
+"not in Classroom" as before; an empty list follows BR-048 and marks nothing. The
+mark is removed when the course is on the list again — for example, the Admin
+restored the previous account or gave the new one the needed role. If the course
+really was deleted, the Admin selects such courses on «Стан даних» and confirms
+"deleted in Classroom": they get the "not in Classroom" mark dated by the
+confirmation and follow BR-048 from then on. Only the Admin confirms — they
+changed the account and know why the courses vanished; the confirmation is
+audited (SC-11) and blocked in read-only mode (BR-026). Both the last time a course
+was seen on the list and this mark are synchronization records, not edits of the
+mirror. *(§2, §3, Epic 1, §5, v101)*
 
 ## Data model
 
@@ -402,6 +428,21 @@ colour and adds a note with the raw points and maximum. An item "not in
 Classroom" (BR-045) keeps its column with its grades in the journal, report and
 export, marked in the header and, on the «Теми занять» sheet, next to the topic.
 *(§4 Epic 3, v99)*
+
+**BR-068** A student who is not on the course's roster now is marked "left
+<last-seen date>" next to their name in the journal and report on screen (BR-051;
+precise to the synchronization frequency). In the export the name stays as it is
+and the name cell gets a note with the same mark, so the printed form does not
+break (as for BR-067). A student known only through submissions — they left before
+the first synchronization — is marked "left" with no date, because the system does
+not know when they left. The mark is current state: back on the roster, no mark.
+*(§4 Epic 3, v101)*
+
+**BR-069** A course with no teacher on its roster now shows "no teacher in
+Classroom" in the course list in place of its teachers — for example, the teacher
+left and their account was deleted. The course card lists the teachers who left.
+Known limitation: a teacher whose data was erased on request (BR-076) is unknown
+to the system, so their course gets the mark too. *(§4 Epic 2, v101)*
 
 ## Meet activity statistics
 
@@ -488,7 +529,7 @@ between the school and the Owner and set at deployment. Deletion is from the
 installation's own database only — nothing is ever deleted in Google. The unit is
 the course: a course and everything under it is deleted once its last activity is
 more than N years ago, whatever its state — a course "not in Classroom" (BR-048)
-included. Last activity is the latest of: a change
+or "not visible to the technical account" (BR-049) included. Last activity is the latest of: a change
 to the course, any coursework or material created or changed, any submission
 changed, any Meet meeting linked to the course. Synchronization does not import a
 new course whose last activity in Google (course, coursework and materials,

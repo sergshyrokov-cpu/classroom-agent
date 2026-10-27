@@ -419,7 +419,9 @@ when" — above all, who took personal data out of the system.
   confirming and re-linking (v55), marking a code "not a course" and removing
   the mark (v88); erasing one participant's data on request (the participant's
   internal id and the count of erased records of each kind) and lifting an
-  erasure exclusion (the exclusion's id) (v93); creating, changing and deleting a report
+  erasure exclusion (the exclusion's id) (v93); an Admin confirming that
+  courses hidden from the technical account were deleted in Classroom (the
+  courses' ids) (v101); creating, changing and deleting a report
   template, recording the template id only (v84); **exporting a journal or report**; each retention purge run
   (actor `system`, counts only — PC-11).
 - **Audited in the Control Plane:** Owner sign-in and refused sign-in; creating
