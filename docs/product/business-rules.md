@@ -289,7 +289,7 @@ left behind. Two kinds:
 - **technical** — fixed by the Admin: the last run failed (a permission error is
   one such case); no successful run for more than 24 hours, or none yet; a course
   skipped for an unknown state; Google returned an empty course list while
-  courses are stored (BR-048); the technical account does not see courses the
+  courses are stored (BR-048), with the date since which it has (v102); the technical account does not see courses the
   previous one saw (BR-049) — one problem for all such courses, archived ones
   included, the Admin seeing their list (v101). The Dean sees that the problem exists and the hint
   to tell the Admin; the Admin sees the details, worded as in the synchronization
@@ -308,7 +308,7 @@ details; the Admin sees all, technical ones with details. Notices are built from
 stored data, never by calling Google, and are visible in read-only mode. The banner
 is restrained — colour only, no sound, pop-up or blinking. Next to the teaching
 problems on «Стан даних» the Dean sees the hint to contact the Admin if the
-problem could not be solved with the teacher (v100). *(§2, Epic 1, v99, v100)*
+problem could not be solved with the teacher (v100). *(§2, Epic 1, v99, v100, v102)*
 
 **BR-048** A stored course missing from a course list read to its end is never
 deleted: synchronization marks it "not in Classroom" with the date it noticed.
@@ -321,13 +321,16 @@ only skipped (BR-043) and is marked only if the next course list lacks it. The
 mark is a synchronization record, not an edit of the mirror. If Google returns an
 empty course list without an error while courses are stored, nothing is marked —
 the technical account has most likely lost its super-admin role — and the run
-records a technical problem (BR-047). A partial loss is not told apart from a real
+records a technical problem (BR-047) worded "Google has returned no course since
+<date>", the date being the run since which the lists have come back empty in a
+row (v102). Such a run counts as successful, so the staleness notice is not raised;
+this problem takes its place. A partial loss is not told apart from a real
 deletion and there is no threshold: it would be hard to explain and would hide a
 real year-end deletion of archived courses; the worst case, a one-run Google
 glitch, leaves false marks until the next run. The mark is shown next to the
 status in the course list and course card (no separate filter), and in the
 header of the journal and report on screen and in the export.
-*(§3, Epic 1, Epic 2, Epic 3, v100)*
+*(§3, Epic 1, Epic 2, Epic 3, v100, v102)*
 
 **BR-049** A new technical account may see fewer courses than the previous one,
 and Google's answer cannot tell that from a deletion. So a stored course missing
@@ -336,8 +339,10 @@ from a course list read to its end, which synchronization last saw on the list
 it last changed — a different email saved), does not get the "not in Classroom"
 mark of BR-048: it is marked "not visible to the technical account" with the
 date. Its data stays and it counts in reports as before; the header of its journal
-and report shows "data not updated since <its last successful read>", as for a
-skipped course (BR-046). It is a technical problem, not a teaching one (BR-047). A
+and report, on screen and in the export, shows "data not updated since <its last
+successful read>", as for a skipped course (BR-046), and the course list and course
+card show "not visible to the technical account since <date>" next to the status,
+with no separate filter (v102). It is a technical problem, not a teaching one (BR-047). A
 course the new account has seen on the list at least once and then lost is marked
 "not in Classroom" as before; an empty list follows BR-048 and marks nothing. The
 mark is removed when the course is on the list again — for example, the Admin
@@ -348,7 +353,7 @@ confirmation and follow BR-048 from then on. Only the Admin confirms — they
 changed the account and know why the courses vanished; the confirmation is
 audited (SC-11) and blocked in read-only mode (BR-026). Both the last time a course
 was seen on the list and this mark are synchronization records, not edits of the
-mirror. *(§2, §3, Epic 1, §5, v101)*
+mirror. *(§2, §3, Epic 1, Epic 2, Epic 3, §5, v101, v102)*
 
 ## Data model
 
@@ -369,10 +374,12 @@ submissions in the run that first loaded the course (that run's date when Google
 gave no `creationTime`), and the first-seen date for everyone who appears later;
 this applies to every course and to memberships stored before v98. Its end is the
 last-seen date. Known limitation: in a course that lives for years with changing
-students, current members count from the course's creation (v98). A period's
+students, current members count from the course's creation (v98); a student who
+left and came back has one membership spanning the break, so they count as a
+member during it and the break is visible nowhere (v102). A period's
 journal lists students who were members for at least part of the period plus
 anyone with submissions in it; in Meet reports, a course's students and teachers
-are its members on the meeting's date. *(§3, §4 Epic 3, Epic 4, v31, v98)*
+are its members on the meeting's date. *(§3, §4 Epic 3, Epic 4, v31, v98, v102)*
 
 **BR-052** A course item is one of three kinds, and journals distinguish them:
 graded work (a `courseWork` with maximum points — submissions and grades),
@@ -458,7 +465,12 @@ history. The product states the delay rather than presenting data as live. *(§3
 
 **BR-062** In the first version Meet reports are built for one selected
 Classroom course and period and show facts only — no lesson plan, lesson length,
-norms or comparison of teachers (EPIC-11). *(§4 Epic 4)*
+norms or comparison of teachers (EPIC-11). Meet reports of a course marked "not in
+Classroom" (BR-048) or "not visible to the technical account" (BR-049) show the
+mark with its date and "course membership as of <its last successful read>", on
+screen and in the export: the course is no longer read, so students who joined
+later are unknown and those who left still count as its students (v102).
+*(§4 Epic 4, v102)*
 
 **BR-063** Each Google meeting is its own row; a reconnect after a dropped call
 is not merged. *(§3, §4 Epic 4)*
@@ -491,7 +503,12 @@ confirming it is optional and only marks that a person checked it, and the UI
 shows which links are automatic and which confirmed (v55). It links when the best share
 is at least 60% and the next is at least 30 points lower, is recomputed on each
 Meet ingestion while the code is unlinked, and an automatic link is never revised
-by the system (v41); ambiguous codes wait in
+by the system (v41). A course marked "not in Classroom" (BR-048) or "not visible
+to the technical account" (BR-049) is no longer read and its roster stays as it
+was, so a course re-created in place of a deleted one would tie with it and never
+link itself; such a course is therefore neither linked automatically nor offered
+as a candidate, while a Dean or Admin may still pick it by hand and links already
+made to it stay (v102). Ambiguous codes wait in
 the unassigned-meetings list, where a Dean or Admin picks the course. A code is
 linked once and covers every meeting of that course until the Classroom link is
 reset; re-linking moves all its meetings. Every change to a link is audited: the
@@ -499,7 +516,7 @@ automatic link (actor `system`), picking a course for an unassigned code,
 confirmation and re-linking (v55). Linking is blocked in
 read-only mode. Known limitation: a non-Classroom link reused in several courses
 is linked to one course only, and meetings of the other courses under that code
-count there. *(§2, §4 Epic 4, v41)*
+count there. *(§2, §4 Epic 4, v41, v102)*
 
 **BR-066** Every meeting, whether its code is linked to a course or not, is
 deleted with its participations N years after its own date, so it cannot outlive
