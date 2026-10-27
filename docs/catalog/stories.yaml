@@ -264,13 +264,15 @@ stories:
     # export; banner and «Стан даних»). Owner 2026-10-26: all three before the pilot.
   - id: US-059
     epic: EPIC-1
-    title: Synchronization marks courses no longer in Classroom, guards against an empty course list, and skips a course with negative values
+    title: Synchronization marks courses no longer in Classroom or hidden from a new technical account, guards against an empty course list, and skips a course with negative values
     state: READY
     blocked_by: null
     # Story file authored: docs/stories/US-059-sync-marks-courses-gone-and-skips-negative-values.md
     # (aligned with v100). Sync part of v100; display of the course mark joins v99
     # Stories 2 and 3. Origin: Owner 2026-10-26 (course deleted in Google) and
     # US-057 spec review m-4 / L-1 (negative values). Before the pilot.
+    # Amended 2026-10-27 for v101 (`f80fe90`): sync part of BR-049 (course
+    # "not visible to the technical account"); Admin's confirmation → Story 3.
   - id: US-046
     epic: EPIC-6
     title: Page-search hint on teaching-data pages
