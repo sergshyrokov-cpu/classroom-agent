@@ -2,38 +2,22 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-058
+story: US-059
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: SPECIFICATION
+previous_stage: null
+last_completed_stage: null
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: SECURITY_REVIEW
-  recorded_at: '2026-10-26T21:21:00Z'
-last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-058-security-review.md
-  version: 1
+  verdict: null
+  stage: null
+  recorded_at: null
+last_artifacts: []
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings:
-- 'HUMAN_PR_APPROVAL: APPROVED by Serhii SHYROKOV at 2026-10-26T21:30:00Z (/so:approve, no comment); implementation report v1, implementation verification v1 and security review v1 reviewed. Approved, not Done until the final commit lands on master.'
-- 'SECURITY_REVIEW PASS: 0 Critical/0 Major/0 Minor, 3 INFO; build 0 warnings, full suite 6278/6278, no vulnerable packages, no csproj change. INFO-1 skip record course name (may hold a teacher name) not purged, lives while Google lists the course with the problem; INFO-2 no story-specific read-only test (gate precedes all new writes); INFO-3 skip record saved outside course transaction by design.'
-- 'IMPLEMENTATION_VERIFICATION PASS: 0 Critical/0 Major; 175/175 in 16 story classes (build 0 warnings). m-1 stale skeleton remark in ISyncSkippedCourseRepository; m-2 SkippedCourseRecordTests summary cites non-existent SyncSkippedCoursePersistenceTests; m-3 persistence of skip-record refresh/removals proven by code reading + repository round trip, not a real run. Deviations D-1…D-5 accepted.'
-- 'IMPLEMENTATION PASS: migration 20261026202733_AddSyncDataHealthRecords, SyncSkippedCourse config/repository/DI, use case marks/records, log event 5136 SyncCourseWorkPresenceChanged. Full suite 6274/6278, the 4 failures were registry tests (table list, course column count) updated as supporting changes, 33/33 rerun; full suite not rerun after that test-only fix. D-1 skippedCourses required, 4 hand-built test constructions adapted. Format PASS.'
-- 'TEST_WRITING PASS: 5 new classes (CourseWorkPresenceTests, SkippedCourseRecordTests, SyncDataHealthInvariantTests, SyncDataHealthPersistenceTests, CourseWorkPresenceSyncTests); full suite 6278, 6218 passed, 60 red all expected (54 new + 6 adapted RecordCompleteRead callers + AppUserMigrationTests counted in them); 3 new tests green by design (report §5). Skeleton: CourseSkipReason, SyncSkippedCourse, ISyncSkippedCourseRepository, CourseWork mark, Course.RecordCompleteRead(readAt) overload, Ignore() of 2 new properties, optional use-case parameter skippedCourses. Log line found as the run''s only new 51xx event with exactly two numeric properties.'
-- 'HUMAN_SPEC_APPROVAL: APPROVED by Serhii SHYROKOV at 2026-10-26T19:49:19Z; interpretations I-1…I-7 confirmed (I-1 with the m-1 edge case); spec, digest, open decisions v1 set APPROVED.'
-- 'SPECIFICATION: spec, digest, open decisions v1 DRAFT. FR-001…008, AC-001…012 + derived AC-013, AC-014, AC-015; I-1…I-7. OD-001 RESOLVED (a) by the Owner in conversation 2026-10-26T19:40:06Z: this Story stores the last-successful-read instant (FR-008/AC-013 kept); recorded in spec, digest, open decisions v1 before SPEC_REVIEW.'
-- 'SPEC_REVIEW m-1: I-1 (404 not recorded) assumes the course leaves the list; a course listed but persistently 404 would be invisible.'
-- 'SPEC_REVIEW m-2: spec §7 / digest say skip records hold no personal data; a course name may contain a teacher name. FIXED in spec §7, I-6 and digest §2 at the Owner request 2026-10-26T19:48:00Z (versions unchanged, still DRAFT).'
-- 'SPEC_REVIEW m-3: an unknown-state course may be recorded with no name; Story 3 needs a fallback.'
-- 'SPEC_REVIEW m-4: AC-006 can pass vacuously; test must start from existing marks and ideally fail inside the transaction.'
-- 'API_DESIGN: NOT_APPLICABLE — spec §7/§10 no endpoint; no openapi.yaml by design.'
-- 'DB_DESIGN PASS: course_work.not_in_classroom_since, course.last_complete_read_at, new table sync_skipped_course; migration AddSyncDataHealthRecords. RecordCompleteRead gains a DateTimeOffset parameter (2 existing test files adapt at TEST_WRITING). No index on the mark (Story 2/3).'
-started_at: '2026-10-26T19:32:53Z'
-updated_at: '2026-10-26T21:30:00Z'
-completed_at: '2026-10-26T21:30:00Z'
+non_blocking_findings: []
+started_at: null
+updated_at: '2026-10-27T09:41:31Z'
+completed_at: null

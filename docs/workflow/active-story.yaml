@@ -3,10 +3,10 @@
 # Writer: story-orchestrator (on activation). Stories are authored by a human
 # in docs/stories/ — there is no backlog-sync stage in this workflow variant.
 version: 1
-active_story: US-058
-story_path: docs/stories/US-058-sync-marks-items-gone-and-records-skipped-courses.md
+active_story: US-059
+story_path: docs/stories/US-059-sync-marks-courses-gone-and-skips-negative-values.md
 source:
   type: authored
-activated_at: 2026-10-26T19:32:53Z
+activated_at: 2026-10-27T09:41:31Z
 activated_by: Serhii SHYROKOV (/so:start)
-status: COMPLETED
+status: IN_PROGRESS
