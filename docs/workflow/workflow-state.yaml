@@ -4,30 +4,24 @@
 version: 1
 story: US-059
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: '2026-10-27T10:45:00Z'
+  verdict: NOT_APPLICABLE
+  stage: API_DESIGN
+  recorded_at: '2026-10-27T11:00:00Z'
 last_artifacts:
-- type: specification
-  path: docs/specifications/US-059-spec.md
-  version: 1
-- type: spec_digest
-  path: docs/specifications/US-059-spec-digest.ru.md
-  version: 1
-- type: specification_review
-  path: docs/reviews/specifications/US-059-spec-review.md
+- type: api_design
+  path: docs/designs/api/US-059-api-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
 - 'OPEN US-059/SPEC_REVIEW/m-1: account change saved between the run''s connection read (:86) and observedAt (:472) -> later loss marked "not in Classroom" instead of "not visible"; address at DB_DESIGN/IMPLEMENTATION or accept.'
 started_at: '2026-10-27T09:47:47Z'
-updated_at: '2026-10-27T10:45:00Z'
+updated_at: '2026-10-27T11:00:00Z'
 completed_at: null
