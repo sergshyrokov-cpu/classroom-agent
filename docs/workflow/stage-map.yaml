@@ -24,6 +24,11 @@
 # Only story-orchestrator may record a transition (docs/workflow/workflow-state.yaml
 # + append docs/workflow/history.jsonl). Stage Skills never mutate workflow state.
 #
+# Findings: every finding a stage reports is appended by the orchestrator to the
+# `review_findings` ledger and stays OPEN until a stage or the human closes it.
+# Stages from API_DESIGN on take the Story's OPEN findings as an input
+# (artifact-lifecycle.md section 4).
+#
 # -----------------------------------------------------------------------------
 # SCOPE NOTE (classroom-agent)
 # -----------------------------------------------------------------------------
@@ -151,7 +156,7 @@ stages:
   API_DESIGN:
     type: automated_skill
     skill: openapi-designer
-    inputs: [specification, open_decisions]
+    inputs: [specification, open_decisions, review_findings]
     outputs: [api_design, openapi]
     next: DB_DESIGN
     optional: true
@@ -164,7 +169,7 @@ stages:
   DB_DESIGN:
     type: automated_skill
     skill: db-designer
-    inputs: [specification, api_design, openapi, open_decisions]
+    inputs: [specification, api_design, openapi, open_decisions, review_findings]
     outputs: [database_design, entity_model]
     next: TEST_WRITING
     optional: true
@@ -179,7 +184,7 @@ stages:
     type: automated_skill
     skill: test-writer
     inputs: [story, specification, api_design, openapi, database_design,
-             entity_model]
+             entity_model, review_findings]
     outputs: [test_strategy, ac_test_matrix, test_generation_report]
     next: IMPLEMENTATION
     loop_back:
@@ -192,7 +197,8 @@ stages:
     type: automated_skill
     skill: dotnet-implementor
     inputs: [story, open_decisions, specification, api_design, openapi,
-             database_design, entity_model, test_strategy, ac_test_matrix]
+             database_design, entity_model, test_strategy, ac_test_matrix,
+             review_findings]
     outputs: [implementation_report]
     next: IMPLEMENTATION_VERIFICATION
     loop_back:
@@ -211,7 +217,7 @@ stages:
       (absorbs RECONCILIATION).
     inputs: [story, specification, open_decisions, api_design, openapi,
              database_design, entity_model, test_strategy, ac_test_matrix,
-             test_generation_report, implementation_report]
+             test_generation_report, implementation_report, review_findings]
     outputs: [implementation_verification]
     next: SECURITY_REVIEW
     loop_back:
@@ -230,7 +236,7 @@ stages:
       a Control Plane authorization model — see trebovaniya.md sections 5 and 9.
     inputs: [story, specification, implementation_report, api_design, openapi,
              database_design, entity_model, test_strategy, ac_test_matrix,
-             open_decisions]
+             open_decisions, review_findings]
     outputs: [security_review]
     next: HUMAN_PR_APPROVAL
     loop_back:

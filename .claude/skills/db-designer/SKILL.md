@@ -98,7 +98,8 @@ result:
   next_stage: TEST_WRITING
   loop_back_stage: null
   blocking_issues: []
-  non_blocking_findings: []
+  non_blocking_findings: []      # each entry starts with its id ("m-1: …")
+  closed_findings: []            # optional; OPEN findings handled here — artifact-lifecycle.md §4
 ```
 
 - `PASS` — every persistence requirement and constraint documented; entities

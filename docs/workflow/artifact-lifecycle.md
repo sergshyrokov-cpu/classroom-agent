@@ -82,3 +82,41 @@ Stored in `workflow-state.yaml` (`status:` and inside `pending_human_gate`).
 no `ARCHIVED` stage to reach (`stage-map.yaml` `retired_identifiers`).
 
 `pending_human_gate.status` sub-enum: `PENDING`, `APPROVED`, `REJECTED`.
+
+---
+
+## 4. Findings
+
+Every finding a stage reports — blocking or not — is recorded in the
+`review_findings` ledger (`docs/workflow/findings.jsonl`, schema in
+`state-schema.md`) by `story-orchestrator`, so it is neither lost between
+stages nor between Stories, and can be analysed later.
+
+- **Id.** Each finding string in `blocking_issues` / `non_blocking_findings`
+  starts with the id the stage's artifact gives it (`m-1: …`, `INFO-2: …`,
+  `N-1: …`). The ledger id is `<StoryId>/<STAGE>/<local id>`, e.g.
+  `US-059/SPEC_REVIEW/m-1`; a re-run of the stage that reuses a local id gets
+  the suffix `@<attempt>` (`US-059/SPEC_REVIEW/m-1@2`).
+- **Severity** is the label the stage used (`Critical`, `Major`, `Minor`,
+  `INFO`, `Nit`, `Deviation`, …) — not re-graded by the orchestrator.
+- **Status** of a finding is the last ledger event for its id: `OPEN` after
+  `RAISED`, otherwise the `resolution` of its `CLOSED` event.
+
+| Resolution | Meaning |
+|---|---|
+| `FIXED` | Changed in an artifact or the code; `ref` names where. |
+| `ACCEPTED` | The human (or the stage, for its own advisory note) decided no change is needed; `note` says why. |
+| `DEFERRED` | Left for later work; `ref` names where it went — a memory file, a `trebovaniya.md` §7 item, a Story. |
+| `WITHDRAWN` | The finding was wrong; `note` says why. |
+
+Closing:
+- A stage Skill that handled an OPEN finding of its Story lists it in the
+  optional envelope field `closed_findings: [{id, resolution, note, ref}]`.
+  A stage closes only `FIXED` or `WITHDRAWN`; `ACCEPTED` and `DEFERRED` of
+  another stage's finding are the human's.
+- At a human gate the orchestrator lists the Story's OPEN findings. The human's
+  `/so:approve` / `/so:reject` comment may close any of them.
+- At `HUMAN_PR_APPROVAL` no finding of the Story stays OPEN: on `/so:approve`
+  every finding still OPEN is closed `DEFERRED`, with the `ref` the human gave,
+  or `ref: null` and `note: "open at PR approval"`, and the orchestrator reports
+  that list so each gets a home (memory note, §7 item or Story).

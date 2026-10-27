@@ -53,6 +53,9 @@ Mutable state:
 - `docs/workflow/history.jsonl` — append-only transition log (registry key
   `workflow_history`). **Only this Skill appends to it.** There is no other
   workflow event log; never create `orchestrator-events.jsonl`.
+- `docs/workflow/findings.jsonl` — append-only findings ledger (registry key
+  `review_findings`; schema `state-schema.md`, vocabulary
+  `artifact-lifecycle.md` section 4). **Only this Skill appends to it.**
 
 ---
 
@@ -100,6 +103,7 @@ result:
   loop_back_stage: <canonical-stage-or-null>  # set only for CHANGES_REQUIRED
   blocking_issues: []
   non_blocking_findings: []
+  closed_findings: []        # optional: [{id, resolution, note, ref}] for OPEN findings this stage handled
 ```
 
 Routing:
@@ -143,6 +147,9 @@ When `current_stage` is a human gate:
    - which artifacts require human review (paths + versions);
    - the current automated verdict;
    - any blocking findings;
+   - every OPEN finding of the Story in `findings.jsonl`, one plain-Russian
+     line each with its id — the human may close any of them in the
+     approve/reject comment;
    - the exact command to record approval: `/so:approve` (or `/so:reject`).
 5. Stop.
 
@@ -200,9 +207,12 @@ Before invoking `stages.<current>.skill`:
 
 1. Confirm the Skill exists and equals the stage owner.
 2. Pass: the active Story id; the current canonical stage; resolved paths for
-   `stages.<current>.inputs` (from `artifact-paths.yaml`); an instruction to
-   stay within its documented responsibility and to return the standard result
-   envelope.
+   `stages.<current>.inputs` (from `artifact-paths.yaml`); when the inputs
+   include `review_findings`, the Story's OPEN findings (id, severity, summary,
+   source) listed explicitly, with the instruction to address those that fall
+   in this stage's responsibility and report them in `closed_findings`; an
+   instruction to stay within its documented responsibility and to return the
+   standard result envelope.
 3. Do not paste full artifact bodies; let the Skill load its own context.
 4. Invoke no other stage Skill in the same `continue`.
 5. Wait for completion. Read the result envelope and inspect the produced
@@ -238,6 +248,21 @@ Then append one line to `docs/workflow/history.jsonl`:
 ```
 
 Preserve all prior history. Never rewrite `history.jsonl`.
+
+Then update the findings ledger `docs/workflow/findings.jsonl`
+(`artifact-lifecycle.md` section 4):
+
+- one `RAISED` event per entry of the envelope's `blocking_issues` and
+  `non_blocking_findings`, its severity and summary taken from the stage's
+  artifact, `source` the artifact that holds the full text;
+- one `CLOSED` event per entry of `closed_findings` whose id is OPEN for this
+  Story (an unknown or already closed id is reported, not recorded);
+- on `/so:approve` or `/so:reject`, one `CLOSED` event (`by: human`) per
+  finding the human's comment closes; at `HUMAN_PR_APPROVAL` approval also
+  closes every remaining OPEN finding of the Story as `DEFERRED` and reports
+  that list, so each gets a home (memory note, `trebovaniya.md` §7 item, Story).
+
+Never rewrite or delete a ledger line; a correction is a new event.
 
 Do not claim a transition occurred unless the state file was successfully
 written.

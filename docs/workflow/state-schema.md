@@ -58,7 +58,8 @@ last_result:                           # last stage result envelope summary, or 
 last_artifacts: []                     # list of {type, path, version} produced by last stage
 pending_human_gate: null               # see below; null unless current_stage is a human_gate
 blocking_issues: []                    # list of strings; non-empty only when status == BLOCKED
-non_blocking_findings: []              # carried-forward advisory findings
+non_blocking_findings: []              # the last stage's advisory findings, for display;
+                                       # the durable record is findings.jsonl (below)
 started_at: null                       # ISO-8601 when first automated stage ran
 updated_at: null                       # ISO-8601 of last orchestrator write
 completed_at: null                     # ISO-8601 when stage COMPLETED was reached
@@ -131,3 +132,49 @@ lifecycle-event markers: `ACTIVATED` (Story activation, `from_stage: null`
 or `null`) and `HUMAN_APPROVED` / `HUMAN_REJECTED` (a human gate,
 `skill: null`). There is no `ARCHIVED` marker — archive mode is retired in this
 variant.
+
+---
+
+## `findings.jsonl` event schema
+
+One JSON object per line, append-only, never rewritten. Owned by
+`story-orchestrator` (registry key `review_findings`). Ids, severities and
+resolutions: `artifact-lifecycle.md` section 4. A finding's text is a summary
+of the stage artifact's finding — no student names or emails, no secrets, no
+raw Google payload; the full text stays in the `source` artifact.
+
+Raised — appended when the orchestrator records a stage result, one per entry
+of `blocking_issues` and `non_blocking_findings`:
+
+```json
+{
+  "timestamp": "<ISO-8601 runtime>",
+  "event": "RAISED",
+  "id": "US-059/SPEC_REVIEW/m-1",
+  "story": "US-059",
+  "stage": "SPEC_REVIEW",
+  "skill": "spec-verifier",
+  "severity": "Minor",
+  "blocking": false,
+  "summary": "<one or two sentences>",
+  "source": "docs/reviews/specifications/US-059-spec-review.md"
+}
+```
+
+Closed — appended from a stage's `closed_findings`, a human gate decision, or
+the closing sweep at `HUMAN_PR_APPROVAL`:
+
+```json
+{
+  "timestamp": "<ISO-8601 runtime>",
+  "event": "CLOSED",
+  "id": "US-059/SPEC_REVIEW/m-1",
+  "story": "US-059",
+  "resolution": "FIXED",
+  "by": "DB_DESIGN",
+  "note": "<why / how>",
+  "ref": "docs/designs/database/US-059-db-design.md"
+}
+```
+
+`by` is a stage id for a stage Skill, or `human` for a gate decision.

@@ -22,6 +22,10 @@ Requirements:
 - set pending_human_gate.status = APPROVED, decided_at (runtime), decided_by;
   store the comment;
 - append a docs/workflow/history.jsonl event with verdict "HUMAN_APPROVED";
+- append to docs/workflow/findings.jsonl a CLOSED event (`by: human`) for each
+  OPEN finding the comment closes; at HUMAN_PR_APPROVAL also close every
+  remaining OPEN finding of the Story as DEFERRED and list them in the result
+  (docs/workflow/artifact-lifecycle.md section 4);
 - advance current_stage to the gate's `on_approve` target; clear
   pending_human_gate; set workflow status to IN_PROGRESS, or COMPLETED when
   entering that stage;

@@ -592,7 +592,8 @@ result:
   next_stage: IMPLEMENTATION
   loop_back_stage: null
   blocking_issues: []
-  non_blocking_findings: []
+  non_blocking_findings: []      # each entry starts with its id ("m-1: …")
+  closed_findings: []            # optional; OPEN findings handled here — artifact-lifecycle.md §4
 ```
 
 (The test source file paths are listed inside the `test_generation_report`.)

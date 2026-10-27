@@ -118,7 +118,8 @@ result:
   next_stage: HUMAN_SPEC_APPROVAL
   loop_back_stage: null            # or SPECIFICATION
   blocking_issues: []
-  non_blocking_findings: []
+  non_blocking_findings: []      # each entry starts with its id ("m-1: …")
+  closed_findings: []            # optional; OPEN findings handled here — artifact-lifecycle.md §4
 ```
 
 - `PASS` — no `Critical`/`Major` findings. `Minor` findings go in

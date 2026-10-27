@@ -17,7 +17,8 @@ Requirements:
   refuse and report the current stage;
 - require a non-empty reason; store it as pending_human_gate.comment;
 - set pending_human_gate.status = REJECTED, decided_at (runtime), decided_by;
-- append a docs/workflow/history.jsonl event with verdict "HUMAN_REJECTED";
+- append a docs/workflow/history.jsonl event with verdict "HUMAN_REJECTED"; append to docs/workflow/findings.jsonl a CLOSED
+  event (`by: human`) for each OPEN finding the comment closes;
 - route current_stage to the gate's `on_reject` target; clear
   pending_human_gate; set workflow status to IN_PROGRESS;
 - do not invoke any stage Skill;

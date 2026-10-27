@@ -27,7 +27,8 @@ Read `current_stage`, `status`, `attempt`, `pending_human_gate`.
 ### 3. If current stage is a human gate (`type: human_gate`)
 Do not invoke a Skill. If `pending_human_gate.status`:
 - `PENDING` → re-report the gate (artifacts + versions, automated verdict,
-  blocking findings, `/so:approve` | `/so:reject`) and stop.
+  blocking findings, the Story's OPEN findings from `findings.jsonl`,
+  `/so:approve` | `/so:reject`) and stop.
 - `APPROVED` → advance `current_stage` to the gate's `on_approve`, clear
   `pending_human_gate`, set `status` appropriately, append history, stop.
 - `REJECTED` → route to the gate's `on_reject`, clear `pending_human_gate`,
@@ -61,7 +62,8 @@ Per SKILL.md "The Stage Result Envelope":
 
 ### 8. Record the transition
 Update `workflow-state.yaml` per `state-schema.md`. Append one `history.jsonl`
-event. Stop.
+event. Append the findings events to `findings.jsonl` (SKILL.md "Recording a
+Transition"). Stop.
 
 ## Continue Result
 

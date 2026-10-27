@@ -377,8 +377,8 @@ Non-negotiable — the Hard Stops above apply in full, and in addition:
   Without the `implementation_report`, only this closed list is in scope:
   - a file at a `docs/workflow/artifact-paths.yaml` pattern containing
     `{story_id}`, resolved for the active Story;
-  - `docs/workflow/workflow-state.yaml`, `docs/workflow/active-story.yaml` and
-    `docs/workflow/history.jsonl`;
+  - `docs/workflow/workflow-state.yaml`, `docs/workflow/active-story.yaml`,
+    `docs/workflow/history.jsonl` and `docs/workflow/findings.jsonl`;
   - the active Story's entry in `docs/catalog/stories.yaml`.
 
   `trebovaniya.md` is never traced this way: it changes only by a new version, in
@@ -406,6 +406,10 @@ This section is about the **harness**. Application logging and health checks are
 
 - `docs/workflow/history.jsonl` — the single append-only workflow transition
   log (owned by `story-orchestrator`).
+- `docs/workflow/findings.jsonl` — the append-only ledger of every finding a
+  stage reported and how it was closed (owned by `story-orchestrator`;
+  `artifact-lifecycle.md` section 4). A finding is never dropped: it stays
+  OPEN until a stage fixes it or the human accepts or defers it.
 - `docs/hooks/tool-usage.jsonl` — tool-usage telemetry (separate; git-ignored).
   It records tool names, artifact keys and stage identifiers — never file
   contents, student names or emails, tokens, or secret values.

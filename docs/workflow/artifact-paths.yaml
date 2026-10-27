@@ -118,6 +118,13 @@ artifacts:
     pattern: docs/workflow/history.jsonl
     owner: story-orchestrator
 
+  # Append-only ledger of every finding any stage reported, and of how each
+  # was closed. Durable across stages and Stories, so findings are not lost
+  # between stages and can be analysed later (schema: state-schema.md).
+  review_findings:
+    pattern: docs/workflow/findings.jsonl
+    owner: story-orchestrator
+
 # =============================================================================
 # Removed in the lightweight variant (their stages were dropped — see the
 # SCOPE NOTE in stage-map.yaml). MUST NOT appear in any Skill or config;

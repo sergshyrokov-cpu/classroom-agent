@@ -121,7 +121,8 @@ result:
   next_stage: SPEC_REVIEW
   loop_back_stage: null
   blocking_issues: []
-  non_blocking_findings: []
+  non_blocking_findings: []      # each entry starts with its id ("m-1: …")
+  closed_findings: []            # optional; OPEN findings handled here — artifact-lifecycle.md §4
 ```
 
 - `PASS` — all Acceptance Criteria represented; validation, security, error
