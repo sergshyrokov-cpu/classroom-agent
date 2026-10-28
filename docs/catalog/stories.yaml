@@ -637,7 +637,7 @@ stories:
   - id: US-065
     epic: EPIC-10
     title: An Admin enters an erasure exclusion by email before the person is loaded
-    state: READY
+    state: IN_PROGRESS
     blocked_by: null
     # Story file authored: docs/stories/US-065-erasure-exclusion-by-email-in-advance.md
     # (aligned with v104, BR-076, DC-8 step 4; v104 agenda item 2). OD-001, OD-002
