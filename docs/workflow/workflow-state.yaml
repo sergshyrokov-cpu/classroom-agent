@@ -4,25 +4,23 @@
 version: 1
 story: US-063
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-verifier
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: PASS
-  stage: SPEC_REVIEW
-  recorded_at: '2026-10-28T17:00:34Z'
+  verdict: NOT_APPLICABLE
+  stage: API_DESIGN
+  recorded_at: '2026-10-28T17:03:44Z'
 last_artifacts:
-- type: specification_review
-  path: docs/reviews/specifications/US-063-spec-review.md
+- type: api_design
+  path: docs/designs/api/US-063-api-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings:
-- 'm-1: FR-006.3 attributes the word «невідомо» to trebovaniya.md; it comes from Story OD-001 a)'
-- 'm-2: a stale course shows the same date twice (US-060 notice and «Дані з Google на»); not stated in spec or digest'
+non_blocking_findings: []
 started_at: '2026-10-28T16:57:49Z'
-updated_at: '2026-10-28T17:02:09Z'
+updated_at: '2026-10-28T17:03:44Z'
 completed_at: null
