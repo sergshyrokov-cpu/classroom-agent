@@ -3,10 +3,10 @@
 # Writer: story-orchestrator (on activation). Stories are authored by a human
 # in docs/stories/ — there is no backlog-sync stage in this workflow variant.
 version: 1
-active_story: US-065
-story_path: docs/stories/US-065-erasure-exclusion-by-email-in-advance.md
+active_story: US-063
+story_path: docs/stories/US-063-generated-and-data-as-of-in-journal-and-export.md
 source:
   type: authored
-activated_at: 2026-10-28T11:01:58Z
+activated_at: 2026-10-28T16:53:36Z
 activated_by: Serhii SHYROKOV (/so:start)
-status: COMPLETED
+status: IN_PROGRESS

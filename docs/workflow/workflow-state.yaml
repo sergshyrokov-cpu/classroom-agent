@@ -2,25 +2,27 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-065
+story: US-063
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
+last_invoked_skill: spec-verifier
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_PR_APPROVAL
-  recorded_at: '2026-10-28T14:55:01Z'
+  verdict: PASS
+  stage: SPEC_REVIEW
+  recorded_at: '2026-10-28T17:00:34Z'
 last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-065-security-review.md
+- type: specification_review
+  path: docs/reviews/specifications/US-063-spec-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings: []
-started_at: '2026-10-28T11:08:08Z'
-updated_at: '2026-10-28T14:55:01Z'
-completed_at: '2026-10-28T14:55:01Z'
+non_blocking_findings:
+- 'm-1: FR-006.3 attributes the word «невідомо» to trebovaniya.md; it comes from Story OD-001 a)'
+- 'm-2: a stale course shows the same date twice (US-060 notice and «Дані з Google на»); not stated in spec or digest'
+started_at: '2026-10-28T16:57:49Z'
+updated_at: '2026-10-28T17:02:09Z'
+completed_at: null
