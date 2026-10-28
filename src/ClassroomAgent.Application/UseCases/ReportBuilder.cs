@@ -153,14 +153,19 @@ internal sealed class ReportBuilder(
                     .First());
         var submitters = chosenSubmissions.Keys.Select(k => k.ParticipantId).ToHashSet();
 
-        var rows = members
+        var students = members
             .Where(m => m.Role == ClassroomRole.Student
                 && (IsOfPeriod(m.StartsAt, m.LastSeenAt, m.OnRoster, start, end) || submitters.Contains(m.ParticipantId)))
             .Select(m => (Member: m, Label: ReportPersonNameRule.Label(m.Surname, m.GivenName, m.Email, nameSource)))
             .OrderBy(r => r.Label.Kind == ReportNameKind.Unnamed)
             .ThenBy(r => r.Label.Name, comparer)
             .ThenBy(r => r.Member.ParticipantId)
-            .Select(r => new GradingRow(
+            .ToList();
+
+        // US-066 FR-002.1: namesakes are judged over the whole report, after its name source.
+        var namesakes = NamesakeRule.Find(students.Select(r => r.Label.Name).ToList(), uiCulture);
+        var rows = students
+            .Select((r, index) => new GradingRow(
                 new PersonName(r.Label.Name, r.Label.Kind),
                 columns
                     .Select(l => ToReportCell(
@@ -173,7 +178,8 @@ internal sealed class ReportBuilder(
                         items[l.Id],
                         settings))
                     .ToList(),
-                DataMarkRules.Left(r.Member.OnRoster, r.Member.SeenOnce, r.Member.LastSeenAt, zone)))
+                DataMarkRules.Left(r.Member.OnRoster, r.Member.SeenOnce, r.Member.LastSeenAt, zone),
+                NamesakeRule.Email(namesakes[index], r.Member.Email)))
             .ToList();
 
         return new ReportBuildResult(

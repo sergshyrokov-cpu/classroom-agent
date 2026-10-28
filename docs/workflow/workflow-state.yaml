@@ -4,23 +4,25 @@
 version: 1
 story: US-066
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: security-reviewer
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: DB_DESIGN
-  recorded_at: '2026-10-28T18:35:51Z'
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_PR_APPROVAL
+  recorded_at: '2026-10-28T19:59:48Z'
 last_artifacts:
-- type: database_design
-  path: docs/designs/database/US-066-db-design.md
+- type: security_review
+  path: docs/reviews/security/US-066-security-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings: []
+non_blocking_findings:
+- 'INFO-1: full suite 6796/6798, two Npgsql migration timeouts in unrelated classes, green on rerun'
+- 'INFO-2: no test pins HTML encoding of a markup-bearing email (VR-002)'
 started_at: '2026-10-28T18:19:50Z'
-updated_at: '2026-10-28T18:35:51Z'
-completed_at: null
+updated_at: '2026-10-28T19:59:48Z'
+completed_at: '2026-10-28T19:59:48Z'

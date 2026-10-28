@@ -111,7 +111,7 @@
                 @foreach (var row in journal.Rows)
                 {
                     <tr>
-                        <th scope="row">@(row.NameKind == JournalNameKind.Unnamed ? T[JournalTextKeys.Unnamed].Value : row.DisplayName)@if (row.Left is { } left) {<br /><span>@DataMarksTexts.Left(T, left)</span>}</th>
+                        <th scope="row">@(row.NameKind == JournalNameKind.Unnamed ? T[JournalTextKeys.Unnamed].Value : NamesakeLabel.Compose(row.DisplayName ?? string.Empty, row.NamesakeEmail))@if (row.Left is { } left) {<br /><span>@DataMarksTexts.Left(T, left)</span>}</th>
                         @foreach (var cell in row.Cells)
                         {
                             var above = cell.PointsAboveMaximum || cell.DraftAboveMaximum;

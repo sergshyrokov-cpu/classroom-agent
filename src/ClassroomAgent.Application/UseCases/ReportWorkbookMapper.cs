@@ -49,9 +49,15 @@ public static partial class ReportWorkbookMapper
             ? texts.Get(ReportText.StudentUnnamed)
             : student.DisplayName ?? string.Empty;
 
-    /// <summary>US-060 spec FR-007.4, FR-008.2: the name cell keeps the name; a leaver's carries the "left" note.</summary>
-    internal static WorkbookCell StudentCell(GradingRow row, IReportTexts texts, CultureInfo culture) =>
-        WorkbookCell.OfText(StudentText(row.Student, texts)) with { Note = LeftText(row.Left, texts, culture) };
+    /// <summary>
+    /// US-060 spec FR-007.4, FR-008.2: the name cell keeps the name; a leaver's carries the "left" note. US-066 FR-004.4:
+    /// a namesake's name is followed by the email in the same cell.
+    /// </summary>
+    internal static WorkbookCell StudentCell(GradingRow row, IReportTexts texts, CultureInfo culture)
+    {
+        var name = NamesakeLabel.Compose(StudentText(row.Student, texts), row.NamesakeEmail);
+        return WorkbookCell.OfText(name) with { Note = LeftText(row.Left, texts, culture) };
+    }
 
     /// <summary>US-060 spec FR-003.1, FR-007.1, FR-008.3: the course's header line, or null when it has none.</summary>
     internal static string? NoticeText(CourseDataNotice? notice, IReportTexts texts, CultureInfo culture) => notice switch

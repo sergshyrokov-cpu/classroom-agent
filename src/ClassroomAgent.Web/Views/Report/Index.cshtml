@@ -179,7 +179,7 @@
                             @foreach (var row in grading.Rows)
                             {
                                 <tr>
-                                    <th scope="row">@(row.Student.NameKind == ReportNameKind.Unnamed ? T[JournalTextKeys.Unnamed].Value : row.Student.DisplayName)@if (row.Left is { } left) {<br /><span>@DataMarksTexts.Left(T, left)</span>}</th>
+                                    <th scope="row">@(row.Student.NameKind == ReportNameKind.Unnamed ? T[JournalTextKeys.Unnamed].Value : NamesakeLabel.Compose(row.Student.DisplayName ?? string.Empty, row.NamesakeEmail))@if (row.Left is { } left) {<br /><span>@DataMarksTexts.Left(T, left)</span>}</th>
                                     @foreach (var cell in row.Cells)
                                     {
                                         @* US-060 spec FR-004.2, FR-004.5: a highlight and always the label. *@

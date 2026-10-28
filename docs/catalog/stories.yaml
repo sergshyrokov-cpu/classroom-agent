@@ -311,7 +311,7 @@ stories:
   - id: US-066
     epic: EPIC-3
     title: Students with the same name are shown with their email in the journal, the report and the export
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: null
     # Story file authored: docs/stories/US-066-namesakes-shown-with-email.md
     # (aligned with v104, BR-086; v104 agenda item 4). OD-001, OD-002 resolved

@@ -127,13 +127,16 @@ public sealed class GetJournalQuery(IJournalSource source, SchoolTimeZone school
                     .First());
         var submitters = chosenSubmissions.Keys.Select(k => k.ParticipantId).ToHashSet();
 
-        var rows = members
+        var ordered = members
             .Where(m => IsOfPeriod(m.StartsAt, m.LastSeenAt, m.OnRoster, start, end) || submitters.Contains(m.ParticipantId))
             .Select(m => (Member: m, Label: Label(m.FullName, m.Email)))
             .OrderBy(r => r.Label.Kind == JournalNameKind.Unnamed)
             .ThenBy(r => r.Label.Name, comparer)
             .ThenBy(r => r.Member.ParticipantId)
-            .Select(r => new JournalRow(
+            .ToList();
+        var namesakes = NamesakeRule.Find(ordered.Select(r => r.Label.Name).ToList(), uiCulture);
+        var rows = ordered
+            .Select((r, index) => new JournalRow(
                 r.Label.Name,
                 r.Label.Kind,
                 columns
@@ -144,7 +147,9 @@ public sealed class GetJournalQuery(IJournalSource source, SchoolTimeZone school
                         b,
                         zone))
                     .ToList(),
-                DataMarkRules.Left(r.Member.OnRoster, r.Member.SeenOnce, r.Member.LastSeenAt, zone)))
+                DataMarkRules.Left(r.Member.OnRoster, r.Member.SeenOnce, r.Member.LastSeenAt, zone),
+                // US-066 FR-002.5: a row labelled by its full email already shows the address.
+                NamesakeRule.Email(namesakes[index] && r.Label.Kind == JournalNameKind.FullName, r.Member.Email)))
             .ToList();
         if (rows.Count == 0)
         {

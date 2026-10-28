@@ -1,5 +1,10 @@
 namespace ClassroomAgent.Application.Models.Dtos;
 
 /// <summary>One row — a student of the period; carries no participant id (US-025 api-design §2.5);
-/// <see cref="Left"/> is US-060 spec FR-006.</summary>
-public sealed record JournalRow(string? DisplayName, JournalNameKind NameKind, IReadOnlyList<JournalCell> Cells, LeftMark? Left);
+/// <see cref="Left"/> is US-060 spec FR-006; <see cref="NamesakeEmail"/> is US-066 api-design D-1.</summary>
+public sealed record JournalRow(
+    string? DisplayName,
+    JournalNameKind NameKind,
+    IReadOnlyList<JournalCell> Cells,
+    LeftMark? Left,
+    string? NamesakeEmail = null);
