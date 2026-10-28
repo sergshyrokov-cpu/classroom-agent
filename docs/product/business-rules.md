@@ -65,7 +65,17 @@ least two, so one person is never a single point of failure. Admins are school
 staff on personal domain administrator accounts. A person who is also the Owner
 may be one of a school's Admins only as that school's employee, through
 `AllowedAdmin` like anyone else and recorded in the agreement with that school;
-the Owner role itself still grants no access to teaching data. *(§2, §9, v50)*
+the Owner role itself still grants no access to teaching data. The program never
+checks the Google domain-administrator role (v104): sign-in checks only
+`AllowedAdmin` (BR-012) and the account's role in the program. A deleted or blocked
+Google account cannot sign in, because Google refuses it; a person whose
+domain-administrator role was removed but whose account remains signs in as Admin
+until the Owner revokes the email. Known limitation — checking the role would need a
+new domain-wide delegation scope and a Google call on every Admin sign-in, while in
+read-only mode the program does not call Google at all (BR-026). It is a procedure
+instead: when an Admin leaves the role or the school, the school tells the Owner,
+who revokes the email and, if no Admin is left, adds a new one in the same request.
+The procedure is part of the school's instructions. *(§2, §9, v50, v104)*
 
 **BR-014** A Dean account is created manually by an Admin. Owner approval is not
 involved. A Dean's login is their work email in the school's domain — a personal
@@ -82,7 +92,13 @@ which is checked first (v65). Disabling takes effect at once (v103): it rotates 
 account's security stamp, which the session cookie is checked against on every
 request (v79), so a Dean who is working at that moment cannot open the next page or
 download an export and is sent to the sign-in page; a request already in progress
-completes. *(§2, v38, v62, v64, v65, v103)*
+completes. When a Dean's work email is renamed in Google, an Admin changes the
+account's login to the new address (v104) under the creation rules — an address in
+the school's domain not taken by another account. The account, its password, history
+and audit stay; the old address no longer signs in; the change rotates the security
+stamp, so an open Dean session stops working on the next request, as on disabling.
+The program does not watch Google for the rename: a Dean's login is the program's
+record, not a Google account. *(§2, v38, v62, v64, v65, v103, v104)*
 
 **BR-015** Teaching data is read on behalf of a **technical account** of the
 school — the impersonation user in `WorkspaceConnection`. The school's
@@ -111,8 +127,10 @@ The previous installation's data stays in its own database. A domain is unique
 across all `Installation` records, suspended ones included: a school returning to
 its former domain has its record resumed, not a new one created. The service-account
 client ID is unique as well. An `Installation` is created active and is never
-deleted in the first version; its name may be corrected, its domain never.
-*(§3, §6, §9, v69)*
+deleted in the first version; its name may be corrected, its domain never. The
+order of a move — new service account and `Installation`, exclusions entered by
+email before the first synchronization (BR-076), suspending the previous
+installation — and what does not carry over are DC-8 (v104). *(§3, §6, §9, v69, v104)*
 
 **BR-022** Removing an `AllowedAdmin` entry removes that person's right to
 configure the installation. It does **not** stop the school from working:
@@ -475,7 +493,11 @@ the blanks built from it — both go into a **note on the course-name cell**, no
 into a printed cell: the export replaces the paper academic journal and this
 information is not printed. A downloaded file thus shows how old it is; a grade
 changed later is not marked anywhere, because the previous value is not kept
-(BR-059, mirror). *(§4 Epic 3, v103)*
+(BR-059, mirror). An open page does not refresh itself (v104): the journal, the
+report and the data-health banner are built when the page loads, so "due passed"
+and data problems are as of "generated"; fresh data needs a reload. Known
+limitation: the program does not remind that an open page is old — the "generated"
+line already says so. *(§4 Epic 3, v103, v104)*
 
 **BR-085** A course and a person are identified by their Google id (BR-041), so
 after a course, surname or email is renamed in Google the next synchronization
@@ -483,6 +505,12 @@ shows the new name on every screen and in new exports — the same course or per
 with the same grades and links. Known limitation: the previous name is not kept
 (mirror, v83), so a person cannot be found by a former surname or email, by search
 or on a page; files already exported keep the old name. *(§4 Epic 2, v103)*
+
+**BR-086** When several students of one journal or report show the same name (two
+"Петренко Іван", say), those rows show the email next to the name — on screen and
+in the export, in the same cell as the name. Other rows are unchanged, so the paper
+journal looks as before. With names taken from the email no rows coincide: an
+address in the domain is unique. *(§4 Epic 3, v104)*
 
 ## Meet activity statistics
 
@@ -616,10 +644,22 @@ in other records (a meeting's organizer email, a course's owner) are cleared, an
 an `ErasedParticipant` exclusion keeps synchronization from re-importing the
 person while they remain in Google: the Google user id and a salted fingerprint
 of the email, never a readable name or address — an explicitly accepted
-trade-off. The Admin lifts an exclusion by entering the person's email. Not
-available in read-only mode; there, an urgent request is done by the Owner by
-hand, only after the school has removed the person from Google. *(§2, §3, §5,
-EPIC-10, v19, v93)*
+trade-off. The Admin lifts an exclusion by entering the person's email. The Admin
+may also enter an exclusion by email for a person not loaded yet (v104) — above all
+when a school moves to another domain (BR-021), where the new installation starts
+with an empty database and its first synchronization would otherwise load people
+whose data was erased; the addresses come from the written requests the school
+keeps, in the new domain. The screen works before the Google connection is
+configured, so the exclusions precede the first synchronization; when a person
+with that email is already loaded, the screen offers the ordinary erasure. Such an
+exclusion has no Google user id at first: synchronization skips a participant
+whose email in Google's answer has the same fingerprint and records their id in
+the exclusion, which from then on works by id even if the address changes. Known
+limitation: a participant whose email Google did not return cannot be matched and
+is erased the ordinary way after synchronization. None of this is available in
+read-only mode; there, an urgent request is done by the Owner by hand, only after
+the school has removed the person from Google. *(§2, §3, §5, EPIC-10, v19, v93,
+v104)*
 
 **BR-077** An erasure never comes back: after a database is restored from a
 backup, every erasure made after the backup's date is re-applied before the

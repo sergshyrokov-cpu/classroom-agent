@@ -297,6 +297,27 @@ the previous one — the dependency is real, not stylistic
 - Moving a school to another Workspace domain means creating a **new**
   `Installation` with a new database, not editing the domain of an existing one
   (BR-021, NFR-051). The previous installation's data stays in its own database.
+  The order (`trebovaniya.md` §9, v104):
+  1. The Owner creates a new service account (the client ID is unique across all
+     `Installation` records), a new `Installation` for the new domain and deploys
+     a new installation with a new database (DC-2, DC-5).
+  2. The school's super-admin in the new domain sets up domain-wide delegation and
+     the technical account (BR-015, BR-032).
+  3. The Owner enters the Admins' new-domain addresses in `AllowedAdmin`.
+  4. The Admin signs in and, **before configuring the connection**, enters an
+     exclusion by email for everyone whose data the school had erased on request
+     (BR-076), with their new-domain addresses; then configures the connection,
+     creates the Dean accounts and starts synchronization.
+  5. Once the new installation works, the Owner suspends the previous
+     `Installation` (BR-080): in read-only mode its data stays viewable and
+     exportable. Its database is removed the ordinary way, after the school
+     confirms it has the export (below).
+- **Not carried over** in a move: Dean accounts, report templates created in the
+  school (the built-in one is in every installation), Meet code links and "not a
+  course" marks, confirmations of deleted courses, the audit trail — all stay in
+  the previous database. Classroom data is loaded again from Google; Meet meetings
+  only as far back as Google still keeps them (180 days). The previous installation
+  does not enter read-only mode by itself — suspension (step 5) does that.
 - **Decommissioning an installation:** the school itself takes the full export
   of its journals — a Dean or Admin through the ordinary export, which works in
   read-only mode too; the Owner does not open the data for it. Only after the

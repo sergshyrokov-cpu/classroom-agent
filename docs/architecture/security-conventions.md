@@ -37,7 +37,9 @@ area as production severity.
   Dean's work email in the school's domain; creating an account with any other
   address or a free-form string is refused, and `AppUser` has no separate login
   field (v55). The account is created manually by an Admin, who may also disable, re-enable and reset its
-  password; the account is never deleted (BR-014). The password an Admin sets when
+  password, and change its login to the Dean's renamed work email under the same
+  domain and uniqueness rules — the change rotates the security stamp, ending an
+  open session on the next request (v104); the account is never deleted (BR-014). The password an Admin sets when
   creating the account or resetting it is temporary: the Dean must change it at the
   next login, so only the Dean knows it (v38, v64). A flow that lets the Admin keep
   a working password is a finding. A Dean may also change their own password at any
@@ -173,6 +175,13 @@ Admin's account (BR-015, SC-8).
 - **Revocation does not end an open session** — a known limitation
   (`trebovaniya.md` §2, v103): the revoked Admin's session ends on its own expiry
   (SC-2), at most 8 hours after sign-in. This is not a finding.
+- **The Google domain-administrator role is not checked** — a known limitation
+  (`trebovaniya.md` §9, v104): sign-in checks `AllowedAdmin` and the account's role
+  in the program only; an ex-Admin whose role was removed but whose Google account
+  remains signs in until the Owner revokes the email. Revocation is the school's
+  procedure (tell the Owner, BR-013). Adding a Directory scope or a Google call at
+  sign-in to check the role without a new `trebovaniya.md` version is a finding
+  (SC-8, BR-026).
 - **At least two Admins per school** are required at onboarding, so one person
   is never a single point of failure. Admins are school staff on personal domain
   administrator accounts — ideally a separate admin account, not the one used
@@ -421,15 +430,17 @@ when" — above all, who took personal data out of the system.
   after 30 days (DC-10) and are not queryable per school.
 - **Audited in an installation:** sign-in and refused sign-in (Dean by password,
   Admin by OAuth, including a refusal because the email is not in
-  `AllowedAdmin`); an Admin creating, disabling, re-enabling or resetting the
-  password of a Dean account, and a Dean changing their own password; saving or
+  `AllowedAdmin`); an Admin creating, disabling, re-enabling, resetting the
+  password of or changing the login of a Dean account (the account's id only,
+  neither address — v104), and a Dean changing their own password; saving or
   changing `WorkspaceConnection`; running the "check access" diagnostic; starting
   a synchronization by hand; every change to a Meet meeting code link — the
   automatic link (actor `system`), picking a course for an unassigned code,
   confirming and re-linking (v55), marking a code "not a course" and removing
   the mark (v88); erasing one participant's data on request (the participant's
   internal id and the count of erased records of each kind) and lifting an
-  erasure exclusion (the exclusion's id) (v93); an Admin confirming that
+  erasure exclusion (the exclusion's id) (v93), and entering an exclusion by
+  email (the exclusion's id) (v104); an Admin confirming that
   courses hidden from the technical account were deleted in Classroom (the
   courses' ids) (v101); creating, changing and deleting a report
   template, recording the template id only (v84); **exporting a journal or report**; each retention purge run

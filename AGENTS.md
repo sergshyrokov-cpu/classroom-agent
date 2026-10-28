@@ -150,7 +150,7 @@ These are binding.
 **Non-normative summary** of `trebovaniya.md` sections 2, 4, 5, 6 and 9 — a cheap
 cache so routine decisions do not require opening a ~180 KB Russian document.
 `trebovaniya.md` always wins; on conflict this section is the one that gets
-corrected. **Verified against v103.** When `trebovaniya.md` moves past that
+corrected. **Verified against v104.** When `trebovaniya.md` moves past that
 version, re-verify this section and update the marker.
 
 - **Roles in the first version are Owner, Admin and Dean only.** Teacher and
@@ -160,7 +160,8 @@ version, re-verify this section and update the marker.
   never in an installation's `AppUser` table.
 - **Admin is a Google Workspace domain administrator of that school, never a
   super-admin.** One email is simultaneously the OAuth login, the `AllowedAdmin`
-  entry in the Control Plane and the `AppUser` with role Admin.
+  entry in the Control Plane and the `AppUser` with role Admin. The program does
+  not check the Google role itself; revoking an ex-Admin is the Owner's (BR-013, v104).
 - **Data is read as a technical account, not as a person.** The impersonation
   user in `WorkspaceConnection` is a school account created by the school's
   super-admin; nobody logs in with it (BR-015). Since v97 it holds the super-admin
