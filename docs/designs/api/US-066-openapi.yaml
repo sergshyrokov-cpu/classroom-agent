@@ -1,0 +1,194 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Students with the same name are shown with their email (US-066)
+  version: "1"
+  description: >
+    HTTP contract of US-066 on the installation's public port. **No operation is
+    added or removed; no parameter, policy, status code or error body changes.**
+    Three existing operations change only in what they render: the journal page
+    (`GET /workspace/journal`, docs/designs/api/US-025-openapi.yaml), the report
+    page (`GET /reports`, docs/designs/api/US-027-openapi.yaml and
+    docs/designs/api/US-042-openapi.yaml) and the report export (US-043 export
+    endpoint, both layouts). The student row view models gain one optional field,
+    `namesakeEmail` (spec FR-003.4). Everything those files define and this file
+    does not restate stands. Companion document:
+    docs/designs/api/US-066-api-design.md.
+x-story: US-066
+x-source-specification: docs/specifications/US-066-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-066-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 104
+x-produced-by: openapi-designer
+x-extends:
+  - docs/designs/api/US-025-openapi.yaml
+  - docs/designs/api/US-027-openapi.yaml
+  - docs/designs/api/US-042-openapi.yaml
+  - docs/designs/api/US-043-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type of
+  the Control Plane channel is added or changed; nothing of this Story is sent to
+  the Control Plane (spec §7, SC-13).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port. Illustrative."
+
+x-host-wide-rules:
+
+  inherited: >
+    Every host-wide rule of the extended files applies unchanged: deny by default,
+    the policies `ViewJournal` and `UseReportTemplates` and the export's policy,
+    `no-store` on these pages (SC-14), read-only mode allows all three operations
+    (spec FR-006, BR-026). The SC-4 anonymous list gains nothing.
+
+  namesake-rule: >
+    Decided in `Application` by the builders (spec FR-002, FR-003.4, AD-3): among
+    the student rows of one journal or one report, as built, a row whose displayed
+    name coincides with another row's — UI-language culture comparer, letter case
+    ignored, names as stored — carries the student's stored email in
+    `namesakeEmail` when it is non-empty. Unnamed rows never coincide; a journal
+    row whose `nameKind` is `Email` never carries it. Every other row carries
+    null. Views and workbook mappers only render the field; they never compare
+    names.
+
+  composition: >
+    Rendered as `<displayName> (<namesakeEmail>)` — one space, parentheses, same
+    line, same cell (spec FR-004.1, OD-001 a). Identical in Ukrainian and English;
+    no translation key (spec FR-004.2, NFR-073). On screen both parts are
+    HTML-encoded by Razor (spec VR-002). The "left" mark keeps its place after the
+    composed text (spec FR-004.3).
+
+  outbound: >
+    No operation calls Google or anything outside the process; no new query (spec
+    §9). The email is never logged or audited (spec §7, SC-10, SC-11).
+
+paths:
+
+  /workspace/journal:
+    get:
+      summary: "Journal page — unchanged operation; student rows may carry `namesakeEmail`"
+      x-change: additive-view-model-field
+      x-policy: ViewJournal
+      x-writes: nothing
+      x-read-only-mode: allowed
+      x-calls-google: false
+      x-spec: [FR-001, FR-002, FR-003, FR-004, FR-005]
+      x-acceptance-criteria: [AC-001, AC-006, AC-008]
+      responses:
+        "200":
+          description: >
+            As US-025. Each `JournalRow` follows `x-host-wide-rules.namesake-rule`;
+            the row header renders `x-host-wide-rules.composition` when
+            `namesakeEmail` is set. Row order unchanged (spec FR-005).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/JournalRow"
+        "302":
+          description: "Unchanged (US-025)."
+        "400":
+          description: "Unchanged (US-025)."
+        "404":
+          description: "Unchanged (US-025)."
+
+  /reports:
+    get:
+      summary: "Report page — unchanged operation; Grading rows may carry `namesakeEmail`"
+      x-change: additive-view-model-field
+      x-policy: UseReportTemplates
+      x-writes: nothing
+      x-read-only-mode: allowed
+      x-calls-google: false
+      x-spec: [FR-001, FR-002, FR-003, FR-004, FR-005]
+      x-acceptance-criteria: [AC-002, AC-005, AC-006, AC-007, AC-008, AC-009]
+      responses:
+        "200":
+          description: >
+            As US-027/US-042. Each `GradingRow` follows
+            `x-host-wide-rules.namesake-rule`, judged after the report's name
+            source (page `names` parameter, else the template). Teachers
+            (`ReportHeader` teachers, "Lesson topics" teachers) are `PersonName`
+            without the field and never carry an email (spec FR-001, OD-002 a).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/GradingRow"
+        "302":
+          description: "Unchanged (US-027)."
+        "400":
+          description: "Unchanged (US-027/US-042)."
+        "404":
+          description: "Unchanged (US-027)."
+
+  x-report-export:
+    x-note: >
+      The US-043 report export endpoint (both layouts: export by template and the
+      group-lessons blank). Route, method, parameters, policy, status codes, media
+      type, file name, audit event and error contract are unchanged. Only the
+      student name cell's text changes: `x-host-wide-rules.composition` when the
+      row's `namesakeEmail` is set; the cell note with the "left" mark and every
+      other cell, row, column, height, style and sheet are unchanged (spec FR-004.4).
+      For the blank the rule is judged over the whole report, not per copy (spec
+      FR-002.1). Not a path of its own here — see US-043.
+    x-spec: [FR-001, FR-002.1, FR-004.4]
+    x-acceptance-criteria: [AC-003, AC-004, AC-006, AC-009]
+
+components:
+  schemas:
+
+    JournalRow:
+      type: object
+      description: >
+        **Changed** (additive). As US-025 plus the "left" mark (US-060), plus
+        `namesakeEmail`.
+      required: [nameKind, cells]
+      properties:
+        displayName:
+          type: [string, "null"]
+          description: "Unchanged (US-025)."
+        nameKind:
+          type: string
+          enum: [FullName, Email, Unnamed]
+          description: "Unchanged (US-025)."
+        cells:
+          type: array
+          description: "Unchanged (US-025)."
+          items:
+            type: object
+        left:
+          description: "Unchanged (US-060)."
+        namesakeEmail:
+          type: [string, "null"]
+          description: >
+            **New.** The student's stored email, as stored (Google data — never
+            translated or corrected), when this row is a namesake per
+            `x-host-wide-rules.namesake-rule` and the email is non-empty; otherwise
+            null. Always null when `nameKind` is `Email` or `Unnamed`.
+
+    GradingRow:
+      type: object
+      description: >
+        **Changed** (additive). As US-027 plus the "left" mark (US-060), plus
+        `namesakeEmail`. The field lives on the student row, not on `PersonName`,
+        so a teacher can never carry it (spec FR-001).
+      required: [student, cells]
+      properties:
+        student:
+          description: "Unchanged `PersonName` (US-042)."
+        cells:
+          type: array
+          description: "Unchanged (US-027)."
+          items:
+            type: object
+        left:
+          description: "Unchanged (US-060)."
+        namesakeEmail:
+          type: [string, "null"]
+          description: >
+            **New.** The student's stored email, as stored, when this row is a
+            namesake per `x-host-wide-rules.namesake-rule` (judged over the
+            report's displayed names after its name source) and the email is
+            non-empty; otherwise null. Always null when `student.nameKind` is
+            `Unnamed`.
