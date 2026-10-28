@@ -4,23 +4,23 @@
 version: 1
 story: US-063
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: '2026-10-28T17:03:44Z'
+  stage: DB_DESIGN
+  recorded_at: '2026-10-28T17:05:08Z'
 last_artifacts:
-- type: api_design
-  path: docs/designs/api/US-063-api-design.md
+- type: database_design
+  path: docs/designs/database/US-063-db-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings: []
 started_at: '2026-10-28T16:57:49Z'
-updated_at: '2026-10-28T17:03:44Z'
+updated_at: '2026-10-28T17:05:08Z'
 completed_at: null
