@@ -308,6 +308,14 @@ stories:
     # Story file authored: docs/stories/US-063-generated-and-data-as-of-in-journal-and-export.md
     # (aligned with v103, BR-084; v103 agenda item 1). OD-001 … OD-003 resolved
     # a) by the Owner 2026-10-27. Before the pilot.
+  - id: US-066
+    epic: EPIC-3
+    title: Students with the same name are shown with their email in the journal, the report and the export
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-066-namesakes-shown-with-email.md
+    # (aligned with v104, BR-086; v104 agenda item 4). OD-001, OD-002 resolved
+    # a) by the Owner 2026-10-28.
   - id: US-064
     epic: EPIC-6
     title: A disabled Dean's open session is refused on the next request
