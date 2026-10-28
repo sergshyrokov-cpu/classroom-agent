@@ -1,0 +1,328 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — An Admin enters an erasure exclusion by email before the person is loaded (US-065)
+  version: "1"
+  description: >
+    HTTP contract of US-065 on the installation's public port. It adds one
+    Admin-only form post to the US-038 erasure area: entering an exclusion by
+    email for a person the program has not loaded (`trebovaniya.md` v104 §2 row
+    "… и внесение исключения по email" — Admin ✔, Dean ✘; §4 Epic 10
+    «Исключение по email заранее»). The erasure page gains a third block. The
+    synchronization match by fingerprint and the one fill of the Google user id
+    (spec FR-006 … FR-008) have no HTTP surface. Everything in
+    docs/designs/api/US-038-openapi.yaml that this file does not change stays as
+    it is. Companion document: docs/designs/api/US-065-api-design.md.
+x-story: US-065
+x-source-specification: docs/specifications/US-065-spec.md
+x-source-specification-version: 2
+x-source-open-decisions: docs/decisions/US-065-open-decisions.md
+x-source-open-decisions-version: 2
+x-requirements-version: 104
+x-produced-by: openapi-designer
+x-extends:
+  - docs/designs/api/US-008-openapi.yaml
+  - docs/designs/api/US-012-openapi.yaml
+  - docs/designs/api/US-038-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type of
+  the Control Plane channel is added or changed; nothing of this Story is sent to
+  the Control Plane (spec S-09, SC-13).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port. Illustrative (US-008 spec FR-001)."
+
+tags:
+  - name: erasure
+    description: "Erasure area of US-038; this Story adds entering an exclusion by email (spec FR-001 … FR-015)"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 and US-038 configured applies and is not restated: HTTPS
+    and HSTS, the deny-by-default fallback policy (SC-4, API-9), the global
+    antiforgery filter, the single error page, the anonymous catch-all `404`, the
+    restricted session of a Dean with a temporary password (US-012), and the
+    exception handler that turns a `ReadOnlyModeException` into `409`.
+
+  policy: >
+    The new operation carries the **existing** policy `EraseParticipantData`
+    (Admin only), applied at controller level as for the five US-038 operations
+    (spec FR-014, S-01). No new policy.
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list gains **nothing**; the US-008 endpoint enumeration test
+    classifies the new operation as protected.
+
+  antiforgery-list-unchanged: >
+    The new `POST` is covered by the global antiforgery rule and gains no
+    exemption (spec VR-003, S-07, API-7).
+
+  outbound: >
+    No Google call, no secret-store read, no Control Plane call (spec FR-001, S-09).
+    The page and the entry work whether or not a `WorkspaceConnection` is saved
+    (spec FR-001, AC-002).
+
+  no-personal-data-in-addresses: >
+    The email travels only in the `POST` body; the success message is a TempData
+    key with no email (spec FR-003, S-08). Request-scope log lines name the route
+    template; no form value is logged (spec VR-001, SC-10).
+
+paths:
+
+  /settings/erasure:
+
+    get:
+      tags: [erasure]
+      operationId: getErasurePage
+      summary: "Existing US-038 erasure page — gains the \"Exclude by email\" block"
+      description: >
+        Unchanged in policy, parameters and status codes (US-038 contract). The
+        view model gains `enter` (an empty `EntryBlock`) and the message key
+        `ExclusionEntered`. In read-only mode the existing `readOnlyNotice` also
+        disables the new block's button (spec FR-012, AC-019). Works with no
+        `WorkspaceConnection` saved; reads nothing from Google (AC-002).
+      x-policy: EraseParticipantData
+      x-change: additive-view-model
+      x-calls-google: false
+      x-writes: nothing
+      x-spec: [FR-001, FR-003, FR-012, FR-015]
+      x-acceptance-criteria: [AC-002, AC-019, AC-020]
+      security:
+        - installationSession: []
+      responses:
+        "200":
+          description: "The page."
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ErasurePageModel"
+        "302":
+          $ref: "#/components/responses/SignInRedirect"
+        "403":
+          $ref: "#/components/responses/ForbiddenForDean"
+
+  /settings/erasure/exclusions:
+
+    post:
+      tags: [erasure]
+      operationId: enterErasureExclusion
+      summary: "Enter an exclusion by email for a person not loaded"
+      description: >
+        Runs `EnterErasureExclusionUseCase` (name indicative; spec FR-002):
+        read-only guard (FR-012) → email (VR-001) → in one transaction under the
+        exclusive side of the erasure fence (FR-011): loaded participants with
+        that email (FR-004) → salt, created if absent, and fingerprint (FR-002
+        step 2) → existing exclusion with that fingerprint (FR-005) → insert one
+        `ErasedParticipant` with the fingerprint and no Google user id plus one
+        audit row (FR-003, FR-013) → commit.
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: EraseParticipantData
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: >
+        On success, in one transaction: the installation's salt if none existed,
+        one ErasedParticipant (fingerprint, no Google user id, entry date) and one
+        AuditEvent. On a read-only refusal: one refused AuditEvent only. On
+        "already loaded", "already excluded" or a validation failure: nothing.
+        The salt can be created only on the way to an insert: "already loaded" is
+        decided before the salt is touched, and with no salt no exclusion can
+        hold a fingerprint, so "already excluded" needs an existing salt.
+      x-return-page: /settings/erasure
+      x-spec: [FR-001, FR-002, FR-003, FR-004, FR-005, FR-011, FR-012, FR-013, FR-014, FR-015]
+      x-acceptance-criteria: [AC-001, AC-002, AC-006, AC-007, AC-009, AC-010, AC-011, AC-012, AC-014, AC-018, AC-020, AC-021]
+      security:
+        - installationSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ExclusionEntryForm"
+      responses:
+        "200":
+          description: >
+            Not an error, nothing stored, no audit row — the erasure page
+            re-rendered with `enter.outcome`:
+            (1) `AlreadyLoaded` (FR-004, AC-006) — `enter.loadedParticipants` lists
+            every stored participant whose normalized email equals the entered
+            one, each as a US-038 search result with the link to its confirmation
+            page; (2) `AlreadyExcluded` (FR-005, AC-007). The entered email is not
+            echoed in the field in either case (api-design §2.4).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ErasurePageModel"
+        "302":
+          description: >
+            (1) **Entered** — Post-Redirect-Get: `Location: /settings/erasure`, the
+            one-time `ErasureMessageKey` `ExclusionEntered` in TempData; the email
+            is not carried (FR-003). (2) Not signed in / Dean with a temporary
+            password — as everywhere; nothing written.
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: [/settings/erasure, /sign-in, /sign-in/change-password]
+        "400":
+          description: >
+            (1) The email fails VR-001: the erasure page re-rendered with
+            `enter.fieldError` and the typed value kept only in that field of this
+            response; nothing stored, no audit row (AC-011). (2) Missing or invalid
+            antiforgery token: the translated error page (API-7, AC-018).
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/ErasurePageModel"
+        "403":
+          $ref: "#/components/responses/ForbiddenForDean"
+        "409":
+          description: >
+            Read-only mode, any BR-025 cause (API-5, spec FR-012): the host-wide
+            translated error page naming the reason. Nothing stored; one refused
+            audit row with the entry action, no target, category `ReadOnlyMode`
+            (FR-013, AC-009). Checked before the email is validated, so a refused
+            request is `409` whatever its body.
+          content:
+            text/html: {}
+        "500":
+          description: >
+            A failure inside the transaction: rolled back, nothing stored, no audit
+            row; the single error page with no detail (AD-9, API-10, spec §8).
+          content:
+            text/html: {}
+
+x-operations-deliberately-absent:
+
+  json-api: >
+    No `/api/v1` path for entering an exclusion (as US-038 spec §10).
+
+  exclusion-list: >
+    No operation lists, shows or edits exclusions (spec §10, US-038 I-14).
+
+  bulk-entry: >
+    No operation takes a list of addresses (OD-002 a).
+
+  sync-and-meet: >
+    The fingerprint match and the one fill of the Google user id run inside
+    synchronization (spec FR-006 … FR-008); the Meet load is unchanged (FR-009).
+    No HTTP operation.
+
+  lifting-unchanged: >
+    `POST /settings/erasure/exclusion-liftings` is unchanged (spec FR-010).
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: __Host-ca-session
+      description: "The installation's own session cookie (US-008 spec FR-015)."
+
+  responses:
+    SignInRedirect:
+      description: >
+        Not signed in: `Location: /sign-in`. A Dean with a temporary password:
+        `Location: /sign-in/change-password` (US-012). Nothing written.
+      headers:
+        Location:
+          schema:
+            type: string
+            enum: [/sign-in, /sign-in/change-password]
+    ForbiddenForDean:
+      description: "Signed in as a Dean: the translated error page (spec FR-014, AC-010). Nothing written."
+      content:
+        text/html: {}
+
+  schemas:
+
+    ExclusionEntryForm:
+      type: object
+      additionalProperties: false
+      required: [email]
+      properties:
+        email:
+          type: string
+          maxLength: 254
+          description: >
+            One address (OD-002 a). Same rule as the lifting field, one shared
+            validation (VR-001, OD-001 a): trimmed; ≤ 254 characters;
+            `local@domain` with exactly one `@`, non-empty parts and no
+            whitespace; any domain. Normalized by
+            `WorkspaceConnection.NormalizeEmail` for the fingerprint and the
+            "already loaded" comparison (VR-002). Never logged; not echoed after
+            a success.
+        __RequestVerificationToken:
+          type: string
+
+    ErasureMessageKey:
+      type: string
+      description: "One-time message after a redirect (TempData `ErasureMessage`). Carries no personal data. `ExclusionEntered` is new."
+      enum: [Erased, ExclusionLifted, ExclusionEntered]
+
+    EmailFieldError:
+      type: string
+      description: >
+        The field errors of the shared email rule — today's `LiftFieldError`
+        values (US-038). The entry block uses the same values; whether the type
+        is shared or renamed is IMPLEMENTATION's, the values are not.
+      enum: [EmailRequired, EmailTooLong, EmailInvalid]
+
+    ErasurePageModel:
+      type: object
+      description: >
+        The US-038 view DTO of the erasure page, mapped in `Application` (AD-8),
+        gaining `enter`. Still carries no Google user id, fingerprint, salt or
+        exclusion data (spec S-05, S-10).
+      required: [readOnlyNotice, messageKey, search, lift, enter]
+      properties:
+        readOnlyNotice:
+          type: boolean
+          description: "True in read-only mode: erasure, lifting and entering are unavailable; the three buttons are disabled (spec FR-012, AC-019). Display only."
+        messageKey:
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/ErasureMessageKey"
+        search:
+          description: "Unchanged — US-038-openapi.yaml `SearchBlock`."
+          type: object
+        lift:
+          description: "Unchanged — US-038-openapi.yaml `LiftBlock`."
+          type: object
+        enter:
+          $ref: "#/components/schemas/EntryBlock"
+
+    EntryBlock:
+      type: object
+      description: "State of the \"Exclude by email\" block in one response."
+      required: [email, fieldError, outcome, loadedParticipants, loadedTruncated]
+      properties:
+        email:
+          type: [string, "null"]
+          description: "The typed value, only in a `400` response; null otherwise."
+        fieldError:
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/EmailFieldError"
+        outcome:
+          type: [string, "null"]
+          enum: [AlreadyLoaded, AlreadyExcluded, null]
+        loadedParticipants:
+          type: array
+          maxItems: 50
+          description: >
+            Non-empty only with `AlreadyLoaded`: the matching participants, shaped
+            and ordered as US-038 search results (US-038-openapi.yaml
+            `ParticipantSearchResult` — internal id, name and email as stored,
+            teacher and student course counts), each linking to
+            `/settings/erasure/participants/{participantId}` (spec FR-004).
+          items:
+            type: object
+            description: "US-038-openapi.yaml `ParticipantSearchResult`."
+        loadedTruncated:
+          type: boolean
+          description: "More than 50 matched (as the US-038 search cap); the list shows the first 50."
