@@ -56,6 +56,15 @@
     <p id="journal-notice">@DataMarksTexts.Notice(T, notice)</p>
 }
 
+@* US-063 spec FR-003.1, FR-003.4: "generated" and "data from Google as of", plain, in their own block above the table. *@
+@if (Model.Stamp is { } stamp)
+{
+    <div id="journal-stamp">
+        <p id="journal-generated">@DataMarksTexts.Generated(T, stamp)</p>
+        <p id="journal-data-as-of">@DataMarksTexts.DataAsOf(T, stamp)</p>
+    </div>
+}
+
 @if (Model.EmptyStateKey is { } empty)
 {
     <p id="journal-empty">@T[JournalTextKeys.Empty(empty)]</p>

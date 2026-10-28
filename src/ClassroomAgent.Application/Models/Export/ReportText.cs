@@ -35,6 +35,11 @@ public enum ReportText
     DataLeftOn,
     DataLeft,
 
+    // US-063 spec FR-006.3: the note on the course-name cell ({0} a date and time, or the "unknown" text).
+    DataGenerated,
+    DataAsOf,
+    DataAsOfUnknown,
+
     // US-044 spec FR-015: the program texts of the Meet export that US-033 has no key for.
     MeetSheetSummary,
     MeetSheetMeetings,

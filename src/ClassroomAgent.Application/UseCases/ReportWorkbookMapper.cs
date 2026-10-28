@@ -64,6 +64,33 @@ public static partial class ReportWorkbookMapper
         _ => texts.Get(ReportText.DataHeaderNotUpdated),
     };
 
+    /// <summary>
+    /// US-063 spec FR-006.2, VR-004, I-5: the note of a course-name cell — the existing note first when there is one, then
+    /// "generated" and "data from Google as of", one per line; null when there is neither.
+    /// </summary>
+    internal static string? CourseNote(string? existing, CourseDataStamp? stamp, IReportTexts texts, CultureInfo culture)
+    {
+        ArgumentNullException.ThrowIfNull(texts);
+        var lines = new List<string>();
+        if (!string.IsNullOrEmpty(existing))
+        {
+            lines.Add(existing);
+        }
+
+        if (stamp is not null)
+        {
+            var dataAsOf = stamp.DataAsOf is { } read ? DateTimeText(read, culture) : texts.Get(ReportText.DataAsOfUnknown);
+            lines.Add(string.Format(culture, texts.Get(ReportText.DataGenerated), DateTimeText(stamp.GeneratedAt, culture)));
+            lines.Add(string.Format(culture, texts.Get(ReportText.DataAsOf), dataAsOf));
+        }
+
+        return lines.Count == 0 ? null : string.Join('\n', lines);
+    }
+
+    /// <summary>US-063 spec FR-006.1, VR-003: a date-time as the screens show it — short date and hours:minutes.</summary>
+    private static string DateTimeText(DateTimeOffset instant, CultureInfo culture) =>
+        instant.ToString(culture.DateTimeFormat.ShortDatePattern + " HH:mm", culture);
+
     /// <summary>US-060 spec FR-005.2, FR-005.3, I-5: the item mark, no date.</summary>
     internal static string ItemMarkText(IReportTexts texts) => texts.Get(ReportText.DataItemNotInClassroom);
 
@@ -178,7 +205,12 @@ public static partial class ReportWorkbookMapper
         var period = header.From.ToString("d", culture) + " – " + header.To.ToString("d", culture);
 
         // US-060 spec FR-007.1, I-3: the header line in the third cell of the Course row, so the table does not move.
-        var courseRow = Labelled(texts.Get(ReportText.HeaderCourse), course);
+        // US-063 spec FR-004.1, FR-004.2: both lines in a note on the course-name cell of each sheet, never printed.
+        var courseRow = new WorksheetRow(
+        [
+            WorkbookCell.OfText(texts.Get(ReportText.HeaderCourse), isHeading: true),
+            WorkbookCell.OfText(course) with { Note = CourseNote(null, header.Stamp, texts, culture) },
+        ]);
         if (NoticeText(header.Notice, texts, culture) is { } notice)
         {
             courseRow = new WorksheetRow([.. courseRow.Cells, WorkbookCell.OfText(notice)]);

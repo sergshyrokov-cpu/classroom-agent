@@ -45,5 +45,26 @@ public static class DataMarksTexts
         return left.LastSeenOn is { } date ? texts[DataMarksTextKeys.LeftOn, Date(date)] : texts[DataMarksTextKeys.Left];
     }
 
+    /// <summary>US-063 spec FR-001, FR-006: "generated: …" in the school's zone.</summary>
+    public static string Generated(IStringLocalizer<SharedResource> texts, CourseDataStamp stamp)
+    {
+        ArgumentNullException.ThrowIfNull(texts);
+        ArgumentNullException.ThrowIfNull(stamp);
+        return texts[DataMarksTextKeys.Generated, DateAndTime(stamp.GeneratedAt)];
+    }
+
+    /// <summary>US-063 spec FR-002, FR-006: "data from Google as of: …", or "unknown" when no read is recorded.</summary>
+    public static string DataAsOf(IStringLocalizer<SharedResource> texts, CourseDataStamp stamp)
+    {
+        ArgumentNullException.ThrowIfNull(texts);
+        ArgumentNullException.ThrowIfNull(stamp);
+        var value = stamp.DataAsOf is { } read ? DateAndTime(read) : texts[DataMarksTextKeys.DataAsOfUnknown].Value;
+        return texts[DataMarksTextKeys.DataAsOf, value];
+    }
+
+    /// <summary>US-063 spec FR-006.1, VR-003: short date and hours:minutes, as other date-times on the screens.</summary>
+    private static string DateAndTime(DateTimeOffset instant) =>
+        instant.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern + " HH:mm", CultureInfo.CurrentCulture);
+
     private static string Date(DateOnly date) => date.ToString("d", CultureInfo.CurrentCulture);
 }

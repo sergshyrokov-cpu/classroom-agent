@@ -88,7 +88,8 @@ public sealed class BlankFormMarksExportTests(PostgreSqlFixture database)
 
     /// <summary>
     /// AC-006, AC-007, AC-011, AC-012, FR-008.3, I-4: the <c>{{course}}</c> cell keeps the course text and carries the
-    /// header line as a note; no note where the variant has no line.
+    /// header line as the first line of its note; no header line where the variant has none (US-063 adds its two lines
+    /// after it).
     /// </summary>
     [Theory]
     [InlineData(CourseHeaderVariant.None, "uk")]
@@ -107,14 +108,24 @@ public sealed class BlankFormMarksExportTests(PostgreSqlFixture database)
         var course = Grading(blank).Cell(GroupLessonsBlank.CourseRow, GroupLessonsBlank.CourseColumn);
         var line = W.HeaderLine(variant, texts);
 
+        // US-063 FR-005.2, I-5: the note now also carries "generated" and "data from Google as of" after the header line,
+        // so the header line is the note's first line, and a variant without one leaves none of its stems in the note.
         Assert.Equal(W.CourseName, course.GetString());
+        var note = Note(course);
+        Assert.NotNull(note);
+        var lines = note.Replace("\r\n", "\n", StringComparison.Ordinal).Trim().Split('\n');
         if (line is null)
         {
-            Assert.Null(Note(course));
+            Assert.StartsWith(GeneratedLinesTexts.Of(texts.Language).Stems[0], lines[0], StringComparison.Ordinal);
+            foreach (var stem in W.HeaderStems(texts))
+            {
+                Assert.DoesNotContain(stem, note, StringComparison.Ordinal);
+            }
         }
         else
         {
-            Assert.Equal(line, Note(course)?.Trim());
+            Assert.Equal(line, lines[0]);
+            Assert.Equal(3, lines.Length);
         }
     }
 

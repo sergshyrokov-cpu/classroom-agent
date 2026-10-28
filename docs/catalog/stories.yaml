@@ -303,7 +303,7 @@ stories:
   - id: US-063
     epic: EPIC-3
     title: «Сформирован» and «Данные из Google на» in the journal, the report and the Excel export
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: null
     # Story file authored: docs/stories/US-063-generated-and-data-as-of-in-journal-and-export.md
     # (aligned with v103, BR-084; v103 agenda item 1). OD-001 … OD-003 resolved

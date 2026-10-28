@@ -37,6 +37,18 @@ internal static class DataMarkRules
         return null;
     }
 
+    /// <summary>
+    /// US-063 spec FR-001, FR-002, VR-001, VR-002: B as given — never a second clock read — and the last complete read,
+    /// both in the school's zone; no other field stands in for a missing read (OD-001 a, OD-002 a).
+    /// </summary>
+    internal static CourseDataStamp Stamp(JournalCourseRecord course, DateTimeOffset b, TimeZoneInfo zone)
+    {
+        ArgumentNullException.ThrowIfNull(course);
+        return new CourseDataStamp(
+            TimeZoneInfo.ConvertTime(b, zone),
+            course.LastCompleteReadAt is { } read ? TimeZoneInfo.ConvertTime(read, zone) : null);
+    }
+
     /// <summary>Spec FR-006.1, VR-005, OD-003 a: off the roster is "left"; undated when first and last seen are equal.</summary>
     internal static LeftMark? Left(bool onRoster, bool seenOnce, DateTimeOffset lastSeenAt, TimeZoneInfo zone) =>
         onRoster ? null : new LeftMark(seenOnce ? null : DateIn(lastSeenAt, zone));

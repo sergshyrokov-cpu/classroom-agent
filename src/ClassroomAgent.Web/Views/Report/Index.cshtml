@@ -73,6 +73,12 @@
         {
             <p id="report-notice">@DataMarksTexts.Notice(T, notice)</p>
         }
+        @* US-063 spec FR-003.2, FR-003.4: "generated" and "data from Google as of", plain. *@
+        @if (report.Header.Stamp is { } stamp)
+        {
+            <p id="report-generated">@DataMarksTexts.Generated(T, stamp)</p>
+            <p id="report-data-as-of">@DataMarksTexts.DataAsOf(T, stamp)</p>
+        }
     </section>
 
     @* US-042 FR-005, api-design §2.2: two GET links built in Application from validated values; the effective source is

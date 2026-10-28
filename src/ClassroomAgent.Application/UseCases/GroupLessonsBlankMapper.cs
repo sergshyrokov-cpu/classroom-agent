@@ -81,7 +81,9 @@ public static class GroupLessonsBlankMapper
 
         // US-060 spec FR-008.3, I-4: the header line as a note on the course cell; the printed text is unchanged.
         var notice = ReportWorkbookMapper.NoticeText(report.Header.Notice, texts, uiCulture);
-        var course = WorkbookCell.OfText(ReportWorkbookMapper.CourseText(report.Header)) with { Note = notice };
+        // US-063 spec FR-005.1, FR-005.2: US-060's line first, then "generated" and "data from Google as of".
+        var courseNote = ReportWorkbookMapper.CourseNote(notice, report.Header.Stamp, texts, uiCulture);
+        var course = WorkbookCell.OfText(ReportWorkbookMapper.CourseText(report.Header)) with { Note = courseNote };
         var teachers = WorkbookCell.OfText(ReportWorkbookMapper.TeachersText(report.Header, texts));
         var groups = Groups(students.Count, studentsPerCopy);
         var blocks = Groups(topics.Count, lessonsPerCopy);

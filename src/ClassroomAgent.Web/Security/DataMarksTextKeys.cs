@@ -30,4 +30,13 @@ public static class DataMarksTextKeys
     public const string LeftOn = "DataMarks.Left.On";
 
     public const string Left = "DataMarks.Left";
+
+    /// <summary>US-063 spec FR-006.3: "generated: {0}" — {0} a date and time.</summary>
+    public const string Generated = "DataMarks.Generated";
+
+    /// <summary>US-063 spec FR-006.3: "data from Google as of: {0}" — {0} a date and time, or <see cref="DataAsOfUnknown"/>.</summary>
+    public const string DataAsOf = "DataMarks.DataAsOf";
+
+    /// <summary>US-063 spec FR-002.3, OD-001 a: the value when no complete read is recorded.</summary>
+    public const string DataAsOfUnknown = "DataMarks.DataAsOf.Unknown";
 }

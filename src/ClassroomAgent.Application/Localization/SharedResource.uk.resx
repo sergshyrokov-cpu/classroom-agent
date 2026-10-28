@@ -584,6 +584,9 @@
   <data name="DataMarks.Note.Draft" xml:space="preserve"><value>Чернетка: {0} з {1}</value></data>
   <data name="DataMarks.Left.On" xml:space="preserve"><value>вибув(-ла) {0}</value></data>
   <data name="DataMarks.Left" xml:space="preserve"><value>вибув(-ла)</value></data>
+  <data name="DataMarks.Generated" xml:space="preserve"><value>Сформовано: {0}</value></data>
+  <data name="DataMarks.DataAsOf" xml:space="preserve"><value>Дані з Google на: {0}</value></data>
+  <data name="DataMarks.DataAsOf.Unknown" xml:space="preserve"><value>невідомо</value></data>
   <data name="DataHealth.Title" xml:space="preserve"><value>Стан даних</value></data>
   <data name="DataHealth.Banner" xml:space="preserve"><value>{0}, {1}</value></data>
   <data name="DataHealth.Banner.Technical.One" xml:space="preserve"><value>{0} технічна проблема</value></data>

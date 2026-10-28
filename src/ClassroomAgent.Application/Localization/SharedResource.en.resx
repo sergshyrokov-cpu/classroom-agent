@@ -584,6 +584,9 @@
   <data name="DataMarks.Note.Draft" xml:space="preserve"><value>Draft: {0} of {1}</value></data>
   <data name="DataMarks.Left.On" xml:space="preserve"><value>left {0}</value></data>
   <data name="DataMarks.Left" xml:space="preserve"><value>left</value></data>
+  <data name="DataMarks.Generated" xml:space="preserve"><value>Generated: {0}</value></data>
+  <data name="DataMarks.DataAsOf" xml:space="preserve"><value>Data from Google as of: {0}</value></data>
+  <data name="DataMarks.DataAsOf.Unknown" xml:space="preserve"><value>unknown</value></data>
   <data name="DataHealth.Title" xml:space="preserve"><value>Data health</value></data>
   <data name="DataHealth.Banner" xml:space="preserve"><value>{0}, {1}</value></data>
   <data name="DataHealth.Banner.Technical.One" xml:space="preserve"><value>{0} technical problem</value></data>

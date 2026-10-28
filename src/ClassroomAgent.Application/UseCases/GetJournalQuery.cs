@@ -64,12 +64,14 @@ public sealed class GetJournalQuery(IJournalSource source, SchoolTimeZone school
         var known = course is { } chosen && records.Any(c => c.Id == chosen) ? course : null;
 
         // US-060 spec FR-003: the selected course's header line, read with the drop-down (no extra round trip).
-        var notice = known is { } selected
-            ? DataMarkRules.Notice(records.Single(c => c.Id == selected), zone)
-            : null;
+        var selectedRecord = known is { } selected ? records.Single(c => c.Id == selected) : null;
+        var notice = selectedRecord is null ? null : DataMarkRules.Notice(selectedRecord, zone);
+
+        // US-063 spec FR-001.2, FR-003.1: the same B every cell is judged against, and the course's last complete read.
+        var stamp = selectedRecord is null ? null : DataMarkRules.Stamp(selectedRecord, b, zone);
 
         JournalPageResult Page(JournalPageOutcome outcome, JournalEmptyStateKey? empty = null, Journal? journal = null) =>
-            new(outcome, new JournalPageModel(courses, records.Count == 0, known, from, to, view, messages, empty, journal, notice));
+            new(outcome, new JournalPageModel(courses, records.Count == 0, known, from, to, view, messages, empty, journal, notice, stamp));
 
         if (messages.Count > 0)
         {

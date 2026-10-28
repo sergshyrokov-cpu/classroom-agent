@@ -109,7 +109,8 @@ internal sealed class ReportBuilder(
             from,
             to,
             teachers,
-            DataMarkRules.Notice(courseRecord, zone));
+            DataMarkRules.Notice(courseRecord, zone),
+            DataMarkRules.Stamp(courseRecord, b, zone));
 
         if (lessons.Count == 0)
         {
