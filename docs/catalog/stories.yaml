@@ -324,6 +324,14 @@ stories:
     # Story file authored: docs/stories/US-064-disabled-dean-session-refused-on-next-request.md
     # (aligned with v103, BR-014, SC-2; v103 agenda item 4). Expected test-only.
     # OD-001 resolved a) by the Owner 2026-10-27. Before the pilot.
+  - id: US-067
+    epic: EPIC-6
+    title: An Admin changes a Dean's login after the work email was renamed in Google
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-067-admin-changes-dean-login.md
+    # (aligned with v104, BR-014, SC-2, SC-11; v104 agenda item 5). OD-001, OD-002
+    # resolved a) by the Owner 2026-10-28.
   - id: US-046
     epic: EPIC-6
     title: Page-search hint on teaching-data pages
