@@ -104,9 +104,11 @@ public sealed class DataHealthPersistenceTests(PostgreSqlFixture database)
 
         var migrations = db.Database.GetMigrations().ToList();
 
+        // US-065 adds a later migration; as in GradeColumnsPersistenceTests, "after the last one" means after the one
+        // that was last when this Story shipped.
         var ours = Assert.Single(migrations, m => m.EndsWith(MigrationSuffix, StringComparison.Ordinal));
-        Assert.Equal(ours, migrations[^1]);
         Assert.True(string.CompareOrdinal(ours, BeforeThisStory) > 0);
+        Assert.Contains(BeforeThisStory, migrations);
     }
 
     /// <summary>

@@ -51,7 +51,7 @@ public sealed class ParticipantErasureSchemaTests(PostgreSqlFixture database)
 
     // ---------------------------------------------------------------- erased_participant (db-design §2)
 
-    /// <summary>db-design §2.1, AC-006: exactly six columns — no name and no email.</summary>
+    /// <summary>db-design §2.1, AC-006: exactly six columns — no name and no email. US-065 db-design §2.1: the Google user id is nullable.</summary>
     [Fact]
     public async Task TheExclusionTable_HasExactlyTheDesignedColumns()
     {
@@ -66,7 +66,7 @@ public sealed class ParticipantErasureSchemaTests(PostgreSqlFixture database)
                 "created_at timestamp with time zone - NO -",
                 "email_fingerprint bytea - YES -",
                 "erased_at timestamp with time zone - NO -",
-                "google_user_id character varying 64 NO -",
+                "google_user_id character varying 64 YES -",
                 "id bigint - NO -",
                 "updated_at timestamp with time zone - NO -",
             },
@@ -117,7 +117,10 @@ public sealed class ParticipantErasureSchemaTests(PostgreSqlFixture database)
         Assert.Equal(ExclusionValues, failure.ConstraintName);
     }
 
-    /// <summary>db-design §2.2: an exclusion is never changed — an update moving updated_at is rejected; a delete is allowed.</summary>
+    /// <summary>
+    /// db-design §2.2: an exclusion is never changed — an update moving updated_at is rejected; a delete is allowed. Since
+    /// US-065 (db-design §2.3) the rule is the trigger tg_erased_participant_fill_only, which raises check_violation.
+    /// </summary>
     [Fact]
     public async Task AnExclusion_CannotBeChanged_ButCanBeDeleted()
     {
@@ -130,7 +133,6 @@ public sealed class ParticipantErasureSchemaTests(PostgreSqlFixture database)
         await host.ExecuteAsync("DELETE FROM erased_participant WHERE id = @id", ct, ("id", id));
 
         Assert.Equal(PostgresErrorCodes.CheckViolation, failure.SqlState);
-        Assert.Equal(ExclusionImmutable, failure.ConstraintName);
         Assert.Equal(0L, await host.CountAsync(ExclusionTable, ct));
     }
 

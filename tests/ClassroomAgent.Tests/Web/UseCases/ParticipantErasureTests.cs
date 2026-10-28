@@ -367,9 +367,7 @@ public sealed class ParticipantErasureTests(PostgreSqlFixture database)
         var ct = TestContext.Current.CancellationToken;
         await using var host = await StartAsync(ct);
         await host.WaitForPurgeRunsAsync(1, ct);
-        await host.SeedExclusionAsync(TargetGoogleUserId, TargetEmail, ct);
-        await host.ExecuteAsync(
-            "UPDATE erased_participant SET erased_at = @old, created_at = @old, updated_at = @old", ct, ("old", RetentionPurgeTestData.Old.AddYears(-10)));
+        await host.SeedExclusionAsync(TargetGoogleUserId, TargetEmail, ct, RetentionPurgeTestData.Old.AddYears(-10));
         var before = await host.ExclusionRowsAsync(ct);
         var salts = await host.SaltRowsAsync(ct);
 

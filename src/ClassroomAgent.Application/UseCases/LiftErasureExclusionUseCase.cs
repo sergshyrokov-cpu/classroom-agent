@@ -87,8 +87,11 @@ public sealed class LiftErasureExclusionUseCase(
 
     private static ExclusionLiftingResult NoExclusion() => new(ExclusionLiftingOutcome.NoExclusionForEmail, null, 0);
 
-    /// <summary>Spec VR-003: required, at most 254 characters, <c>local@domain</c> with one <c>@</c> and non-empty parts.</summary>
-    private static LiftFieldError? Validate(string trimmed)
+    /// <summary>
+    /// Spec VR-003: required, at most 254 characters, <c>local@domain</c> with one <c>@</c> and non-empty parts. Shared
+    /// with the entry of US-065 (its spec VR-001: one validation, no second copy).
+    /// </summary>
+    internal static LiftFieldError? Validate(string trimmed)
     {
         if (trimmed.Length == 0)
         {

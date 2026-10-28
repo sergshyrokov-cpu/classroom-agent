@@ -1,5 +1,6 @@
 using ClassroomAgent.Application.Exceptions;
 using ClassroomAgent.Application.Models;
+using ClassroomAgent.Application.Models.Dtos;
 using ClassroomAgent.Application.Ports;
 using ClassroomAgent.Application.UseCases;
 using ClassroomAgent.Domain.Entities;
@@ -58,6 +59,10 @@ public sealed class ErasureUnitWorld
 
     public LiftErasureExclusionUseCase Lift => new(Guard, Salts, Exclusions, Audit, Work, WriteScope, Time);
 
+    /// <summary>US-065: the entry of an exclusion in advance over the same ports.</summary>
+    public EnterErasureExclusionUseCase Enter =>
+        new(Guard, Reads, Fence, Salts, Exclusions, Audit, Work, WriteScope, Time);
+
     public SearchParticipantsForErasureQuery Search => new(Reads);
 
     /// <summary>The confirmation query over a legitimacy state that is read-only or not.</summary>
@@ -86,6 +91,12 @@ public sealed class ErasureUnitWorld
 
         public List<ParticipantSearchRecord> SearchRows { get; } = [];
 
+        /// <summary>US-065: the participants the "already loaded" lookup answers, whatever the email asked.</summary>
+        public List<ParticipantSearchResult> LoadedRows { get; } = [];
+
+        /// <summary>US-065: every email the "already loaded" lookup was asked for, as passed.</summary>
+        public List<string> EmailLookups { get; } = [];
+
         /// <summary>Every search asked for: the term as passed and the limit.</summary>
         public List<(string Term, int Limit)> Searches { get; } = [];
 
@@ -106,6 +117,15 @@ public sealed class ErasureUnitWorld
         {
             world.Calls.Add("target");
             return Task.FromResult(Targets.TryGetValue(participantId, out var target) ? target : null);
+        }
+
+        public Task<IReadOnlyList<ParticipantSearchResult>> FindParticipantsByEmailAsync(
+            string normalizedEmail,
+            CancellationToken cancellationToken)
+        {
+            world.Calls.Add("loaded");
+            EmailLookups.Add(normalizedEmail);
+            return Task.FromResult<IReadOnlyList<ParticipantSearchResult>>(LoadedRows.ToList());
         }
     }
 
@@ -209,7 +229,7 @@ public sealed class ErasureUnitWorld
             IReadOnlyCollection<string> googleUserIds,
             CancellationToken cancellationToken)
         {
-            IReadOnlySet<string> found = Stored.Select(e => e.GoogleUserId).Where(googleUserIds.Contains).ToHashSet(StringComparer.Ordinal);
+            IReadOnlySet<string> found = Stored.Select(e => e.GoogleUserId).OfType<string>().Where(googleUserIds.Contains).ToHashSet(StringComparer.Ordinal);
             return Task.FromResult(found);
         }
 
@@ -237,6 +257,21 @@ public sealed class ErasureUnitWorld
             Removed.Add(exclusion);
             Stored.Remove(exclusion);
         }
+
+        public Task<bool> AnyWithFingerprintAsync(EmailFingerprint fingerprint, CancellationToken cancellationToken)
+        {
+            world.Calls.Add("exclusion:any");
+            FingerprintLookups.Add(fingerprint);
+            return Task.FromResult(Stored.Any(e => Matches(e, fingerprint)));
+        }
+
+        public Task<IReadOnlyList<UnmatchedExclusion>> GetUnmatchedByFingerprintsAsync(
+            IReadOnlyCollection<EmailFingerprint> candidates,
+            CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("The erasure use cases never match by fingerprint (synchronization does).");
+
+        public Task<bool> FillGoogleUserIdAsync(long exclusionId, string googleUserId, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("The erasure use cases never fill a Google user id (synchronization does).");
 
         private static bool Matches(ErasedParticipant exclusion, EmailFingerprint fingerprint) =>
             exclusion.EmailFingerprint is { } bytes && bytes.AsSpan().SequenceEqual(fingerprint.Bytes.Span);

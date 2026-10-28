@@ -162,6 +162,19 @@ public sealed class SyncWorld
 
         public void Remove(ErasedParticipant exclusion) => throw new InvalidOperationException("Synchronization never lifts.");
 
+        public Task<bool> AnyWithFingerprintAsync(
+            ClassroomAgent.Domain.Rules.EmailFingerprint fingerprint,
+            CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("Synchronization never enters an exclusion.");
+
+        public Task<IReadOnlyList<UnmatchedExclusion>> GetUnmatchedByFingerprintsAsync(
+            IReadOnlyCollection<ClassroomAgent.Domain.Rules.EmailFingerprint> candidates,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<UnmatchedExclusion>>([]);
+
+        public Task<bool> FillGoogleUserIdAsync(long exclusionId, string googleUserId, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("With no exclusion there is nothing to fill.");
+
         public Task<ErasureSalt?> FindAsync(CancellationToken cancellationToken) => Task.FromResult<ErasureSalt?>(null);
 
         public Task<ErasureSalt> GetOrCreateAsync(CancellationToken cancellationToken) =>

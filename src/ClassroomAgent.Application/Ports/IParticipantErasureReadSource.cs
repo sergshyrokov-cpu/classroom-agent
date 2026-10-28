@@ -1,4 +1,5 @@
 using ClassroomAgent.Application.Models;
+using ClassroomAgent.Application.Models.Dtos;
 
 namespace ClassroomAgent.Application.Ports;
 
@@ -16,4 +17,12 @@ public interface IParticipantErasureReadSource
 
     /// <summary>The id, Google user id and email of the participant, or null when no participant has that id.</summary>
     Task<ParticipantErasureTarget?> GetTargetAsync(long participantId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// US-065 entity model §3, spec FR-004: every participant whose stored email, lower-cased, equals
+    /// <paramref name="normalizedEmail"/>, in the US-038 search shape and order; at most 51 rows, to detect truncation.
+    /// </summary>
+    Task<IReadOnlyList<ParticipantSearchResult>> FindParticipantsByEmailAsync(
+        string normalizedEmail,
+        CancellationToken cancellationToken);
 }

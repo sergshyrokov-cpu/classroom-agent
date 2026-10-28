@@ -1,3 +1,4 @@
+using ClassroomAgent.Application.Models;
 using ClassroomAgent.Domain.Entities;
 using ClassroomAgent.Domain.Rules;
 
@@ -24,4 +25,17 @@ public interface IErasedParticipantRepository
         CancellationToken cancellationToken);
 
     void Remove(ErasedParticipant exclusion);
+
+    /// <summary>US-065 entity model §3: true when any exclusion has this fingerprint (entry, "already excluded").</summary>
+    Task<bool> AnyWithFingerprintAsync(EmailFingerprint fingerprint, CancellationToken cancellationToken);
+
+    /// <summary>US-065 entity model §3: exclusions with no Google id whose fingerprint is among the candidates (sync match).</summary>
+    Task<IReadOnlyList<UnmatchedExclusion>> GetUnmatchedByFingerprintsAsync(
+        IReadOnlyCollection<EmailFingerprint> candidates,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// US-065 entity model §3, db-design §4 step 6: the one fill; false when the row is gone or already has an id.
+    /// </summary>
+    Task<bool> FillGoogleUserIdAsync(long exclusionId, string googleUserId, CancellationToken cancellationToken);
 }

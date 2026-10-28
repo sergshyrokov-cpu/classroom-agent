@@ -161,6 +161,7 @@ public sealed class PermissionMatrixTests(PostgreSqlFixture database)
         Cell("GET", "settings/erasure/participants/{participantid}", InstallationPolicies.EraseParticipantData),
         Cell("POST", "settings/erasure/participants/{participantid}/erasure", InstallationPolicies.EraseParticipantData),
         Cell("POST", "settings/erasure/exclusion-liftings", InstallationPolicies.EraseParticipantData),
+        Cell("POST", "settings/erasure/exclusions", InstallationPolicies.EraseParticipantData),
     ];
 
     /// <summary>

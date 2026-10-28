@@ -149,6 +149,9 @@ public static class SignInRoutes
     /// <summary>US-038 openapi: the lifting of an exclusion by email (api-design §2.3).</summary>
     public const string ErasureLiftings = "/settings/erasure/exclusion-liftings";
 
+    /// <summary>US-065 openapi: the entry of an exclusion by email before the person is loaded (api-design §2.1).</summary>
+    public const string ErasureExclusions = "/settings/erasure/exclusions";
+
     /// <summary>The route parameter of the participant pages (US-038 api-design §2.6).</summary>
     public const string ErasureParticipantIdParameter = "participantId";
 

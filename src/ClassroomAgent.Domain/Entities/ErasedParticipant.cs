@@ -8,8 +8,10 @@ namespace ClassroomAgent.Domain.Entities;
 /// Synchronization and the Meet load consult it where they write (spec FR-011, FR-012).
 /// </summary>
 /// <remarks>
-/// Created by the erasure and deleted by the lifting; never changed (<c>ck_erased_participant_immutable</c>). No
-/// navigation: nothing it could point to survives the erasure.
+/// Created by the erasure, or entered in advance by email (US-065), and deleted by the lifting. An exclusion entered in
+/// advance gains its Google user id once, when synchronization matches it; nothing else ever changes
+/// (<c>tg_erased_participant_fill_only</c>, US-065 db-design §2.3). No navigation: nothing it could point to survives
+/// the erasure.
 /// </remarks>
 public sealed class ErasedParticipant
 {
@@ -21,12 +23,12 @@ public sealed class ErasedParticipant
 
     private ErasedParticipant()
     {
-        GoogleUserId = string.Empty;
     }
 
     public long Id { get; private set; }
 
-    public string GoogleUserId { get; private set; }
+    /// <summary>Null for an exclusion entered in advance until synchronization matches it (US-065 spec FR-003, FR-007).</summary>
+    public string? GoogleUserId { get; private set; }
 
     /// <summary>Null when the participant had no email (US-038 OD-001 a).</summary>
     public byte[]? EmailFingerprint { get; private set; }
@@ -50,4 +52,16 @@ public sealed class ErasedParticipant
             ErasedAt = erasedAt,
         };
     }
+
+    /// <summary>
+    /// US-065 spec FR-003, entity model §1: an exclusion entered by email before the person is loaded — the fingerprint,
+    /// no Google user id, the entry date in <see cref="ErasedAt"/> (spec I-3).
+    /// </summary>
+    public static ErasedParticipant EnterInAdvance(EmailFingerprint fingerprint, DateTimeOffset enteredAt) =>
+        new()
+        {
+            GoogleUserId = null,
+            EmailFingerprint = fingerprint.Bytes.ToArray(),
+            ErasedAt = enteredAt,
+        };
 }

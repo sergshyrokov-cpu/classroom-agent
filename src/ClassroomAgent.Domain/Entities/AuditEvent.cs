@@ -1035,7 +1035,34 @@ public sealed class AuditEvent
     }
 
     /// <summary>
-    /// US-038 spec I-12: an erasure or a lifting refused in read-only mode. The action is one of the two; the category
+    /// US-065 spec FR-013, entity model §2: an Admin entered an exclusion in advance — target the new exclusion's internal
+    /// id.
+    /// </summary>
+    public static AuditEvent ErasureExclusionEntered(
+        long adminId,
+        long exclusionId,
+        DateTimeOffset occurredAt,
+        string? requestId)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(exclusionId);
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = adminId,
+            ActorRole = AppRole.Admin,
+            Action = AuditAction.ErasureExclusionEntered,
+            TargetType = AuditTargetType.ErasedParticipant,
+            TargetId = exclusionId,
+            Outcome = AuditOutcome.Succeeded,
+            RefusalCategory = null,
+            RequestId = requestId,
+        };
+    }
+
+    /// <summary>
+    /// US-038 spec I-12: an erasure, a lifting or (US-065 spec FR-013) an entry refused in read-only mode. The category
     /// is read-only mode; the participant id is named only for an erasure (db-design §9.4).
     /// </summary>
     public static AuditEvent ErasureRefused(
@@ -1046,12 +1073,14 @@ public sealed class AuditEvent
         DateTimeOffset occurredAt,
         string? requestId)
     {
-        if (action is not (AuditAction.ParticipantErased or AuditAction.ErasureExclusionLifted))
+        if (action is not (AuditAction.ParticipantErased
+            or AuditAction.ErasureExclusionLifted
+            or AuditAction.ErasureExclusionEntered))
         {
             throw new ArgumentOutOfRangeException(
                 nameof(action),
                 action,
-                "A refused erasure row carries the erasure or the lifting action.");
+                "A refused erasure row carries the erasure, the lifting or the entry action.");
         }
 
         if (category is not AuditRefusalCategory.ReadOnlyMode)
@@ -1062,9 +1091,11 @@ public sealed class AuditEvent
                 "A refused erasure or lifting carries the read-only category (US-038 spec FR-014).");
         }
 
-        if (action == AuditAction.ErasureExclusionLifted && participantId is not null)
+        if (action != AuditAction.ParticipantErased && participantId is not null)
         {
-            throw new ArgumentException("A refused lifting names no participant (db-design §9.4).", nameof(participantId));
+            throw new ArgumentException(
+                "A refused lifting or entry names no participant (db-design §9.4).",
+                nameof(participantId));
         }
 
         return new AuditEvent

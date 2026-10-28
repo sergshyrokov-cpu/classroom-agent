@@ -5,4 +5,7 @@ public enum ErasureMessageKey
 {
     Erased,
     ExclusionLifted,
+
+    /// <summary>US-065 spec FR-003: an exclusion was entered by email.</summary>
+    ExclusionEntered,
 }

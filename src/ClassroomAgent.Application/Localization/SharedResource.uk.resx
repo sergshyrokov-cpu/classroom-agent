@@ -548,7 +548,15 @@
   <data name="Erasure.Lift.Error.EmailInvalid" xml:space="preserve"><value>Введіть адресу у вигляді ім'я@домен.</value></data>
   <data name="Erasure.Message.Erased" xml:space="preserve"><value>Дані людини видалено.</value></data>
   <data name="Erasure.Message.ExclusionLifted" xml:space="preserve"><value>Виключення знято. Наступна синхронізація завантажить людину як нову.</value></data>
-  <data name="Erasure.ReadOnlyNotice" xml:space="preserve"><value>Інсталяція працює лише на читання: видалення даних і зняття виключення недоступні.</value></data>
+  <data name="Erasure.ReadOnlyNotice" xml:space="preserve"><value>Інсталяція працює лише на читання: видалення даних, зняття і внесення виключення недоступні.</value></data>
+  <data name="Erasure.Enter.Title" xml:space="preserve"><value>Виключити за електронною поштою</value></data>
+  <data name="Erasure.Enter.Explanation" xml:space="preserve"><value>Для людини, яку програма ще не завантажила, — передусім під час переходу школи на інший домен. Зберігається лише відбиток адреси, не сама адреса. Синхронізація не завантажуватиме цю людину.</value></data>
+  <data name="Erasure.Enter.Label" xml:space="preserve"><value>Електронна пошта з письмового запиту</value></data>
+  <data name="Erasure.Enter.Button" xml:space="preserve"><value>Внести виключення</value></data>
+  <data name="Erasure.Enter.AlreadyLoaded" xml:space="preserve"><value>Цю людину вже завантажено — видаліть її дані звичайним способом.</value></data>
+  <data name="Erasure.Enter.AlreadyExcluded" xml:space="preserve"><value>Цю адресу вже виключено.</value></data>
+  <data name="Erasure.Enter.Truncated" xml:space="preserve"><value>Показано перших 50 людей з цією адресою.</value></data>
+  <data name="Erasure.Message.ExclusionEntered" xml:space="preserve"><value>Виключення внесено. Синхронізація не завантажуватиме цю людину.</value></data>
   <data name="Erasure.Confirmation.Title" xml:space="preserve"><value>Підтвердження видалення даних</value></data>
   <data name="Erasure.Confirmation.Courses" xml:space="preserve"><value>Курси</value></data>
   <data name="Erasure.Confirmation.Submissions" xml:space="preserve"><value>Здані роботи</value></data>

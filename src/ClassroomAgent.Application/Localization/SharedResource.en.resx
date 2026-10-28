@@ -548,7 +548,15 @@
   <data name="Erasure.Lift.Error.EmailInvalid" xml:space="preserve"><value>Enter an address of the form name@domain.</value></data>
   <data name="Erasure.Message.Erased" xml:space="preserve"><value>The person's data was erased.</value></data>
   <data name="Erasure.Message.ExclusionLifted" xml:space="preserve"><value>The exclusion was lifted. The next synchronization will load the person as new.</value></data>
-  <data name="Erasure.ReadOnlyNotice" xml:space="preserve"><value>The installation is read-only: erasure and lifting an exclusion are unavailable.</value></data>
+  <data name="Erasure.ReadOnlyNotice" xml:space="preserve"><value>The installation is read-only: erasure, lifting and entering an exclusion are unavailable.</value></data>
+  <data name="Erasure.Enter.Title" xml:space="preserve"><value>Exclude by email</value></data>
+  <data name="Erasure.Enter.Explanation" xml:space="preserve"><value>For a person the program has not loaded yet — chiefly when the school moves to another domain. Only a fingerprint of the address is kept, not the address itself. Synchronization will not load this person.</value></data>
+  <data name="Erasure.Enter.Label" xml:space="preserve"><value>The email from the written request</value></data>
+  <data name="Erasure.Enter.Button" xml:space="preserve"><value>Enter the exclusion</value></data>
+  <data name="Erasure.Enter.AlreadyLoaded" xml:space="preserve"><value>This person is already loaded — erase their data the ordinary way.</value></data>
+  <data name="Erasure.Enter.AlreadyExcluded" xml:space="preserve"><value>This address is already excluded.</value></data>
+  <data name="Erasure.Enter.Truncated" xml:space="preserve"><value>The first 50 people with this address are shown.</value></data>
+  <data name="Erasure.Message.ExclusionEntered" xml:space="preserve"><value>The exclusion was entered. Synchronization will not load this person.</value></data>
   <data name="Erasure.Confirmation.Title" xml:space="preserve"><value>Confirm the erasure</value></data>
   <data name="Erasure.Confirmation.Courses" xml:space="preserve"><value>Courses</value></data>
   <data name="Erasure.Confirmation.Submissions" xml:space="preserve"><value>Submissions</value></data>

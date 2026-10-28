@@ -11,6 +11,12 @@ public sealed class AuditDeletionConfinementTests
 {
     private const string PurgeStore = "RetentionPurgeStore.cs";
 
+    /// <summary>
+    /// US-065 db-design §4 step 6: the one fill of an exclusion's Google user id is a set-based <c>ExecuteUpdate</c> on
+    /// <c>erased_participant</c> — the only <c>ExecuteUpdate</c> outside the purge store, and its file never names audit rows.
+    /// </summary>
+    private const string ExclusionRepository = "ErasedParticipantRepository.cs";
+
     /// <summary>The audit repository stays add-only.</summary>
     [Fact]
     public void TheAuditRepository_CanOnlyAdd()
@@ -45,7 +51,7 @@ public sealed class AuditDeletionConfinementTests
                 var text = File.ReadAllText(f);
                 return text.Contains("AuditEvents.Remove", StringComparison.Ordinal)
                        || text.Contains("AuditEvents.Update", StringComparison.Ordinal)
-                       || text.Contains("ExecuteUpdate", StringComparison.Ordinal)
+                       || (text.Contains("ExecuteUpdate", StringComparison.Ordinal) && Path.GetFileName(f) != ExclusionRepository)
                        || text.Contains("DELETE FROM audit_event", StringComparison.OrdinalIgnoreCase)
                        || text.Contains("UPDATE audit_event", StringComparison.OrdinalIgnoreCase);
             })
@@ -53,6 +59,18 @@ public sealed class AuditDeletionConfinementTests
             .ToList();
 
         Assert.Empty(offenders);
+    }
+
+    /// <summary>US-065: the exclusion repository's <c>ExecuteUpdate</c> touches the exclusion table only, never audit rows.</summary>
+    [Fact]
+    public void TheExclusionFill_NeverNamesAuditRows()
+    {
+        var file = Assert.Single(ProductionSources(), f => Path.GetFileName(f) == ExclusionRepository);
+        var text = File.ReadAllText(file);
+
+        Assert.Contains("db.ErasedParticipants", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("AuditEvent", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("audit_event", text, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>

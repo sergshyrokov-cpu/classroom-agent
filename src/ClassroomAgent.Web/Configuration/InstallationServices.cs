@@ -240,6 +240,9 @@ public static class InstallationServices
         services.AddScoped<EraseParticipantUseCase>();
         services.AddScoped<LiftErasureExclusionUseCase>();
 
+        // US-065 spec FR-002: the entry of an exclusion by email before the person is loaded.
+        services.AddScoped<EnterErasureExclusionUseCase>();
+
         // US-062 entity model §2: the data-health read port, the banner's and the page's queries (read only, no guard),
         // the Admin's confirmation (read-only guard first, FR-006.2) and the layout's banner source.
         services.AddScoped<IDataHealthSource, DataHealthSource>();

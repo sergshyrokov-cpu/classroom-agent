@@ -1,4 +1,5 @@
 using ClassroomAgent.Application.Models;
+using ClassroomAgent.Application.Models.Dtos;
 using ClassroomAgent.Application.Ports;
 using ClassroomAgent.Domain.Enums;
 using ClassroomAgent.Domain.Entities;
@@ -12,6 +13,9 @@ namespace ClassroomAgent.Infrastructure.Persistence;
 /// </summary>
 public sealed class ParticipantErasureReadSource(ClassroomAgentDbContext db) : IParticipantErasureReadSource
 {
+    /// <summary>US-065 api-design §2.5: the search's cap; the lookup returns one more to tell whether there were more.</summary>
+    private const int MaxEmailMatches = 50;
+
     public async Task<ParticipantSearchPage> SearchAsync(string term, int limit, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(term);
@@ -89,4 +93,30 @@ public sealed class ParticipantErasureReadSource(ClassroomAgentDbContext db) : I
             .Where(p => p.Id == participantId)
             .Select(p => new ParticipantErasureTarget(p.Id, p.GoogleUserId, p.Email))
             .SingleOrDefaultAsync(cancellationToken);
+
+    /// <summary>
+    /// US-065 db-design §3 step 2: <c>lower(email) = @normalized</c>, served by <c>ix_classroom_participant_email_lower</c>;
+    /// every participant, on a roster or not, in the order and shape of <see cref="SearchAsync"/>.
+    /// </summary>
+    public async Task<IReadOnlyList<ParticipantSearchResult>> FindParticipantsByEmailAsync(
+        string normalizedEmail,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(normalizedEmail);
+
+        return await db.ClassroomParticipants
+            .AsNoTracking()
+            .Where(p => p.Email != null && p.Email.ToLower() == normalizedEmail)
+            .OrderBy(p => p.FullName)
+            .ThenBy(p => p.Email)
+            .ThenBy(p => p.Id)
+            .Take(MaxEmailMatches + 1)
+            .Select(p => new ParticipantSearchResult(
+                p.Id,
+                p.FullName,
+                p.Email,
+                db.CourseMemberships.Count(m => m.ParticipantId == p.Id && m.Role == ClassroomRole.Teacher),
+                db.CourseMemberships.Count(m => m.ParticipantId == p.Id && m.Role == ClassroomRole.Student)))
+            .ToListAsync(cancellationToken);
+    }
 }

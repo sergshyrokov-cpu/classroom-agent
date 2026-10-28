@@ -207,9 +207,12 @@ public static class ErasureHostExtensions
         this InstallationTestHost host,
         string googleUserId,
         string? email,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        DateTimeOffset? at = null)
     {
-        var stamp = host.Time.GetUtcNow();
+        // US-065: an exclusion can no longer be aged by an UPDATE (tg_erased_participant_fill_only), so an old one is
+        // inserted with its age.
+        var stamp = at ?? host.Time.GetUtcNow();
         await host.ExecuteAsync(
             """
             INSERT INTO erasure_salt (singleton, salt, created_at, updated_at)
@@ -232,10 +235,53 @@ public static class ErasureHostExtensions
             ("stamp", stamp));
     }
 
-    /// <summary>A stored exclusion, every column.</summary>
+    /// <summary>
+    /// US-065: seeds by SQL an exclusion entered in advance — the known salt first when none is stored, the fingerprint of
+    /// <paramref name="email"/>, no Google user id — without going through the entry under test; returns its id.
+    /// </summary>
+    public static async Task<long> SeedExclusionInAdvanceAsync(
+        this InstallationTestHost host,
+        string email,
+        CancellationToken cancellationToken)
+    {
+        var stamp = host.Time.GetUtcNow();
+        await host.ExecuteAsync(
+            """
+            INSERT INTO erasure_salt (singleton, salt, created_at, updated_at)
+            VALUES (true, @salt, @stamp, @stamp)
+            ON CONFLICT (singleton) DO NOTHING
+            """,
+            cancellationToken,
+            ("salt", ErasureTestData.KnownSalt()),
+            ("stamp", stamp));
+        var salt = await host.ScalarAsync<byte[]>("SELECT salt FROM erasure_salt", cancellationToken);
+        return await host.ScalarAsync<long>(
+            """
+            INSERT INTO erased_participant (google_user_id, email_fingerprint, erased_at, created_at, updated_at)
+            VALUES (NULL, @fingerprint, @stamp, @stamp, @stamp)
+            RETURNING id
+            """,
+            cancellationToken,
+            ("fingerprint", ErasureTestData.Fingerprint(email, salt!)),
+            ("stamp", stamp));
+    }
+
+    /// <summary>US-065: runs the entry use case resolved from the host's container, as one request would.</summary>
+    public static async Task<ExclusionEntryResult> EnterExclusionAsync(
+        this InstallationTestHost host,
+        long adminId,
+        string? email,
+        CancellationToken cancellationToken)
+    {
+        using var scope = host.CreateScope();
+        var useCase = scope.ServiceProvider.GetRequiredService<EnterErasureExclusionUseCase>();
+        return await useCase.ExecuteAsync(adminId, email, null, cancellationToken);
+    }
+
+    /// <summary>A stored exclusion, every column; the Google user id is null for an exclusion entered in advance (US-065).</summary>
     public sealed record ExclusionRow(
         long Id,
-        string GoogleUserId,
+        string? GoogleUserId,
         byte[]? EmailFingerprint,
         DateTimeOffset ErasedAt,
         DateTimeOffset CreatedAt,
@@ -246,7 +292,7 @@ public static class ErasureHostExtensions
             "SELECT id, google_user_id, email_fingerprint, erased_at, created_at, updated_at FROM erased_participant ORDER BY id",
             r => new ExclusionRow(
                 r.GetInt64(0),
-                r.GetString(1),
+                r.IsDBNull(1) ? null : r.GetString(1),
                 r.IsDBNull(2) ? null : r.GetFieldValue<byte[]>(2),
                 r.GetFieldValue<DateTimeOffset>(3),
                 r.GetFieldValue<DateTimeOffset>(4),
@@ -281,7 +327,7 @@ public static class ErasureHostExtensions
         int? ClearedMeetOrganizers,
         int? ClearedCourseOwners);
 
-    /// <summary>The audit rows of the two US-038 actions, in order.</summary>
+    /// <summary>The audit rows of the two US-038 actions and the US-065 entry, in order.</summary>
     public static Task<IReadOnlyList<ErasureAuditRow>> ErasureAuditRowsAsync(this InstallationTestHost host, CancellationToken cancellationToken) =>
         host.QueryAsync(
             """
@@ -289,7 +335,7 @@ public static class ErasureHostExtensions
                    erased_memberships, erased_submissions, erased_meet_participations, cleared_meet_organizers,
                    cleared_course_owners
             FROM audit_event
-            WHERE action IN ('participant_erased', 'erasure_exclusion_lifted')
+            WHERE action IN ('participant_erased', 'erasure_exclusion_lifted', 'erasure_exclusion_entered')
             ORDER BY id
             """,
             r => new ErasureAuditRow(
@@ -391,6 +437,19 @@ public static class ErasureHostExtensions
             ErasureTestData.ConfirmationPath(participantId),
             ErasureTestData.ErasurePath(participantId),
             mark is null ? [] : [new(ErasureTestData.Fields.Mark, mark)],
+            cancellationToken,
+            withToken);
+
+    /// <summary>US-065: posts the "Exclude by email" form from the erasure page.</summary>
+    public static Task<PageResponse> PostEntryAsync(
+        this FormClient client,
+        string email,
+        CancellationToken cancellationToken,
+        bool withToken = true) =>
+        client.PostFromAsync(
+            ErasureTestData.PagePath,
+            ErasureTestData.EntriesPath,
+            [new(ErasureTestData.Fields.Email, email)],
             cancellationToken,
             withToken);
 

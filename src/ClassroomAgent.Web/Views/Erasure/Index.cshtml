@@ -1,3 +1,4 @@
+@using ClassroomAgent.Application.Models
 @using ClassroomAgent.Application.Models.Dtos
 @model ErasurePageModel
 @{
@@ -72,3 +73,43 @@
         <p id="erasure-no-exclusion">@T[ErasureTextKeys.NoExclusion]</p>
     }
 </form>
+
+<h2>@T[ErasureTextKeys.EnterTitle]</h2>
+<p>@T[ErasureTextKeys.EnterExplanation]</p>
+<form method="post" action="@SignInRoutes.ErasureExclusions" id="erasure-enter-form">
+    @Html.AntiForgeryToken()
+    <label>
+        @T[ErasureTextKeys.EnterLabel]
+        <input type="text" name="email" value="@Model.Enter.Email" maxlength="254" autocomplete="off" />
+    </label>
+    <button type="submit" disabled="@(Model.ReadOnlyNotice ? "disabled" : null)">@T[ErasureTextKeys.EnterButton]</button>
+    @if (Model.Enter.FieldError is { } enterError)
+    {
+        <p class="field-error" id="erasure-enter-error">@T[ErasureTextKeys.Of(enterError)]</p>
+    }
+</form>
+
+@if (Model.Enter.Outcome == ExclusionEntryOutcome.AlreadyExcluded)
+{
+    <p id="erasure-already-excluded">@T[ErasureTextKeys.AlreadyExcluded]</p>
+}
+
+@if (Model.Enter.Outcome == ExclusionEntryOutcome.AlreadyLoaded)
+{
+    <p id="erasure-already-loaded">@T[ErasureTextKeys.AlreadyLoaded]</p>
+    <ul id="erasure-loaded-results">
+        @foreach (var result in Model.Enter.LoadedParticipants)
+        {
+            <li data-participant-id="@result.ParticipantId">
+                <a href="@SignInRoutes.ErasureConfirmationOf(result.ParticipantId)">@(string.IsNullOrWhiteSpace(result.FullName) ? T[ErasureTextKeys.NoName].Value : result.FullName)</a>
+                <span>@(result.Email ?? T[ErasureTextKeys.NoEmail].Value)</span>
+                <span>@T[ErasureTextKeys.TeacherCourses]: @result.TeacherCourses</span>
+                <span>@T[ErasureTextKeys.StudentCourses]: @result.StudentCourses</span>
+            </li>
+        }
+    </ul>
+    @if (Model.Enter.LoadedTruncated)
+    {
+        <p id="erasure-loaded-truncated">@T[ErasureTextKeys.LoadedTruncated]</p>
+    }
+}

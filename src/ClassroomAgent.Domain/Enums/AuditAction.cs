@@ -104,4 +104,7 @@ public enum AuditAction
     /// deleted in Classroom.
     /// </summary>
     CoursesConfirmedDeleted,
+
+    /// <summary>US-065 spec FR-013: an Admin entered an erasure exclusion by email before the person was loaded.</summary>
+    ErasureExclusionEntered,
 }

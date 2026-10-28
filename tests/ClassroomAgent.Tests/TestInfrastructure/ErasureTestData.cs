@@ -21,6 +21,9 @@ public static partial class ErasureTestData
     /// <summary>openapi <c>POST /settings/erasure/exclusion-liftings</c>.</summary>
     public const string LiftingsPath = "/settings/erasure/exclusion-liftings";
 
+    /// <summary>US-065 openapi <c>POST /settings/erasure/exclusions</c>.</summary>
+    public const string EntriesPath = "/settings/erasure/exclusions";
+
     /// <summary>openapi <c>GET /settings/erasure/participants/{participantId}</c>.</summary>
     public static string ConfirmationPath(long participantId) =>
         "/settings/erasure/participants/" + participantId.ToString(CultureInfo.InvariantCulture);
@@ -43,6 +46,9 @@ public static partial class ErasureTestData
         public const string Erasure = "settings/erasure/participants/{participantid}/erasure";
         public const string Liftings = "settings/erasure/exclusion-liftings";
 
+        /// <summary>US-065: the entry of an exclusion in advance (not in <see cref="All"/>, which is US-038's five).</summary>
+        public const string Entries = "settings/erasure/exclusions";
+
         public static IReadOnlyList<string> All { get; } = [Page, Searches, Confirmation, Erasure, Liftings];
     }
 
@@ -59,6 +65,7 @@ public static partial class ErasureTestData
     {
         public const string Erase = "Participant.Erase";
         public const string Lift = "ErasureExclusion.Lift";
+        public const string Enter = "ErasureExclusion.Enter";
     }
 
     /// <summary>Markup hooks (strategy §4).</summary>
@@ -120,6 +127,27 @@ public static partial class ErasureTestData
 
         /// <summary>The form posting to the erasure; its submit button is <c>disabled</c> in read-only mode.</summary>
         public const string EraseForm = "erasure-form";
+
+        /// <summary>US-065: the form posting to <see cref="EntriesPath"/>; its submit button is <c>disabled</c> in read-only mode.</summary>
+        public const string EnterForm = "erasure-enter-form";
+
+        /// <summary>US-065: the VR-001 field error of the entry form.</summary>
+        public const string EnterError = "erasure-enter-error";
+
+        /// <summary>US-065: the "this person is already loaded — erase their data the ordinary way" message.</summary>
+        public const string AlreadyLoaded = "erasure-already-loaded";
+
+        /// <summary>
+        /// US-065: the list of the participants already loaded with that email; each entry carries
+        /// <see cref="ResultAttribute"/> and links to its confirmation page.
+        /// </summary>
+        public const string LoadedResults = "erasure-loaded-results";
+
+        /// <summary>US-065: more than 50 participants have that email; the list shows 50.</summary>
+        public const string LoadedTruncated = "erasure-loaded-truncated";
+
+        /// <summary>US-065: the "this email is already excluded" message.</summary>
+        public const string AlreadyExcluded = "erasure-already-excluded";
     }
 
     /// <summary>The values of <see cref="Markup.CountAttribute"/>.</summary>
@@ -176,6 +204,23 @@ public static partial class ErasureTestData
         public const string RoleTeacher = "Erasure.Role.Teacher";
         public const string RoleStudent = "Erasure.Role.Student";
 
+        // US-065 (test strategy §5). The entry's field errors reuse the three Erasure.Lift.Error.* keys (one shared VR-001).
+        public const string EnterTitle = "Erasure.Enter.Title";
+        public const string EnterExplanation = "Erasure.Enter.Explanation";
+        public const string EnterLabel = "Erasure.Enter.Label";
+        public const string EnterButton = "Erasure.Enter.Button";
+        public const string AlreadyLoaded = "Erasure.Enter.AlreadyLoaded";
+        public const string AlreadyExcluded = "Erasure.Enter.AlreadyExcluded";
+        public const string LoadedTruncated = "Erasure.Enter.Truncated";
+        public const string ExclusionEntered = "Erasure.Message.ExclusionEntered";
+
+        /// <summary>US-065's keys.</summary>
+        public static IReadOnlyList<string> Entry { get; } =
+        [
+            EnterTitle, EnterExplanation, EnterLabel, EnterButton, AlreadyLoaded, AlreadyExcluded, LoadedTruncated,
+            ExclusionEntered,
+        ];
+
         public static IReadOnlyList<string> All { get; } =
         [
             Title, NavigationEntry, SearchLabel, SearchButton, NoneFound, Truncated, NoName, NoEmail, TeacherCourses,
@@ -207,6 +252,7 @@ public static partial class ErasureTestData
     {
         public const string ErasedAction = "participant_erased";
         public const string LiftedAction = "erasure_exclusion_lifted";
+        public const string EnteredAction = "erasure_exclusion_entered";
         public const string ParticipantTarget = "classroom_participant";
         public const string ExclusionTarget = "erased_participant";
         public const string Succeeded = "succeeded";
@@ -238,6 +284,13 @@ public static partial class ErasureTestData
         public const string AuditErasureShape = "ck_audit_event_erasure_shape";
         public const string AuditLiftShape = "ck_audit_event_exclusion_lift_shape";
         public const string Migration = "_AddParticipantErasure";
+
+        // US-065 db-design §2.3, §6.2, §7.
+        public const string FillOnlyTrigger = "tg_erased_participant_fill_only";
+        public const string FillOnlyFunction = "erased_participant_fill_only";
+        public const string AuditEntryShape = "ck_audit_event_exclusion_entry_shape";
+        public const string AuditAction = "ck_audit_event_action";
+        public const string InAdvanceMigration = "_AddErasureExclusionInAdvance";
 
         public static IReadOnlyList<string> AuditCountColumns { get; } =
         [

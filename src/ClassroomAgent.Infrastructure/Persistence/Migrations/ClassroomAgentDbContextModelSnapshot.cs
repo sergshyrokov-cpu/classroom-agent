@@ -314,7 +314,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                     b.ToTable("audit_event", null, t =>
                         {
-                            t.HasCheckConstraint("ck_audit_event_action", "action IN ('admin_sign_in', 'workspace_connection_saved', 'access_check_run', 'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', 'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run', 'synchronization_requested', 'report_template_created', 'report_template_changed', 'report_template_deleted', 'journal_exported', 'meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', 'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed', 'meet_reports_exported', 'meet_meeting_exported', 'participant_erased', 'erasure_exclusion_lifted', 'courses_confirmed_deleted')");
+                            t.HasCheckConstraint("ck_audit_event_action", "action IN ('admin_sign_in', 'workspace_connection_saved', 'access_check_run', 'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', 'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run', 'synchronization_requested', 'report_template_created', 'report_template_changed', 'report_template_deleted', 'journal_exported', 'meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', 'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed', 'meet_reports_exported', 'meet_meeting_exported', 'participant_erased', 'erasure_exclusion_lifted', 'courses_confirmed_deleted', 'erasure_exclusion_entered')");
 
                             t.HasCheckConstraint("ck_audit_event_actor_id", "(actor_type = 'app_user') = (actor_id IS NOT NULL)");
 
@@ -335,6 +335,8 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_audit_event_erasure_counts_non_negative", "(erased_memberships IS NULL OR erased_memberships >= 0) AND (erased_submissions IS NULL OR erased_submissions >= 0) AND (erased_meet_participations IS NULL OR erased_meet_participations >= 0) AND (cleared_meet_organizers IS NULL OR cleared_meet_organizers >= 0) AND (cleared_course_owners IS NULL OR cleared_course_owners >= 0)");
 
                             t.HasCheckConstraint("ck_audit_event_erasure_shape", "action <> 'participant_erased' OR (actor_type = 'app_user' AND actor_role = 'admin' AND (outcome = 'refused' OR (target_type = 'classroom_participant' AND target_id IS NOT NULL)))");
+
+                            t.HasCheckConstraint("ck_audit_event_exclusion_entry_shape", "action <> 'erasure_exclusion_entered' OR (actor_type = 'app_user' AND actor_role = 'admin' AND (outcome = 'refused' OR (target_type = 'erased_participant' AND target_id IS NOT NULL)))");
 
                             t.HasCheckConstraint("ck_audit_event_exclusion_lift_shape", "action <> 'erasure_exclusion_lifted' OR (actor_type = 'app_user' AND actor_role = 'admin' AND (outcome = 'refused' OR (target_type = 'erased_participant' AND target_id IS NOT NULL)))");
 
@@ -758,7 +760,6 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .HasColumnName("erased_at");
 
                     b.Property<string>("GoogleUserId")
-                        .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
                         .HasColumnName("google_user_id");
@@ -779,9 +780,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                     b.ToTable("erased_participant", null, t =>
                         {
-                            t.HasCheckConstraint("ck_erased_participant_immutable", "updated_at = created_at");
-
-                            t.HasCheckConstraint("ck_erased_participant_values", "char_length(google_user_id) >= 1 AND (email_fingerprint IS NULL OR octet_length(email_fingerprint) = 32)");
+                            t.HasCheckConstraint("ck_erased_participant_values", "(google_user_id IS NULL OR char_length(google_user_id) >= 1) AND (email_fingerprint IS NULL OR octet_length(email_fingerprint) = 32) AND (google_user_id IS NOT NULL OR email_fingerprint IS NOT NULL)");
                         });
                 });
 

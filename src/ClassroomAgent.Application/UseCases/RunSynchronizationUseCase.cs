@@ -571,6 +571,7 @@ public sealed class RunSynchronizationUseCase(
                     submissionSnapshots,
                     observedAt,
                     record,
+                    progress,
                     transaction),
                 cancellationToken);
 
@@ -728,6 +729,7 @@ public sealed class RunSynchronizationUseCase(
         IReadOnlyList<SubmissionSnapshot> submissionSnapshots,
         DateTimeOffset observedAt,
         SyncSkippedCourse? record,
+        ImportProgress progress,
         CancellationToken cancellationToken)
     {
         // US-038 spec FR-011, db-design §7.3: the shared fence first, so an erasure committing meanwhile is waited for
@@ -756,7 +758,7 @@ public sealed class RunSynchronizationUseCase(
 
         // US-038 spec FR-012, db-design §7.4: the excluded among the course's owner, roster and submitters, in one
         // lookup. They are skipped — not an error and not a failure — and the course keeps no excluded owner.
-        var excluded = await exclusions.GetExcludedGoogleUserIdsAsync(
+        var excludedById = await exclusions.GetExcludedGoogleUserIdsAsync(
             RosterOf(roster).Select(p => p.Entry.GoogleUserId)
                 .Concat(submissionSnapshots.Select(s => s.GoogleUserId))
                 .Append(snapshot.Details.OwnerGoogleId)
@@ -764,6 +766,7 @@ public sealed class RunSynchronizationUseCase(
                 .Distinct(StringComparer.Ordinal)
                 .ToList(),
             cancellationToken);
+        var excluded = await AddMatchedInAdvanceAsync(roster, excludedById, progress, cancellationToken);
         var details = snapshot.Details.OwnerGoogleId is { } owner && excluded.Contains(owner)
             ? snapshot.Details with { OwnerGoogleId = null }
             : snapshot.Details;
@@ -844,6 +847,81 @@ public sealed class RunSynchronizationUseCase(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new CourseResult(false, marked, unrecognised, itemsMarked, itemsUnmarked);
+    }
+
+    /// <summary>
+    /// US-065 spec FR-006 … FR-008, db-design §4: the roster entries whose email has the fingerprint of an exclusion
+    /// entered in advance (no Google user id yet) join the course's excluded ids, and each such exclusion receives the
+    /// Google id of its match — once. Exclusions that hold an id work by id only (spec I-1). A matched id that is a
+    /// stored participant is not excluded and fills nothing (FR-008, OD-003 a); an id another exclusion already holds is
+    /// skipped by id and fills nothing (I-2). At most three queries plus one update per filled exclusion (NFR-003).
+    /// </summary>
+    /// <remarks>
+    /// The salt is read here, inside the course transaction and after the fence, while none has been found: an entry
+    /// that created it while this course waited on the fence is then seen (spec FR-011; TEST_WRITING INFO-1). Once found
+    /// it is kept for the run — it never changes.
+    /// </remarks>
+    private async Task<IReadOnlySet<string>> AddMatchedInAdvanceAsync(
+        CourseRoster roster,
+        IReadOnlySet<string> excludedById,
+        ImportProgress progress,
+        CancellationToken cancellationToken)
+    {
+        progress.Salt ??= await salts.FindAsync(cancellationToken);
+        if (progress.Salt is not { } salt)
+        {
+            return excludedById;
+        }
+
+        // VR-004: an entry with no email in Google's answer cannot be matched.
+        var candidates = RosterOf(roster)
+            .Where(p => !string.IsNullOrWhiteSpace(p.Entry.Email))
+            .Select(p => (p.Entry.GoogleUserId, Fingerprint: EmailFingerprint.Of(p.Entry.Email!, salt)))
+            .ToList();
+        if (candidates.Count == 0)
+        {
+            return excludedById;
+        }
+
+        var unmatched = await exclusions.GetUnmatchedByFingerprintsAsync(
+            candidates.Select(c => c.Fingerprint).Distinct().ToList(),
+            cancellationToken);
+        if (unmatched.Count == 0)
+        {
+            return excludedById;
+        }
+
+        var matchedFingerprints = unmatched.Select(u => u.Fingerprint).ToHashSet();
+        var matched = candidates.Where(c => matchedFingerprints.Contains(c.Fingerprint)).ToList();
+
+        // FR-008, OD-003 a: a Google id already stored as a participant keeps being synchronized as usual.
+        var storedIds = (await participants.GetByGoogleUserIdsAsync(
+                matched.Select(c => c.GoogleUserId).Distinct(StringComparer.Ordinal).ToList(),
+                cancellationToken))
+            .Select(p => p.GoogleUserId)
+            .ToHashSet(StringComparer.Ordinal);
+        matched = matched.Where(c => !storedIds.Contains(c.GoogleUserId)).ToList();
+
+        var excluded = new HashSet<string>(excludedById, StringComparer.Ordinal);
+        excluded.UnionWith(matched.Select(c => c.GoogleUserId));
+
+        // FR-007, I-2: per exclusion in id order, the ordinally first remaining id that no exclusion holds yet; each
+        // filled id is taken before the next, so the unique index is never hit.
+        var held = new HashSet<string>(excludedById, StringComparer.Ordinal);
+        foreach (var exclusion in unmatched)
+        {
+            var googleUserId = matched
+                .Where(c => c.Fingerprint == exclusion.Fingerprint && !held.Contains(c.GoogleUserId))
+                .Select(c => c.GoogleUserId)
+                .Order(StringComparer.Ordinal)
+                .FirstOrDefault();
+            if (googleUserId is not null && await exclusions.FillGoogleUserIdAsync(exclusion.Id, googleUserId, cancellationToken))
+            {
+                held.Add(googleUserId);
+            }
+        }
+
+        return excluded;
     }
 
     /// <summary>
@@ -1134,6 +1212,9 @@ public sealed class RunSynchronizationUseCase(
 
         /// <summary>US-059 FR-007: the course marks of the end of the list; null until the list has been read to its end.</summary>
         public CourseListMarkCounts? CourseList { get; set; }
+
+        /// <summary>US-065 db-design §4 step 1: the installation's salt once found; it never changes afterwards.</summary>
+        public ErasureSalt? Salt { get; set; }
     }
 
     /// <summary>What the Meet step did so far, for the outcome the host logs (US-031 spec FR-012).</summary>

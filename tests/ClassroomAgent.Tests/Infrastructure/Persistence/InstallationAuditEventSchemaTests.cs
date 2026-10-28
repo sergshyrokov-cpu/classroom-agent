@@ -122,6 +122,9 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
                 "ck_audit_event_erasure_counts_absent",
                 "ck_audit_event_erasure_counts_non_negative",
                 "ck_audit_event_erasure_shape",
+
+                // US-065 adds the entry row's shape (US-065 db-design §6.2).
+                "ck_audit_event_exclusion_entry_shape",
                 "ck_audit_event_exclusion_lift_shape",
                 "ck_audit_event_export_columns",
                 "ck_audit_event_export_columns_absent",

@@ -23,6 +23,13 @@ public static class ErasureTextKeys
     public const string LiftButton = "Erasure.Lift.Button";
     public const string NoExclusion = "Erasure.Lift.NoExclusion";
     public const string ReadOnlyNotice = "Erasure.ReadOnlyNotice";
+    public const string EnterTitle = "Erasure.Enter.Title";
+    public const string EnterExplanation = "Erasure.Enter.Explanation";
+    public const string EnterLabel = "Erasure.Enter.Label";
+    public const string EnterButton = "Erasure.Enter.Button";
+    public const string AlreadyLoaded = "Erasure.Enter.AlreadyLoaded";
+    public const string AlreadyExcluded = "Erasure.Enter.AlreadyExcluded";
+    public const string LoadedTruncated = "Erasure.Enter.Truncated";
     public const string ConfirmationTitle = "Erasure.Confirmation.Title";
     public const string Courses = "Erasure.Confirmation.Courses";
     public const string Submissions = "Erasure.Confirmation.Submissions";
@@ -56,6 +63,7 @@ public static class ErasureTextKeys
     {
         ErasureMessageKey.Erased => "Erasure.Message.Erased",
         ErasureMessageKey.ExclusionLifted => "Erasure.Message.ExclusionLifted",
+        ErasureMessageKey.ExclusionEntered => "Erasure.Message.ExclusionEntered",
         _ => throw new ArgumentOutOfRangeException(nameof(message), message, null),
     };
 
