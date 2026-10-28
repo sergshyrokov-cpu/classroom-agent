@@ -24,4 +24,11 @@ public interface ICourseRepository
     /// course list (a few hundred rows per school).
     /// </summary>
     Task<IReadOnlyList<Course>> GetAllAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// US-062 entity model §2.1: row-locked read (FOR UPDATE) of the given courses; call only inside
+    /// ExecuteInTransactionAsync (db-design §4). Unknown ids are simply absent from the result.
+    /// </summary>
+    Task<IReadOnlyList<Course>> GetForAbsenceConfirmationAsync(
+        IReadOnlyCollection<long> courseIds, CancellationToken cancellationToken);
 }

@@ -589,6 +589,14 @@ public sealed class SyncWorld
             IReadOnlyList<Course> all = Stored.Values.ToList();
             return Task.FromResult(all);
         }
+
+        /// <summary>US-062 entity model §2.1: the stored courses with those internal ids; unknown ids are absent.</summary>
+        public Task<IReadOnlyList<Course>> GetForAbsenceConfirmationAsync(
+            IReadOnlyCollection<long> courseIds, CancellationToken cancellationToken)
+        {
+            IReadOnlyList<Course> found = Stored.Values.Where(c => courseIds.Contains(c.Id)).ToList();
+            return Task.FromResult(found);
+        }
     }
 
     /// <summary>The participants, in memory, keyed on the Google user id (spec FR-006).</summary>

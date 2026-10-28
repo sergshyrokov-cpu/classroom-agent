@@ -1,0 +1,242 @@
+@using System.Globalization
+@using ClassroomAgent.Application.Models.Dtos
+@using ClassroomAgent.Domain.Enums
+@* US-062 INFO-1: _ViewImports brings Application.Models, whose SkippedCourse (US-014) shares the DTO's simple name. *@
+@using SkippedCourse = ClassroomAgent.Application.Models.Dtos.SkippedCourse
+@inject SchoolTimeZone School
+@model DataHealthPageModel
+@{
+    ViewData["Title"] = T[DataHealthTextKeys.Title];
+
+    // Api-design §3: the language switcher returns to the bare page path — no query string, no personal data.
+    ViewData[UiLanguageController.ReturnPathViewDataKey] = SignInRoutes.DataHealth;
+}
+
+@await Html.PartialAsync("_PageSearchHint", PageSearchHintTextKeys.Ordinary)
+
+@if (Model.Message is { } message)
+{
+    <p id="data-health-message" class="form-message">@(message == DataHealthMessage.Confirmed
+        ? T[DataHealthTextKeys.Of(message), Model.ConfirmedCount ?? 0]
+        : T[DataHealthTextKeys.Of(message)])</p>
+}
+
+@* FR-004.5, I-3: in read-only mode the landing page's message for the reason, in place of the X6 problem. *@
+@if (Model.ReadOnly is { } readOnly)
+{
+    <section id="data-health-read-only" class="notice">
+        <h2>@T["Landing.ReadOnly.Title"]</h2>
+        <p>@T["Landing.ReadOnly." + readOnly.Reason]</p>
+    </section>
+}
+
+@if (Model.HasNoProblem)
+{
+    <p>@T[DataHealthTextKeys.NoProblems]</p>
+}
+
+<section id="data-health-technical">
+    <h2>@T[DataHealthTextKeys.SectionTechnical]</h2>
+    @if (Model.Technical.Count == 0)
+    {
+        <p>@T[DataHealthTextKeys.None]</p>
+    }
+    @foreach (var problem in Model.Technical)
+    {
+        <div class="data-health-problem">
+            <p><strong>@TechnicalTitle(problem)</strong></p>
+            @if (problem.Details is { } details)
+            {
+                switch (problem.Kind)
+                {
+                    case TechnicalProblemKind.LastRunFailed:
+                        <p>@T[DiagnosisKey(details.Diagnosis)]</p>
+                        if (details.FailedStep is { } step)
+                        {
+                            <p>@T["LastSync.Step." + step]</p>
+                        }
+                        if (details.FinishedAt is { } finished)
+                        {
+                            <p>@T[DataHealthTextKeys.FinishedAt, Instant(finished)]</p>
+                        }
+                        <p><a href="@SignInRoutes.WorkspaceConnection">@T[DataHealthTextKeys.ConnectionPage]</a></p>
+                        break;
+                    case TechnicalProblemKind.NoRecentSuccess when details.LastSuccessAt is { } lastSuccess:
+                        <p>@T[DataHealthTextKeys.LastSuccess, Instant(lastSuccess)]</p>
+                        break;
+                    case TechnicalProblemKind.ControlPlaneUnreachable:
+                        if (details.UpgradeRequired == true)
+                        {
+                            <p>@T[DataHealthTextKeys.UpgradeRequired]</p>
+                        }
+                        <p>@T[DataHealthTextKeys.TellTheOwner]</p>
+                        break;
+                    case TechnicalProblemKind.UnknownCourseState when details.Course is { } course:
+                        <p>@CourseName(course)</p>
+                        if (details.SkippedSince is { } skippedSince)
+                        {
+                            <p>@T[DataHealthTextKeys.SkippedSince, Date(skippedSince)]</p>
+                        }
+                        break;
+                    case TechnicalProblemKind.CoursesNotVisible when details.NotVisibleCourses is { } courses:
+                        @* FR-006.1: the Admin's checkbox per course and the confirmation button. *@
+                        <form id="course-deletion-confirmation" method="post" action="@SignInRoutes.DataHealthCourseDeletionConfirmation">
+                            @Html.AntiForgeryToken()
+                            <ul>
+                                @foreach (var course in courses)
+                                {
+                                    <li>
+                                        <label>
+                                            <input type="checkbox" name="@DataHealthController.CourseIdsField" value="@course.CourseId.ToString(CultureInfo.InvariantCulture)" />
+                                            @course.Name
+                                        </label>
+                                        (@T["Courses.Status." + course.State]; @T[DataHealthTextKeys.MarkedSince, Date(course.MarkedSince)];
+                                        @(course.LastCompleteReadAt is { } read
+                                            ? T[DataHealthTextKeys.LastCompleteRead, Instant(read)]
+                                            : T[DataHealthTextKeys.NeverRead]))
+                                    </li>
+                                }
+                            </ul>
+                            <button type="submit">@T[DataHealthTextKeys.ConfirmButton]</button>
+                        </form>
+                        break;
+                }
+            }
+            else if (!Model.IsAdmin)
+            {
+                <p>@T[DataHealthTextKeys.TellTheAdmin]</p>
+            }
+        </div>
+    }
+</section>
+
+<section id="data-health-teaching">
+    <h2>@T[DataHealthTextKeys.SectionTeaching]</h2>
+    @if (!Model.IsAdmin)
+    {
+        @* FR-004.3, I-8: the hint to contact the Admin is the Dean's. *@
+        <p>@T[DataHealthTextKeys.ContactTheAdmin]</p>
+    }
+    @if (Model.Teaching.Count == 0)
+    {
+        <p>@T[DataHealthTextKeys.None]</p>
+    }
+    @foreach (var course in Model.Teaching)
+    {
+        CourseProblemsBlock(course);
+    }
+</section>
+
+<section id="data-health-archived">
+    <h2>@T[DataHealthTextKeys.SectionArchived]</h2>
+    @if (Model.Archived.Count == 0)
+    {
+        <p>@T[DataHealthTextKeys.None]</p>
+    }
+    @foreach (var course in Model.Archived)
+    {
+        CourseProblemsBlock(course);
+    }
+</section>
+
+@functions {
+    /// <summary>FR-004.3, FR-004.4: one course, then its problems in the order T4, T3, T2, T1, then the archived X3.</summary>
+    private void CourseProblemsBlock(CourseProblems course)
+    {
+        <div class="data-health-course">
+            @if (course.Course.Name is not null || course.Course.GoogleCourseId is not null)
+            {
+                <h3>
+                    @if (course.JournalPath is { } journal)
+                    {
+                        <a href="@journal">@CourseName(course.Course)</a>
+                    }
+                    else
+                    {
+                        <text>@CourseName(course.Course)</text>
+                    }
+                </h3>
+            }
+            @if (course.NotInClassroomSince is { } notInClassroom)
+            {
+                <p>@T[DataHealthTextKeys.NotInClassroomSince, Date(notInClassroom)] — @T[DataHealthTextKeys.HintNotInClassroom]</p>
+            }
+            @if (course.Skipped is { } skipped)
+            {
+                <p>@SkippedText(skipped) — @T[DataHealthTextKeys.HintSkipped]</p>
+            }
+            @if (course.ItemsNotInClassroom.Count > 0)
+            {
+                <p>@T[DataHealthTextKeys.ItemsNotInClassroom]</p>
+                <ul>
+                    @foreach (var item in course.ItemsNotInClassroom)
+                    {
+                        <li>@T[DataHealthTextKeys.ItemSince, item.Title, Date(item.Since)]</li>
+                    }
+                </ul>
+            }
+            @if (course.AboveMaximum.Count > 0)
+            {
+                <p>@T[DataHealthTextKeys.AboveMaximum]</p>
+                <ul>
+                    @foreach (var grade in course.AboveMaximum)
+                    {
+                        <li>
+                            @grade.ItemTitle — @(grade.StudentName.Length == 0 ? T[JournalTextKeys.Unnamed].Value : grade.StudentName):
+                            @T[grade.IsDraft ? DataMarksTextKeys.NoteDraft : DataMarksTextKeys.NotePoints, Number(grade.Points), Number(grade.Maximum)]
+                        </li>
+                    }
+                </ul>
+            }
+            @if (course.UnknownState == true)
+            {
+                <p>@T[DataHealthTextKeys.Of(TechnicalProblemKind.UnknownCourseState)]</p>
+                @if (!Model.IsAdmin)
+                {
+                    <p>@T[DataHealthTextKeys.TellTheAdmin]</p>
+                }
+            }
+        </div>
+    }
+
+    /// <summary>FR-007: the title; X4 and X6 carry their dates for both roles (I-2).</summary>
+    private string TechnicalTitle(TechnicalProblem problem) => problem switch
+    {
+        { Kind: TechnicalProblemKind.CourseListEmpty, EmptySince: { } since } =>
+            T[DataHealthTextKeys.Of(problem.Kind), Date(since)],
+        { Kind: TechnicalProblemKind.ControlPlaneUnreachable, LastCheckAt: { } lastCheck, ReadOnlyFrom: { } readOnlyFrom } =>
+            T[DataHealthTextKeys.Of(problem.Kind), Date(lastCheck), Date(readOnlyFrom)],
+        _ => T[DataHealthTextKeys.Of(problem.Kind)],
+    };
+
+    /// <summary>FR-001.6, OD-003: the three T3 texts.</summary>
+    private string SkippedText(SkippedCourse skipped) => skipped switch
+    {
+        { Variant: SkippedCourseVariant.Since, NotUpdatedSince: { } since } => T[DataHealthTextKeys.NotUpdatedSince, Date(since)],
+        { Variant: SkippedCourseVariant.NeverLoaded, SkippedSince: { } since } => T[DataHealthTextKeys.NeverLoaded, Date(since)],
+        _ => T[DataHealthTextKeys.NotUpdated],
+    };
+
+    /// <summary>FR-001.6, OD-003: the stored name, or "untitled" with the Google course id.</summary>
+    private string CourseName(CourseLabel course) =>
+        course.Name ?? T[DataHealthTextKeys.Untitled, course.GoogleCourseId ?? string.Empty];
+
+    /// <summary>The connection page's diagnosis texts: six configuration outcomes reuse the "Check access" text (VR-004).</summary>
+    private static string DiagnosisKey(string? diagnosis) => diagnosis switch
+    {
+        nameof(SyncDiagnosis.GoogleUnavailable) => "LastSync.Diagnosis.GoogleUnavailable",
+        nameof(SyncDiagnosis.Unexpected) or null => "LastSync.Diagnosis.Unexpected",
+        _ => "AccessCheck.Outcome." + diagnosis,
+    };
+
+    /// <summary>FR-004.6, NFR-074: the calendar date of the instant in the school's zone, in the short date pattern.</summary>
+    private string Date(DateTimeOffset instant) =>
+        DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(instant, School.Zone).DateTime).ToString("d", CultureInfo.CurrentCulture);
+
+    /// <summary>FR-004.6: date and time to the minute in the school's zone.</summary>
+    private string Instant(DateTimeOffset instant) =>
+        TimeZoneInfo.ConvertTime(instant, School.Zone).DateTime.ToString(
+            CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern + " HH:mm", CultureInfo.CurrentCulture);
+
+    private static string Number(decimal value) => value.ToString("0.####", CultureInfo.CurrentCulture);
+}

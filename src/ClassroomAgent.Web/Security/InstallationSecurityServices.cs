@@ -102,6 +102,17 @@ public static class InstallationSecurityServices
                     InstallationSession.RoleName(AppRole.Admin),
                     InstallationSession.RoleName(AppRole.Dean)));
 
+            // US-062 api-design §2.2: «Стан даних» and the banner (§2 row 749, both roles); the confirmation of deleted
+            // courses (§2 row 750, the Admin only).
+            options.AddPolicy(
+                InstallationPolicies.ViewDataHealth,
+                policy => policy.RequireAuthenticatedUser().RequireRole(
+                    InstallationSession.RoleName(AppRole.Admin),
+                    InstallationSession.RoleName(AppRole.Dean)));
+            options.AddPolicy(
+                InstallationPolicies.ConfirmCoursesDeleted,
+                policy => policy.RequireAuthenticatedUser().RequireRole(InstallationSession.RoleName(AppRole.Admin)));
+
             // US-020 api-design §2.10: its own matrix row ("Просмотр курсов и участников"), both roles.
             options.AddPolicy(
                 InstallationPolicies.ViewCourses,

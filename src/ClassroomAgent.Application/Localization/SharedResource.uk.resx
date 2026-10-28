@@ -576,4 +576,49 @@
   <data name="DataMarks.Note.Draft" xml:space="preserve"><value>Чернетка: {0} з {1}</value></data>
   <data name="DataMarks.Left.On" xml:space="preserve"><value>вибув(-ла) {0}</value></data>
   <data name="DataMarks.Left" xml:space="preserve"><value>вибув(-ла)</value></data>
+  <data name="DataHealth.Title" xml:space="preserve"><value>Стан даних</value></data>
+  <data name="DataHealth.Banner" xml:space="preserve"><value>{0}, {1}</value></data>
+  <data name="DataHealth.Banner.Technical.One" xml:space="preserve"><value>{0} технічна проблема</value></data>
+  <data name="DataHealth.Banner.Technical.Few" xml:space="preserve"><value>{0} технічні проблеми</value></data>
+  <data name="DataHealth.Banner.Technical.Many" xml:space="preserve"><value>{0} технічних проблем</value></data>
+  <data name="DataHealth.Banner.Teaching.One" xml:space="preserve"><value>{0} навчальна</value></data>
+  <data name="DataHealth.Banner.Teaching.Few" xml:space="preserve"><value>{0} навчальні</value></data>
+  <data name="DataHealth.Banner.Teaching.Many" xml:space="preserve"><value>{0} навчальних</value></data>
+  <data name="DataHealth.NoProblems" xml:space="preserve"><value>Проблем із даними немає</value></data>
+  <data name="DataHealth.None" xml:space="preserve"><value>Немає</value></data>
+  <data name="DataHealth.Section.Technical" xml:space="preserve"><value>Технічні проблеми</value></data>
+  <data name="DataHealth.Section.Teaching" xml:space="preserve"><value>Навчальні проблеми</value></data>
+  <data name="DataHealth.Section.Archived" xml:space="preserve"><value>Архівні курси (не враховуються)</value></data>
+  <data name="DataHealth.Teaching.AboveMaximum" xml:space="preserve"><value>Бали вище максимуму</value></data>
+  <data name="DataHealth.Teaching.ItemsNotInClassroom" xml:space="preserve"><value>Завдання або матеріали, яких немає в Classroom</value></data>
+  <data name="DataHealth.Teaching.NotUpdatedSince" xml:space="preserve"><value>Курс не оновлюється з {0}</value></data>
+  <data name="DataHealth.Teaching.NotUpdated" xml:space="preserve"><value>Курс не оновлюється</value></data>
+  <data name="DataHealth.Teaching.NeverLoaded" xml:space="preserve"><value>Курс ще не завантажено; пропускається з {0}</value></data>
+  <data name="DataHealth.Teaching.NotInClassroomSince" xml:space="preserve"><value>Курсу немає в Classroom з {0}</value></data>
+  <data name="DataHealth.Teaching.ItemSince" xml:space="preserve"><value>{0}: з {1}</value></data>
+  <data name="DataHealth.Hint.Skipped" xml:space="preserve"><value>курс не оновлюється: у Classroom введено неприпустиме значення балів, зверніться до викладача</value></data>
+  <data name="DataHealth.Hint.NotInClassroom" xml:space="preserve"><value>курс видалено або приховано в Classroom, уточніть у викладача</value></data>
+  <data name="DataHealth.Hint.TellTheAdmin" xml:space="preserve"><value>Повідомте Адміністратора</value></data>
+  <data name="DataHealth.Hint.ContactTheAdmin" xml:space="preserve"><value>Якщо з викладачем вирішити не вдалося, зверніться до Адміністратора</value></data>
+  <data name="DataHealth.Hint.TellTheOwner" xml:space="preserve"><value>Повідомте Власника</value></data>
+  <data name="DataHealth.Course.Untitled" xml:space="preserve"><value>Курс без назви ({0})</value></data>
+  <data name="DataHealth.Technical.LastRunFailed" xml:space="preserve"><value>Остання синхронізація завершилася помилкою</value></data>
+  <data name="DataHealth.Technical.NoRecentSuccess" xml:space="preserve"><value>Успішної синхронізації не було понад 24 години</value></data>
+  <data name="DataHealth.Technical.NoSuccessYet" xml:space="preserve"><value>Успішної синхронізації ще не було</value></data>
+  <data name="DataHealth.Technical.UnknownCourseState" xml:space="preserve"><value>Курс пропущено: стан курсу, якого програма не знає</value></data>
+  <data name="DataHealth.Technical.CourseListEmpty" xml:space="preserve"><value>Google не повертає жодного курсу з {0} — перевірте роль технічного акаунта</value></data>
+  <data name="DataHealth.Technical.CoursesNotVisible" xml:space="preserve"><value>Технічний акаунт не бачить курсів, які бачив попередній</value></data>
+  <data name="DataHealth.Technical.ControlPlaneUnreachable" xml:space="preserve"><value>Немає зв'язку із сервісом з {0}; з {1} програма перейде в режим «лише для читання», якщо зв'язок не відновиться</value></data>
+  <data name="DataHealth.Technical.UpgradeRequired" xml:space="preserve"><value>Причина: ця версія програми більше не підтримується, потрібне оновлення</value></data>
+  <data name="DataHealth.Technical.SkippedSince" xml:space="preserve"><value>Пропускається з {0}</value></data>
+  <data name="DataHealth.Technical.LastSuccess" xml:space="preserve"><value>Остання успішна синхронізація: {0}</value></data>
+  <data name="DataHealth.Technical.FinishedAt" xml:space="preserve"><value>Завершено: {0}</value></data>
+  <data name="DataHealth.Technical.ConnectionPage" xml:space="preserve"><value>Підключення до Google Workspace</value></data>
+  <data name="DataHealth.Technical.MarkedSince" xml:space="preserve"><value>не бачить з {0}</value></data>
+  <data name="DataHealth.Technical.LastCompleteRead" xml:space="preserve"><value>останнє повне читання: {0}</value></data>
+  <data name="DataHealth.Technical.NeverRead" xml:space="preserve"><value>повного читання не було</value></data>
+  <data name="DataHealth.Confirm.Button" xml:space="preserve"><value>Підтвердити: видалені в Classroom</value></data>
+  <data name="DataHealth.Message.Confirmed" xml:space="preserve"><value>Позначено як видалені в Classroom: {0}</value></data>
+  <data name="DataHealth.Message.Invalid" xml:space="preserve"><value>Виберіть від 1 до 1000 курсів зі списку</value></data>
+  <data name="DataHealth.Message.ListChanged" xml:space="preserve"><value>Список змінився — оновіть сторінку</value></data>
 </root>

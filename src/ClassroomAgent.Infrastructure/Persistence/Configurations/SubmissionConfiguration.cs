@@ -74,6 +74,12 @@ public sealed class SubmissionConfiguration : IEntityTypeConfiguration<Submissio
             .HasDatabaseName("ix_submission_course_work_participant");
 
         builder.HasIndex(s => s.ParticipantId).HasDatabaseName("ix_submission_participant_id");
+
+        // US-062 db-design §5.2: the above-maximum probe reads only graded rows, index-only.
+        builder.HasIndex(s => s.CourseWorkId, "ix_submission_graded")
+            .HasDatabaseName("ix_submission_graded")
+            .IncludeProperties(s => new { s.AssignedGrade, s.DraftGrade })
+            .HasFilter("assigned_grade IS NOT NULL OR draft_grade IS NOT NULL");
     }
 
     private static string StateCode(SubmissionState value) => value switch

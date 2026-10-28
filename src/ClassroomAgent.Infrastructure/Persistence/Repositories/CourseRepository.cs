@@ -29,4 +29,17 @@ public sealed class CourseRepository(ClassroomAgentDbContext db) : ICourseReposi
     /// <summary>US-059 entity model §6: tracked, because the end of a complete list marks, unmarks and sights them.</summary>
     public async Task<IReadOnlyList<Course>> GetAllAsync(CancellationToken cancellationToken) =>
         await db.Courses.ToListAsync(cancellationToken);
+
+    /// <summary>
+    /// US-062 db-design §4: tracked, and row-locked <c>FOR UPDATE</c> until the caller's transaction ends, so a concurrent
+    /// synchronization or confirmation of the same course waits; unknown ids are simply absent.
+    /// </summary>
+    public async Task<IReadOnlyList<Course>> GetForAbsenceConfirmationAsync(
+        IReadOnlyCollection<long> courseIds, CancellationToken cancellationToken)
+    {
+        var ids = courseIds.ToArray();
+        return await db.Courses
+            .FromSql($"SELECT * FROM course WHERE id = ANY({ids}) FOR UPDATE")
+            .ToListAsync(cancellationToken);
+    }
 }

@@ -34,7 +34,8 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 + "'report_template_deleted', 'journal_exported', "
                 + "'meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', "
                 + "'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed', "
-                + "'meet_reports_exported', 'meet_meeting_exported', 'participant_erased', 'erasure_exclusion_lifted')");
+                + "'meet_reports_exported', 'meet_meeting_exported', 'participant_erased', 'erasure_exclusion_lifted', "
+                + "'courses_confirmed_deleted')");
 
             // US-009 db-design §4.1: a refused action names WHAT was refused without naming a row that was never
             // created, so a target type without an id is now legal. An id without a type — an identifier belonging
@@ -213,6 +214,19 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 "ck_audit_event_exclusion_lift_shape",
                 "action <> 'erasure_exclusion_lifted' OR (actor_type = 'app_user' AND actor_role = 'admin' "
                 + "AND (outcome = 'refused' OR (target_type = 'erased_participant' AND target_id IS NOT NULL)))");
+
+            // US-062 db-design §3.2: the Admin's confirmation names no target; a succeeded row carries 1 … 1000 course
+            // ids, the read-only refused row none (unverified input); no other action carries ids.
+            table.HasCheckConstraint(
+                "ck_audit_event_course_deletion_shape",
+                "action <> 'courses_confirmed_deleted' OR (actor_type = 'app_user' AND actor_role = 'admin' "
+                + "AND target_type IS NULL AND target_id IS NULL "
+                + "AND ((outcome = 'succeeded' AND refusal_category IS NULL AND confirmed_course_ids IS NOT NULL "
+                + "AND cardinality(confirmed_course_ids) BETWEEN 1 AND 1000) "
+                + "OR (outcome = 'refused' AND refusal_category = 'read_only_mode' AND confirmed_course_ids IS NULL)))");
+            table.HasCheckConstraint(
+                "ck_audit_event_confirmed_course_ids_absent",
+                "action = 'courses_confirmed_deleted' OR confirmed_course_ids IS NULL");
         });
 
         builder.HasKey(e => e.Id).HasName("pk_audit_event");
@@ -259,6 +273,9 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         builder.Property(e => e.ErasedMeetParticipations);
         builder.Property(e => e.ClearedMeetOrganizers);
         builder.Property(e => e.ClearedCourseOwners);
+
+        // US-062 db-design §3.1: bare course ids, ascending and distinct, no foreign key (PC-11).
+        builder.Property(e => e.ConfirmedCourseIds);
 
         // US-032 db-design §3.2: a code and bare course ids (no foreign key, PC-11).
         builder.Property(e => e.MeetCode).HasMaxLength(MeetSession.MeetingCodeMaxLength);
@@ -359,6 +376,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         AuditAction.MeetMeetingExported => "meet_meeting_exported",
         AuditAction.ParticipantErased => "participant_erased",
         AuditAction.ErasureExclusionLifted => "erasure_exclusion_lifted",
+        AuditAction.CoursesConfirmedDeleted => "courses_confirmed_deleted",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -389,6 +407,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         "meet_meeting_exported" => AuditAction.MeetMeetingExported,
         "participant_erased" => AuditAction.ParticipantErased,
         "erasure_exclusion_lifted" => AuditAction.ErasureExclusionLifted,
+        "courses_confirmed_deleted" => AuditAction.CoursesConfirmedDeleted,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 

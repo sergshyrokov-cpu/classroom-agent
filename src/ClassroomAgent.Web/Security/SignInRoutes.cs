@@ -89,6 +89,15 @@ public static class SignInRoutes
     /// <summary>US-032 api-design §2.7: the key the one-time confirmation travels under in TempData.</summary>
     public const string MeetCodeMessageTempDataKey = "MeetCodeMessage";
 
+    /// <summary>US-062 api-design §2.1: the «Стан даних» page (GET).</summary>
+    public const string DataHealth = "/workspace/data-health";
+
+    /// <summary>US-062 api-design §2.1: the Admin's confirmation that courses were deleted in Classroom (POST).</summary>
+    public const string DataHealthCourseDeletionConfirmation = "/workspace/data-health/course-deletion-confirmation";
+
+    /// <summary>US-062 api-design §2.6: the key the one-time confirmation and its count travel under in TempData.</summary>
+    public const string DataHealthMessageTempDataKey = "DataHealthMessage";
+
     /// <summary>US-027 api-design §2.1: the report templates list (the section's entry page) and the create save.</summary>
     public const string ReportTemplates = "/reports/templates";
 

@@ -576,4 +576,49 @@
   <data name="DataMarks.Note.Draft" xml:space="preserve"><value>Draft: {0} of {1}</value></data>
   <data name="DataMarks.Left.On" xml:space="preserve"><value>left {0}</value></data>
   <data name="DataMarks.Left" xml:space="preserve"><value>left</value></data>
+  <data name="DataHealth.Title" xml:space="preserve"><value>Data health</value></data>
+  <data name="DataHealth.Banner" xml:space="preserve"><value>{0}, {1}</value></data>
+  <data name="DataHealth.Banner.Technical.One" xml:space="preserve"><value>{0} technical problem</value></data>
+  <data name="DataHealth.Banner.Technical.Few" xml:space="preserve"><value>{0} technical problems</value></data>
+  <data name="DataHealth.Banner.Technical.Many" xml:space="preserve"><value>{0} technical problems</value></data>
+  <data name="DataHealth.Banner.Teaching.One" xml:space="preserve"><value>{0} teaching</value></data>
+  <data name="DataHealth.Banner.Teaching.Few" xml:space="preserve"><value>{0} teaching</value></data>
+  <data name="DataHealth.Banner.Teaching.Many" xml:space="preserve"><value>{0} teaching</value></data>
+  <data name="DataHealth.NoProblems" xml:space="preserve"><value>There are no data problems</value></data>
+  <data name="DataHealth.None" xml:space="preserve"><value>None</value></data>
+  <data name="DataHealth.Section.Technical" xml:space="preserve"><value>Technical problems</value></data>
+  <data name="DataHealth.Section.Teaching" xml:space="preserve"><value>Teaching problems</value></data>
+  <data name="DataHealth.Section.Archived" xml:space="preserve"><value>Archived courses (not counted)</value></data>
+  <data name="DataHealth.Teaching.AboveMaximum" xml:space="preserve"><value>Points above the maximum</value></data>
+  <data name="DataHealth.Teaching.ItemsNotInClassroom" xml:space="preserve"><value>Items not in Classroom</value></data>
+  <data name="DataHealth.Teaching.NotUpdatedSince" xml:space="preserve"><value>The course has not been updated since {0}</value></data>
+  <data name="DataHealth.Teaching.NotUpdated" xml:space="preserve"><value>The course is not being updated</value></data>
+  <data name="DataHealth.Teaching.NeverLoaded" xml:space="preserve"><value>The course has not been loaded yet; skipped since {0}</value></data>
+  <data name="DataHealth.Teaching.NotInClassroomSince" xml:space="preserve"><value>The course is not in Classroom since {0}</value></data>
+  <data name="DataHealth.Teaching.ItemSince" xml:space="preserve"><value>{0}: since {1}</value></data>
+  <data name="DataHealth.Hint.Skipped" xml:space="preserve"><value>the course is not updated: an invalid points value was entered in Classroom, contact the teacher</value></data>
+  <data name="DataHealth.Hint.NotInClassroom" xml:space="preserve"><value>the course was deleted or hidden in Classroom, check with the teacher</value></data>
+  <data name="DataHealth.Hint.TellTheAdmin" xml:space="preserve"><value>Tell the Admin</value></data>
+  <data name="DataHealth.Hint.ContactTheAdmin" xml:space="preserve"><value>If it could not be solved with the teacher, contact the Admin</value></data>
+  <data name="DataHealth.Hint.TellTheOwner" xml:space="preserve"><value>Tell the Owner</value></data>
+  <data name="DataHealth.Course.Untitled" xml:space="preserve"><value>Untitled course ({0})</value></data>
+  <data name="DataHealth.Technical.LastRunFailed" xml:space="preserve"><value>The last synchronization failed</value></data>
+  <data name="DataHealth.Technical.NoRecentSuccess" xml:space="preserve"><value>No successful synchronization for more than 24 hours</value></data>
+  <data name="DataHealth.Technical.NoSuccessYet" xml:space="preserve"><value>No successful synchronization yet</value></data>
+  <data name="DataHealth.Technical.UnknownCourseState" xml:space="preserve"><value>Course skipped: a course state the program does not know</value></data>
+  <data name="DataHealth.Technical.CourseListEmpty" xml:space="preserve"><value>Google has returned no course since {0} — check the technical account's role</value></data>
+  <data name="DataHealth.Technical.CoursesNotVisible" xml:space="preserve"><value>The technical account does not see courses the previous one saw</value></data>
+  <data name="DataHealth.Technical.ControlPlaneUnreachable" xml:space="preserve"><value>No connection with the service since {0}; from {1} the program will switch to read-only mode unless the connection is restored</value></data>
+  <data name="DataHealth.Technical.UpgradeRequired" xml:space="preserve"><value>Reason: this version of the program is no longer supported and must be upgraded</value></data>
+  <data name="DataHealth.Technical.SkippedSince" xml:space="preserve"><value>Skipped since {0}</value></data>
+  <data name="DataHealth.Technical.LastSuccess" xml:space="preserve"><value>Last successful synchronization: {0}</value></data>
+  <data name="DataHealth.Technical.FinishedAt" xml:space="preserve"><value>Finished: {0}</value></data>
+  <data name="DataHealth.Technical.ConnectionPage" xml:space="preserve"><value>Google Workspace connection</value></data>
+  <data name="DataHealth.Technical.MarkedSince" xml:space="preserve"><value>not seen since {0}</value></data>
+  <data name="DataHealth.Technical.LastCompleteRead" xml:space="preserve"><value>last complete read: {0}</value></data>
+  <data name="DataHealth.Technical.NeverRead" xml:space="preserve"><value>never read completely</value></data>
+  <data name="DataHealth.Confirm.Button" xml:space="preserve"><value>Confirm: deleted in Classroom</value></data>
+  <data name="DataHealth.Message.Confirmed" xml:space="preserve"><value>Marked as deleted in Classroom: {0}</value></data>
+  <data name="DataHealth.Message.Invalid" xml:space="preserve"><value>Select 1 to 1000 courses from the list</value></data>
+  <data name="DataHealth.Message.ListChanged" xml:space="preserve"><value>The list has changed — reload the page</value></data>
 </root>

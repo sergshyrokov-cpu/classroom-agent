@@ -98,4 +98,10 @@ public enum AuditAction
 
     /// <summary>US-038 spec FR-013: an Admin lifted one erasure exclusion.</summary>
     ErasureExclusionLifted,
+
+    /// <summary>
+    /// US-062 FR-006.2 step 5 (SC-11, v101): an Admin confirmed that courses not visible to the technical account were
+    /// deleted in Classroom.
+    /// </summary>
+    CoursesConfirmedDeleted,
 }

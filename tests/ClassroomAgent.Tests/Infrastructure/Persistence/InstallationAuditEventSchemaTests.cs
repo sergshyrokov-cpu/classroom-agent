@@ -36,6 +36,9 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
                 // US-038 adds the five counts of a succeeded erasure (US-038 db-design §9.2).
                 "cleared_course_owners integer - YES -",
                 "cleared_meet_organizers integer - YES -",
+
+                // US-062 adds the ids of the courses an Admin confirmed deleted (US-062 db-design §3.1).
+                "confirmed_course_ids ARRAY - YES -",
                 "created_at timestamp with time zone - NO -",
                 "erased_meet_participations integer - YES -",
                 "erased_memberships integer - YES -",
@@ -109,6 +112,10 @@ public sealed class InstallationAuditEventSchemaTests(PostgreSqlFixture database
                 "ck_audit_event_actor_role",
                 "ck_audit_event_actor_role_value",
                 "ck_audit_event_actor_type",
+
+                // US-062 adds two constraints on the confirmation row (US-062 db-design §3.2).
+                "ck_audit_event_confirmed_course_ids_absent",
+                "ck_audit_event_course_deletion_shape",
 
                 // US-038 adds five constraints on the erasure and lifting rows (US-038 db-design §9.3).
                 "ck_audit_event_erasure_counts",

@@ -161,6 +161,23 @@ public sealed class Course
     }
 
     /// <summary>
+    /// US-062 FR-006.2 step 4, BR-049: the Admin confirmed the course was deleted in Classroom. Only a course marked
+    /// NotVisibleToTechnicalAccount changes: mark := NotInClassroom, AbsentSince := confirmedAt; returns true. Any other
+    /// state is left as it is and returns false.
+    /// </summary>
+    public bool ConfirmDeletedInClassroom(DateTimeOffset confirmedAt)
+    {
+        if (AbsenceMark is not CourseAbsenceMark.NotVisibleToTechnicalAccount)
+        {
+            return false;
+        }
+
+        AbsenceMark = CourseAbsenceMark.NotInClassroom;
+        AbsentSince = confirmedAt;
+        return true;
+    }
+
+    /// <summary>
     /// FR-003.1, FR-004.1: the course was on the list — records <paramref name="listedAt"/> as its last sighting and
     /// removes any mark. Returns true when a mark was removed (for the FR-007 count).
     /// </summary>

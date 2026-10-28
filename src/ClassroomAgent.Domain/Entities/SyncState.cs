@@ -66,10 +66,24 @@ public sealed class SyncState
     public bool LastCourseListEmpty { get; private set; }
 
     /// <summary>
+    /// US-062 FR-008: the start of the first run of the current streak of empty course lists; null exactly when
+    /// <see cref="LastCourseListEmpty"/> is false.
+    /// </summary>
+    public DateTimeOffset? CourseListEmptySince { get; private set; }
+
+    /// <summary>
     /// FR-005.2, FR-005.3: the course list was read to its end — <paramref name="emptyWhileCoursesStored"/> sets or clears
     /// the flag. Never called by a run that stopped before the end (FR-005.4); BeginRun, CompleteRun and FailRun leave it.
     /// </summary>
-    public void RecordCourseListRead(bool emptyWhileCoursesStored) => LastCourseListEmpty = emptyWhileCoursesStored;
+    /// <remarks>
+    /// US-062 FR-008.1, I-11: the first empty list of a streak dates it with its run's <see cref="StartedAt"/>; later empty
+    /// lists keep that date; a non-empty list clears flag and date together.
+    /// </remarks>
+    public void RecordCourseListRead(bool emptyWhileCoursesStored)
+    {
+        LastCourseListEmpty = emptyWhileCoursesStored;
+        CourseListEmptySince = emptyWhileCoursesStored ? CourseListEmptySince ?? StartedAt : null;
+    }
 
     /// <summary>The first row of an installation that has never synchronized (spec I-2).</summary>
     public static SyncState BeginFirstRun(Guid runId, DateTimeOffset startedAt)

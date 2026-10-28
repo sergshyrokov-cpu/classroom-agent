@@ -111,4 +111,16 @@ public static class InstallationPolicies
     /// reach the forced change form and nothing else.
     /// </summary>
     public const string CompleteTemporaryPasswordChange = nameof(CompleteTemporaryPasswordChange);
+
+    /// <summary>
+    /// US-062 api-design §2.2: the «Стан даних» page and the banner — ✔ Admin, ✔ Dean (<c>trebovaniya.md</c> §2 row
+    /// 749, v99).
+    /// </summary>
+    public const string ViewDataHealth = nameof(ViewDataHealth);
+
+    /// <summary>
+    /// US-062 api-design §2.2: confirming that courses not visible to the technical account were deleted in Classroom —
+    /// ✔ Admin, ✘ Dean (<c>trebovaniya.md</c> §2 row 750, v101).
+    /// </summary>
+    public const string ConfirmCoursesDeleted = nameof(ConfirmCoursesDeleted);
 }

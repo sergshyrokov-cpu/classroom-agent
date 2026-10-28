@@ -44,6 +44,14 @@ button {
 
 .language-switcher [aria-current="true"] { font-weight: bold; }
 
+/* US-062 FR-003.3: the data-health banner — a quiet coloured strip, no icon, animation or dismiss control. */
+.data-health-banner {
+    margin: 0.5rem 0 0;
+    padding: 0.25rem 0.75rem;
+    border-left: 0.25rem solid #b26a00;
+    background: rgba(178, 106, 0, 0.12);
+}
+
 /* US-025 NFR-070: the journal scrolls horizontally inside the page instead of widening it. */
 .table-scroll { overflow-x: auto; }
 

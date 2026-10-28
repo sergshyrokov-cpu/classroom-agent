@@ -161,6 +161,9 @@ public sealed class AccessCheckAuditSchemaTests(PostgreSqlFixture database)
 
                 // US-038 db-design §9.2: the five counts of a succeeded erasure.
                 "cleared_course_owners", "cleared_meet_organizers",
+
+                // US-062 db-design §3.1: the ids of the courses an Admin confirmed deleted.
+                "confirmed_course_ids",
                 "created_at",
                 "erased_meet_participations", "erased_memberships", "erased_submissions",
 

@@ -63,6 +63,11 @@ public sealed class PermissionMatrixTests(PostgreSqlFixture database)
             [Admin]),
         new(InstallationPolicies.ChangeOwnPassword, "Смена собственного пароля", [Dean]),
         new(InstallationPolicies.ViewLegitimacyStatus, "Просмотр статуса легитимности инсталляции", [Admin, Dean]),
+        new(InstallationPolicies.ViewDataHealth, "Уведомления о состоянии данных и страница «Стан даних»", [Admin, Dean]),
+        new(
+            InstallationPolicies.ConfirmCoursesDeleted,
+            "Подтверждение, что курсы, не видимые техническому аккаунту, удалены в Classroom",
+            [Admin]),
     ];
 
     /// <summary>
@@ -110,6 +115,10 @@ public sealed class PermissionMatrixTests(PostgreSqlFixture database)
         Cell("POST", "database/synchronization-requests", InstallationPolicies.StartSynchronization),
 
         Cell("GET", "workspace/journal", InstallationPolicies.ViewJournal),
+
+        // US-062 api-design §2.1, §2.2: «Стан даних» (§2 row 749) and the Admin's confirmation (§2 row 750).
+        Cell("GET", "workspace/data-health", InstallationPolicies.ViewDataHealth),
+        Cell("POST", "workspace/data-health/course-deletion-confirmation", InstallationPolicies.ConfirmCoursesDeleted),
 
         // Audit 2 I-2, spec I-3: the journal export sits under UseReportTemplates; both rows are ✔/✔.
         Cell("POST", "api/v1/exports/journal-xlsx", InstallationPolicies.UseReportTemplates),

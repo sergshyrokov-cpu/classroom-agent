@@ -69,6 +69,11 @@ public sealed class CourseWorkConfiguration : IEntityTypeConfiguration<CourseWor
 
         builder.HasIndex(c => new { c.CourseId, c.ItemDate })
             .HasDatabaseName("ix_course_work_course_item_date");
+
+        // US-062 db-design §5.2: the data-health probe touches only the items marked "not in Classroom".
+        builder.HasIndex(c => c.CourseId, "ix_course_work_not_in_classroom")
+            .HasDatabaseName("ix_course_work_not_in_classroom")
+            .HasFilter("not_in_classroom_since IS NOT NULL");
     }
 
     private static string ResourceCode(CourseWorkResource value) => value switch

@@ -239,6 +239,14 @@ public static class InstallationServices
         services.AddScoped<GetErasureConfirmationQuery>();
         services.AddScoped<EraseParticipantUseCase>();
         services.AddScoped<LiftErasureExclusionUseCase>();
+
+        // US-062 entity model §2: the data-health read port, the banner's and the page's queries (read only, no guard),
+        // the Admin's confirmation (read-only guard first, FR-006.2) and the layout's banner source.
+        services.AddScoped<IDataHealthSource, DataHealthSource>();
+        services.AddScoped<GetDataHealthCountsQuery>();
+        services.AddScoped<GetDataHealthQuery>();
+        services.AddScoped<ConfirmCoursesDeletedUseCase>();
+        services.AddScoped<DataHealthBanner>();
         services.AddHostedService<StartupSelfCheckBackgroundService>();
         services.AddHostedService<LegitimacyCheckBackgroundService>();
         services.AddHostedService<SynchronizationBackgroundService>();

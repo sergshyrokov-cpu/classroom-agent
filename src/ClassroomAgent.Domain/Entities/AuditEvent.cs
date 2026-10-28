@@ -119,6 +119,15 @@ public sealed class AuditEvent
     /// <summary>US-038 db-design §9.2: courses whose owner a succeeded erasure cleared; null otherwise.</summary>
     public int? ClearedCourseOwners { get; private set; }
 
+    /// <summary>
+    /// US-062 db-design §3: the internal ids of the confirmed courses, ascending and distinct; only on a succeeded
+    /// <see cref="AuditAction.CoursesConfirmedDeleted"/> row.
+    /// </summary>
+    public long[]? ConfirmedCourseIds { get; private set; }
+
+    /// <summary>US-062 VR-001, I-6: the most course ids one confirmation carries.</summary>
+    public const int MaxConfirmedCourseIds = 1000;
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -937,6 +946,67 @@ public sealed class AuditEvent
             ErasedMeetParticipations = counts.MeetParticipations,
             ClearedMeetOrganizers = counts.ClearedMeetOrganizers,
             ClearedCourseOwners = counts.ClearedCourseOwners,
+        };
+    }
+
+    /// <summary>
+    /// US-062 entity model §1.4: succeeded row — actor the Admin (role Admin), no target, the ids sorted and
+    /// de-duplicated; throws ArgumentOutOfRangeException for an empty set, more than 1000 ids or a non-positive id.
+    /// </summary>
+    public static AuditEvent CoursesConfirmedDeleted(
+        long adminId, IReadOnlyCollection<long> courseIds, DateTimeOffset occurredAt, string? requestId)
+    {
+        ArgumentNullException.ThrowIfNull(courseIds);
+        var ids = courseIds.Distinct().Order().ToArray();
+        if (ids.Length is 0 or > MaxConfirmedCourseIds)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(courseIds), ids.Length, "A confirmation carries 1 to 1000 distinct course ids (US-062 VR-001).");
+        }
+
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(ids[0], nameof(courseIds));
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = adminId,
+            ActorRole = AppRole.Admin,
+            Action = AuditAction.CoursesConfirmedDeleted,
+            TargetType = null,
+            TargetId = null,
+            Outcome = AuditOutcome.Succeeded,
+            RefusalCategory = null,
+            RequestId = requestId,
+            ConfirmedCourseIds = ids,
+        };
+    }
+
+    /// <summary>
+    /// US-062 entity model §1.4: refused in read-only mode (API design §2.5) — actor the Admin, no target, no ids,
+    /// category ReadOnlyMode only.
+    /// </summary>
+    public static AuditEvent CoursesConfirmedDeletedRefused(
+        long adminId, AuditRefusalCategory category, DateTimeOffset occurredAt, string? requestId)
+    {
+        if (category is not AuditRefusalCategory.ReadOnlyMode)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(category), category, "A refused confirmation carries the read-only category (US-062 api-design §2.5).");
+        }
+
+        return new AuditEvent
+        {
+            OccurredAt = occurredAt,
+            ActorType = AuditActorType.AppUser,
+            ActorId = adminId,
+            ActorRole = AppRole.Admin,
+            Action = AuditAction.CoursesConfirmedDeleted,
+            TargetType = null,
+            TargetId = null,
+            Outcome = AuditOutcome.Refused,
+            RefusalCategory = category,
+            RequestId = requestId,
         };
     }
 

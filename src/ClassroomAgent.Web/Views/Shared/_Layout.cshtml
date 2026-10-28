@@ -1,3 +1,8 @@
+@inject DataHealthBanner DataHealth
+@{
+    // US-062 FR-003, api-design §2.3: computed once per page; null renders nothing (I-4, OD-001 a).
+    var dataHealth = await DataHealth.ForAsync(Context);
+}
 <!DOCTYPE html>
 <html lang="@System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
 <head>
@@ -9,6 +14,11 @@
 <body>
     <header class="page-header">
         @await Html.PartialAsync("_LanguageSwitcher")
+        @if (dataHealth is { } counts)
+        {
+            @* FR-003.2, FR-003.3: a restrained coloured strip; its whole text is one link to «Стан даних». *@
+            <p id="data-health-banner" class="data-health-banner"><a href="@SignInRoutes.DataHealth">@T[DataHealthTextKeys.Banner, T[DataHealthTextKeys.BannerPart("Technical", counts.TechnicalCount), counts.TechnicalCount], T[DataHealthTextKeys.BannerPart("Teaching", counts.TeachingCount), counts.TeachingCount]]</a></p>
+        }
     </header>
     <main class="page">
         <h1>@ViewData["Title"]</h1>

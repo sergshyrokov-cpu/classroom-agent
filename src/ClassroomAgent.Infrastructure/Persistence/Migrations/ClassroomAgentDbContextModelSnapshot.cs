@@ -179,6 +179,10 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("cleared_meet_organizers");
 
+                    b.PrimitiveCollection<long[]>("ConfirmedCourseIds")
+                        .HasColumnType("bigint[]")
+                        .HasColumnName("confirmed_course_ids");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -310,7 +314,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                     b.ToTable("audit_event", null, t =>
                         {
-                            t.HasCheckConstraint("ck_audit_event_action", "action IN ('admin_sign_in', 'workspace_connection_saved', 'access_check_run', 'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', 'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run', 'synchronization_requested', 'report_template_created', 'report_template_changed', 'report_template_deleted', 'journal_exported', 'meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', 'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed', 'meet_reports_exported', 'meet_meeting_exported', 'participant_erased', 'erasure_exclusion_lifted')");
+                            t.HasCheckConstraint("ck_audit_event_action", "action IN ('admin_sign_in', 'workspace_connection_saved', 'access_check_run', 'dean_account_created', 'dean_account_disabled', 'dean_account_reenabled', 'dean_account_password_reset', 'dean_password_changed', 'dean_sign_in', 'retention_purge_run', 'synchronization_requested', 'report_template_created', 'report_template_changed', 'report_template_deleted', 'journal_exported', 'meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', 'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed', 'meet_reports_exported', 'meet_meeting_exported', 'participant_erased', 'erasure_exclusion_lifted', 'courses_confirmed_deleted')");
 
                             t.HasCheckConstraint("ck_audit_event_actor_id", "(actor_type = 'app_user') = (actor_id IS NOT NULL)");
 
@@ -319,6 +323,10 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_audit_event_actor_role_value", "actor_role IS NULL OR actor_role IN ('admin', 'dean')");
 
                             t.HasCheckConstraint("ck_audit_event_actor_type", "actor_type IN ('app_user', 'anonymous', 'system')");
+
+                            t.HasCheckConstraint("ck_audit_event_confirmed_course_ids_absent", "action = 'courses_confirmed_deleted' OR confirmed_course_ids IS NULL");
+
+                            t.HasCheckConstraint("ck_audit_event_course_deletion_shape", "action <> 'courses_confirmed_deleted' OR (actor_type = 'app_user' AND actor_role = 'admin' AND target_type IS NULL AND target_id IS NULL AND ((outcome = 'succeeded' AND refusal_category IS NULL AND confirmed_course_ids IS NOT NULL AND cardinality(confirmed_course_ids) BETWEEN 1 AND 1000) OR (outcome = 'refused' AND refusal_category = 'read_only_mode' AND confirmed_course_ids IS NULL)))");
 
                             t.HasCheckConstraint("ck_audit_event_erasure_counts", "NOT (action = 'participant_erased' AND outcome = 'succeeded') OR (erased_memberships IS NOT NULL AND erased_submissions IS NOT NULL AND erased_meet_participations IS NOT NULL AND cleared_meet_organizers IS NOT NULL AND cleared_course_owners IS NOT NULL)");
 
@@ -713,6 +721,10 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                     b.HasIndex("CourseId", "Resource", "GoogleId")
                         .IsUnique()
                         .HasDatabaseName("uq_course_work_course_resource_google_id");
+
+                    b.HasIndex(new[] { "CourseId" }, "ix_course_work_not_in_classroom")
+                        .HasDatabaseName("ix_course_work_not_in_classroom")
+                        .HasFilter("not_in_classroom_since IS NOT NULL");
 
                     b.ToTable("course_work", null, t =>
                         {
@@ -1365,6 +1377,12 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                     b.HasIndex("CourseWorkId", "ParticipantId")
                         .HasDatabaseName("ix_submission_course_work_participant");
 
+                    b.HasIndex(new[] { "CourseWorkId" }, "ix_submission_graded")
+                        .HasDatabaseName("ix_submission_graded")
+                        .HasFilter("assigned_grade IS NOT NULL OR draft_grade IS NOT NULL");
+
+                    NpgsqlIndexBuilderExtensions.IncludeProperties(b.HasIndex(new[] { "CourseWorkId" }, "ix_submission_graded"), new[] { "AssignedGrade", "DraftGrade" });
+
                     b.ToTable("submission", null, t =>
                         {
                             t.HasCheckConstraint("ck_submission_grades_non_negative", "(assigned_grade IS NULL OR assigned_grade >= 0) AND (draft_grade IS NULL OR draft_grade >= 0)");
@@ -1438,6 +1456,10 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset?>("CourseListEmptySince")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("course_list_empty_since");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1514,6 +1536,8 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_sync_state_counter", "processed_count >= 0");
 
+                            t.HasCheckConstraint("ck_sync_state_course_list_empty_since", "last_course_list_empty = (course_list_empty_since IS NOT NULL)");
+
                             t.HasCheckConstraint("ck_sync_state_error_length", "last_error IS NULL OR char_length(last_error) BETWEEN 1 AND 512");
 
                             t.HasCheckConstraint("ck_sync_state_failed_step", "failed_step IS NULL OR (status = 'failed' AND failed_step IN ('classroom', 'meet', 'linking'))");
@@ -1528,7 +1552,7 @@ namespace ClassroomAgent.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_sync_state_status", "status IN ('running', 'completed', 'failed')");
 
-                            t.HasCheckConstraint("ck_sync_state_terminal_fields", "(status = 'running' AND finished_at IS NULL AND last_error IS NULL)\r\nOR (status = 'completed' AND finished_at IS NOT NULL AND last_error IS NULL)\r\nOR (status = 'failed' AND finished_at IS NOT NULL AND last_error IS NOT NULL)");
+                            t.HasCheckConstraint("ck_sync_state_terminal_fields", "(status = 'running' AND finished_at IS NULL AND last_error IS NULL)\nOR (status = 'completed' AND finished_at IS NOT NULL AND last_error IS NULL)\nOR (status = 'failed' AND finished_at IS NOT NULL AND last_error IS NOT NULL)");
                         });
                 });
 

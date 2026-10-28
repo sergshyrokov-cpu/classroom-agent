@@ -55,6 +55,11 @@ public sealed class SyncStateConfiguration : IEntityTypeConfiguration<SyncState>
             table.HasCheckConstraint(
                 "ck_sync_state_last_full_run_at",
                 "last_full_run_at IS NULL OR (last_successful_run_at IS NOT NULL AND last_full_run_at <= last_successful_run_at)");
+
+            // US-062 db-design §2, FR-008.1: the flag is true exactly when the empty-list date is set.
+            table.HasCheckConstraint(
+                "ck_sync_state_course_list_empty_since",
+                "last_course_list_empty = (course_list_empty_since IS NOT NULL)");
         });
 
         builder.HasKey(s => s.Id).HasName("pk_sync_state");
@@ -75,6 +80,9 @@ public sealed class SyncStateConfiguration : IEntityTypeConfiguration<SyncState>
 
         // US-059 db-design §4: the empty-list flag; the existing row gets false.
         builder.Property(s => s.LastCourseListEmpty).IsRequired().HasDefaultValue(false);
+
+        // US-062 db-design §2: the start of the current streak of empty lists; the migration backfills a flagged row.
+        builder.Property(s => s.CourseListEmptySince);
         builder.Property(s => s.FailedStep)
             .HasMaxLength(16)
             .HasConversion(new ValueConverter<SyncStep, string>(v => StepCode(v), code => StepFromCode(code)));
