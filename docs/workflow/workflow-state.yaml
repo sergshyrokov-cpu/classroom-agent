@@ -4,23 +4,23 @@
 version: 1
 story: US-064
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: security-reviewer
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: DB_DESIGN
-  recorded_at: '2026-10-29T07:13:05Z'
+  verdict: PASS
+  stage: SECURITY_REVIEW
+  recorded_at: '2026-10-29T07:57:01Z'
 last_artifacts:
-- type: database_design
-  path: docs/designs/database/US-064-db-design.md
+- type: security_review
+  path: docs/reviews/security/US-064-security-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings: []
 started_at: '2026-10-29T06:27:20Z'
-updated_at: '2026-10-29T07:13:05Z'
-completed_at: null
+updated_at: '2026-10-29T08:02:01Z'
+completed_at: '2026-10-29T08:02:01Z'
