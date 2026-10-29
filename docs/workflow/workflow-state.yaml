@@ -2,27 +2,34 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-066
+story: US-064
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
+last_invoked_skill: null
 last_result:
   verdict: HUMAN_APPROVED
-  stage: HUMAN_PR_APPROVAL
-  recorded_at: '2026-10-28T19:59:48Z'
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: '2026-10-29T07:07:33Z'
 last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-066-security-review.md
+- type: specification
+  path: docs/specifications/US-064-spec.md
+  version: 1
+- type: spec_digest
+  path: docs/specifications/US-064-spec-digest.ru.md
+  version: 1
+- type: specification_review
+  path: docs/reviews/specifications/US-064-spec-review.md
+  version: 1
+- type: open_decisions
+  path: docs/decisions/US-064-open-decisions.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings:
-- 'INFO-1: full suite 6796/6798, two Npgsql migration timeouts in unrelated classes, green on rerun'
-- 'INFO-2: no test pins HTML encoding of a markup-bearing email (VR-002)'
-started_at: '2026-10-28T18:19:50Z'
-updated_at: '2026-10-28T19:59:48Z'
-completed_at: '2026-10-28T19:59:48Z'
+non_blocking_findings: []
+started_at: '2026-10-29T06:27:20Z'
+updated_at: '2026-10-29T07:07:33Z'
+completed_at: null
