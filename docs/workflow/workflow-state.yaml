@@ -4,26 +4,26 @@
 version: 1
 story: US-067
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: PASS
-  stage: API_DESIGN
-  recorded_at: '2026-10-29T08:19:28Z'
+  stage: DB_DESIGN
+  recorded_at: '2026-10-29T08:50:41Z'
 last_artifacts:
-- type: openapi
-  path: docs/designs/api/US-067-openapi.yaml
+- type: database_design
+  path: docs/designs/database/US-067-db-design.md
   version: 1
-- type: api_design
-  path: docs/designs/api/US-067-api-design.md
+- type: entity_model
+  path: docs/designs/database/US-067-entity-model.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings: []
 started_at: '2026-10-29T08:09:38Z'
-updated_at: '2026-10-29T08:19:28Z'
+updated_at: '2026-10-29T08:50:41Z'
 completed_at: null
