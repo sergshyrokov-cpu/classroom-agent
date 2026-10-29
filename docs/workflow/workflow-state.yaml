@@ -4,32 +4,23 @@
 version: 1
 story: US-064
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: db-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: '2026-10-29T07:07:33Z'
+  verdict: NOT_APPLICABLE
+  stage: DB_DESIGN
+  recorded_at: '2026-10-29T07:13:05Z'
 last_artifacts:
-- type: specification
-  path: docs/specifications/US-064-spec.md
-  version: 1
-- type: spec_digest
-  path: docs/specifications/US-064-spec-digest.ru.md
-  version: 1
-- type: specification_review
-  path: docs/reviews/specifications/US-064-spec-review.md
-  version: 1
-- type: open_decisions
-  path: docs/decisions/US-064-open-decisions.md
+- type: database_design
+  path: docs/designs/database/US-064-db-design.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings: []
 started_at: '2026-10-29T06:27:20Z'
-updated_at: '2026-10-29T07:07:33Z'
+updated_at: '2026-10-29T07:13:05Z'
 completed_at: null
