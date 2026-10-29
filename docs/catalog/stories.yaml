@@ -327,7 +327,7 @@ stories:
   - id: US-067
     epic: EPIC-6
     title: An Admin changes a Dean's login after the work email was renamed in Google
-    state: READY
+    state: IN_PROGRESS
     blocked_by: null
     # Story file authored: docs/stories/US-067-admin-changes-dean-login.md
     # (aligned with v104, BR-014, SC-2, SC-11; v104 agenda item 5). OD-001, OD-002

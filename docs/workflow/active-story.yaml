@@ -3,10 +3,10 @@
 # Writer: story-orchestrator (on activation). Stories are authored by a human
 # in docs/stories/ — there is no backlog-sync stage in this workflow variant.
 version: 1
-active_story: US-064
-story_path: docs/stories/US-064-disabled-dean-session-refused-on-next-request.md
+active_story: US-067
+story_path: docs/stories/US-067-admin-changes-dean-login.md
 source:
   type: authored
-activated_at: 2026-10-29T06:22:39Z
+activated_at: 2026-10-29T08:03:58Z
 activated_by: Serhii SHYROKOV (/so:start)
-status: COMPLETED
+status: IN_PROGRESS
