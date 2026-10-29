@@ -119,6 +119,10 @@
   <data name="DeanAccounts.Action.Disable" xml:space="preserve"><value>Вимкнути</value></data>
   <data name="DeanAccounts.Action.ReEnable" xml:space="preserve"><value>Увімкнути знову</value></data>
   <data name="DeanAccounts.Action.ResetPassword" xml:space="preserve"><value>Скинути пароль</value></data>
+  <data name="DeanAccounts.Action.ChangeLogin" xml:space="preserve"><value>Змінити логін</value></data>
+  <data name="DeanAccounts.ChangeLogin.Email.Label" xml:space="preserve"><value>Новий логін (робоча пошта)</value></data>
+  <data name="DeanAccounts.Confirmation.LoginChanged" xml:space="preserve"><value>Логін змінено. Пароль залишився той самий.</value></data>
+  <data name="DeanAccounts.Refused.LoginUnchanged" xml:space="preserve"><value>Логін не змінено: це вже поточний логін облікового запису.</value></data>
   <data name="DeanAccounts.Confirmation.Created" xml:space="preserve"><value>Обліковий запис створено.</value></data>
   <data name="DeanAccounts.Confirmation.Disabled" xml:space="preserve"><value>Обліковий запис вимкнено.</value></data>
   <data name="DeanAccounts.Confirmation.ReEnabled" xml:space="preserve"><value>Обліковий запис увімкнено знову.</value></data>

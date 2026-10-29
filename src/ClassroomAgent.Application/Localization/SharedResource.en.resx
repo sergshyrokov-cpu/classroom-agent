@@ -119,6 +119,10 @@
   <data name="DeanAccounts.Action.Disable" xml:space="preserve"><value>Disable</value></data>
   <data name="DeanAccounts.Action.ReEnable" xml:space="preserve"><value>Re-enable</value></data>
   <data name="DeanAccounts.Action.ResetPassword" xml:space="preserve"><value>Reset password</value></data>
+  <data name="DeanAccounts.Action.ChangeLogin" xml:space="preserve"><value>Change login</value></data>
+  <data name="DeanAccounts.ChangeLogin.Email.Label" xml:space="preserve"><value>New login (work email)</value></data>
+  <data name="DeanAccounts.Confirmation.LoginChanged" xml:space="preserve"><value>Login changed. The password stays the same.</value></data>
+  <data name="DeanAccounts.Refused.LoginUnchanged" xml:space="preserve"><value>Login not changed: this is already the account’s login.</value></data>
   <data name="DeanAccounts.Confirmation.Created" xml:space="preserve"><value>The account has been created.</value></data>
   <data name="DeanAccounts.Confirmation.Disabled" xml:space="preserve"><value>The account has been disabled.</value></data>
   <data name="DeanAccounts.Confirmation.ReEnabled" xml:space="preserve"><value>The account has been re-enabled.</value></data>

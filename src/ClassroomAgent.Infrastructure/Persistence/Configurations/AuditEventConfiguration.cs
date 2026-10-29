@@ -35,7 +35,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
                 + "'meet_code_auto_linked', 'meet_code_course_picked', 'meet_code_link_confirmed', "
                 + "'meet_code_relinked', 'meet_code_marked_not_a_course', 'meet_code_mark_removed', "
                 + "'meet_reports_exported', 'meet_meeting_exported', 'participant_erased', 'erasure_exclusion_lifted', "
-                + "'courses_confirmed_deleted', 'erasure_exclusion_entered')");
+                + "'courses_confirmed_deleted', 'erasure_exclusion_entered', 'dean_login_changed')");
 
             // US-009 db-design §4.1: a refused action names WHAT was refused without naming a row that was never
             // created, so a target type without an id is now legal. An id without a type — an identifier belonging
@@ -384,6 +384,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         AuditAction.ErasureExclusionLifted => "erasure_exclusion_lifted",
         AuditAction.CoursesConfirmedDeleted => "courses_confirmed_deleted",
         AuditAction.ErasureExclusionEntered => "erasure_exclusion_entered",
+        AuditAction.DeanLoginChanged => "dean_login_changed",
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
@@ -416,6 +417,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         "erasure_exclusion_lifted" => AuditAction.ErasureExclusionLifted,
         "courses_confirmed_deleted" => AuditAction.CoursesConfirmedDeleted,
         "erasure_exclusion_entered" => AuditAction.ErasureExclusionEntered,
+        "dean_login_changed" => AuditAction.DeanLoginChanged,
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 

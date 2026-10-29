@@ -71,8 +71,9 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
         // column types only (US-055 db-design §3.2). US-058 adds AddSyncDataHealthRecords, the last one, with the table
         // sync_skipped_course and two columns (US-058 db-design §5). US-059 adds AddCourseListMarks, the last one, with
         // five columns and one check and no table (US-059 db-design §7). US-062 adds AddDataHealth. US-065 adds
-        // AddErasureExclusionInAdvance, the last one, with no table (US-065 db-design §7).
-        Assert.Equal(25, migrations.Count);
+        // AddErasureExclusionInAdvance, with no table (US-065 db-design §7). US-067 adds AddDeanLoginChangedAuditAction,
+        // the last one, amending audit_event's action check only (US-067 db-design §4).
+        Assert.Equal(26, migrations.Count);
         Assert.EndsWith("_InitialLegitimacyState", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_InitialAppUserAndAuditEvent", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_AddWorkspaceConnection", migrations[2], StringComparison.Ordinal);
@@ -96,6 +97,7 @@ public sealed class AppUserMigrationTests(PostgreSqlFixture database)
         // US-062 db-design §7 adds AddDataHealth: two nullable columns, constraints and indexes, no table.
         Assert.EndsWith("_AddDataHealth", migrations[23], StringComparison.Ordinal);
         Assert.EndsWith(ErasureTestData.Names.InAdvanceMigration, migrations[24], StringComparison.Ordinal);
+        Assert.EndsWith("_AddDeanLoginChangedAuditAction", migrations[25], StringComparison.Ordinal);
     }
 
     /// <summary>db-design 7.1: the migration seeds nothing — the first account appears when a person signs in.</summary>

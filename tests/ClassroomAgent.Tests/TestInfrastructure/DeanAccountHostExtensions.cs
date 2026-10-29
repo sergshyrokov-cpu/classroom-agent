@@ -87,6 +87,24 @@ public static class DeanAccountHostExtensions
             withToken);
     }
 
+    /// <summary>Posts the login change of one account (US-067 api-design D-1, D-2).</summary>
+    public static async Task<PageResponse> ChangeDeanLoginAsync(
+        this FormClient client,
+        long deanId,
+        string? newEmail,
+        CancellationToken cancellationToken,
+        bool withToken = true)
+    {
+        await client.OpenForTokenAsync(DeanAccountTestData.Paths.Deans, cancellationToken);
+        return await client.PostFormAsync(
+            DeanAccountTestData.Paths.Login(deanId),
+            newEmail is null
+                ? Array.Empty<KeyValuePair<string, string>>()
+                : [new(DeanAccountTestData.Fields.NewEmail, newEmail)],
+            cancellationToken,
+            withToken);
+    }
+
     /// <summary>Opens the sign-in page and posts the Dean's email and password (US-012 openapi POST /sign-in).</summary>
     public static async Task<PageResponse> SignInAsDeanAsync(
         this FormClient client,

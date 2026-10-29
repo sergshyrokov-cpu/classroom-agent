@@ -48,6 +48,14 @@
                         </label>
                         <button type="submit">@T[DeanAccountTextKeys.ActionResetPassword]</button>
                     </form>
+                    <form method="post" action="/settings/deans/@dean.Id/login">
+                        @Html.AntiForgeryToken()
+                        <label>
+                            @T[DeanAccountTextKeys.ChangeLoginEmailLabel]
+                            <input type="email" name="newEmail" autocomplete="off" />
+                        </label>
+                        <button type="submit">@T[DeanAccountTextKeys.ActionChangeLogin]</button>
+                    </form>
                 </td>
             </tr>
         }

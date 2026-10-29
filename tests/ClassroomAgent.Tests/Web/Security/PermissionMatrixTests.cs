@@ -153,6 +153,9 @@ public sealed class PermissionMatrixTests(PostgreSqlFixture database)
         Cell("POST", "settings/deans/{deanid}/state", InstallationPolicies.ManageDeanAccounts),
         Cell("POST", "settings/deans/{deanid}/password", InstallationPolicies.ManageDeanAccounts),
 
+        // US-067: the login change, Admin only (§2 matrix v104, «смена логина»).
+        Cell("POST", "settings/deans/{deanid}/login", InstallationPolicies.ManageDeanAccounts),
+
         Cell("GET", "account/password", InstallationPolicies.ChangeOwnPassword),
         Cell("POST", "account/password", InstallationPolicies.ChangeOwnPassword),
 

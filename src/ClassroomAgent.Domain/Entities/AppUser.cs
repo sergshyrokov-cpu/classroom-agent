@@ -136,6 +136,30 @@ public sealed class AppUser
     }
 
     /// <summary>
+    /// An Admin changes a Dean's login to the renamed work email (US-067 spec FR-003; BR-014, SC-2 v104). Only the
+    /// login and the stamps change: password, temporary mark, counter, lockout, disabled state, language, last
+    /// sign-in and creation time stay as they were, and the rotated stamp ends open sessions at their next request.
+    /// </summary>
+    /// <remarks>
+    /// The format and the school's domain are checked by the use case, with creation's rules; the "same address"
+    /// case is decided there too, before this is called, so nothing rotates when nothing changes (spec FR-006).
+    /// </remarks>
+    public void ChangeLogin(string email, DateTimeOffset at)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        if (Role != AppRole.Dean)
+        {
+            // An Admin's login is their Google account and AllowedAdmin entry, never changed here (BR-010).
+            throw new InvalidOperationException("Only a Dean account's login can be changed.");
+        }
+
+        var normalized = Normalize(email);
+        Email = normalized;
+        NormalizedEmail = normalized;
+        RotateSecurityStamp();
+    }
+
+    /// <summary>
     /// Clears the disabled state and **nothing else** — no temporary password, no lockout cleared
     /// (US-012 spec FR-008, BR-014).
     /// </summary>

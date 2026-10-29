@@ -107,4 +107,7 @@ public enum AuditAction
 
     /// <summary>US-065 spec FR-013: an Admin entered an erasure exclusion by email before the person was loaded.</summary>
     ErasureExclusionEntered,
+
+    /// <summary>US-067 spec FR-007 (SC-11 v104): an Admin changed a Dean account's login. Neither address is recorded.</summary>
+    DeanLoginChanged,
 }

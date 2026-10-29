@@ -11,7 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace ClassroomAgent.Web.Controllers;
 
 /// <summary>
-/// The Admin's Dean accounts screen and the four actions of BR-014 (US-012 openapi; spec FR-011, FR-016).
+/// The Admin's Dean accounts screen and the four actions of BR-014 (US-012 openapi; spec FR-011, FR-016), plus the
+/// login change of US-067 (api-design D-1).
 /// Admin only — the §2 matrix row "Створення, відключення та включення, скидання пароля облікових записів
 /// Деканів", its own policy.
 /// </summary>
@@ -26,7 +27,8 @@ public sealed class DeanAccountsController(
     GetLegitimacyModeQuery legitimacyMode,
     CreateDeanAccountUseCase create,
     SetDeanAccountStateUseCase setState,
-    ResetDeanPasswordUseCase resetPassword) : Controller
+    ResetDeanPasswordUseCase resetPassword,
+    ChangeDeanLoginUseCase changeLogin) : Controller
 {
     [HttpGet(SignInRoutes.Deans)]
     public async Task<IActionResult> Index(CancellationToken cancellationToken) =>
@@ -102,6 +104,30 @@ public sealed class DeanAccountsController(
     }
 
     /// <summary>
+    /// US-067 api-design D-1 … D-4: changes the account's login. A missing field is an empty address, refused as
+    /// malformed — never a binding error; the entered value is never re-shown (spec FR-010, I-5) nor logged (SC-10).
+    /// </summary>
+    [HttpPost(SignInRoutes.DeanLogin)]
+    public async Task<IActionResult> ChangeLogin(
+        long deanId,
+        [FromForm] string? newEmail,
+        CancellationToken cancellationToken)
+    {
+        var outcome = await changeLogin.ExecuteAsync(
+            ActorId(),
+            deanId,
+            newEmail ?? string.Empty,
+            HttpContext.TraceIdentifier,
+            cancellationToken);
+
+        return await AnswerAsync(
+            outcome,
+            DeanAccountTextKeys.LoginChangedConfirmation,
+            null,
+            cancellationToken);
+    }
+
+    /// <summary>
     /// The shared answer of the two actions on one account: `404` when the id names no Dean — never `403`,
     /// which would announce that the id exists (api-design §2.7) — `409` for a stale screen, `400` for a
     /// password the policy refused, and Post-Redirect-Get on success.
@@ -122,6 +148,7 @@ public sealed class DeanAccountsController(
                 return NotFound();
 
             case DeanAccountRefusal.AlreadyInThatState:
+            case DeanAccountRefusal.LoginUnchanged:
                 Response.StatusCode = StatusCodes.Status409Conflict;
                 return View(nameof(Index), await PageAsync(emailInput, MessageOf(outcome), cancellationToken));
 

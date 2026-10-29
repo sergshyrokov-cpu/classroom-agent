@@ -1,7 +1,6 @@
 using ClassroomAgent.Application.Exceptions;
 using ClassroomAgent.Application.Models;
 using ClassroomAgent.Application.Ports;
-using ClassroomAgent.Application.Validation;
 using ClassroomAgent.Domain.Entities;
 using ClassroomAgent.Domain.Enums;
 
@@ -49,15 +48,14 @@ public sealed class CreateDeanAccountUseCase(
 
         // 2: the address itself (spec VR-001).
         var trimmed = email.Trim();
-        if (!IsWellFormedAddress(trimmed))
+        if (!DeanLoginAddress.IsWellFormed(trimmed))
         {
             return Refused(DeanAccountRefusal.NotAnEmailAddress);
         }
 
         // 3: the school's domain, read server-side and never taken from the form (spec FR-004, S-04).
         var state = await legitimacyStates.GetForReadAsync(cancellationToken);
-        var schoolDomain = string.IsNullOrEmpty(state?.Domain) ? null : state.Domain;
-        if (schoolDomain is null || !IsInDomain(trimmed, schoolDomain))
+        if (!DeanLoginAddress.IsInDomain(trimmed, DeanLoginAddress.SchoolDomainOf(state)))
         {
             return Refused(DeanAccountRefusal.OutsideSchoolDomain);
         }
@@ -105,33 +103,6 @@ public sealed class CreateDeanAccountUseCase(
     }
 
     private static DeanAccountActionOutcome Refused(DeanAccountRefusal refusal) => new(refusal, null, null);
-
-    /// <summary>
-    /// The address shape of spec VR-001 — the same rule US-009 applies to the technical account: at most 254
-    /// characters, no whitespace, exactly one <c>@</c>, a non-empty local part and a domain-shaped domain part.
-    /// </summary>
-    private static bool IsWellFormedAddress(string address)
-    {
-        if (address.Length is 0 or > ServiceAccountEmailAttribute.MaximumLength || address.Any(char.IsWhiteSpace))
-        {
-            return false;
-        }
-
-        var parts = address.Split('@');
-        return parts.Length == 2
-            && parts[0].Length > 0
-            && WorkspaceDomainAttribute.IsDomain(WorkspaceConnection.NormalizeDomain(parts[1]));
-    }
-
-    /// <summary>
-    /// The address is in the school's domain when the two domains are equal. A subdomain of the school's domain
-    /// is not the school's domain (spec FR-004).
-    /// </summary>
-    private static bool IsInDomain(string address, string schoolDomain) =>
-        string.Equals(
-            WorkspaceConnection.NormalizeDomain(address.Split('@')[1]),
-            WorkspaceConnection.NormalizeDomain(schoolDomain),
-            StringComparison.Ordinal);
 
     /// <summary>
     /// One audit row and nothing else, declared as <see cref="PermittedServiceWrite.AuditEvent"/> — on the

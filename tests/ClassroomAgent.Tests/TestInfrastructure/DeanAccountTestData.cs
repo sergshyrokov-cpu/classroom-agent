@@ -48,6 +48,9 @@ public static class DeanAccountTestData
         public static string State(long deanId) => $"{Deans}/{deanId}/state";
 
         public static string Password(long deanId) => $"{Deans}/{deanId}/password";
+
+        /// <summary>US-067 api-design D-1: the login change of one account.</summary>
+        public static string Login(long deanId) => $"{Deans}/{deanId}/login";
     }
 
     public static class Policies
@@ -77,6 +80,9 @@ public static class DeanAccountTestData
         public const string StateActive = "Active";
 
         public const string StateDisabled = "Disabled";
+
+        /// <summary>US-067 api-design D-2: the login change form's one field — deliberately not <see cref="Email"/>.</summary>
+        public const string NewEmail = "newEmail";
     }
 
     /// <summary>The database codes of db-design §4.</summary>
@@ -93,6 +99,9 @@ public static class DeanAccountTestData
         public const string PasswordChanged = "dean_password_changed";
 
         public const string SignIn = "dean_sign_in";
+
+        /// <summary>US-067 db-design §3.</summary>
+        public const string LoginChanged = "dean_login_changed";
 
         public const string TargetType = "app_user";
 
@@ -165,6 +174,18 @@ public static class DeanAccountTestData
 
         public const string RefusedAlreadyInThatState = "DeanAccounts.Refused.AlreadyInThatState";
 
+        /// <summary>US-067 api-design D-5: the change form's field label.</summary>
+        public const string ChangeLoginEmailLabel = "DeanAccounts.ChangeLogin.Email.Label";
+
+        /// <summary>US-067 api-design D-5: the change form's button.</summary>
+        public const string ActionChangeLogin = "DeanAccounts.Action.ChangeLogin";
+
+        /// <summary>US-067 api-design D-5: the confirmation of a changed login.</summary>
+        public const string LoginChangedConfirmation = "DeanAccounts.Confirmation.LoginChanged";
+
+        /// <summary>US-067 api-design D-3, D-5: the answer to the account's own current address (OD-002 a).</summary>
+        public const string RefusedLoginUnchanged = "DeanAccounts.Refused.LoginUnchanged";
+
         public const string PasswordTooShort = "Password.Refused.TooShort";
 
         public const string PasswordTooLong = "Password.Refused.TooLong";
@@ -226,6 +247,10 @@ public static class DeanAccountTestData
             RefusedOutsideDomain,
             RefusedEmailInUse,
             RefusedAlreadyInThatState,
+            ChangeLoginEmailLabel,
+            ActionChangeLogin,
+            LoginChangedConfirmation,
+            RefusedLoginUnchanged,
             PasswordTooShort,
             PasswordTooLong,
             PasswordEqualsLogin,

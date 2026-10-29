@@ -128,6 +128,9 @@ public static class SignInRoutes
     /// <summary>US-012 openapi: resetting one account's password to a new temporary one.</summary>
     public const string DeanPassword = "/settings/deans/{deanId:long}/password";
 
+    /// <summary>US-067 api-design D-1: changing one account's login to the Dean's renamed work email.</summary>
+    public const string DeanLogin = "/settings/deans/{deanId:long}/login";
+
     /// <summary>US-012 openapi: the forced change of a temporary password (api-design §2.5, §2.6).</summary>
     public const string ForcedPasswordChange = "/sign-in/change-password";
 

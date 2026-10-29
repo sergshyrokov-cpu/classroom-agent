@@ -538,8 +538,8 @@ public sealed class AuditEvent
     ];
 
     /// <summary>
-    /// A succeeded Dean-account management action by an Admin (US-012 spec FR-017; db-design §4.4). The action
-    /// says which of the four it was; the target is always the account acted upon.
+    /// A succeeded Dean-account management action by an Admin (US-012 spec FR-017; db-design §4.4; US-067 spec
+    /// FR-007). The action says which of the five it was; the target is always the account acted upon.
     /// </summary>
     public static AuditEvent DeanAccountManaged(
         long adminId,
@@ -549,12 +549,13 @@ public sealed class AuditEvent
         string? requestId)
     {
         if (action is not (AuditAction.DeanAccountCreated or AuditAction.DeanAccountDisabled
-            or AuditAction.DeanAccountReEnabled or AuditAction.DeanAccountPasswordReset))
+            or AuditAction.DeanAccountReEnabled or AuditAction.DeanAccountPasswordReset
+            or AuditAction.DeanLoginChanged))
         {
             throw new ArgumentOutOfRangeException(
                 nameof(action),
                 action,
-                "A Dean-account management row carries one of the four actions SC-11 names.");
+                "A Dean-account management row carries one of the five actions SC-11 names.");
         }
 
         return new AuditEvent

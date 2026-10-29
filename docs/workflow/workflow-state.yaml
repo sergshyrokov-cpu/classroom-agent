@@ -4,26 +4,25 @@
 version: 1
 story: US-067
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: security-reviewer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: '2026-10-29T08:50:41Z'
+  stage: SECURITY_REVIEW
+  recorded_at: '2026-10-29T10:50:52Z'
 last_artifacts:
-- type: database_design
-  path: docs/designs/database/US-067-db-design.md
-  version: 1
-- type: entity_model
-  path: docs/designs/database/US-067-entity-model.md
+- type: security_review
+  path: docs/reviews/security/US-067-security-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings: []
+non_blocking_findings:
+- 'INFO-1: ChangeDeanLoginUseCase does not catch AppUserConflictException; a concurrent change of the account row ends on the generic error page (500), nothing committed'
+- 'INFO-2: the login may be set to the technical account address of the school domain, as creation allows; a Dean login gains no Google access'
 started_at: '2026-10-29T08:09:38Z'
-updated_at: '2026-10-29T08:50:41Z'
-completed_at: null
+updated_at: '2026-10-29T10:52:45Z'
+completed_at: '2026-10-29T10:52:45Z'

@@ -23,4 +23,7 @@ public enum DeanAccountRefusal
 
     /// <summary>The account is already in the requested state; a stale screen (spec VR-005).</summary>
     AlreadyInThatState,
+
+    /// <summary>The new login normalizes to the account's own current login; nothing is written (US-067 spec FR-006).</summary>
+    LoginUnchanged,
 }

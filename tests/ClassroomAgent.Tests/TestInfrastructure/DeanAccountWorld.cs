@@ -67,6 +67,9 @@ public sealed class DeanAccountWorld
     public ChangeOwnPasswordUseCase ChangeOwn =>
         new(Users, Audit, Hasher, Work, WriteScope, Time);
 
+    public ChangeDeanLoginUseCase ChangeLogin =>
+        new(ReadOnly, Users, Legitimacy, Audit, Work, WriteScope, Time);
+
     public ListDeanAccountsQuery List => new(Users);
 
     /// <summary>An Admin already in the table — the actor of every management action.</summary>
@@ -212,11 +215,23 @@ public sealed class DeanAccountWorld
 
         public int Transactions { get; private set; }
 
+        /// <summary>
+        /// US-067 spec FR-004: the next commit fails as the unique index would refuse it — another account took the
+        /// address between the use case's check and its save. Consumed by that one commit.
+        /// </summary>
+        public Exception? NextCommitFailure { get; set; }
+
         /// <summary>How many accounts and audit rows were staged at each commit, in order.</summary>
         public List<(int Accounts, int AuditRows)> Staged { get; } = [];
 
         public Task SaveChangesAsync(CancellationToken cancellationToken)
         {
+            if (NextCommitFailure is { } failure)
+            {
+                NextCommitFailure = null;
+                throw failure;
+            }
+
             Commits++;
             Staged.Add((users.Added.Count, audit.Written.Count));
             audit.WrittenAtLastCommit = audit.Written.Count;

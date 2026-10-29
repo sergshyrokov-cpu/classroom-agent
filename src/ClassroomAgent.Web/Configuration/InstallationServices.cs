@@ -114,6 +114,7 @@ public static class InstallationServices
         services.AddScoped<ListDeanAccountsQuery>();
         services.AddScoped<CreateDeanAccountUseCase>();
         services.AddScoped<SetDeanAccountStateUseCase>();
+        services.AddScoped<ChangeDeanLoginUseCase>();
         services.AddScoped<ResetDeanPasswordUseCase>();
         services.AddScoped<SignInDeanUseCase>();
         services.AddScoped<CompleteTemporaryPasswordChangeUseCase>();

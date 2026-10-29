@@ -34,6 +34,12 @@ public static class DeanAccountTextKeys
 
     public const string ActionResetPassword = "DeanAccounts.Action.ResetPassword";
 
+    /// <summary>US-067 api-design D-5: the login change form's button.</summary>
+    public const string ActionChangeLogin = "DeanAccounts.Action.ChangeLogin";
+
+    /// <summary>US-067 api-design D-5: the login change form's field label.</summary>
+    public const string ChangeLoginEmailLabel = "DeanAccounts.ChangeLogin.Email.Label";
+
     public const string CreatedConfirmation = "DeanAccounts.Confirmation.Created";
 
     public const string DisabledConfirmation = "DeanAccounts.Confirmation.Disabled";
@@ -41,6 +47,9 @@ public static class DeanAccountTextKeys
     public const string ReEnabledConfirmation = "DeanAccounts.Confirmation.ReEnabled";
 
     public const string PasswordResetConfirmation = "DeanAccounts.Confirmation.PasswordReset";
+
+    /// <summary>US-067 api-design D-5: the confirmation of a changed login.</summary>
+    public const string LoginChangedConfirmation = "DeanAccounts.Confirmation.LoginChanged";
 
     public const string SignInRefused = "SignIn.Refused.WrongLoginOrPassword";
 
@@ -75,6 +84,7 @@ public static class DeanAccountTextKeys
         DeanAccountRefusal.OutsideSchoolDomain => "DeanAccounts.Refused.OutsideSchoolDomain",
         DeanAccountRefusal.EmailAlreadyUsed => "DeanAccounts.Refused.EmailAlreadyUsed",
         DeanAccountRefusal.AlreadyInThatState => "DeanAccounts.Refused.AlreadyInThatState",
+        DeanAccountRefusal.LoginUnchanged => "DeanAccounts.Refused.LoginUnchanged",
         _ => throw new ArgumentOutOfRangeException(nameof(refusal), refusal, null),
     };
 
