@@ -1,0 +1,181 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — An Admin changes a Dean's login (US-067)
+  version: "1"
+  description: >
+    HTTP contract of US-067 on the installation's public port. **One operation is
+    added** next to the per-row actions of the Admin's Dean accounts screen:
+    `POST /settings/deans/{deanId}/login` (spec FR-001). No existing operation,
+    parameter, policy, status code or error body changes; the screen
+    (`GET /settings/deans`) renders one more per-row form. Everything
+    docs/designs/api/US-012-openapi.yaml and the host-wide rules of
+    docs/designs/api/US-008-openapi.yaml define and this file does not restate
+    stands — deny by default, global antiforgery, the single translated error
+    page, the `409` read-only mapping. Server-rendered, no JSON API (§8).
+    Companion document: docs/designs/api/US-067-api-design.md.
+x-story: US-067
+x-source-specification: docs/specifications/US-067-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-067-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 104
+x-produced-by: openapi-designer
+x-extends:
+  - docs/designs/api/US-008-openapi.yaml
+  - docs/designs/api/US-012-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. The operation is
+  an installation screen action, which the contract version does not describe
+  (DC-12); no wire type to the Control Plane changes.
+
+servers:
+  - url: https://school.example
+    description: "Installation public port. Illustrative."
+
+tags:
+  - name: settings
+    description: "The admin panel's settings section (US-012)"
+
+paths:
+
+  /settings/deans/{deanId}/login:
+
+    parameters:
+      - $ref: "#/components/parameters/DeanId"
+
+    post:
+      tags: [settings]
+      operationId: changeDeanLogin
+      summary: "Change a Dean account's login to the Dean's renamed work email"
+      description: >
+        Sets the account's login (`Email`, `NormalizedEmail`) to the new address and
+        rotates the security stamp, in one transaction with one audit row (spec
+        FR-003, FR-007). Nothing else about the account changes — password, its
+        temporary mark, lockout, disabled state, language, last sign-in, creation
+        time (AC-006). A disabled account may be changed and stays disabled
+        (OD-001 a). Evaluation order and stop-at-first-refusal are spec FR-002:
+        read-only → Dean exists → format → school domain → same address →
+        uniqueness. The school domain is read server-side; no domain value is
+        accepted from the request (SC-2).
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ManageDeanAccounts
+      x-antiforgery: required
+      x-calls-google: false
+      x-writes: "the AppUser Email, NormalizedEmail and security stamp, plus one AuditEvent row (DeanLoginChanged), in one transaction"
+      x-spec: [FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011]
+      x-acceptance-criteria: [AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010]
+      security:
+        - installationSession: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ChangeDeanLoginForm"
+      responses:
+        "302":
+          description: >
+            (1) Changed. Post-Redirect-Get to `/settings/deans` with the translated
+            confirmation (key `DeanAccounts.Confirmation.LoginChanged`) in TempData;
+            the row now shows the new address. One audit row `dean_login_changed`
+            — actor the Admin, object the account id, neither address (spec
+            FR-007, SC-11). The Dean's open session ends on its next request
+            (stamp rotated, AC-003).
+            (2) Not signed in: redirect to `/sign-in` (SC-4, AC-009), as for every
+            protected operation (host-wide rule). Nothing is written.
+          headers:
+            Location:
+              schema:
+                type: string
+                enum: [/settings/deans, /sign-in]
+        "400":
+          description: >
+            (1) The new address is malformed or empty (`NotAnEmailAddress`, key
+            `DeanAccounts.Refused.NotAnEmail`), outside the school's domain or in a
+            subdomain of it, or no school domain is known (`OutsideSchoolDomain`,
+            key `DeanAccounts.Refused.OutsideSchoolDomain`), or taken by another
+            account of any role in any letter case — including a take that wins
+            the race against the unique index (`EmailAlreadyUsed`, key
+            `DeanAccounts.Refused.EmailAlreadyUsed`; spec FR-002, FR-004). The
+            screen is re-rendered with that page-level message — the same keys
+            the creation form uses (FR-011). The rejected value is not echoed into
+            any field (`emailInput` is null, spec FR-010, I-5) and not written to
+            any log (SC-10). Nothing is written, no audit row.
+            (2) Missing or invalid antiforgery token (host-wide). Nothing is
+            written.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/DeanAccountsPageModel"
+        "403":
+          description: >
+            Signed in as a Dean — for any account id, the Dean's own included
+            (AC-009, TC-5): the translated error page. Nothing is written.
+          content:
+            text/html: {}
+        "404":
+          description: >
+            No `AppUser` with that id, or one whose role is not Dean — one answer
+            for both, so an Admin's id is indistinguishable from an unknown one
+            (spec FR-002 step 2; US-012 S-03). Nothing is written.
+          content:
+            text/html: {}
+        "409":
+          description: >
+            (1) Read-only mode (BR-026, AD-6): the host-wide translated error page;
+            the login is unchanged and the refusal writes its audit row
+            (`DeanAccountManagementRefused`, action `DeanLoginChanged`, the account
+            id, category read-only; spec FR-008).
+            (2) The new address normalizes to the account's own current login —
+            "login unchanged" (OD-002 a, spec FR-006): the screen is re-rendered
+            with the translated message (key `DeanAccounts.Refused.LoginUnchanged`);
+            nothing is written — no account change, no stamp rotation, no audit
+            row. `409` mirrors `AlreadyInThatState` of the `state` operation.
+          content:
+            text/html:
+              x-view-model:
+                $ref: "#/components/schemas/DeanAccountsPageModel"
+
+components:
+
+  parameters:
+    DeanId:
+      $ref: "docs/designs/api/US-012-openapi.yaml#/components/parameters/DeanId"
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: __Host-ca-session
+      description: "The installation's session cookie (US-008 spec FR-015); unchanged."
+
+  schemas:
+
+    DeanAccountsPageModel:
+      description: >
+        Unchanged from US-012 (`#/components/schemas/DeanAccountsPageModel`). On a
+        refusal of this operation `emailInput` is null — it belongs to the creation
+        form only — and `messageKey` carries the refusal key.
+      $ref: "docs/designs/api/US-012-openapi.yaml#/components/schemas/DeanAccountsPageModel"
+
+    ChangeDeanLoginForm:
+      type: object
+      additionalProperties: false
+      properties:
+        newEmail:
+          type: string
+          maxLength: 320
+          description: >
+            The Dean's new work email as typed. Trimmed, then checked by the same
+            rules as creation: length 1..254 after trimming, no whitespace, exactly
+            one `@`, non-empty local part, domain equal to the school's domain read
+            server-side (spec §6). Stored lower-cased (BR-079). A missing field is
+            treated as empty and refused as malformed (`400`), never as a binding
+            error. Never logged or audited (SC-10, SC-11). Named `newEmail`, not
+            `email`, so it cannot be mistaken for the creation form's field.
+        __RequestVerificationToken:
+          type: string
+      required: [newEmail]
