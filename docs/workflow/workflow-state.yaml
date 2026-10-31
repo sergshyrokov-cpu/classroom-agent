@@ -2,27 +2,25 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-067
+story: US-061
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: SECURITY_REVIEW
-  recorded_at: '2026-10-29T10:50:52Z'
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: '2026-10-31T14:30:03Z'
 last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-067-security-review.md
+- type: specification_review
+  path: docs/reviews/specifications/US-061-spec-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings:
-- 'INFO-1: ChangeDeanLoginUseCase does not catch AppUserConflictException; a concurrent change of the account row ends on the generic error page (500), nothing committed'
-- 'INFO-2: the login may be set to the technical account address of the school domain, as creation allows; a Dean login gains no Google access'
-started_at: '2026-10-29T08:09:38Z'
-updated_at: '2026-10-29T10:52:45Z'
-completed_at: '2026-10-29T10:52:45Z'
+non_blocking_findings: []
+started_at: '2026-10-31T14:14:39Z'
+updated_at: '2026-10-31T14:30:03Z'
+completed_at: null
