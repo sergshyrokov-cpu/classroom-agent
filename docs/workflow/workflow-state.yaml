@@ -4,20 +4,29 @@
 version: 1
 story: US-068
 workflow: story-delivery
-current_stage: SPECIFICATION
-previous_stage: null
-last_completed_stage: null
+current_stage: API_DESIGN
+previous_stage: HUMAN_SPEC_APPROVAL
+last_completed_stage: HUMAN_SPEC_APPROVAL
 status: IN_PROGRESS
 attempt: 1
 last_invoked_skill: null
 last_result:
-  verdict: null
-  stage: null
-  recorded_at: null
-last_artifacts: []
+  verdict: HUMAN_APPROVED
+  stage: HUMAN_SPEC_APPROVAL
+  recorded_at: '2026-11-01T13:35:45Z'
+last_artifacts:
+- type: specification
+  path: docs/specifications/US-068-spec.md
+  version: 2
+- type: spec_digest
+  path: docs/specifications/US-068-spec-digest.ru.md
+  version: 2
+- type: specification_review
+  path: docs/reviews/specifications/US-068-spec-review.md
+  version: 2
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings: []
-started_at: null
-updated_at: '2026-11-01T12:47:30Z'
+started_at: '2026-11-01T12:52:58Z'
+updated_at: '2026-11-01T13:35:45Z'
 completed_at: null
