@@ -341,6 +341,14 @@ stories:
     # course-choice page.
     # Story file authored: docs/stories/US-046-page-search-hint.md
     # (aligned with v91, NFR-075). The one exception to the frozen pilot scope.
+  - id: US-068
+    epic: EPIC-6
+    title: Both hosts share one restrained look built on Bootstrap
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-068-restrained-look-with-bootstrap.md
+    # (aligned with v105, NFR-076, SC-15). OD-001, OD-002 resolved a) by the
+    # Owner 2026-11-01. Before the first demo to real users.
 
   # --- EPIC-1: Synchronization ---------------------------------------------
   - id: US-013
