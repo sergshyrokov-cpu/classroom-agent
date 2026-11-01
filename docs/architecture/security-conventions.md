@@ -600,6 +600,11 @@ Decided in `trebovaniya.md` section 8 (v95).
   `onclick`-style attribute, no `style` attribute. Scripts and styles live as
   files in the application's static files directory. No resource is loaded from
   another site (fonts, libraries, counters) — SC-13 forbids it as well.
+- **Styling does not loosen the headers** *(v105)*. The interface library
+  (Bootstrap, NFR-076) is served from the host's own static files. Images it
+  embeds in its stylesheet as `data:` URIs (select arrow, check mark) are
+  replaced by files from the same directory; `img-src` never gains `data:` and
+  `style-src` never gains `'unsafe-inline'` for it.
 - Each host has a test that enumerates its endpoints and asserts the headers on
   every one. A response without them, a CSP that allows `'unsafe-inline'`,
   `'unsafe-eval'` or another origin beyond the Google sign-in address, or an

@@ -215,3 +215,17 @@ and the paged lists without a search field (teachers, Meet codes), which warn
 that browser search finds only the rows shown. Sign-in, password and settings
 forms, the Admin's service pages, the error page and the Control Plane have no
 hint. *(§5, v91)*
+
+**NFR-076** Both hosts — the installation and the Control Plane — share one
+restrained look built on Bootstrap 5.3, CSS only (no Bootstrap scripts while there
+is no menu). Its files ship with the application in each host's static files
+directory together with its MIT licence file; nothing is loaded from another site,
+and the browser security headers are not loosened for it (SC-15). One light theme.
+The header keeps its current content (language switcher and, in the installation,
+the data-health banner); no school name or logo. Data-state marks are highlighted
+by colour only — no sound, pop-up or blinking. Pages read on a phone (NFR-070).
+Styling adds and removes no visible text. Acceptance: tests prove the stylesheets
+are linked on every page of both hosts and no inline style exists; a person checks
+the look of the key pages — sign-in, journal, Meet reports, settings, the error page,
+and in the Control Plane sign-in and the installation list — on a computer and a
+phone. *(§8, v105)*

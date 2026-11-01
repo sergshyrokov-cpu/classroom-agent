@@ -84,6 +84,8 @@ stage identifiers, or an alternative artifact-path convention.
 - **PostgreSQL** — rationale and runtime rules in `persistence-conventions.md` PC-1
 - xUnit, `Microsoft.AspNetCore.Mvc.Testing`
 - Serilog — structured logging to a rolling file (DC-10)
+- Bootstrap 5.3, CSS only, vendored in each host's `wwwroot` with its MIT licence;
+  never from a CDN (NFR-076, SC-15)
 - ASP.NET Core Identity — local login/password for Dean, Google OAuth
   (external login) for Admin, login/password for the Owner in the Control Plane
 - Google APIs: Classroom API, Admin Reports API (Meet events) —
@@ -150,7 +152,7 @@ These are binding.
 **Non-normative summary** of `trebovaniya.md` sections 2, 4, 5, 6 and 9 — a cheap
 cache so routine decisions do not require opening a ~180 KB Russian document.
 `trebovaniya.md` always wins; on conflict this section is the one that gets
-corrected. **Verified against v104.** When `trebovaniya.md` moves past that
+corrected. **Verified against v105.** When `trebovaniya.md` moves past that
 version, re-verify this section and update the marker.
 
 - **Roles in the first version are Owner, Admin and Dean only.** Teacher and
