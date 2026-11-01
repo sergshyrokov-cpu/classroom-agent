@@ -2,26 +2,22 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-061
+story: US-068
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: SPECIFICATION
+previous_stage: null
+last_completed_stage: null
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: SECURITY_REVIEW
-  recorded_at: '2026-11-01T07:29:39Z'
-last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-061-security-review.md
-  version: 1
+  verdict: null
+  stage: null
+  recorded_at: null
+last_artifacts: []
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings:
-- 'INFO-1: full run counted 6925 tests, the implementation report 6926; one-case difference unexplained, all passed'
-started_at: '2026-10-31T14:14:39Z'
-updated_at: '2026-11-01T08:36:38Z'
-completed_at: '2026-11-01T08:36:38Z'
+non_blocking_findings: []
+started_at: null
+updated_at: '2026-11-01T12:47:30Z'
+completed_at: null
