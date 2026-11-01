@@ -23,4 +23,7 @@ public interface IMeetCodesReadSource
 
     /// <summary>Every stored course (id, name, section), any order.</summary>
     Task<IReadOnlyList<Models.Dtos.CourseOption>> GetAllCoursesAsync(CancellationToken cancellationToken);
+
+    /// <summary>US-061 spec FR-003.2: every course with a stored mark (US-059), any order.</summary>
+    Task<IReadOnlyList<Models.MeetCourseAbsenceRecord>> GetCourseAbsencesAsync(CancellationToken cancellationToken);
 }

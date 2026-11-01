@@ -4,23 +4,24 @@
 version: 1
 story: US-061
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: security-reviewer
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: DB_DESIGN
-  recorded_at: '2026-10-31T14:33:18Z'
+  verdict: PASS
+  stage: SECURITY_REVIEW
+  recorded_at: '2026-11-01T07:29:39Z'
 last_artifacts:
-- type: database_design
-  path: docs/designs/database/US-061-db-design.md
+- type: security_review
+  path: docs/reviews/security/US-061-security-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings: []
+non_blocking_findings:
+- 'INFO-1: full run counted 6925 tests, the implementation report 6926; one-case difference unexplained, all passed'
 started_at: '2026-10-31T14:14:39Z'
-updated_at: '2026-10-31T14:33:18Z'
-completed_at: null
+updated_at: '2026-11-01T08:36:38Z'
+completed_at: '2026-11-01T08:36:38Z'

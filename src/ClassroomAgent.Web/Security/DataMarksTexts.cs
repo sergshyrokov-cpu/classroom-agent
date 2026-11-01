@@ -37,6 +37,20 @@ public static class DataMarksTexts
         };
     }
 
+    /// <summary>US-061 spec FR-005.1, FR-006: the Meet line — the mark, «; », the roster (undated, OD-001 a).</summary>
+    public static string MeetNotice(IStringLocalizer<SharedResource> texts, MeetCourseNotice notice)
+    {
+        ArgumentNullException.ThrowIfNull(texts);
+        ArgumentNullException.ThrowIfNull(notice);
+        var mark = notice.Mark == CourseAbsenceMark.NotInClassroom
+            ? texts[DataMarksTextKeys.HeaderNotInClassroomSince, Date(notice.Since)]
+            : texts[DataMarksTextKeys.MeetNotVisibleSince, Date(notice.Since)];
+        var roster = notice.RosterAsOf is { } asOf
+            ? texts[DataMarksTextKeys.MeetRosterAsOf, Date(asOf)]
+            : texts[DataMarksTextKeys.MeetRosterUndated];
+        return mark + texts[DataMarksTextKeys.MeetSeparator] + roster;
+    }
+
     /// <summary>Spec FR-006.1: "left" with the last-seen date, or alone (OD-003 a).</summary>
     public static string Left(IStringLocalizer<SharedResource> texts, LeftMark left)
     {

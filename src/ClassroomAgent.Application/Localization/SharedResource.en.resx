@@ -580,6 +580,10 @@
   <data name="DataMarks.Course.NotVisibleSince" xml:space="preserve"><value>not visible to the technical account since {0}</value></data>
   <data name="DataMarks.Course.NoTeacher" xml:space="preserve"><value>no teacher in Classroom</value></data>
   <data name="DataMarks.Header.NotInClassroomSince" xml:space="preserve"><value>Course not in Classroom since {0}</value></data>
+  <data name="DataMarks.Meet.NotVisibleSince" xml:space="preserve"><value>Course not visible to the technical account since {0}</value></data>
+  <data name="DataMarks.Meet.RosterAsOf" xml:space="preserve"><value>course membership as of {0}</value></data>
+  <data name="DataMarks.Meet.RosterUndated" xml:space="preserve"><value>course membership as of the last read</value></data>
+  <data name="DataMarks.Meet.Separator" xml:space="preserve"><value>; </value></data>
   <data name="DataMarks.Header.NotUpdatedSince" xml:space="preserve"><value>Data not updated since {0}</value></data>
   <data name="DataMarks.Header.NotUpdated" xml:space="preserve"><value>Data not updated</value></data>
   <data name="DataMarks.Item.NotInClassroom" xml:space="preserve"><value>not in Classroom</value></data>

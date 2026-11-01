@@ -21,7 +21,7 @@
 
 @if (Model.CurrentCourse is { } current)
 {
-    <p id="meet-code-current-course">@T[MeetCodesTextKeys.ChoiceCurrent]: @CourseLabel(current)</p>
+    <p id="meet-code-current-course">@T[MeetCodesTextKeys.ChoiceCurrent]: @CourseLabel(current)@Mark(current.Id)</p>
 }
 
 <form id="meet-code-choice-form" method="post" action="@(SignInRoutes.MeetCodes + "/" + Uri.EscapeDataString(Model.MeetingCode) + "/link")">
@@ -58,7 +58,7 @@
                 <p>
                     <label>
                         <input type="radio" name="courseId" value="@course.Id.ToString(CultureInfo.InvariantCulture)" required />
-                        @CourseLabel(course)
+                        @CourseLabel(course)@Mark(course.Id)
                     </label>
                 </p>
             }
@@ -70,6 +70,10 @@
 </form>
 
 @functions {
+    /// <summary>US-061 spec FR-003.2, OD-002 a: a marked course's mark with its date after its name; nothing for others.</summary>
+    private string Mark(long courseId) =>
+        Model.Absences.TryGetValue(courseId, out var absence) ? " (" + DataMarksTexts.Absence(T, absence) + ")" : string.Empty;
+
     /// <summary>Spec I-7: the course name, then its section when it has one; Google data, not translated.</summary>
     private static string CourseLabel(CourseOption course) =>
         string.IsNullOrEmpty(course.Section) ? course.Name : course.Name + " — " + course.Section;

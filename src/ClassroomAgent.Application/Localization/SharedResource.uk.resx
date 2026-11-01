@@ -580,6 +580,10 @@
   <data name="DataMarks.Course.NotVisibleSince" xml:space="preserve"><value>не видно технічному акаунту з {0}</value></data>
   <data name="DataMarks.Course.NoTeacher" xml:space="preserve"><value>викладача немає в Classroom</value></data>
   <data name="DataMarks.Header.NotInClassroomSince" xml:space="preserve"><value>Курсу немає в Classroom з {0}</value></data>
+  <data name="DataMarks.Meet.NotVisibleSince" xml:space="preserve"><value>Курс не видно технічному акаунту з {0}</value></data>
+  <data name="DataMarks.Meet.RosterAsOf" xml:space="preserve"><value>склад курсу — на {0}</value></data>
+  <data name="DataMarks.Meet.RosterUndated" xml:space="preserve"><value>склад курсу — на дату останнього читання</value></data>
+  <data name="DataMarks.Meet.Separator" xml:space="preserve"><value>; </value></data>
   <data name="DataMarks.Header.NotUpdatedSince" xml:space="preserve"><value>Дані не оновлювалися з {0}</value></data>
   <data name="DataMarks.Header.NotUpdated" xml:space="preserve"><value>Дані не оновлювалися</value></data>
   <data name="DataMarks.Item.NotInClassroom" xml:space="preserve"><value>немає в Classroom</value></data>

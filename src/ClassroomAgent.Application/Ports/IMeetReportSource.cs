@@ -8,6 +8,9 @@ public interface IMeetReportSource
     /// <summary>R6 — the course's name, or null when no course has this id.</summary>
     Task<string?> GetCourseNameAsync(long courseId, CancellationToken cancellationToken);
 
+    /// <summary>US-061 spec FR-005: the course's stored mark and last complete read, or null when no course has this id.</summary>
+    Task<MeetCourseMarkRecord?> GetCourseMarkAsync(long courseId, CancellationToken cancellationToken);
+
     /// <summary>R1 + R2 — meetings of the course with start in [start, endExclusive), each with its connections.</summary>
     Task<IReadOnlyList<MeetReportMeetingRecord>> GetMeetingsAsync(
         long courseId,

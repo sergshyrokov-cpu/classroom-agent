@@ -91,6 +91,13 @@ public sealed class FakeMeetReportSource : IMeetReportSource
         return Task.FromResult(_courseNames.TryGetValue(courseId, out var name) ? name : null);
     }
 
+    /// <summary>US-061: no registered course carries a mark here; a known course answers an unmarked record.</summary>
+    public Task<MeetCourseMarkRecord?> GetCourseMarkAsync(long courseId, CancellationToken cancellationToken)
+    {
+        Calls++;
+        return Task.FromResult(_courseNames.ContainsKey(courseId) ? new MeetCourseMarkRecord(null, null, null) : null);
+    }
+
     public Task<IReadOnlyList<MeetReportMeetingRecord>> GetMeetingsAsync(
         long courseId,
         DateTimeOffset start,

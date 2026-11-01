@@ -8,4 +8,8 @@ public sealed record MeetCodeCourseChoicePageModel(
     IReadOnlyList<CandidateCourse> Candidates,
     IReadOnlyList<CourseOption> OtherCourses,
     int ReturnPage,
-    MeetCodeFieldError? FieldError);
+    MeetCodeFieldError? FieldError)
+{
+    /// <summary>US-061 spec FR-003.2, OD-002 a: the mark of each marked course on the page, by course id.</summary>
+    public IReadOnlyDictionary<long, CourseAbsence> Absences { get; init; } = new Dictionary<long, CourseAbsence>();
+}

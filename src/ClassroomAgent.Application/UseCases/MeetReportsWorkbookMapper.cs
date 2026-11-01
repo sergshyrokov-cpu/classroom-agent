@@ -28,7 +28,7 @@ internal static class MeetReportsWorkbookMapper
     {
         List<WorksheetRow> Header() =>
         [
-            Row(Label(texts, ReportText.MeetHeaderCourse), WorkbookCell.OfText(courseName)),
+            CourseRow(texts, courseName, reports.CourseNotice, culture),
             Row(Label(texts, ReportText.MeetHeaderPeriod), WorkbookCell.OfDate(from), WorkbookCell.OfDate(to)),
             ExportedRow(texts, exportedLocal),
             DelayRow(texts, reports.DelayNotice.MeetLoadedUpTo, culture),

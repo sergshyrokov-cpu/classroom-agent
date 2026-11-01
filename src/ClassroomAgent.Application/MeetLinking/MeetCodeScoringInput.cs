@@ -4,4 +4,8 @@ namespace ClassroomAgent.Application.MeetLinking;
 public sealed record MeetCodeScoringInput(
     string MeetingCode,
     IReadOnlyList<MeetCodeMeeting> Meetings,
-    IReadOnlyList<RosterMembership> Memberships);
+    IReadOnlyList<RosterMembership> Memberships)
+{
+    /// <summary>US-061 spec FR-001, VR-002: courses with a stored mark (US-059); never candidates.</summary>
+    public IReadOnlySet<long> MarkedCourseIds { get; init; } = new HashSet<long>();
+}

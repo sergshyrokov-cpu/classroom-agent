@@ -21,6 +21,13 @@ public sealed class MeetReportSource(ClassroomAgentDbContext db) : IMeetReportSo
             .Select(c => c.Name)
             .SingleOrDefaultAsync(cancellationToken);
 
+    public async Task<MeetCourseMarkRecord?> GetCourseMarkAsync(long courseId, CancellationToken cancellationToken) =>
+        await db.Courses
+            .AsNoTracking()
+            .Where(c => c.Id == courseId)
+            .Select(c => new MeetCourseMarkRecord(c.AbsenceMark, c.AbsentSince, c.LastCompleteReadAt))
+            .SingleOrDefaultAsync(cancellationToken);
+
     public async Task<IReadOnlyList<MeetReportMeetingRecord>> GetMeetingsAsync(
         long courseId,
         DateTimeOffset start,

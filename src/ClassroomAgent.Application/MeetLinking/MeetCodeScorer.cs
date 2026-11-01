@@ -27,7 +27,10 @@ public static class MeetCodeScorer
             var date = RosterOnDate.LocalDate(meeting.StartedAt, zone);
             foreach (var membership in byEmail[meeting.OrganizerEmail!])
             {
-                if (membership.Role == ClassroomRole.Teacher && RosterOnDate.Covers(membership, date, zone))
+                // US-061 FR-001.1, I-6: a marked course is not a candidate at all; the denominator below is unchanged.
+                if (membership.Role == ClassroomRole.Teacher
+                    && RosterOnDate.Covers(membership, date, zone)
+                    && !input.MarkedCourseIds.Contains(membership.CourseId))
                 {
                     candidates.Add(membership.CourseId);
                 }

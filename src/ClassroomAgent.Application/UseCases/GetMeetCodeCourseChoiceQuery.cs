@@ -55,8 +55,15 @@ public sealed class GetMeetCodeCourseChoiceQuery(
             .ToList();
 
         var current = currentCourseId is { } id && courses.TryGetValue(id, out var course) ? course : null;
+
+        // US-061 spec FR-003.2: a marked course shows its mark with its date; candidates are never marked (FR-002.3).
+        var absences = (await reads.GetCourseAbsencesAsync(cancellationToken))
+            .ToDictionary(a => a.CourseId, a => DataMarkRules.Absence(a.Mark, a.Since, zone.Zone)!);
         return new MeetCodeChoiceResult(
             false,
-            new MeetCodeCourseChoicePageModel(code, state, current, candidates, others, MeetCodeWrite.ReturnPage(returnPage), fieldError));
+            new MeetCodeCourseChoicePageModel(code, state, current, candidates, others, MeetCodeWrite.ReturnPage(returnPage), fieldError)
+            {
+                Absences = absences,
+            });
     }
 }

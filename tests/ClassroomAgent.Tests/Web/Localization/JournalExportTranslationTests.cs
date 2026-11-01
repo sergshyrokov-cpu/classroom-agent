@@ -25,6 +25,14 @@ public sealed class JournalExportTranslationTests(PostgreSqlFixture database)
 
         Assert.False(string.IsNullOrWhiteSpace(ukrainian));
         Assert.False(string.IsNullOrWhiteSpace(english));
+        if (text == ReportText.MeetNoticeSeparator)
+        {
+            // US-061 spec FR-006: punctuation, the same in both languages — a missing key would answer the key itself.
+            Assert.Equal("; ", ukrainian);
+            Assert.Equal("; ", english);
+            return;
+        }
+
         Assert.NotEqual(ukrainian, english);
     }
 

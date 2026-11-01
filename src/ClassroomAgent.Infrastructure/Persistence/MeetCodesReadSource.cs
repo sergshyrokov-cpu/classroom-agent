@@ -221,6 +221,13 @@ public sealed class MeetCodesReadSource(ClassroomAgentDbContext db) : IMeetCodes
             .Select(c => new CourseOption(c.Id, c.Name, c.Section))
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<MeetCourseAbsenceRecord>> GetCourseAbsencesAsync(CancellationToken cancellationToken) =>
+        await db.Courses
+            .AsNoTracking()
+            .Where(c => c.AbsenceMark != null && c.AbsentSince != null)
+            .Select(c => new MeetCourseAbsenceRecord(c.Id, c.AbsenceMark!.Value, c.AbsentSince!.Value))
+            .ToListAsync(cancellationToken);
+
     private async Task<Dictionary<long, string>> LoadEmailsAsync(IEnumerable<long> ids, CancellationToken cancellationToken)
     {
         var distinct = ids.Distinct().ToList();

@@ -53,6 +53,7 @@ public sealed class GetMeetReportMeetingQuery(IMeetReportSource source, SchoolTi
         }
 
         var zone = schoolTimeZone.Zone;
+        var mark = await source.GetCourseMarkAsync(courseId, cancellationToken);
         var members = await source.GetCourseMembersAsync(courseId, cancellationToken);
         var people = ByEmail(await source.GetPeopleAsync(EmailsOf([meeting]), cancellationToken));
         var facts = Classify(meeting, courseId, members, people, zone);
@@ -78,7 +79,8 @@ public sealed class GetMeetReportMeetingQuery(IMeetReportSource source, SchoolTi
                 Person(meeting.OrganizerEmail, people),
                 facts.OrganizerNotCourseTeacher,
                 lines,
-                new MeetOtherParticipants(facts.OtherCount, facts.OtherSeconds)),
+                new MeetOtherParticipants(facts.OtherCount, facts.OtherSeconds),
+                DataMarkRules.MeetNotice(mark?.AbsenceMark, mark?.AbsentSince, mark?.LastCompleteReadAt, zone)),
             new MeetMeetingExportAction(courseId, meetingId));
     }
 

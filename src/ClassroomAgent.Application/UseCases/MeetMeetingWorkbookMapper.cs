@@ -27,7 +27,7 @@ internal static class MeetMeetingWorkbookMapper
         var meetingMinutes = Minutes(meeting.DurationSeconds);
         var rows = new List<WorksheetRow>
         {
-            Row(Label(texts, ReportText.MeetHeaderCourse), WorkbookCell.OfText(meeting.CourseName)),
+            CourseRow(texts, meeting.CourseName, meeting.CourseNotice, culture),
             Row(Label(texts, ReportText.MeetHeaderMeeting), Day(meeting.StartedAt), Start(meeting.StartedAt), End(meeting.StartedAt, meeting.EndedAt)),
             Row(Label(texts, ReportText.MeetHeaderDuration), Number(meetingMinutes)),
             Row(Label(texts, ReportText.MeetHeaderMeetingCode), WorkbookCell.OfText(meeting.MeetingCode)),

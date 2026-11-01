@@ -10,7 +10,8 @@ namespace ClassroomAgent.Tests.Web.Localization;
 public sealed class MeetExportTranslationTests(PostgreSqlFixture database)
 {
     /// <summary>The two columns that may legitimately read "Email" in both languages.</summary>
-    private static readonly ReportText[] SameInBothLanguages = [ReportText.MeetColumnEmail, ReportText.MeetColumnOrganizerEmail];
+    private static readonly ReportText[] SameInBothLanguages =
+        [ReportText.MeetColumnEmail, ReportText.MeetColumnOrganizerEmail, ReportText.MeetNoticeSeparator];
 
     private static IEnumerable<ReportText> MeetTexts() =>
         Enum.GetValues<ReportText>().Where(t => t.ToString().StartsWith("Meet", StringComparison.Ordinal));

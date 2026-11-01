@@ -39,4 +39,16 @@ public static class DataMarksTextKeys
 
     /// <summary>US-063 spec FR-002.3, OD-001 a: the value when no complete read is recorded.</summary>
     public const string DataAsOfUnknown = "DataMarks.DataAsOf.Unknown";
+
+    /// <summary>US-061 spec FR-006: the Meet line's "not visible" mark — {0} a date ("not in Classroom" is <see cref="HeaderNotInClassroomSince"/>).</summary>
+    public const string MeetNotVisibleSince = "DataMarks.Meet.NotVisibleSince";
+
+    /// <summary>US-061 spec FR-006: the roster part — {0} the date of the last complete read.</summary>
+    public const string MeetRosterAsOf = "DataMarks.Meet.RosterAsOf";
+
+    /// <summary>US-061 spec FR-006, OD-001 a: the roster part when no complete read is recorded.</summary>
+    public const string MeetRosterUndated = "DataMarks.Meet.RosterUndated";
+
+    /// <summary>US-061 spec FR-005.1: what joins the two parts into one line.</summary>
+    public const string MeetSeparator = "DataMarks.Meet.Separator";
 }

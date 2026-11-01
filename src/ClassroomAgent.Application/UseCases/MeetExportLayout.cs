@@ -2,6 +2,7 @@ using System.Globalization;
 using ClassroomAgent.Application.Models.Dtos;
 using ClassroomAgent.Application.Models.Export;
 using ClassroomAgent.Application.Ports;
+using ClassroomAgent.Domain.Enums;
 
 namespace ClassroomAgent.Application.UseCases;
 
@@ -72,6 +73,28 @@ internal static class MeetExportLayout
         var name = person.FullName ?? (person.Email is null ? texts.Get(ReportText.MeetPersonUnnamed) : null);
         yield return TextOrEmpty(name);
         yield return TextOrEmpty(person.Email);
+    }
+
+    /// <summary>
+    /// US-061 spec FR-005.3: the Course header row; a marked course's Meet line goes into its third cell, so no row is
+    /// added and the table does not move. An unmarked course leaves the cell empty.
+    /// </summary>
+    public static WorksheetRow CourseRow(IReportTexts texts, string courseName, MeetCourseNotice? notice, CultureInfo culture) =>
+        notice is null
+            ? Row(Label(texts, ReportText.MeetHeaderCourse), WorkbookCell.OfText(courseName))
+            : Row(Label(texts, ReportText.MeetHeaderCourse), WorkbookCell.OfText(courseName), WorkbookCell.OfText(NoticeText(texts, notice, culture)));
+
+    /// <summary>US-061 spec FR-005.1, FR-006: the mark, «; », the roster — dates in the UI language's short date pattern.</summary>
+    private static string NoticeText(IReportTexts texts, MeetCourseNotice notice, CultureInfo culture)
+    {
+        var markText = notice.Mark == CourseAbsenceMark.NotInClassroom
+            ? ReportText.DataHeaderNotInClassroomSince
+            : ReportText.MeetNoticeNotVisibleSince;
+        var mark = string.Format(culture, texts.Get(markText), notice.Since.ToString("d", culture));
+        var roster = notice.RosterAsOf is { } asOf
+            ? string.Format(culture, texts.Get(ReportText.MeetNoticeRosterAsOf), asOf.ToString("d", culture))
+            : texts.Get(ReportText.MeetNoticeRosterUndated);
+        return mark + texts.Get(ReportText.MeetNoticeSeparator) + roster;
     }
 
     /// <summary>Spec FR-004 "Exported": the instant of the export in the school's zone, as a date-time cell.</summary>

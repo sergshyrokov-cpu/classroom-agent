@@ -38,6 +38,16 @@ internal static class DataMarkRules
     }
 
     /// <summary>
+    /// US-061 spec FR-005.1, FR-005.5, VR-001, VR-004: the Meet line of a course with either stored mark — the mark's
+    /// date and the roster's date, undated when no complete read is recorded (OD-001 a); a skip record alone gives none.
+    /// </summary>
+    internal static MeetCourseNotice? MeetNotice(
+        CourseAbsenceMark? mark, DateTimeOffset? since, DateTimeOffset? lastCompleteReadAt, TimeZoneInfo zone) =>
+        mark is { } kind && since is { } instant
+            ? new MeetCourseNotice(kind, DateIn(instant, zone), lastCompleteReadAt is { } read ? DateIn(read, zone) : null)
+            : null;
+
+    /// <summary>
     /// US-063 spec FR-001, FR-002, VR-001, VR-002: B as given — never a second clock read — and the last complete read,
     /// both in the school's zone; no other field stands in for a missing read (OD-001 a, OD-002 a).
     /// </summary>

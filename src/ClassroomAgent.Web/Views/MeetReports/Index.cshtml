@@ -51,6 +51,12 @@
 
 @if (Model.Reports is { } reports)
 {
+    @* US-061 spec FR-005: a marked course's roster is frozen at its last read; one restrained line, nothing else changes. *@
+    @if (reports.CourseNotice is { } courseNotice)
+    {
+        <p id="meet-reports-course-notice">@DataMarksTexts.MeetNotice(T, courseNotice)</p>
+    }
+
     @* Spec FR-012: Meet data arrive late; the time Meet meetings are loaded up to, in the school's zone. *@
     <p id="meet-reports-delay-notice">
         @T[MeetReportsTextKeys.DelayNotice]

@@ -78,8 +78,12 @@ public sealed class MeetCodeScoringSource(ClassroomAgentDbContext db) : IMeetCod
                 m.Course.CreationTime,
                 m.LastSeenAt,
                 m.OnRoster,
+                Marked = m.Course.AbsenceMark != null,
             })
             .ToListAsync(cancellationToken);
+
+        // US-061 spec FR-001, §9: the marked courses are known from this one read, for the whole batch.
+        var marked = rows.Where(m => m.Marked).Select(m => m.CourseId).ToHashSet();
 
         // US-056 db-design §3: the start of each membership, by the one Domain rule.
         var memberships = rows
@@ -118,7 +122,10 @@ public sealed class MeetCodeScoringSource(ClassroomAgentDbContext db) : IMeetCod
             inputs.Add(new MeetCodeScoringInput(
                 group.Key,
                 meetings,
-                memberships.Where(m => relevant.Contains(m.Email)).ToList()));
+                memberships.Where(m => relevant.Contains(m.Email)).ToList())
+            {
+                MarkedCourseIds = marked,
+            });
         }
 
         return inputs;

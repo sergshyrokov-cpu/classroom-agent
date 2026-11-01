@@ -30,6 +30,10 @@
     @* Spec FR-010: the course, the meeting's times and code, and the organizer with their mark. *@
     <section id="meet-report-meeting">
         <h2>@meeting.CourseName</h2>
+        @if (meeting.CourseNotice is { } courseNotice)
+        {
+            <p id="meet-report-meeting-course-notice">@DataMarksTexts.MeetNotice(T, courseNotice)</p>
+        }
         <dl>
             <dt>@T[MeetReportsTextKeys.MeetingsDate]</dt>
             <dd>@meeting.StartedAt.ToString("d", culture)</dd>

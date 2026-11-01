@@ -110,6 +110,9 @@ public sealed class GetMeetReportsQuery(
             return Page(MeetReportsPageOutcome.CourseUnknown);
         }
 
+        // US-061 spec FR-005: the course's stored mark comes with the drop-down's record; no extra read.
+        var record = records.First(c => c.Id == courseId);
+
         // Spec FR-003, FR-004: whole local days as one half-open UTC interval on the meeting's start.
         var start = StartOfDay(from!.Value, zone);
         var end = StartOfDay(to!.Value.AddDays(1), zone);
@@ -175,6 +178,11 @@ public sealed class GetMeetReportsQuery(
 
         return Page(
             MeetReportsPageOutcome.Shown,
-            new MeetReports(new MeetDelayNotice(watermark), summary, rows, studentRows));
+            new MeetReports(
+                new MeetDelayNotice(watermark),
+                summary,
+                rows,
+                studentRows,
+                DataMarkRules.MeetNotice(record.AbsenceMark, record.AbsentSince, record.LastCompleteReadAt, zone)));
     }
 }

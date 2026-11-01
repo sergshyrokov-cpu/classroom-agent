@@ -40,6 +40,12 @@ public enum ReportText
     DataAsOf,
     DataAsOfUnknown,
 
+    // US-061 spec FR-006: the Meet line of a marked course ({0} a date); "not in Classroom" is DataHeaderNotInClassroomSince.
+    MeetNoticeNotVisibleSince,
+    MeetNoticeRosterAsOf,
+    MeetNoticeRosterUndated,
+    MeetNoticeSeparator,
+
     // US-044 spec FR-015: the program texts of the Meet export that US-033 has no key for.
     MeetSheetSummary,
     MeetSheetMeetings,

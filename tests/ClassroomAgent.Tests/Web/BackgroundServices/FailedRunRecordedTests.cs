@@ -204,7 +204,12 @@ public sealed class FailedRunRecordedTests(PostgreSqlFixture database)
         await using var host = await SyncHostExtensions.StartAsync(
             database,
             ct,
-            classroom: reader => reader.WithCourse(classroomCourse, CourseTestData.CourseName(7), students: [Person(7)]),
+            // US-061 FR-001: the seeded courses A and B stay listed, so the run does not mark them (US-059) and A is
+            // still the code's candidate whose link insert the test rejects.
+            classroom: reader => reader
+                .WithCourse(classroomCourse, CourseTestData.CourseName(7), students: [Person(7)])
+                .WithCourse(CourseTestData.CourseId(1), CourseTestData.CourseName(1))
+                .WithCourse(CourseTestData.CourseId(2), CourseTestData.CourseName(2)),
             seed: async (h, token) =>
             {
                 await SeedClearRostersAsync(h, token);
