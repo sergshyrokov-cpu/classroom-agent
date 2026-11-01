@@ -1,17 +1,17 @@
 ---
 artifact_type: open_decisions
 story: US-068
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-11-01T12:51:01Z
-updated_at: 2026-11-01T12:51:01Z
+updated_at: 2026-11-01T13:40:12Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-068-restrained-look-with-bootstrap.md
     version: null
   - path: trebovaniya.md
     version: 105
-supersedes: null
+supersedes: docs/decisions/US-068-open-decisions.md@v1
 ---
 
 # US-068 Open Decisions
@@ -49,3 +49,25 @@ Carried from the Story.
 Impact: spec FR-003.1, FR-005, FR-006, AC-007.
 
 **Resolved 2026-11-01 by the Owner: a)** («всё по умолчанию»).
+
+## OD-003 Which confirmation buttons get the danger colour (SPEC_REVIEW m-2)
+
+Raised by SPEC_REVIEW v2 after approval of spec v2; resolved before TEST_WRITING. Supplements spec
+FR-005.3 and I-3 and is binding for TEST_WRITING and IMPLEMENTATION; where FR-005.3 says
+"installation status change", this decision narrows it.
+
+FR-005.3 named "installation status change" among actions that "cannot be undone"; that includes
+resuming an installation, which takes nothing away.
+
+- **a) (recommended)** — the danger outline marks the submit button of a **consequential** action,
+  reversible or not: Erasure confirmation («Видалити»), report-template deletion, revocation of an
+  allowed Admin («Відкликати доступ»), and **suspension** of an installation («Призупинити»).
+  Resumption («Відновити») uses the ordinary main-action style. Cancel links/buttons stay
+  secondary outline.
+- b) — only truly irreversible actions (Erasure, report-template deletion) are red; suspension and
+  revocation use the ordinary style.
+- c) — only Erasure and suspension, as drawn in the mockup.
+
+Impact: spec FR-005.3, I-3; AC-007 (manual look check).
+
+**Resolved 2026-11-01 by the Owner: a).**
