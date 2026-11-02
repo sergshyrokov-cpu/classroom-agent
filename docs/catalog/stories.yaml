@@ -479,6 +479,22 @@ stories:
   # (aligned with v90). OD-001 … OD-009 resolved by the Owner on 2026-10-12,
   # before activation.
 
+  - id: US-070
+    epic: EPIC-2
+    title: Search in the teacher and Meet code lists, shared matching rules, pickers that narrow as you type
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-070-search-in-lists-and-pickers.md
+    # (aligned with v107, v108, BR-087, NFR-075). Decided by the Owner 2026-11-02.
+    # Before Deans start work in the pilot.
+  - id: US-071
+    epic: EPIC-2
+    title: One search field in the header, including students with their courses
+    state: READY
+    blocked_by: Depends on US-070 (matching rules, Meet code search).
+    # Story file authored: docs/stories/US-071-search-field-in-the-header.md
+    # (aligned with v107, v108, BR-088, NFR-075, NFR-078, SC-14). Decided by the Owner
+    # 2026-11-02. Before Deans start work in the pilot.
   # --- EPIC-5: Database management -----------------------------------------
   - id: US-024
     epic: EPIC-5
