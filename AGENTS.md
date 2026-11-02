@@ -149,12 +149,16 @@ These are binding.
 
 # Domain Essentials
 
-**Non-normative summary** of `trebovaniya.md` sections 2, 4, 5, 6 and 9 — a cheap
+**Non-normative summary** of `trebovaniya.md` sections 1, 2, 4, 5, 6 and 9 — a cheap
 cache so routine decisions do not require opening a ~180 KB Russian document.
 `trebovaniya.md` always wins; on conflict this section is the one that gets
-corrected. **Verified against v106.** When `trebovaniya.md` moves past that
+corrected. **Verified against v107.** When `trebovaniya.md` moves past that
 version, re-verify this section and update the marker.
 
+- **Finding information easily is a main product goal** (v107). This is an
+  information tool; clumsy search cancels its other benefits. Every decision about
+  a screen or list is checked against "how does the user find what they need here?".
+  The goal itself grants no new role rights and adds no data.
 - **Roles in the first version are Owner, Admin and Dean only.** Teacher and
   Student are deferred to Epic 7. Teachers and students exist as *synced data*
   (`ClassroomParticipant`), never as accounts.

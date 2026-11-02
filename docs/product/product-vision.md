@@ -57,6 +57,9 @@ readers are the Dean and the Admin.
    the school's super-admin authorizing a service account and creating a
    technical account once — no code changes, no hard-coded domain.
 4. The Owner can suspend a school's access without logging into its server.
+5. Users find what they need quickly. This is an information tool, so ease of
+   finding information is one of its main advantages; clumsy search would
+   cancel the rest (`trebovaniya.md` section 1, v107).
 
 ## What this is deliberately not
 
