@@ -150,6 +150,16 @@ area as production severity.
   A session cookie without `httpOnly`, any cookie without `Secure`, a `SameSite`
   value other than the one fixed here, or HTTPS rules applied to the wrong port is
   a finding.
+- **Showing a typed password** *(v106)*. Every password field of both hosts, the
+  temporary password an Admin sets included, has a control that shows and hides the
+  typed text in the browser (NFR-077). It is a same-host script file and icon: the
+  headers do not change (SC-15), and nothing reaches the server that a hidden field
+  would not send. When the form is submitted the field is hidden again, so the browser
+  neither stores the value as ordinary text nor restores it visible on "back". A shown
+  field has spell checking and auto-capitalisation off, because a browser's enhanced
+  spell check may send field text to an outside service (SC-13). Password rules,
+  sign-in checks, lockout, storage and logging do not change; a difference in any of
+  them caused by this control is a finding.
 
 ## SC-3 Admin identity and the AllowedAdmin check
 

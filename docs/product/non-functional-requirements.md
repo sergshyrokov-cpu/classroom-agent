@@ -229,3 +229,11 @@ are linked on every page of both hosts and no inline style exists; a person chec
 the look of the key pages — sign-in, journal, Meet reports, settings, the error page,
 and in the Control Plane sign-in and the installation list — on a computer and a
 phone. *(§8, v105)*
+
+**NFR-077** Page labels: the landing page labels the role («Роль: Декан»); a page has
+one title, the one the layout renders; the three blocks of the database page are
+named; the Meet reports course field prompts for a course in the same words as the
+journal and the template report. The language switcher keeps `УКР` and `ENG`. Every
+password field of both hosts has an eye icon that shows and hides the typed text
+(SC-2), with no new visible word; its accessible names come from translation files.
+Without scripts there is no icon and the field works as before. *(§8, v106)*
