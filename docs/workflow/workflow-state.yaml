@@ -4,23 +4,23 @@
 version: 1
 story: US-069
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: '2026-11-02T11:47:36Z'
+  verdict: NOT_APPLICABLE
+  stage: API_DESIGN
+  recorded_at: '2026-11-02T11:49:31Z'
 last_artifacts:
-- type: specification_review
-  path: docs/reviews/specifications/US-069-spec-review.md
-  version: 3
+- type: api_design
+  path: docs/designs/api/US-069-api-design.md
+  version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings: []
 started_at: '2026-11-02T11:08:35Z'
-updated_at: '2026-11-02T11:47:36Z'
+updated_at: '2026-11-02T11:49:31Z'
 completed_at: null
