@@ -349,6 +349,14 @@ stories:
     # Story file authored: docs/stories/US-068-restrained-look-with-bootstrap.md
     # (aligned with v105, NFR-076, SC-15). OD-001, OD-002 resolved a) by the
     # Owner 2026-11-01. Before the first demo to real users.
+  - id: US-069
+    epic: EPIC-6
+    title: Small interface text fixes and a show-password control
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-069-small-interface-texts-and-show-password.md
+    # (aligned with v106, NFR-077, SC-2; from the Owner's remarks at the US-068 AC-007
+    # look check). OD-001...OD-005 resolved a) by the Owner 2026-11-02.
 
   # --- EPIC-1: Synchronization ---------------------------------------------
   - id: US-013
