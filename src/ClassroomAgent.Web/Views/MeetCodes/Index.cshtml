@@ -9,7 +9,6 @@
     var culture = CultureInfo.CurrentCulture;
 }
 
-<h1>@T[MeetCodesTextKeys.Title]</h1>
 @await Html.PartialAsync("_PageSearchHint", PageSearchHintTextKeys.PagedList)
 
 @if (Model.Message is { } message)

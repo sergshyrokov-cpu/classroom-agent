@@ -95,7 +95,7 @@ public static partial class PageSearchHintTestData
 
     /// <summary>
     /// The markup that follows the <paramref name="ordinal"/>-th <c>&lt;/h1&gt;</c> inside <c>&lt;main&gt;</c>
-    /// (1 = the layout title; 2 = the view's own title on Meet codes, OD-002 a), with leading white space and HTML
+    /// (1 = the layout title, the only one since US-069 FR-002), with leading white space and HTML
     /// comments removed; null when there is no such title.
     /// </summary>
     public static string? AfterTitle(string html, int ordinal)

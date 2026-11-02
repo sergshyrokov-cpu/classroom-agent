@@ -17,6 +17,8 @@
 
 @* US-024 spec FR-002 … FR-004: counts of what is stored; each number alone in its element (test strategy §4). *@
 <section id="database-counters">
+    <div>
+    <h2>@T[DatabaseTextKeys.BlockCourses]</h2>
     <dl>
         <dt>@T[CoursesTextKeys.State(CourseState.Active)]</dt>
         <dd data-counter="courses-active">@Count(courses.Active)</dd>
@@ -31,6 +33,9 @@
         <dt>@T[DatabaseTextKeys.CounterTotal]</dt>
         <dd data-counter="courses-total">@Count(courses.Total)</dd>
     </dl>
+    </div>
+    <div>
+    <h2>@T[DatabaseTextKeys.BlockData]</h2>
     <dl>
         <dt>@T[DatabaseTextKeys.CounterTeachers]</dt>
         <dd data-counter="teachers">@Count(statistics.Teachers)</dd>
@@ -45,10 +50,12 @@
         <dt>@T[DatabaseTextKeys.CounterMeetCodesAwaitingDecision]</dt>
         <dd data-counter="meet-codes-awaiting-decision">@Count(statistics.MeetCodesAwaitingDecision)</dd>
     </dl>
+    </div>
 </section>
 
 @* US-024 spec FR-005, FR-006: the same block for both roles; a failed run has no cause here (S-08). *@
 <section id="database-synchronization">
+    <h2>@T[DatabaseTextKeys.BlockSynchronization]</h2>
     <dl>
         <dt>@T[DatabaseTextKeys.SyncLastSuccessfulRun]</dt>
         <dd data-sync-line="last-successful-run">@Time(sync.LastSuccessfulRunAt)</dd>

@@ -148,4 +148,6 @@
   <data name="Installation.PushAddress.Extra" xml:space="preserve"><value>Адреса push не може містити шлях, параметри запиту, якір чи облікові дані.</value></data>
   <data name="Installation.PushAddress.Host" xml:space="preserve"><value>Хост в адресі push має бути іменем, адресою IPv4 або адресою IPv6 у квадратних дужках.</value></data>
   <data name="Installation.PushAddress.Port" xml:space="preserve"><value>Вкажіть порт в адресі push — число від 1 до 65535.</value></data>
+  <data name="Password.Toggle.Show" xml:space="preserve"><value>Показати пароль</value></data>
+  <data name="Password.Toggle.Hide" xml:space="preserve"><value>Сховати пароль</value></data>
 </root>

@@ -44,7 +44,10 @@
                         @Html.AntiForgeryToken()
                         <label class="form-label">
                             @T[DeanAccountTextKeys.CreatePasswordLabel]
-                            <input type="password" name="temporaryPassword" autocomplete="new-password" class="form-control" />
+                            <span class="password-field">
+                                <input type="password" name="temporaryPassword" autocomplete="new-password" spellcheck="false" autocapitalize="off" class="form-control" />
+                                @await Html.PartialAsync("_PasswordToggle")
+                            </span>
                         </label>
                         <button type="submit" class="btn btn-sm btn-outline-secondary">@T[DeanAccountTextKeys.ActionResetPassword]</button>
                     </form>
@@ -70,10 +73,15 @@
     </label>
     <label class="form-label">
         @T[DeanAccountTextKeys.CreatePasswordLabel]
-        <input type="password" name="temporaryPassword" autocomplete="new-password" class="form-control" />
+        <span class="password-field">
+            <input type="password" name="temporaryPassword" autocomplete="new-password" spellcheck="false" autocapitalize="off" class="form-control" />
+            @await Html.PartialAsync("_PasswordToggle")
+        </span>
     </label>
     <button type="submit" class="btn btn-primary">@T[DeanAccountTextKeys.CreateSubmit]</button>
 </form>
+
+<script src="/js/password-toggle.js" defer></script>
 
 @functions {
     private static string ReasonKey(LegitimacyModeReason? reason) => reason switch

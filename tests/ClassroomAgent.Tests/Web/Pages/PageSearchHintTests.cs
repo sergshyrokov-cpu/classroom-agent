@@ -48,8 +48,8 @@ public sealed class PageSearchHintTests(PostgreSqlFixture database)
         _ => Variants.Ordinary,
     };
 
-    /// <summary>Api-design §3: the hint follows the layout title, on Meet codes the view's own second title (OD-002 a).</summary>
-    private static int TitleOrdinalOf(string page) => page == "meet-codes" ? 2 : 1;
+    /// <summary>Api-design §3: the hint follows the layout title (US-069 FR-002 removed the view's own second title on Meet codes).</summary>
+    private static int TitleOrdinalOf(string page) => 1;
 
     private static string PathOf(string page, Mr.SeededWorld world) => page switch
     {

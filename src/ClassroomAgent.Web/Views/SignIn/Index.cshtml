@@ -19,7 +19,11 @@
     </label>
     <label class="form-label">
         @T[DeanAccountTextKeys.SignInPasswordLabel]
-        <input type="password" name="password" autocomplete="current-password" class="form-control" />
+        <span class="password-field">
+            <input type="password" name="password" autocomplete="current-password" spellcheck="false" autocapitalize="off" class="form-control" />
+            @await Html.PartialAsync("_PasswordToggle")
+        </span>
     </label>
     <button type="submit" class="btn btn-primary">@T[DeanAccountTextKeys.SignInSubmit]</button>
 </form>
+<script src="/js/password-toggle.js" defer></script>

@@ -32,7 +32,7 @@
         <p>
             <label for="meet-reports-course" class="form-label">@T[MeetReportsTextKeys.FormCourse]</label>
             <select id="meet-reports-course" name="@MeetReportsController.CourseIdParameter" class="form-select">
-                <option value=""></option>
+                <option value="">@T[JournalTextKeys.ChooseCourse]</option>
                 @foreach (var course in Model.Courses)
                 {
                     <option value="@course.Id.ToString(CultureInfo.InvariantCulture)" selected="@(course.Id == Model.SelectedCourseId)">@CourseLabel(course)</option>

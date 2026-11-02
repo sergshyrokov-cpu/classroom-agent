@@ -3,7 +3,7 @@
     ViewData["Title"] = T["Landing.Title"];
 }
 <p>@T["Landing.SignedInAs"] <span id="signed-in-email">@Model.Email</span></p>
-<p id="signed-in-role">@T[Model.RoleKey]</p>
+<p id="signed-in-role">@T["Landing.RoleLine", T[Model.RoleKey].Value]</p>
 
 @if (Model.IsReadOnly)
 {

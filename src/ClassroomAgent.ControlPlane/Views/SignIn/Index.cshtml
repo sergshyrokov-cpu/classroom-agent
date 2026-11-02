@@ -13,8 +13,12 @@
     @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "login")
 
     <label for="password" class="form-label">@T["SignIn.Password.Label"]</label>
-    <input id="password" name="password" type="password" value="" class="form-control" />
+    <span class="password-field">
+        <input id="password" name="password" type="password" value="" spellcheck="false" autocapitalize="off" class="form-control" />
+        @await Html.PartialAsync("~/Views/Shared/_PasswordToggle.cshtml")
+    </span>
     @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "password")
 
     <button type="submit" class="btn btn-primary">@T["SignIn.Submit"]</button>
 </form>
+<script src="/js/password-toggle.js" defer></script>

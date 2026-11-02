@@ -640,4 +640,10 @@
   <data name="DataHealth.Message.Confirmed" xml:space="preserve"><value>Позначено як видалені в Classroom: {0}</value></data>
   <data name="DataHealth.Message.Invalid" xml:space="preserve"><value>Виберіть від 1 до 1000 курсів зі списку</value></data>
   <data name="DataHealth.Message.ListChanged" xml:space="preserve"><value>Список змінився — оновіть сторінку</value></data>
+  <data name="Landing.RoleLine" xml:space="preserve"><value>Роль: {0}</value></data>
+  <data name="Database.Block.Courses" xml:space="preserve"><value>Курси</value></data>
+  <data name="Database.Block.Data" xml:space="preserve"><value>Дані</value></data>
+  <data name="Database.Block.Synchronization" xml:space="preserve"><value>Синхронізація</value></data>
+  <data name="Password.Toggle.Show" xml:space="preserve"><value>Показати пароль</value></data>
+  <data name="Password.Toggle.Hide" xml:space="preserve"><value>Сховати пароль</value></data>
 </root>

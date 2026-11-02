@@ -19,12 +19,19 @@
     @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "login")
 
     <label for="password" class="form-label">@T["Setup.Password.Label"]</label>
-    <input id="password" name="password" type="password" value="" class="form-control" />
+    <span class="password-field">
+        <input id="password" name="password" type="password" value="" spellcheck="false" autocapitalize="off" class="form-control" />
+        @await Html.PartialAsync("~/Views/Shared/_PasswordToggle.cshtml")
+    </span>
     @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "password")
 
     <label for="passwordConfirmation" class="form-label">@T["Setup.PasswordConfirmation.Label"]</label>
-    <input id="passwordConfirmation" name="passwordConfirmation" type="password" value="" class="form-control" />
+    <span class="password-field">
+        <input id="passwordConfirmation" name="passwordConfirmation" type="password" value="" spellcheck="false" autocapitalize="off" class="form-control" />
+        @await Html.PartialAsync("~/Views/Shared/_PasswordToggle.cshtml")
+    </span>
     @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "passwordConfirmation")
 
     <button type="submit" class="btn btn-primary">@T["Setup.Submit"]</button>
 </form>
+<script src="/js/password-toggle.js" defer></script>

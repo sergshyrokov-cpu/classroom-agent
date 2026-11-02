@@ -12,11 +12,18 @@
     @Html.AntiForgeryToken()
     <label class="form-label">
         @T[DeanAccountTextKeys.OwnPasswordCurrentLabel]
-        <input type="password" name="currentPassword" autocomplete="current-password" class="form-control" />
+        <span class="password-field">
+            <input type="password" name="currentPassword" autocomplete="current-password" spellcheck="false" autocapitalize="off" class="form-control" />
+            @await Html.PartialAsync("_PasswordToggle")
+        </span>
     </label>
     <label class="form-label">
         @T[DeanAccountTextKeys.OwnPasswordNewLabel]
-        <input type="password" name="newPassword" autocomplete="new-password" class="form-control" />
+        <span class="password-field">
+            <input type="password" name="newPassword" autocomplete="new-password" spellcheck="false" autocapitalize="off" class="form-control" />
+            @await Html.PartialAsync("_PasswordToggle")
+        </span>
     </label>
     <button type="submit" class="btn btn-primary">@T[DeanAccountTextKeys.OwnPasswordSubmit]</button>
 </form>
+<script src="/js/password-toggle.js" defer></script>

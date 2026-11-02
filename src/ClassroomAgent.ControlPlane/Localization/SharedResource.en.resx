@@ -148,4 +148,6 @@
   <data name="Installation.PushAddress.Extra" xml:space="preserve"><value>The push address may not contain a path, a query, a fragment or credentials.</value></data>
   <data name="Installation.PushAddress.Host" xml:space="preserve"><value>The host of the push address must be a name, an IPv4 address or an IPv6 address in square brackets.</value></data>
   <data name="Installation.PushAddress.Port" xml:space="preserve"><value>Give the port of the push address — a number from 1 to 65535.</value></data>
+  <data name="Password.Toggle.Show" xml:space="preserve"><value>Show password</value></data>
+  <data name="Password.Toggle.Hide" xml:space="preserve"><value>Hide password</value></data>
 </root>

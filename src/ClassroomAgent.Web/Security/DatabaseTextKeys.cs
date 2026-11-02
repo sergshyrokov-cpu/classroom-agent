@@ -15,6 +15,12 @@ public static class DatabaseTextKeys
 
     public const string NavigationEntry = "Database.NavigationEntry";
 
+    public const string BlockCourses = "Database.Block.Courses";
+
+    public const string BlockData = "Database.Block.Data";
+
+    public const string BlockSynchronization = "Database.Block.Synchronization";
+
     public const string CounterTotal = "Database.Counter.Total";
 
     public const string CounterTeachers = "Database.Counter.Teachers";

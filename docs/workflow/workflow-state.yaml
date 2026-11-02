@@ -4,23 +4,25 @@
 version: 1
 story: US-069
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: security-reviewer
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: DB_DESIGN
-  recorded_at: '2026-11-02T11:51:50Z'
+  verdict: PASS
+  stage: SECURITY_REVIEW
+  recorded_at: '2026-11-02T13:13:07Z'
 last_artifacts:
-- type: database_design
-  path: docs/designs/database/US-069-db-design.md
+- type: security_review
+  path: docs/reviews/security/US-069-security-review.md
   version: 1
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings: []
+non_blocking_findings:
+- 'INFO-1: the eye also reveals a password the browser filled in'
+- 'INFO-2: the script scan names constructs, so a later script change needs reading'
 started_at: '2026-11-02T11:08:35Z'
-updated_at: '2026-11-02T11:51:50Z'
-completed_at: null
+updated_at: '2026-11-02T18:18:21Z'
+completed_at: '2026-11-02T18:18:21Z'

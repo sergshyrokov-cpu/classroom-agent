@@ -114,6 +114,31 @@ body { overflow-wrap: break-word; }
     color: var(--bs-secondary-color);
 }
 
+/* ---- Shared: show-password control (US-069 FR-006, FR-008) — icon chosen by aria-pressed, room on the right only when ready ---- */
+
+.password-field { position: relative; display: block; max-width: var(--content-width); }
+
+.password-field--ready input { padding-right: 2.25rem; }
+
+.password-field--ready input::-ms-reveal { display: none; }
+
+.password-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 2.25rem;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    background-image: url("/img/password/eye.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 1.125rem;
+}
+
+.password-toggle[aria-pressed="true"] { background-image: url("/img/password/eye-off.svg"); }
+
 /* ---- Installation: landing page (AC-007 look check) ---- */
 
 #signed-in-role { font-size: 1.125rem; }
@@ -316,6 +341,9 @@ main.page:has(#dean-accounts) > .form-message { width: 0; min-width: 100%; max-w
     padding: 0.125rem 0.375rem;
     font-size: inherit;
 }
+
+/* US-069 FR-008.3: this row's compact padding above would otherwise put the text under the eye control. */
+#dean-accounts td:last-child .password-field--ready .form-control { padding-right: 2.25rem; }
 
 #dean-accounts td:last-child button[type=submit] { margin-top: 0; }
 
