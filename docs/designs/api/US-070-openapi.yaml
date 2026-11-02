@@ -1,0 +1,452 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Search in the teacher and Meet code lists, narrowing pickers (US-070)
+  version: "1"
+  description: >
+    Delta to the HTTP contracts of US-020, US-022 and US-032 on the installation's public port
+    (`trebovaniya.md` v109, Epic 2 "Поиск"; BR-087). Server-rendered pages only; no JSON API, no new
+    path, no new role right. `GET /workspace/teachers` and `GET /workspace/meet-codes` gain the query
+    parameter `q`; the Meet code row actions and the course-choice page carry the search as `returnQ`;
+    `GET /workspace/courses` moves to the shared matching rules. Five form-driven pages gain the markup
+    hooks of the narrowing script (`x-picker-contract`). Search reads stored data only: no Google call,
+    no write, no audit event. What this file does not restate stays as US-020, US-022 and US-032 say.
+    Companion document: docs/designs/api/US-070-api-design.md.
+x-story: US-070
+x-source-specification: docs/specifications/US-070-spec.md
+x-source-specification-version: 4
+x-source-open-decisions: docs/decisions/US-070-open-decisions.md
+x-source-open-decisions-version: 2
+x-requirements-version: 109
+x-produced-by: openapi-designer
+x-extends:
+  - docs/designs/api/US-008-openapi.yaml
+  - docs/designs/api/US-020-openapi.yaml
+  - docs/designs/api/US-022-openapi.yaml
+  - docs/designs/api/US-032-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type between installation
+  and Control Plane is added or changed (DC-12).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port. Illustrative; the real value is the configured public base address."
+
+tags:
+  - name: search
+    description: "The list searches (spec FR-001 … FR-008)"
+  - name: pickers
+    description: "Pages that gain the narrowing script's hooks only (spec FR-009)"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 configured host-wide applies and is not restated: deny by default, the antiforgery
+    filter, the single error page, the session cookie, the restricted session (US-012), the exception
+    handler, `Cache-Control: no-store` (SC-14), the browser security headers (SC-15).
+
+  anonymous-list-unchanged: >
+    The SC-4 closed list of anonymous endpoints gains nothing. Static files keep their existing treatment;
+    the one new file is `/js/picker-narrow.js`.
+
+  antiforgery-list-unchanged: "The exemption list gains nothing. `returnQ` travels inside forms that already carry the token."
+
+  outbound: "No operation below calls anything outside the process (spec section 7, AC-008)."
+
+  search-text: >
+    `q` and `returnQ` are VR-001 in one shared Application implementation: more than one occurrence →
+    repeated; trim; empty → no search; over 100 characters after trimming → too long; any control character
+    → control character. A page holds only the result (the validated text, or nothing) and re-emits only that:
+    `Uri.EscapeDataString` in a URL, Razor encoding in markup. With no search the parameter is omitted from
+    every URL and form, never sent empty. The rejected text is never echoed, read with or logged (SC-10, SC-14).
+
+  query-order: >
+    Query parameters are emitted in one order, so tests can compare URLs. Teachers: `status`, `q`, `page`.
+    Meet codes: `list`, `q`, `page`, `size` (`size` only where it is emitted today). Course-choice: `returnPage`, `returnQ`.
+
+paths:
+
+  /workspace/courses:
+    get:
+      tags: [search]
+      operationId: getCourseList
+      summary: "Existing US-020 page — the search follows the shared rules"
+      description: >
+        Path, policy (`ViewCourses`), parameters, status codes, messages, paging and return path are unchanged.
+        What changes: `q` matches by spec FR-001 over name and section; the field gains `autocomplete="off"`; the hint
+        becomes the variant `course-list` of FR-008.
+      x-change: behaviour-of-existing-parameter
+      x-policy: ViewCourses
+      x-spec: [FR-001, FR-002, FR-007, FR-008, VR-001, VR-002]
+      x-acceptance-criteria: [AC-001, AC-002, AC-007, AC-008, AC-010]
+      x-read-only-mode: allowed
+      responses:
+        "200":
+          description: "As US-020."
+          content: { text/html: {} }
+        "400":
+          description: "As US-020."
+          content: { text/html: {} }
+
+  /workspace/teachers:
+    get:
+      tags: [search]
+      operationId: getTeacherList
+      summary: "Existing US-022 page — gains `q`"
+      description: >
+        Evaluation order: authentication (`302`) → restricted session (`302`) → `ViewCourses` → query shape of `status`,
+        `q` and `page` (`400`, every failing parameter reported, nothing read for the list) → matching total, page of
+        matching teachers (`200`). `q` matches by spec FR-001 over surname, given name and email, ANDed with the status
+        filter. A page past the last shows the last (as today). The US-022 sentence "any other query parameter, `q` included,
+        is ignored" no longer holds for `q`. Markup: the field in the existing form (`x-markup`). Every paging link and the
+        return path carry `q`; a row's link to the course list does not (spec I-12).
+      x-change: additive-parameter
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewCourses
+      x-permission-matrix-row: "\"Просмотр курсов и участников\" — Admin ✔, Dean ✔"
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: nothing
+      x-read-only-mode: allowed
+      x-spec: [FR-001, FR-003, FR-006, FR-007, FR-008, VR-001, VR-002]
+      x-acceptance-criteria: [AC-001, AC-003, AC-006, AC-007, AC-008, AC-010]
+      x-markup:
+        field: '<input id="teacher-list-search" type="search" name="q" maxlength="100" autocomplete="off" class="form-control" />'
+        label-key: Teachers.Form.Search
+        empty-under-search: 'id "teacher-list-empty", key Teachers.Empty.NoMatch; with no search the key stays Teachers.Empty'
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/SearchText"
+      responses:
+        "200":
+          description: "The page."
+          content:
+            text/html:
+              x-view-model-delta: { $ref: "#/components/schemas/TeacherListPageModelDelta" }
+        "400":
+          description: >
+            `status`, `page` or `q` malformed: the page with the messages, no list, the field empty, and a return path
+            without the text. `q` refusals add `SearchRepeated`, `SearchTooLong` or `SearchControlCharacter` to
+            `messageKeys`; they resolve to the existing `Courses.Validation.*` texts, with no new translation. The refusal log
+            line names the parameter `q` and the key, never the text.
+          content:
+            text/html:
+              x-view-model-delta: { $ref: "#/components/schemas/TeacherListPageModelDelta" }
+        "302":
+          description: "Not signed in — `/sign-in`; restricted session — `/sign-in/change-password`."
+
+  /workspace/meet-codes:
+    get:
+      tags: [search]
+      operationId: getMeetCodes
+      summary: "Existing US-032 page — gains `q`, a search form, the Organizers column on two lists"
+      description: >
+        Evaluation order: authentication (`302`) → restricted session (`302`) → `ViewMeetCodes` → `q` shape (refused: `400`,
+        VR-003, nothing read, even when another parameter is also invalid) → `list`, `page`, `size` shape (invalid: the fallback of
+        US-032 VR-004, Unassigned at its defaults, `QueryInvalid`, `400`, the valid search still applied, spec VR-004) → the three
+        counts under the search → effective page, the last page when `page` is past it → the rows of the shown list.
+        The counts are read first, and give the shown list's total, so clamping takes no second read of the rows.
+        This replaces the US-032 sentence "a `page` beyond the last answers `200` with empty `content`" (spec I-6), with or
+        without a search. `q` matches by spec FR-001 over the code (rule 6), the linked course's name and section, and the
+        organizer emails through the read the screen uses (OD-001 a); candidate courses and the accounts that linked, confirmed or
+        marked are not searched. The list links reset to page 0 and carry `q`; the paging links and the return path carry it.
+      x-change: additive-parameter
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewMeetCodes
+      x-permission-matrix-row: "\"Привязка кода встречи Meet к курсу\" — Admin ✔, Dean ✔"
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: nothing
+      x-read-only-mode: allowed
+      x-spec: [FR-001, FR-004, FR-006, FR-007, FR-008, VR-001, VR-003, VR-004]
+      x-acceptance-criteria: [AC-001, AC-004, AC-005, AC-006, AC-007, AC-008, AC-010]
+      x-markup:
+        form: '<form id="meet-codes-search-form" method="get" action="/workspace/meet-codes">, between the hint and the list links'
+        field: '<input id="meet-codes-search" type="search" name="q" maxlength="100" autocomplete="off" class="form-control" />'
+        hidden: '<input type="hidden" name="list" /> and <input type="hidden" name="size" />, their effective values; no `page`, so a submit opens page 0'
+        label-key: MeetCodes.Form.Search
+        empty-under-search: 'id "meet-codes-empty", key MeetCodes.Empty.NoMatch for every list; with no search the keys stay MeetCodes.Empty.<list>'
+        column: '"Organizers" (existing key) right after the code on the Linked and Not-a-course tables, with or without a search'
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/SearchText"
+      responses:
+        "200":
+          description: "The page."
+          content:
+            text/html:
+              x-view-model-delta: { $ref: "#/components/schemas/MeetCodesPageModelDelta" }
+        "400":
+          description: >
+            Refused `q` (spec VR-003): the page with `searchMessage`, the field empty, the list links without counters, no table,
+            no empty message, no pagination, and a return path without the text. Other valid parameters keep their values; invalid
+            ones fall back to the defaults. Invalid `list`, `page` or `size` with a valid or absent `q` (spec VR-004): as US-032, with
+            the search applied. No log line is added on this page: it has none today.
+          content:
+            text/html:
+              x-view-model-delta: { $ref: "#/components/schemas/MeetCodesPageModelDelta" }
+        "302":
+          description: "Not signed in — `/sign-in`; restricted session — `/sign-in/change-password`."
+
+  /workspace/meet-codes/{meetingCode}/course-choice:
+    get:
+      tags: [search]
+      operationId: getMeetCodeCourseChoice
+      summary: "Existing US-032 form — carries the search, narrows, Cancel returns to the code's list"
+      description: >
+        Gains the query parameter `returnQ`. Its text goes into the form's hidden `returnQ`, the return path and the "cancel"
+        link. "Cancel" now opens `/workspace/meet-codes?list=<the code's current list>&q=…&page=<returnPage>` (spec FR-005.4, I-7;
+        today it opens the default list). Unknown code (`404`): the Meet meetings page, Unassigned, page 0, `CodeNotFound`, with the search.
+        Markup hooks: `x-picker-contract`.
+      x-change: additive-parameter
+      x-policy: LinkMeetCodes
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: nothing
+      x-read-only-mode: allowed
+      x-spec: [FR-005, FR-009, VR-001]
+      x-acceptance-criteria: [AC-006, AC-009]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/MeetingCode"
+        - $ref: "#/components/parameters/ReturnQ"
+      responses:
+        "200":
+          description: "The form."
+          content:
+            text/html:
+              x-view-model-delta: { $ref: "#/components/schemas/MeetCodeCourseChoicePageModelDelta" }
+        "400":
+          description: "Malformed code: the error page, as US-032. It does not return to the search (spec FR-005)."
+          content: { text/html: {} }
+        "404":
+          description: "Unknown code — as above."
+          content: { text/html: {} }
+
+  /workspace/meet-codes/{meetingCode}/link:
+    post:
+      tags: [search]
+      operationId: setMeetCodeCourse
+      summary: "Existing US-032 write — the form gains `returnQ`"
+      description: >
+        Order, policy, audit and writes are as US-032. `returnQ` follows `x-components.returnQ-field`. See `x-outcomes-with-search`.
+      x-change: additive-form-field
+      x-policy: LinkMeetCodes
+      x-antiforgery: required
+      x-read-only-mode: "refused in Application, guard first — 409, as US-032; the error page does not return to the search"
+      x-spec: [FR-005, VR-001]
+      x-acceptance-criteria: [AC-006, AC-008]
+      x-outcomes-with-search:
+        success: "302 `/workspace/meet-codes?list=<the list the code came from>&q=…&page=<returnPage>`"
+        same-course: "400 the choice form with `SameCourse`, carrying the search"
+        unknown-course: "404 the choice form with `CourseNotFound`, carrying the search"
+        unknown-code: "404 the page, Unassigned, page 0, `CodeNotFound`, with the search"
+        stale: "409 the page, the code's current list, page 0, `StateChanged`, with the search"
+        malformed: "400 the error page, no search"
+      parameters:
+        - $ref: "#/components/parameters/MeetingCode"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            x-form-delta: "US-032 MeetCodeLinkForm + optional `returnQ`"
+      responses:
+        "302":
+          description: "See `x-outcomes-with-search`."
+        "400":
+          description: "See `x-outcomes-with-search`."
+          content: { text/html: {} }
+        "404":
+          description: "See `x-outcomes-with-search`."
+          content: { text/html: {} }
+        "409":
+          description: "See `x-outcomes-with-search`; read-only as US-032."
+          content: { text/html: {} }
+
+  /workspace/meet-codes/{meetingCode}/confirmation:
+    post:
+      tags: [search]
+      operationId: confirmMeetCodeLink
+      summary: "Existing US-032 write — the form gains `returnQ`"
+      description: "As `setMeetCodeCourse`, with no choice-form outcome. Success: `?list=linked&q=…&page=<returnPage>`."
+      x-change: additive-form-field
+      x-policy: LinkMeetCodes
+      x-antiforgery: required
+      x-read-only-mode: "refused in Application, guard first — 409, as US-032"
+      x-spec: [FR-005, VR-001]
+      x-acceptance-criteria: [AC-006, AC-008]
+      parameters:
+        - $ref: "#/components/parameters/MeetingCode"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            x-form-delta: "US-032 MeetCodeConfirmationForm + optional `returnQ`"
+      responses:
+        "302":
+          description: "Success."
+        "400":
+          description: "Malformed — the error page, no search."
+          content: { text/html: {} }
+        "404":
+          description: "Unknown code, with the search."
+          content: { text/html: {} }
+        "409":
+          description: "Stale, with the search; read-only as US-032."
+          content: { text/html: {} }
+
+  /workspace/meet-codes/{meetingCode}/not-a-course-mark:
+    post:
+      tags: [search]
+      operationId: markMeetCodeNotACourse
+      summary: "Existing US-032 write — the form gains `returnQ`"
+      description: "As `setMeetCodeCourse`, with no choice-form outcome. Success: `?list=<the list the code came from>&q=…&page=<returnPage>`."
+      x-change: additive-form-field
+      x-policy: LinkMeetCodes
+      x-antiforgery: required
+      x-read-only-mode: "refused in Application, guard first — 409, as US-032"
+      x-spec: [FR-005, VR-001]
+      x-acceptance-criteria: [AC-006, AC-008]
+      parameters:
+        - $ref: "#/components/parameters/MeetingCode"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            x-form-delta: "US-032 MeetCodeMarkForm + optional `returnQ`"
+      responses:
+        "302":
+          description: "Success."
+        "400":
+          description: "Malformed — the error page, no search."
+          content: { text/html: {} }
+        "404":
+          description: "Unknown code, with the search."
+          content: { text/html: {} }
+        "409":
+          description: "Stale, with the search; read-only as US-032."
+          content: { text/html: {} }
+
+x-components:
+  returnQ-field: >
+    Optional. Read from every occurrence in the posted form, apart from the US-032 known-fields check: a repeated field is
+    malformed under US-032, but a `returnQ` failing VR-001, repeated included, is no search, and the action goes on (spec FR-005.5).
+    Nothing is shown about it, and it is not echoed or logged. The read-only guard runs before it is looked at. It is not in any audit row.
+
+x-picker-contract:
+  script: >
+    `/js/picker-narrow.js`, one own static file, loaded by `<script src="~/js/picker-narrow.js"></script>` only on a page holding a picker
+    with the hooks below. No inline code, no style attribute, no CSP change (SC-15). It reads rows already in the page, sends nothing and stores nothing.
+  label-keys:
+    data-narrow-label: Picker.Narrow.Label
+    data-narrow-none: Picker.Narrow.NothingFound
+  select-pickers:
+    elements: ["#journal-course", "#report-course", "#meet-reports-course", "#course-list-teacher"]
+    hook: '`data-narrow="select"` on the `<select>`, with `data-narrow-label` and `data-narrow-none`'
+    row-text: "the option's own text"
+    always-kept: 'the option with `value=""` and the selected option'
+    absent-when: "no select is rendered (`NoCoursesStored`), or the teacher filter has no teacher to choose"
+  course-choice-picker:
+    element: "#meet-code-choice-form"
+    hook: '`data-narrow="radios"` on the form, with `data-narrow-label` and `data-narrow-none`'
+    row: '`data-narrow-row` and `data-narrow-text="<course label>"` on each `<p>` holding a radio; the text has neither the absence mark nor the share percent'
+    block: "each `<fieldset>`; given the `hidden` attribute while it holds no row"
+    always-kept: "the row of the checked radio"
+    submit: '`id="meet-code-choice-submit"`; the script sets `disabled` while no radio remains in the form and removes it when one returns (spec FR-009.8, I-15)'
+    absent-when: "neither a candidate nor another course: no hook, no field, no script"
+  field-built-by-the-script: 'a label and `<input type="search" maxlength="100" autocomplete="off">` with no `name`; a polite live region showing the "nothing found" text; Enter in the field does not submit'
+
+x-hint-contract:
+  key: PageSearchHint.ListField
+  placeholder: "{0} is the translated label of the field, from the field's own key, so they cannot differ"
+  variants:
+    course-list: Courses.Form.Search
+    teacher-list: Teachers.Form.Search
+    meet-codes: MeetCodes.Form.Search
+  replaces: "`PageSearchHint.CourseList`, `PageSearchHint.PagedList` and the variant `paged-list`; `ordinary` is untouched"
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: ClassroomAgent.Session
+      description: "The installation's session cookie (US-008); name illustrative."
+
+  parameters:
+    SearchText:
+      name: q
+      in: query
+      required: false
+      description: "The search text. See `x-host-wide-rules.search-text`. Bound as a string; validated in `Application`."
+      schema: { type: string, maxLength: 100 }
+      example: "петро іван"
+    ReturnQ:
+      name: returnQ
+      in: query
+      required: false
+      description: "The search of the list the user came from. A value failing VR-001 is no search (spec FR-005.5), never `400`."
+      schema: { type: string, maxLength: 100 }
+    MeetingCode:
+      name: meetingCode
+      in: path
+      required: true
+      description: "As US-032. A row's code stays in the path; the program never builds a code or an email into a query string (spec section 7)."
+      schema: { type: string, minLength: 1, maxLength: 64 }
+
+  schemas:
+
+    TeacherListPageModelDelta:
+      type: object
+      description: "Added to US-022 `TeacherListPageModel`."
+      properties:
+        searchText:
+          type: [string, "null"]
+          description: "The validated text; null with no search or after a refusal."
+        messageKeys:
+          type: array
+          description: "Gains three values."
+          items:
+            type: string
+            enum: [StatusMalformed, PageMalformed, SearchRepeated, SearchTooLong, SearchControlCharacter]
+
+    MeetCodesPageModelDelta:
+      type: object
+      description: "Changes to US-032 `MeetCodesPageModel`."
+      properties:
+        searchText:
+          type: [string, "null"]
+          description: "The validated text; null with no search or after a refusal."
+        searchMessage:
+          type: [string, "null"]
+          enum: [SearchRepeated, SearchTooLong, SearchControlCharacter, null]
+          description: "Translated as `Courses.Validation.<value>`. Non-null means nothing was read: no table, no counters."
+        counts:
+          description: "Null exactly when `searchMessage` is set; otherwise the matches under the search, or the sizes with none."
+          oneOf:
+            - type: object
+            - type: "null"
+        linkedCodeItem.organizerEmails:
+          type: array
+          items: { type: string }
+          description: "New on `LinkedCodeItem`: distinct non-null, ordinal order, as on `UnassignedCodeItem`."
+        notACourseCodeItem.organizerEmails:
+          type: array
+          items: { type: string }
+          description: "New on `NotACourseCodeItem`, the same."
+
+    MeetCodeCourseChoicePageModelDelta:
+      type: object
+      description: "Added to US-032 `MeetCodeCourseChoicePageModel`."
+      properties:
+        returnQ:
+          type: [string, "null"]
+          description: "The validated text; null with no search or when it failed VR-001."
