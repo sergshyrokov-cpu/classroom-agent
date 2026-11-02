@@ -115,6 +115,8 @@ the students of each course.
 - US-020 Course list with filters and search
 - US-021 Course detail with roster
 - US-022 Teachers and their courses
+- US-070 Search in the teacher and Meet code lists, shared matching rules, pickers that narrow as you type
+- US-071 One search field in the header, including students with their courses
 
 ---
 

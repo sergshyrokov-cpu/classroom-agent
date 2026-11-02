@@ -512,6 +512,33 @@ in the export, in the same cell as the name. Other rows are unchanged, so the pa
 journal looks as before. With names taken from the email no rows coincide: an
 address in the domain is unique. *(§4 Epic 3, v104)*
 
+**BR-087** Search rules, one set for every search field and narrowing picker. The text
+splits into words; a record matches when it holds all the words in any order, each as
+part of a word. Case does not matter, apostrophe variants (' ’ ʼ) count as one character,
+hyphens in Meet codes do not matter, typos are not forgiven. Only current names and titles
+match (BR-085). An erased or excluded person is not found, and an organizer's email only
+where the screen shows it. Search reads stored data only, never Google, so it works in
+read-only mode; it writes no audit event and its text reaches no application log. The text
+is in the page address, and the browser does not remember the field. In a list the search
+covers the whole list, combines with the filters by AND and stays across pages and after a
+row action: the course list, the teacher list (surname, given name, email), the Meet codes
+(code, organizer email, linked course name and section; all three lists, with counters
+showing matches). Course pickers in the journal, template report and Meet reports, the
+teacher filter of the course list and the full course list when choosing a course for a
+Meet code narrow as the user types; without scripts they are plain lists. *(§4 Epic 2, v108)*
+
+**BR-088** The «Пошук» / "Search" field in the header of every installation page after
+sign-in, except the forced password change and the error page, opens a results page for
+Admin and Dean from 2 characters. Groups, in a fixed order with empty ones hidden: students
+(anyone who is a student in at least one course, departed included; name, email, courses
+with links to their cards, and the left mark of BR-068 next to the course left, because
+leaving belongs to a course); teachers; courses; Meet codes. A person in both roles is in
+both groups. Up to 20 per group, alphabetical, with a "showing 20 of N" line and, except for
+students, a link to the whole list with this search. An empty result repeats the text and
+reminds that former names are not found; the page warns in one line that the text stays in
+the browser history. There is no student card. Expected size: about 1000 students and 300
+teachers. *(§4 Epic 2, v108)*
+
 ## Meet activity statistics
 
 **BR-060** Meet statistics serve the Dean's oversight of how teaching actually

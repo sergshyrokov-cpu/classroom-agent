@@ -587,6 +587,11 @@ Decided in `trebovaniya.md` section 8 (v85).
   without the header is a finding.
 - This does not replace sign-out or the session limits of SC-2: an unfinished
   session is protected by its expiry, not by caching rules.
+- It does not cover the browser history either. A search text is in the page address
+  (`trebovaniya.md` Epic 2, v108), so a searched surname can stay in the history of a
+  shared computer. Accepted by the Owner on 2026-11-02: search fields carry
+  `autocomplete="off"`, the header search results page warns in one line, the application
+  logs no query string (SC-10), and the privacy policy covers it later (section 7 item 30).
 
 ## SC-15 Browser security headers
 

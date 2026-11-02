@@ -209,12 +209,12 @@ database page — shows a one-line page-search hint in small text at the top,
 directly under the page title. It is always visible, cannot be dismissed,
 stores nothing and does not detect the device: the text names both the computer
 shortcuts and the phone browser menu path. The text comes from translation files
-and has three variants, worded in `trebovaniya.md` section 5: an ordinary page;
-the course list, which points to its own search field by that field's label;
-and the paged lists without a search field (teachers, Meet codes), which warn
-that browser search finds only the rows shown. Sign-in, password and settings
-forms, the Admin's service pages, the error page and the Control Plane have no
-hint. *(§5, v91)*
+and has two variants, worded in `trebovaniya.md` section 5: an ordinary page, which
+names browser search for the page and the header field for the whole program; and the
+paged lists (courses, teachers, Meet codes), which name the list's own field by its
+label, warn that browser search sees only the rows shown, and name the header field.
+Sign-in, password and settings forms, the Admin's service pages, the error page and the
+Control Plane have no hint. *(§5, v91, v108)*
 
 **NFR-076** Both hosts — the installation and the Control Plane — share one
 restrained look built on Bootstrap 5.3, CSS only (no Bootstrap scripts while there
@@ -237,3 +237,8 @@ journal and the template report. The language switcher keeps `УКР` and `ENG`.
 password field of both hosts has an eye icon that shows and hides the typed text
 (SC-2), with no new visible word; its accessible names come from translation files.
 Without scripts there is no icon and the field works as before. *(§8, v106)*
+
+**NFR-078** A hint or message of one sentence on one line ends without a final period, for
+the readability of the page, in both languages and both hosts. A text of several sentences
+keeps its periods. The rule binds new texts; existing ones follow by the base version, and
+both forms are accepted until then. *(§8, v108, v109)*
