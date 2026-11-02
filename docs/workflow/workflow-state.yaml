@@ -2,27 +2,19 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-069
+story: US-070
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: SPECIFICATION
+previous_stage: null
+last_completed_stage: null
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
-last_result:
-  verdict: PASS
-  stage: SECURITY_REVIEW
-  recorded_at: '2026-11-02T13:13:07Z'
-last_artifacts:
-- type: security_review
-  path: docs/reviews/security/US-069-security-review.md
-  version: 1
+last_invoked_skill: null
+last_result: null
+last_artifacts: []
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings:
-- 'INFO-1: the eye also reveals a password the browser filled in'
-- 'INFO-2: the script scan names constructs, so a later script change needs reading'
-started_at: '2026-11-02T11:08:35Z'
-updated_at: '2026-11-02T18:18:21Z'
-completed_at: '2026-11-02T18:18:21Z'
+non_blocking_findings: []
+started_at: null
+updated_at: '2026-11-02T19:39:42Z'
+completed_at: null
