@@ -8,18 +8,18 @@
 }
 <form method="post" action="@SignInRoutes.Start">
     @Html.AntiForgeryToken()
-    <button type="submit">@T["SignIn.Google.Button"]</button>
+    <button type="submit" class="btn btn-primary">@T["SignIn.Google.Button"]</button>
 </form>
 
 <form method="post" action="/sign-in" id="dean-sign-in">
     @Html.AntiForgeryToken()
-    <label>
+    <label class="form-label">
         @T[DeanAccountTextKeys.SignInEmailLabel]
-        <input type="email" name="email" autocomplete="username" />
+        <input type="email" name="email" autocomplete="username" class="form-control" />
     </label>
-    <label>
+    <label class="form-label">
         @T[DeanAccountTextKeys.SignInPasswordLabel]
-        <input type="password" name="password" autocomplete="current-password" />
+        <input type="password" name="password" autocomplete="current-password" class="form-control" />
     </label>
-    <button type="submit">@T[DeanAccountTextKeys.SignInSubmit]</button>
+    <button type="submit" class="btn btn-primary">@T[DeanAccountTextKeys.SignInSubmit]</button>
 </form>

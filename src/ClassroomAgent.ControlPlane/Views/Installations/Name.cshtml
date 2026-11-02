@@ -5,10 +5,10 @@
 }
 <form method="post" action="@(detailPath + "/name")" autocomplete="off">
     @Html.AntiForgeryToken()
-    <label for="name">@T["Installation.Name.Label"]</label>
-    <input id="name" name="name" type="text" value="@Model.Name" />
+    <label for="name" class="form-label">@T["Installation.Name.Label"]</label>
+    <input id="name" name="name" type="text" value="@Model.Name" class="form-control" />
     @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "name")
 
-    <button type="submit">@T["Installation.Save"]</button>
+    <button type="submit" class="btn btn-primary">@T["Installation.Save"]</button>
 </form>
 <p><a href="@detailPath">@T["Installation.BackToDetail"]</a></p>

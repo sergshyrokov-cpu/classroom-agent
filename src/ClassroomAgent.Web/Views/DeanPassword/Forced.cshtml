@@ -12,9 +12,9 @@
 
 <form method="post" action="/sign-in/change-password" id="forced-password-change">
     @Html.AntiForgeryToken()
-    <label>
+    <label class="form-label">
         @T[DeanAccountTextKeys.OwnPasswordNewLabel]
-        <input type="password" name="newPassword" autocomplete="new-password" />
+        <input type="password" name="newPassword" autocomplete="new-password" class="form-control" />
     </label>
-    <button type="submit">@T[DeanAccountTextKeys.OwnPasswordSubmit]</button>
+    <button type="submit" class="btn btn-primary">@T[DeanAccountTextKeys.OwnPasswordSubmit]</button>
 </form>

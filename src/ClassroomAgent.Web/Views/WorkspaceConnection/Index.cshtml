@@ -73,7 +73,7 @@
 }
 <form id="synchronization-request-form" method="post" action="@SignInRoutes.SynchronizationRequests">
     @Html.AntiForgeryToken()
-    <button type="submit">@T[SynchronizationRequestTextKeys.Button]</button>
+    <button type="submit" class="btn btn-primary">@T[SynchronizationRequestTextKeys.Button]</button>
 </form>
 
 @if (Model.SavedImpersonationUserEmail is { } saved)
@@ -96,12 +96,12 @@
 
 <form method="post" action="@SignInRoutes.WorkspaceConnection">
     @Html.AntiForgeryToken()
-    <label for="impersonationUserEmail">@T[WorkspaceConnectionTextKeys.ImpersonationUserLabel]</label>
+    <label for="impersonationUserEmail" class="form-label">@T[WorkspaceConnectionTextKeys.ImpersonationUserLabel]</label>
     <input type="email"
            id="impersonationUserEmail"
            name="impersonationUserEmail"
-           value="@Model.TypedImpersonationUserEmail" />
-    <button type="submit">@T[WorkspaceConnectionTextKeys.SaveButton]</button>
+           value="@Model.TypedImpersonationUserEmail" class="form-control" />
+    <button type="submit" class="btn btn-primary">@T[WorkspaceConnectionTextKeys.SaveButton]</button>
 </form>
 
 @functions {

@@ -25,8 +25,8 @@
    template reference, the internal course id and two dates — no personal data (spec S-05). *@
 <form id="report-form" method="get" action="@SignInRoutes.Report">
     <p>
-        <label for="report-template">@T[ReportTemplateTextKeys.ReportTemplateLabel]</label>
-        <select id="report-template" name="@ReportController.TemplateParameter">
+        <label for="report-template" class="form-label">@T[ReportTemplateTextKeys.ReportTemplateLabel]</label>
+        <select id="report-template" name="@ReportController.TemplateParameter" class="form-select">
             @foreach (var option in Model.Templates)
             {
                 <option value="@option.Reference" selected="@(option.Reference == Model.SelectedTemplate)">@(option.IsBuiltIn ? T[ReportTemplateTextKeys.BuiltInName].Value : option.Name)</option>
@@ -40,8 +40,8 @@
     else
     {
         <p>
-            <label for="report-course">@T[JournalTextKeys.CourseLabel]</label>
-            <select id="report-course" name="@ReportController.CourseIdParameter">
+            <label for="report-course" class="form-label">@T[JournalTextKeys.CourseLabel]</label>
+            <select id="report-course" name="@ReportController.CourseIdParameter" class="form-select">
                 <option value="">@T[JournalTextKeys.ChooseCourse]</option>
                 @foreach (var course in Model.Courses)
                 {
@@ -51,12 +51,12 @@
         </p>
     }
     <p>
-        <label for="report-from">@T[JournalTextKeys.FromLabel]</label>
-        <input id="report-from" type="date" name="@ReportController.FromParameter" value="@IsoDate(Model.From)" />
-        <label for="report-to">@T[JournalTextKeys.ToLabel]</label>
-        <input id="report-to" type="date" name="@ReportController.ToParameter" value="@IsoDate(Model.To)" />
+        <label for="report-from" class="form-label">@T[JournalTextKeys.FromLabel]</label>
+        <input id="report-from" type="date" name="@ReportController.FromParameter" value="@IsoDate(Model.From)" class="form-control" />
+        <label for="report-to" class="form-label">@T[JournalTextKeys.ToLabel]</label>
+        <input id="report-to" type="date" name="@ReportController.ToParameter" value="@IsoDate(Model.To)" class="form-control" />
     </p>
-    <button type="submit">@T[JournalTextKeys.Show]</button>
+    <button type="submit" class="btn btn-primary">@T[JournalTextKeys.Show]</button>
 </form>
 
 @if (Model.Report is { } report)
@@ -110,28 +110,28 @@
             @* US-043 spec FR-004: the layout choice, the program layout preselected; nothing of it is stored. *@
             <fieldset>
                 <legend>@T[JournalExportTextKeys.LayoutCaption]</legend>
-                <label><input type="radio" name="layout" value="program" checked="checked" /> @T[JournalExportTextKeys.LayoutProgram]</label>
-                <label><input type="radio" name="layout" value="group-lessons-blank" /> @T[JournalExportTextKeys.LayoutGroupLessonsBlank]</label>
+                <label class="form-check"><input type="radio" name="layout" value="program" checked="checked" class="form-check-input" /> @T[JournalExportTextKeys.LayoutProgram]</label>
+                <label class="form-check"><input type="radio" name="layout" value="group-lessons-blank" class="form-check-input" /> @T[JournalExportTextKeys.LayoutGroupLessonsBlank]</label>
             </fieldset>
             <fieldset id="report-export-blank" hidden>
-                <label>@T[JournalExportTextKeys.StudentsPerCopy]
-                    <input type="number" id="report-export-students" min="1" max="@export.BlankForm.StudentsPerCopyMax.ToString(CultureInfo.InvariantCulture)" step="1" value="@export.BlankForm.StudentsPerCopyDefault.ToString(CultureInfo.InvariantCulture)" />
+                <label class="form-label">@T[JournalExportTextKeys.StudentsPerCopy]
+                    <input type="number" id="report-export-students" min="1" max="@export.BlankForm.StudentsPerCopyMax.ToString(CultureInfo.InvariantCulture)" step="1" value="@export.BlankForm.StudentsPerCopyDefault.ToString(CultureInfo.InvariantCulture)" class="form-control" />
                 </label>
-                <label>@T[JournalExportTextKeys.LessonsPerCopy]
-                    <input type="number" id="report-export-lessons" min="1" max="@export.BlankForm.LessonsPerCopyMax.ToString(CultureInfo.InvariantCulture)" step="1" value="@export.BlankForm.LessonsPerCopyDefault.ToString(CultureInfo.InvariantCulture)" />
+                <label class="form-label">@T[JournalExportTextKeys.LessonsPerCopy]
+                    <input type="number" id="report-export-lessons" min="1" max="@export.BlankForm.LessonsPerCopyMax.ToString(CultureInfo.InvariantCulture)" step="1" value="@export.BlankForm.LessonsPerCopyDefault.ToString(CultureInfo.InvariantCulture)" class="form-control" />
                 </label>
             </fieldset>
             <fieldset id="report-export-orientation">
                 <legend>@T[JournalExportTextKeys.OrientationCaption]</legend>
-                <label><input type="radio" name="orientation" value="portrait" checked="checked" /> @T[JournalExportTextKeys.OrientationPortrait]</label>
-                <label><input type="radio" name="orientation" value="landscape" /> @T[JournalExportTextKeys.OrientationLandscape]</label>
+                <label class="form-check"><input type="radio" name="orientation" value="portrait" checked="checked" class="form-check-input" /> @T[JournalExportTextKeys.OrientationPortrait]</label>
+                <label class="form-check"><input type="radio" name="orientation" value="landscape" class="form-check-input" /> @T[JournalExportTextKeys.OrientationLandscape]</label>
             </fieldset>
             <button type="button" id="report-export-button"
                     data-template="@export.Template"
                     data-course-id="@export.CourseId.ToString(CultureInfo.InvariantCulture)"
                     data-from="@export.From.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
                     data-to="@export.To.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
-                    data-names="@NameSourceCode.Of(export.Names)">@T[JournalExportTextKeys.Action]</button>
+                    data-names="@NameSourceCode.Of(export.Names)" class="btn btn-outline-secondary">@T[JournalExportTextKeys.Action]</button>
             <p id="report-export-error" class="form-error" aria-live="polite"></p>
         </section>
         <script src="~/js/report-export.js"></script>
@@ -154,7 +154,7 @@
             {
                 @* NFR-070: the table scrolls inside the page rather than widening it. *@
                 <div class="table-scroll">
-                    <table id="report-grading-table">
+                    <table id="report-grading-table" class="table table-sm table-bordered">
                         <thead>
                             <tr>
                                 <th scope="col">@T[JournalTextKeys.StudentHeader]</th>
@@ -229,12 +229,12 @@
         <section id="report-lesson-topics">
             <h2>@T[ReportTemplateTextKeys.ReportLessonTopics]</h2>
             <div class="table-scroll">
-                <table id="report-topics-table">
+                <table id="report-topics-table" class="table table-sm table-bordered">
                     <thead>
                         <tr>
-                            <th scope="col">@T[ReportTemplateTextKeys.ReportDate]</th>
+                            <th scope="col" class="text-end">@T[ReportTemplateTextKeys.ReportDate]</th>
                             <th scope="col">@T[ReportTemplateTextKeys.ReportTopic]</th>
-                            <th scope="col">@T[ReportTemplateTextKeys.ReportHours]</th>
+                            <th scope="col" class="text-end">@T[ReportTemplateTextKeys.ReportHours]</th>
                             <th scope="col">@T[ReportTemplateTextKeys.ReportTeacher]</th>
                             <th scope="col">@T[ReportTemplateTextKeys.ReportIndependentWork]</th>
                             <th scope="col">@T[ReportTemplateTextKeys.ReportSignature]</th>
@@ -244,9 +244,9 @@
                         @foreach (var topic in topics.Rows)
                         {
                             <tr>
-                                <td>@topic.LessonDate.ToString("d", culture)</td>
+                                <td class="text-end">@topic.LessonDate.ToString("d", culture)</td>
                                 <td>@topic.Title@if (topic.NotInClassroom) {<br /><span>@T[DataMarksTextKeys.ItemNotInClassroom]</span>}</td>
-                                <td>@topic.Hours.ToString(culture)</td>
+                                <td class="text-end">@topic.Hours.ToString(culture)</td>
                                 <td>@TeacherNames(report.Header.Teachers)</td>
                                 <td></td>
                                 <td></td>

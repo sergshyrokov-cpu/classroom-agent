@@ -1,0 +1,11 @@
+Bootstrap 5.3.8 - vendored CSS only (US-068, OD-001 a)
+
+Version:        5.3.8 (released 2025-08-26)
+Archive:        https://github.com/twbs/bootstrap/releases/download/v5.3.8/bootstrap-5.3.8-dist.zip
+Licence file:   https://raw.githubusercontent.com/twbs/bootstrap/v5.3.8/LICENSE (saved as LICENSE.txt)
+Downloaded:     2026-11-01
+Integrity:      sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB
+                (css/bootstrap.min.css; the css_hash Bootstrap publishes for 5.3.8)
+
+css/bootstrap.min.css and LICENSE.txt are unmodified copies of the release files.
+No script, source map or font is shipped. Both hosts carry byte-identical copies.

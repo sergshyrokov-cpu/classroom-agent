@@ -25,7 +25,7 @@
 
 <form method="post" action="@SignInRoutes.AccessCheck">
     @Html.AntiForgeryToken()
-    <button type="submit">@T[AccessCheckTextKeys.RunButton]</button>
+    <button type="submit" class="btn btn-primary">@T[AccessCheckTextKeys.RunButton]</button>
 </form>
 
 @if (Model.Result is { } result)

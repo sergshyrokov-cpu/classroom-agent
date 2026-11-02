@@ -86,8 +86,8 @@
                                 @foreach (var course in courses)
                                 {
                                     <li>
-                                        <label>
-                                            <input type="checkbox" name="@DataHealthController.CourseIdsField" value="@course.CourseId.ToString(CultureInfo.InvariantCulture)" />
+                                        <label class="form-check">
+                                            <input type="checkbox" name="@DataHealthController.CourseIdsField" value="@course.CourseId.ToString(CultureInfo.InvariantCulture)" class="form-check-input" />
                                             @course.Name
                                         </label>
                                         (@T["Courses.Status." + course.State]; @T[DataHealthTextKeys.MarkedSince, Date(course.MarkedSince)];
@@ -97,7 +97,7 @@
                                     </li>
                                 }
                             </ul>
-                            <button type="submit">@T[DataHealthTextKeys.ConfirmButton]</button>
+                            <button type="submit" class="btn btn-primary">@T[DataHealthTextKeys.ConfirmButton]</button>
                         </form>
                         break;
                 }

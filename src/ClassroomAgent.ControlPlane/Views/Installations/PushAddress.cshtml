@@ -7,10 +7,10 @@
 <p class="note">@T["Installation.PushAddress.ClearNote"]</p>
 <form method="post" action="@(detailPath + "/push-address")" autocomplete="off">
     @Html.AntiForgeryToken()
-    <label for="pushAddress">@T["Installation.PushAddress.Label"]</label>
-    <input id="pushAddress" name="pushAddress" type="text" value="@Model.PushAddress" />
+    <label for="pushAddress" class="form-label">@T["Installation.PushAddress.Label"]</label>
+    <input id="pushAddress" name="pushAddress" type="text" value="@Model.PushAddress" class="form-control" />
     @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "pushAddress")
 
-    <button type="submit">@T["Installation.Save"]</button>
+    <button type="submit" class="btn btn-primary">@T["Installation.Save"]</button>
 </form>
 <p><a href="@detailPath">@T["Installation.BackToDetail"]</a></p>

@@ -18,15 +18,15 @@
 
 <form id="teacher-list-form" method="get" action="@SignInRoutes.Teachers">
     <p>
-        <label for="teacher-list-status">@T[CoursesTextKeys.FormStatus]</label>
-        <select id="teacher-list-status" name="@TeachersController.StatusParameter">
+        <label for="teacher-list-status" class="form-label">@T[CoursesTextKeys.FormStatus]</label>
+        <select id="teacher-list-status" name="@TeachersController.StatusParameter" class="form-select">
             @foreach (var status in Enum.GetValues<CourseStatusFilter>())
             {
                 <option value="@CourseListUrl.Token(status)" selected="@(status == Model.Status)">@T[CoursesTextKeys.Status(status)]</option>
             }
         </select>
     </p>
-    <button type="submit">@T[CoursesTextKeys.FormSubmit]</button>
+    <button type="submit" class="btn btn-primary">@T[CoursesTextKeys.FormSubmit]</button>
 </form>
 
 @if (Model.List is { } list)
@@ -39,12 +39,12 @@
     {
         <p id="teacher-list-total">@T[TeachersTextKeys.PagingTotal, list.TotalCount]</p>
         <div class="table-scroll">
-            <table>
+            <table class="table table-sm table-bordered">
                 <thead>
                     <tr>
                         <th scope="col">@T[TeachersTextKeys.ColumnName]</th>
                         <th scope="col">@T[TeachersTextKeys.ColumnEmail]</th>
-                        <th scope="col">@T[TeachersTextKeys.ColumnCourses]</th>
+                        <th scope="col" class="text-end">@T[TeachersTextKeys.ColumnCourses]</th>
                         <th scope="col">@T[TeachersTextKeys.ColumnLink]</th>
                     </tr>
                 </thead>
@@ -54,7 +54,7 @@
                         <tr data-participant-id="@row.ParticipantId.ToString(CultureInfo.InvariantCulture)">
                             <td>@PersonText(row.Name)</td>
                             <td>@row.Email</td>
-                            <td>@row.CourseCount.ToString(CultureInfo.InvariantCulture)</td>
+                            <td class="text-end">@row.CourseCount.ToString(CultureInfo.InvariantCulture)</td>
                             <td><a href="@row.CoursesUrl">@T[TeachersTextKeys.CoursesLink]</a></td>
                         </tr>
                     }

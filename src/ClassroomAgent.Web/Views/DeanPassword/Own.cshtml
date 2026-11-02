@@ -10,13 +10,13 @@
 
 <form method="post" action="/account/password" id="own-password">
     @Html.AntiForgeryToken()
-    <label>
+    <label class="form-label">
         @T[DeanAccountTextKeys.OwnPasswordCurrentLabel]
-        <input type="password" name="currentPassword" autocomplete="current-password" />
+        <input type="password" name="currentPassword" autocomplete="current-password" class="form-control" />
     </label>
-    <label>
+    <label class="form-label">
         @T[DeanAccountTextKeys.OwnPasswordNewLabel]
-        <input type="password" name="newPassword" autocomplete="new-password" />
+        <input type="password" name="newPassword" autocomplete="new-password" class="form-control" />
     </label>
-    <button type="submit">@T[DeanAccountTextKeys.OwnPasswordSubmit]</button>
+    <button type="submit" class="btn btn-primary">@T[DeanAccountTextKeys.OwnPasswordSubmit]</button>
 </form>

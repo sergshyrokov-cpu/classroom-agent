@@ -32,15 +32,15 @@
 else if (Model.List == MeetCodeList.Unassigned)
 {
     <div class="table-scroll">
-        <table id="meet-codes-table">
+        <table id="meet-codes-table" class="table table-sm table-bordered">
             <thead>
                 <tr>
                     <th scope="col">@T[MeetCodesTextKeys.ColumnCode]</th>
                     <th scope="col">@T[MeetCodesTextKeys.ColumnOrganizers]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnFirstMeeting]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnLastMeeting]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnMeetings]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnParticipants]</th>
+                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnFirstMeeting]</th>
+                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnLastMeeting]</th>
+                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnMeetings]</th>
+                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnParticipants]</th>
                     <th scope="col">@T[MeetCodesTextKeys.ColumnCandidates]</th>
                     <th scope="col">@T[MeetCodesTextKeys.ColumnActions]</th>
                 </tr>
@@ -51,10 +51,10 @@ else if (Model.List == MeetCodeList.Unassigned)
                     <tr>
                         <th scope="row">@item.MeetingCode</th>
                         <td>@string.Join(", ", item.OrganizerEmails)</td>
-                        <td>@item.FirstMeetingDate.ToString("d", culture)</td>
-                        <td>@item.LastMeetingDate.ToString("d", culture)</td>
-                        <td>@item.MeetingCount.ToString(CultureInfo.InvariantCulture)</td>
-                        <td>@item.ParticipantCount.ToString(CultureInfo.InvariantCulture)</td>
+                        <td class="text-end">@item.FirstMeetingDate.ToString("d", culture)</td>
+                        <td class="text-end">@item.LastMeetingDate.ToString("d", culture)</td>
+                        <td class="text-end">@item.MeetingCount.ToString(CultureInfo.InvariantCulture)</td>
+                        <td class="text-end">@item.ParticipantCount.ToString(CultureInfo.InvariantCulture)</td>
                         <td>
                             @if (item.Candidates.Count == 0)
                             {
@@ -83,16 +83,16 @@ else if (Model.List == MeetCodeList.Unassigned)
 else if (Model.List == MeetCodeList.Linked)
 {
     <div class="table-scroll">
-        <table id="meet-codes-table">
+        <table id="meet-codes-table" class="table table-sm table-bordered">
             <thead>
                 <tr>
                     <th scope="col">@T[MeetCodesTextKeys.ColumnCode]</th>
                     <th scope="col">@T[MeetCodesTextKeys.ColumnCourse]</th>
                     <th scope="col">@T[MeetCodesTextKeys.ColumnMadeBy]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnMadeAt]</th>
+                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnMadeAt]</th>
                     <th scope="col">@T[MeetCodesTextKeys.ColumnConfirmedBy]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnMeetings]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnLastMeeting]</th>
+                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnMeetings]</th>
+                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnLastMeeting]</th>
                     <th scope="col">@T[MeetCodesTextKeys.ColumnActions]</th>
                 </tr>
             </thead>
@@ -103,7 +103,7 @@ else if (Model.List == MeetCodeList.Linked)
                         <th scope="row">@item.MeetingCode</th>
                         <td>@CourseLabel(item.Course)</td>
                         <td>@(item.MadeAutomatically ? T[MeetCodesTextKeys.Automatically].Value : AccountText(item.MadeBy))</td>
-                        <td>@item.MadeAt.ToString("g", culture)</td>
+                        <td class="text-end">@item.MadeAt.ToString("g", culture)</td>
                         <td>
                             @if (item.ConfirmedBy is { } confirmedBy)
                             {
@@ -118,8 +118,8 @@ else if (Model.List == MeetCodeList.Linked)
                                 <span>@T[MeetCodesTextKeys.NotConfirmed]</span>
                             }
                         </td>
-                        <td>@item.MeetingCount.ToString(CultureInfo.InvariantCulture)</td>
-                        <td>@(item.LastMeetingDate?.ToString("d", culture))</td>
+                        <td class="text-end">@item.MeetingCount.ToString(CultureInfo.InvariantCulture)</td>
+                        <td class="text-end">@(item.LastMeetingDate?.ToString("d", culture))</td>
                         <td>
                             @if (item.CanConfirm)
                             {
@@ -127,7 +127,7 @@ else if (Model.List == MeetCodeList.Linked)
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="expectedCourseId" value="@item.Course.Id.ToString(CultureInfo.InvariantCulture)" />
                                     <input type="hidden" name="returnPage" value="@Model.Page.ToString(CultureInfo.InvariantCulture)" />
-                                    <button type="submit">@T[MeetCodesTextKeys.ActionConfirm]</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">@T[MeetCodesTextKeys.ActionConfirm]</button>
                                 </form>
                             }
                             <a href="@ChoiceUrl(item.MeetingCode)">@T[MeetCodesTextKeys.ActionRelink]</a>
@@ -142,14 +142,14 @@ else if (Model.List == MeetCodeList.Linked)
 else
 {
     <div class="table-scroll">
-        <table id="meet-codes-table">
+        <table id="meet-codes-table" class="table table-sm table-bordered">
             <thead>
                 <tr>
                     <th scope="col">@T[MeetCodesTextKeys.ColumnCode]</th>
                     <th scope="col">@T[MeetCodesTextKeys.ColumnMarkedBy]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnMarkedAt]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnMeetings]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnLastMeeting]</th>
+                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnMarkedAt]</th>
+                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnMeetings]</th>
+                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnLastMeeting]</th>
                     <th scope="col">@T[MeetCodesTextKeys.ColumnActions]</th>
                 </tr>
             </thead>
@@ -159,9 +159,9 @@ else
                     <tr>
                         <th scope="row">@item.MeetingCode</th>
                         <td>@AccountText(item.MarkedBy)</td>
-                        <td>@item.MarkedAt.ToString("g", culture)</td>
-                        <td>@item.MeetingCount.ToString(CultureInfo.InvariantCulture)</td>
-                        <td>@(item.LastMeetingDate?.ToString("d", culture))</td>
+                        <td class="text-end">@item.MarkedAt.ToString("g", culture)</td>
+                        <td class="text-end">@item.MeetingCount.ToString(CultureInfo.InvariantCulture)</td>
+                        <td class="text-end">@(item.LastMeetingDate?.ToString("d", culture))</td>
                         <td><a href="@ChoiceUrl(item.MeetingCode)">@T[MeetCodesTextKeys.ActionPickCourse]</a></td>
                     </tr>
                 }
@@ -228,7 +228,7 @@ else
         }
 
         builder.AppendHtml("<input type=\"hidden\" name=\"returnPage\" value=\"" + Model.Page.ToString(CultureInfo.InvariantCulture) + "\" />");
-        builder.AppendHtml("<button type=\"submit\">");
+        builder.AppendHtml("<button type=\"submit\" class=\"btn btn-sm btn-outline-secondary\">");
         builder.Append(T[MeetCodesTextKeys.ActionMarkNotACourse].Value);
         builder.AppendHtml("</button></form>");
         return builder;

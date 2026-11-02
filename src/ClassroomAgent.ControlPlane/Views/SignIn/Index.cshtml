@@ -8,13 +8,13 @@
 }
 <form method="post" action="/sign-in">
     @Html.AntiForgeryToken()
-    <label for="login">@T["SignIn.Login.Label"]</label>
-    <input id="login" name="login" type="text" value="@Model.Login" />
+    <label for="login" class="form-label">@T["SignIn.Login.Label"]</label>
+    <input id="login" name="login" type="text" value="@Model.Login" class="form-control" />
     @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "login")
 
-    <label for="password">@T["SignIn.Password.Label"]</label>
-    <input id="password" name="password" type="password" value="" />
+    <label for="password" class="form-label">@T["SignIn.Password.Label"]</label>
+    <input id="password" name="password" type="password" value="" class="form-control" />
     @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "password")
 
-    <button type="submit">@T["SignIn.Submit"]</button>
+    <button type="submit" class="btn btn-primary">@T["SignIn.Submit"]</button>
 </form>

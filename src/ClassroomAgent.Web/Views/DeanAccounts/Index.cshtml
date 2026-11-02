@@ -16,7 +16,7 @@
     <p class="form-message">@T[Model.MessageKey]</p>
 }
 
-<table id="dean-accounts">
+<table id="dean-accounts" class="table table-sm table-bordered">
     <thead>
         <tr>
             <th>@T[DeanAccountTextKeys.ColumnEmail]</th>
@@ -38,23 +38,23 @@
                     <form method="post" action="/settings/deans/@dean.Id/state">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="desiredState" value="@(dean.IsDisabled ? "Active" : "Disabled")" />
-                        <button type="submit">@T[dean.IsDisabled ? DeanAccountTextKeys.ActionReEnable : DeanAccountTextKeys.ActionDisable]</button>
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">@T[dean.IsDisabled ? DeanAccountTextKeys.ActionReEnable : DeanAccountTextKeys.ActionDisable]</button>
                     </form>
                     <form method="post" action="/settings/deans/@dean.Id/password">
                         @Html.AntiForgeryToken()
-                        <label>
+                        <label class="form-label">
                             @T[DeanAccountTextKeys.CreatePasswordLabel]
-                            <input type="password" name="temporaryPassword" autocomplete="new-password" />
+                            <input type="password" name="temporaryPassword" autocomplete="new-password" class="form-control" />
                         </label>
-                        <button type="submit">@T[DeanAccountTextKeys.ActionResetPassword]</button>
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">@T[DeanAccountTextKeys.ActionResetPassword]</button>
                     </form>
                     <form method="post" action="/settings/deans/@dean.Id/login">
                         @Html.AntiForgeryToken()
-                        <label>
+                        <label class="form-label">
                             @T[DeanAccountTextKeys.ChangeLoginEmailLabel]
-                            <input type="email" name="newEmail" autocomplete="off" />
+                            <input type="email" name="newEmail" autocomplete="off" class="form-control" />
                         </label>
-                        <button type="submit">@T[DeanAccountTextKeys.ActionChangeLogin]</button>
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">@T[DeanAccountTextKeys.ActionChangeLogin]</button>
                     </form>
                 </td>
             </tr>
@@ -64,15 +64,15 @@
 
 <form method="post" action="/settings/deans" id="create-dean">
     @Html.AntiForgeryToken()
-    <label>
+    <label class="form-label">
         @T[DeanAccountTextKeys.CreateEmailLabel]
-        <input type="email" name="email" value="@Model.EmailInput" autocomplete="off" />
+        <input type="email" name="email" value="@Model.EmailInput" autocomplete="off" class="form-control" />
     </label>
-    <label>
+    <label class="form-label">
         @T[DeanAccountTextKeys.CreatePasswordLabel]
-        <input type="password" name="temporaryPassword" autocomplete="new-password" />
+        <input type="password" name="temporaryPassword" autocomplete="new-password" class="form-control" />
     </label>
-    <button type="submit">@T[DeanAccountTextKeys.CreateSubmit]</button>
+    <button type="submit" class="btn btn-primary">@T[DeanAccountTextKeys.CreateSubmit]</button>
 </form>
 
 @functions {

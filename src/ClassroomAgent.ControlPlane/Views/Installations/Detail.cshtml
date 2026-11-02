@@ -10,7 +10,7 @@
     <dt>@T["Installation.Identifier.Label"]</dt>
     <dd>
         <code id="installation-identifier">@installation.Identifier.ToString("D")</code>
-        <button type="button" data-copy-target="installation-identifier" data-copied-text="@T["Installation.Identifier.Copied"]">@T["Installation.Identifier.Copy"]</button>
+        <button type="button" data-copy-target="installation-identifier" data-copied-text="@T["Installation.Identifier.Copied"]" class="btn btn-sm btn-outline-secondary">@T["Installation.Identifier.Copy"]</button>
         <span class="copy-status" data-copy-status="installation-identifier"></span>
         <p class="note">@T["Installation.Identifier.ConfigurationNote"]</p>
     </dd>
@@ -96,11 +96,11 @@
     }
     else
     {
-        <table>
+        <table class="table table-sm table-bordered">
             <thead>
                 <tr>
                     <th>@T["AllowedAdmin.Email.Label"]</th>
-                    <th>@T["AllowedAdmin.AddedAt.Label"]</th>
+                    <th class="text-end">@T["AllowedAdmin.AddedAt.Label"]</th>
                     <th></th>
                 </tr>
             </thead>
@@ -109,7 +109,7 @@
                 {
                     <tr>
                         <td>@admin.Email</td>
-                        <td>@InstallationDisplay.UtcTime(admin.AddedAt)</td>
+                        <td class="text-end">@InstallationDisplay.UtcTime(admin.AddedAt)</td>
                         <td><a href="@(detailPath + "/admins/" + admin.Identifier.ToString("D") + "/revocation")">@T["AllowedAdmin.Revoke"]</a></td>
                     </tr>
                 }

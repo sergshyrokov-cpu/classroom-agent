@@ -24,12 +24,12 @@
    text, HTML-encoded by Razor and never translated (VR-009). Hiding the change and delete actions of the built-in is
    not enforcement — Application refuses them (FR-006). *@
 <div class="table-scroll">
-    <table id="report-template-list">
+    <table id="report-template-list" class="table table-sm table-bordered">
         <thead>
             <tr>
                 <th scope="col">@T[ReportTemplateTextKeys.NameHeader]</th>
                 <th scope="col">@T[ReportTemplateTextKeys.AuthorHeader]</th>
-                <th scope="col">@T[ReportTemplateTextKeys.ChangedHeader]</th>
+                <th scope="col" class="text-end">@T[ReportTemplateTextKeys.ChangedHeader]</th>
                 <th scope="col">@T[ReportTemplateTextKeys.ActionsHeader]</th>
             </tr>
         </thead>
@@ -58,7 +58,7 @@
                             <span>@item.AuthorEmail</span>
                         }
                     </td>
-                    <td>@(item.ChangedAt is { } changedAt ? changedAt.ToString("g", culture) : string.Empty)</td>
+                    <td class="text-end">@(item.ChangedAt is { } changedAt ? changedAt.ToString("g", culture) : string.Empty)</td>
                     <td>
                         <a href="@(SignInRoutes.Report + "?template=" + Uri.EscapeDataString(item.Reference))">@T[ReportTemplateTextKeys.ActionReport]</a>
                         <a href="@("/reports/templates/" + Uri.EscapeDataString(item.Reference) + "/copy")">@T[ReportTemplateTextKeys.ActionCopy]</a>

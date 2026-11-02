@@ -76,7 +76,7 @@
 }
 <form id="database-synchronization-form" method="post" action="@SignInRoutes.DatabaseSynchronizationRequests">
     @Html.AntiForgeryToken()
-    <button type="submit">@T[SynchronizationRequestTextKeys.Button]</button>
+    <button type="submit" class="btn btn-primary">@T[SynchronizationRequestTextKeys.Button]</button>
 </form>
 
 @functions {

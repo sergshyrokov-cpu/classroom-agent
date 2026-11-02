@@ -4,23 +4,24 @@
 version: 1
 story: US-068
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: security-reviewer
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: DB_DESIGN
-  recorded_at: '2026-11-01T13:38:44Z'
+  verdict: PASS
+  stage: SECURITY_REVIEW
+  recorded_at: '2026-11-02T10:41:50Z'
 last_artifacts:
-- type: database_design
-  path: docs/designs/database/US-068-db-design.md
-  version: 1
+- type: security_review
+  path: docs/reviews/security/US-068-security-review.md
+  version: 2
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings: []
+non_blocking_findings:
+- 'INFO-3: One full-suite failure outside the Story''s reach: IncrementalSyncHostTests.TheLog_NamesNoSkippedCourse timed out waiting for 2 SyncRunCompleted log events (6989/6990); its class is 5/5 green on rerun, the full suite was not rerun as a whole.'
 started_at: '2026-11-01T12:52:58Z'
-updated_at: '2026-11-01T13:38:44Z'
-completed_at: null
+updated_at: '2026-11-02T10:52:28Z'
+completed_at: '2026-11-02T10:52:28Z'

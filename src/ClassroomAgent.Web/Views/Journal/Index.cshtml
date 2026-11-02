@@ -30,8 +30,8 @@
     else
     {
         <p>
-            <label for="journal-course">@T[JournalTextKeys.CourseLabel]</label>
-            <select id="journal-course" name="@JournalController.CourseIdParameter">
+            <label for="journal-course" class="form-label">@T[JournalTextKeys.CourseLabel]</label>
+            <select id="journal-course" name="@JournalController.CourseIdParameter" class="form-select">
                 <option value="">@T[JournalTextKeys.ChooseCourse]</option>
                 @foreach (var course in Model.Courses)
                 {
@@ -41,13 +41,13 @@
         </p>
     }
     <p>
-        <label for="journal-from">@T[JournalTextKeys.FromLabel]</label>
-        <input id="journal-from" type="date" name="@JournalController.FromParameter" value="@IsoDate(Model.From)" />
-        <label for="journal-to">@T[JournalTextKeys.ToLabel]</label>
-        <input id="journal-to" type="date" name="@JournalController.ToParameter" value="@IsoDate(Model.To)" />
+        <label for="journal-from" class="form-label">@T[JournalTextKeys.FromLabel]</label>
+        <input id="journal-from" type="date" name="@JournalController.FromParameter" value="@IsoDate(Model.From)" class="form-control" />
+        <label for="journal-to" class="form-label">@T[JournalTextKeys.ToLabel]</label>
+        <input id="journal-to" type="date" name="@JournalController.ToParameter" value="@IsoDate(Model.To)" class="form-control" />
     </p>
     <input type="hidden" name="@JournalController.ViewParameter" value="@viewText" />
-    <button type="submit">@T[JournalTextKeys.Show]</button>
+    <button type="submit" class="btn btn-primary">@T[JournalTextKeys.Show]</button>
 </form>
 
 @* US-060 spec FR-003.2, I-1: the selected course's header line, above the journal table. *@
@@ -82,7 +82,7 @@
     @* NFR-070: the table scrolls inside the page rather than widening it. Every Google string is HTML-encoded by
        Razor and never translated (spec FR-015, VR-005). *@
     <div class="table-scroll">
-        <table id="journal-table">
+        <table id="journal-table" class="table table-sm table-bordered">
             <thead>
                 <tr>
                     <th scope="col">@T[JournalTextKeys.StudentHeader]</th>

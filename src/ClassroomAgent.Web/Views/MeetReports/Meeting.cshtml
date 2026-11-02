@@ -64,13 +64,13 @@
             <meta name="request-verification-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
             <fieldset>
                 <legend>@T[JournalExportTextKeys.OrientationCaption]</legend>
-                <label><input type="radio" name="orientation" value="portrait" /> @T[JournalExportTextKeys.OrientationPortrait]</label>
-                <label><input type="radio" name="orientation" value="landscape" checked="checked" /> @T[JournalExportTextKeys.OrientationLandscape]</label>
+                <label class="form-check"><input type="radio" name="orientation" value="portrait" class="form-check-input" /> @T[JournalExportTextKeys.OrientationPortrait]</label>
+                <label class="form-check"><input type="radio" name="orientation" value="landscape" checked="checked" class="form-check-input" /> @T[JournalExportTextKeys.OrientationLandscape]</label>
             </fieldset>
             <button type="button" id="meet-export-button"
                     data-kind="meeting"
                     data-course-id="@export.CourseId.ToString(CultureInfo.InvariantCulture)"
-                    data-meeting-id="@export.MeetingId.ToString(CultureInfo.InvariantCulture)">@T[JournalExportTextKeys.Action]</button>
+                    data-meeting-id="@export.MeetingId.ToString(CultureInfo.InvariantCulture)" class="btn btn-outline-secondary">@T[JournalExportTextKeys.Action]</button>
             <p id="meet-export-error" class="form-error" aria-live="polite"></p>
         </section>
         <script src="~/js/meet-export.js"></script>
@@ -79,7 +79,7 @@
     @* Spec FR-010, I-11: one line per identified person, then one line for the other participants — a count and
        their minutes, never an address or a name. *@
     <div class="table-scroll">
-        <table id="meet-report-people">
+        <table id="meet-report-people" class="table table-sm table-bordered">
             <tbody>
                 @foreach (var line in meeting.People)
                 {

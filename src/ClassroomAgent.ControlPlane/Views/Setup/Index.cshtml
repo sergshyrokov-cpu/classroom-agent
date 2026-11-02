@@ -10,21 +10,21 @@
 <p>@T["Setup.Intro"]</p>
 <form method="post" action="/setup" autocomplete="off">
     @Html.AntiForgeryToken()
-    <label for="setupCode">@T["Setup.SetupCode.Label"]</label>
-    <input id="setupCode" name="setupCode" type="text" value="" />
+    <label for="setupCode" class="form-label">@T["Setup.SetupCode.Label"]</label>
+    <input id="setupCode" name="setupCode" type="text" value="" class="form-control" />
     @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "setupCode")
 
-    <label for="login">@T["Setup.Login.Label"]</label>
-    <input id="login" name="login" type="text" value="@Model.Login" />
+    <label for="login" class="form-label">@T["Setup.Login.Label"]</label>
+    <input id="login" name="login" type="text" value="@Model.Login" class="form-control" />
     @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "login")
 
-    <label for="password">@T["Setup.Password.Label"]</label>
-    <input id="password" name="password" type="password" value="" />
+    <label for="password" class="form-label">@T["Setup.Password.Label"]</label>
+    <input id="password" name="password" type="password" value="" class="form-control" />
     @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "password")
 
-    <label for="passwordConfirmation">@T["Setup.PasswordConfirmation.Label"]</label>
-    <input id="passwordConfirmation" name="passwordConfirmation" type="password" value="" />
+    <label for="passwordConfirmation" class="form-label">@T["Setup.PasswordConfirmation.Label"]</label>
+    <input id="passwordConfirmation" name="passwordConfirmation" type="password" value="" class="form-control" />
     @await Html.PartialAsync("~/Views/Shared/_FieldErrors.cshtml", "passwordConfirmation")
 
-    <button type="submit">@T["Setup.Submit"]</button>
+    <button type="submit" class="btn btn-primary">@T["Setup.Submit"]</button>
 </form>

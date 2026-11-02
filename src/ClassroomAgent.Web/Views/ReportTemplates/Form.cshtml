@@ -43,29 +43,29 @@
     @Html.AntiForgeryToken()
 
     <p>
-        <label for="template-name">@T[ReportTemplateTextKeys.FormName]</label>
-        <input id="template-name" type="text" name="name" value="@values.Name" />
+        <label for="template-name" class="form-label">@T[ReportTemplateTextKeys.FormName]</label>
+        <input id="template-name" type="text" name="name" value="@values.Name" class="form-control" />
     </p>
 
     <p>
-        <label for="template-view">@T[ReportTemplateTextKeys.FormView]</label>
-        <select id="template-view" name="view">
+        <label for="template-view" class="form-label">@T[ReportTemplateTextKeys.FormView]</label>
+        <select id="template-view" name="view" class="form-select">
             <option value="full" selected="@(values.View == "full")">@T[JournalTextKeys.FullView]</option>
             <option value="short" selected="@(values.View == "short")">@T[JournalTextKeys.ShortView]</option>
         </select>
     </p>
 
     <p>
-        <label for="template-hide-materials">@T[ReportTemplateTextKeys.FormHideMaterials]</label>
-        <select id="template-hide-materials" name="hideMaterials">
+        <label for="template-hide-materials" class="form-label">@T[ReportTemplateTextKeys.FormHideMaterials]</label>
+        <select id="template-hide-materials" name="hideMaterials" class="form-select">
             <option value="true" selected="@(values.HideMaterials == "true")">@T[ReportTemplateTextKeys.FormYes]</option>
             <option value="false" selected="@(values.HideMaterials != "true")">@T[ReportTemplateTextKeys.FormNo]</option>
         </select>
     </p>
 
     <p>
-        <label for="template-hours">@T[ReportTemplateTextKeys.FormHours]</label>
-        <input id="template-hours" type="text" inputmode="numeric" name="hoursPerLesson" value="@values.HoursPerLesson" />
+        <label for="template-hours" class="form-label">@T[ReportTemplateTextKeys.FormHours]</label>
+        <input id="template-hours" type="text" inputmode="numeric" name="hoursPerLesson" value="@values.HoursPerLesson" class="form-control" />
     </p>
 
     @* US-042 FR-002, openapi ReportTemplateForm.names: a radio group, the stored or default value checked; after a
@@ -73,10 +73,10 @@
     <fieldset id="template-names">
         <legend>@T[ReportTemplateTextKeys.FormNames]</legend>
         <p>
-            <label><input type="radio" name="@NameSourceCode.FieldName" value="@NameSourceCode.Profile" checked="@(values.Names == NameSourceCode.Profile)" /> @T[ReportTemplateTextKeys.NameSourceProfile]</label>
+            <label class="form-check"><input type="radio" name="@NameSourceCode.FieldName" value="@NameSourceCode.Profile" checked="@(values.Names == NameSourceCode.Profile)" class="form-check-input" /> @T[ReportTemplateTextKeys.NameSourceProfile]</label>
         </p>
         <p>
-            <label><input type="radio" name="@NameSourceCode.FieldName" value="@NameSourceCode.Email" checked="@(values.Names == NameSourceCode.Email)" /> @T[ReportTemplateTextKeys.NameSourceEmail]</label>
+            <label class="form-check"><input type="radio" name="@NameSourceCode.FieldName" value="@NameSourceCode.Email" checked="@(values.Names == NameSourceCode.Email)" class="form-check-input" /> @T[ReportTemplateTextKeys.NameSourceEmail]</label>
         </p>
     </fieldset>
 
@@ -84,13 +84,13 @@
     <fieldset id="scale-section" data-preset="@preset">
         <legend>@T[ReportTemplateTextKeys.FormScale]</legend>
         <p>
-            <select id="scale-mode" name="scaleMode" aria-label="@T[ReportTemplateTextKeys.FormScale]">
+            <select id="scale-mode" name="scaleMode" aria-label="@T[ReportTemplateTextKeys.FormScale]" class="form-select">
                 <option value="none" selected="@(values.ScaleMode != "ranges")">@T[ReportTemplateTextKeys.FormScaleNone]</option>
                 <option value="ranges" selected="@(values.ScaleMode == "ranges")">@T[ReportTemplateTextKeys.FormScaleRanges]</option>
             </select>
         </p>
         <div id="scale-rows-section" class="table-scroll">
-            <table>
+            <table class="table table-sm table-bordered">
                 <thead>
                     <tr>
                         <th scope="col">@T[ReportTemplateTextKeys.FormScaleFrom]</th>
@@ -114,8 +114,8 @@
             </table>
         </div>
         <p>
-            <button type="button" id="scale-add-row" hidden>@T[ReportTemplateTextKeys.FormScaleAddRow]</button>
-            <button type="button" id="scale-preset" hidden>@T[ReportTemplateTextKeys.FormScalePreset]</button>
+            <button type="button" id="scale-add-row" hidden class="btn btn-outline-secondary">@T[ReportTemplateTextKeys.FormScaleAddRow]</button>
+            <button type="button" id="scale-preset" hidden class="btn btn-outline-secondary">@T[ReportTemplateTextKeys.FormScalePreset]</button>
         </p>
     </fieldset>
 
@@ -126,28 +126,28 @@
         {
             var mark = values.Marks[state];
             <p>
-                <label for="mark-@(state)-kind">@T[ReportTemplateTextKeys.ProgramMark(state.ToString())]</label>
-                <select id="mark-@(state)-kind" name="marks[@(state)].kind">
+                <label for="mark-@(state)-kind" class="form-label">@T[ReportTemplateTextKeys.ProgramMark(state.ToString())]</label>
+                <select id="mark-@(state)-kind" name="marks[@(state)].kind" class="form-select">
                     <option value="program" selected="@(mark.Kind == "program")">@T[ReportTemplateTextKeys.FormMarkProgram]</option>
                     <option value="own" selected="@(mark.Kind == "own")">@T[ReportTemplateTextKeys.FormMarkOwn]</option>
                     <option value="empty" selected="@(mark.Kind == "empty")">@T[ReportTemplateTextKeys.FormMarkEmpty]</option>
                 </select>
-                <input type="text" name="marks[@(state)].text" value="@mark.Text" aria-label="@T[ReportTemplateTextKeys.FormMarkText]" />
+                <input type="text" name="marks[@(state)].text" value="@mark.Text" aria-label="@T[ReportTemplateTextKeys.FormMarkText]" class="form-control" />
             </p>
         }
         <p>
-            <label for="late-mark-kind">@T[ReportTemplateTextKeys.FormLateMark]</label>
-            <select id="late-mark-kind" name="lateMark.kind">
+            <label for="late-mark-kind" class="form-label">@T[ReportTemplateTextKeys.FormLateMark]</label>
+            <select id="late-mark-kind" name="lateMark.kind" class="form-select">
                 <option value="program" selected="@(values.LateMark.Kind == "program")">@T[ReportTemplateTextKeys.FormMarkProgram]</option>
                 <option value="own" selected="@(values.LateMark.Kind == "own")">@T[ReportTemplateTextKeys.FormMarkOwn]</option>
                 <option value="hidden" selected="@(values.LateMark.Kind == "hidden")">@T[ReportTemplateTextKeys.FormLateHidden]</option>
             </select>
-            <input type="text" name="lateMark.text" value="@values.LateMark.Text" aria-label="@T[ReportTemplateTextKeys.FormMarkText]" />
+            <input type="text" name="lateMark.text" value="@values.LateMark.Text" aria-label="@T[ReportTemplateTextKeys.FormMarkText]" class="form-control" />
         </p>
     </fieldset>
 
     <p>
-        <button type="submit">@T[ReportTemplateTextKeys.FormSave]</button>
+        <button type="submit" class="btn btn-primary">@T[ReportTemplateTextKeys.FormSave]</button>
         <a href="@SignInRoutes.ReportTemplates">@T[ReportTemplateTextKeys.FormCancel]</a>
     </p>
 </form>

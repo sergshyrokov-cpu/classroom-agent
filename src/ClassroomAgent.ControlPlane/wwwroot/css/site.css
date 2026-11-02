@@ -1,66 +1,52 @@
-body {
-    font-family: system-ui, sans-serif;
-    margin: 0;
-    background: #f6f7f9;
-    color: #1f2328;
-}
+/*
+ * US-068: loaded after /lib/bootstrap/css/bootstrap.min.css (Bootstrap 5.3, default light theme, OD-002 a).
+ * The first part is shared word for word with the installation's site.css (spec FR-010.1); the rest is this host's.
+ */
 
-.page {
-    max-width: 28rem;
-    margin: 3rem auto;
-    padding: 0 1rem;
-}
+/* ---- Shared: page frame (FR-004) ---- */
 
-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-}
+body { overflow-wrap: break-word; }
 
-input,
-button {
-    font: inherit;
-    padding: 0.5rem;
-}
+.page-header { padding-top: 0.5rem; }
 
-button {
-    margin-top: 0.8rem;
-}
+.page { padding-top: 0.5rem; padding-bottom: 2rem; font-size: 0.9375rem; }
 
-.field-error,
-.form-error {
-    color: #b3261e;
-    margin: 0;
-}
+/* FR-004.2: everything but tables stays in one readable column inside the wide container, with one right edge. */
+:root { --content-width: 48rem; }
 
-/* US-002: installation list and detail. */
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
+.page h1,
+.page p,
+.page ul,
+.page .form-control,
+.page .form-select,
+.page dl,
+.page .notice,
+.page .form-message,
+.page .note { max-width: var(--content-width); }
 
-th,
-td {
-    text-align: left;
-    padding: 0.4rem;
-    border-bottom: 1px solid #d0d7de;
-    overflow-wrap: anywhere;
-}
+.page form { margin-bottom: 1rem; }
 
-dd {
-    margin: 0 0 0.8rem;
-    overflow-wrap: anywhere;
-}
+.page label.form-label { display: block; margin-bottom: 0.25rem; }
 
-.note {
-    color: #57606a;
-}
+/* AC-007 look check: compact titles and fields, more room for data. */
+.page h1 { font-size: 1.375rem; }
 
-.page-header {
-    max-width: 40rem;
-    margin: 0 auto;
-    padding: 0.5rem 1rem 0;
-}
+/* A section title sits closer to its own content than to the section above. */
+.page h2 { font-size: 1.1rem; margin-top: 0.75rem; margin-bottom: 0.25rem; }
+
+.page p { margin-bottom: 0.5rem; }
+
+.page form p { margin-bottom: 0.5rem; }
+
+/* Every fieldset title: the size of the body text, bold. */
+.page legend { font-size: inherit; font-weight: 700; margin-bottom: 0.25rem; }
+
+/* A submit button right under the last field stands a little apart from it. */
+.page form > label.form-label ~ button[type=submit],
+.page form > .form-control ~ button[type=submit],
+.page form > .form-select ~ button[type=submit] { margin-top: 0.5rem; }
+
+/* ---- Shared: language switcher (FR-004.1, FR-005.3) ---- */
 
 .language-switcher {
     display: flex;
@@ -71,6 +57,78 @@ dd {
 
 .language-switcher form { margin: 0; }
 
-.language-switcher button { padding: 0.25rem 0.5rem; }
+/* AC-007 look check: the switcher sits on the page title row instead of taking a row of its own, ending at the right
+   edge of the content column. The title (or, in the installation, the data-health banner) leaves room for it so they
+   never overlap. */
+.page-header { position: relative; }
 
-.language-switcher [aria-current="true"] { font-weight: bold; }
+.page-header .language-switcher {
+    position: absolute;
+    top: 0.75rem;
+    left: calc(var(--bs-gutter-x) * 0.5 + min(var(--content-width), 100% - var(--bs-gutter-x)));
+    width: max-content;
+    transform: translateX(-100%);
+}
+
+.page-header:has(.language-switcher):not(:has(.data-health-banner)) + .page h1 { padding-right: 11rem; }
+
+.page-header:has(.language-switcher) .data-health-banner { max-width: calc(var(--content-width) - 11rem); margin-right: 11rem; }
+
+/* ---- Shared: tables (FR-005.1) ---- */
+
+.table { width: auto; max-width: 100%; }
+
+.table th,
+.table td { vertical-align: top; }
+
+/* Compact rows (as Bootstrap's table-sm): more data on the screen. */
+.table { font-size: 0.875rem; line-height: 1.2; }
+
+.table > :not(caption) > * > * { padding: 0.0625rem 0.3rem; }
+
+/* ---- Shared: messages (FR-005.4) — a quiet bordered box, no icon, no close button ---- */
+
+.notice,
+.form-message {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--bs-secondary-border-subtle);
+    border-radius: var(--bs-border-radius);
+    background-color: var(--bs-light-bg-subtle);
+    color: var(--bs-body-color);
+}
+
+/* Lines inside a message box are evenly spaced. */
+.notice h2 { margin-top: 0; }
+
+.notice > * { margin-bottom: 0.25rem; }
+
+.notice > :last-child { margin-bottom: 0; }
+
+.form-error,
+.field-error { color: var(--bs-danger-text-emphasis); }
+
+.field-error { margin: 0.25rem 0 0.5rem; }
+
+.note {
+    font-size: 0.875em;
+    color: var(--bs-secondary-color);
+}
+
+/* ---- Control Plane: Owner warnings (FR-006.1) — the same quiet amber treatment as the installation's marks ---- */
+
+.warning {
+    max-width: var(--content-width);
+    padding: 0.25rem 0.75rem;
+    border-left: 0.25rem solid var(--bs-warning);
+    background-color: var(--bs-warning-bg-subtle);
+    color: var(--bs-warning-text-emphasis);
+}
+
+/* ---- Control Plane: definition lists of the installation detail ---- */
+
+dd {
+    margin: 0 0 0.8rem;
+    overflow-wrap: anywhere;
+}
+
+.table td { overflow-wrap: anywhere; }

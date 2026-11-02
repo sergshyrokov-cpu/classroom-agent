@@ -19,7 +19,7 @@
             {
                 if (code == current)
                 {
-                    <span lang="@code" aria-current="true">@T[key]</span>
+                    <span lang="@code" aria-current="true" class="btn btn-sm btn-secondary active">@T[key]</span>
                 }
                 else
                 {
@@ -27,7 +27,7 @@
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="language" value="@code" />
                         <input type="hidden" name="returnPath" value="@returnPath" />
-                        <button type="submit" lang="@code">@T[key]</button>
+                        <button type="submit" lang="@code" class="btn btn-sm btn-outline-secondary">@T[key]</button>
                     </form>
                 }
             }

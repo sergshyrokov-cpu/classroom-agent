@@ -46,15 +46,15 @@
 
 <form method="post" action="@SignInRoutes.ErasureEraseOf(Model.ParticipantId)" id="erasure-form">
     @Html.AntiForgeryToken()
-    <label>
-        <input type="checkbox" name="irreversibleConfirmed" value="true" />
+    <label class="form-check">
+        <input type="checkbox" name="irreversibleConfirmed" value="true" class="form-check-input" />
         @T[ErasureTextKeys.Mark]
     </label>
     @if (Model.MarkError is not null)
     {
         <p class="field-error" id="erasure-mark-error">@T[ErasureTextKeys.MarkRequired]</p>
     }
-    <button type="submit" disabled="@(Model.ReadOnlyNotice ? "disabled" : null)">@T[ErasureTextKeys.EraseButton]</button>
+    <button type="submit" disabled="@(Model.ReadOnlyNotice ? "disabled" : null)" class="btn btn-outline-danger">@T[ErasureTextKeys.EraseButton]</button>
 </form>
 
 <p><a href="@SignInRoutes.Erasure">@T[ErasureTextKeys.Title]</a></p>

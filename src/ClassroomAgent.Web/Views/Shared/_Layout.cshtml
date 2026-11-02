@@ -9,10 +9,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"] — @T["Layout.AppName"]</title>
+    <link rel="stylesheet" href="/lib/bootstrap/css/bootstrap.min.css" />
     <link rel="stylesheet" href="/css/site.css" />
 </head>
 <body>
-    <header class="page-header">
+    <header class="page-header container">
         @await Html.PartialAsync("_LanguageSwitcher")
         @if (dataHealth is { } counts)
         {
@@ -20,7 +21,7 @@
             <p id="data-health-banner" class="data-health-banner"><a href="@SignInRoutes.DataHealth">@T[DataHealthTextKeys.Banner, T[DataHealthTextKeys.BannerPart("Technical", counts.TechnicalCount), counts.TechnicalCount], T[DataHealthTextKeys.BannerPart("Teaching", counts.TeachingCount), counts.TeachingCount]]</a></p>
         }
     </header>
-    <main class="page">
+    <main class="page container">
         <h1>@ViewData["Title"]</h1>
         @RenderBody()
     </main>

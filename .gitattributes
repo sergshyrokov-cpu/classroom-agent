@@ -2,3 +2,5 @@
 *.csproj text
 *.sln text eol=crlf
 *.dll binary
+# US-068: vendored library files are committed byte-for-byte (their SHA-384 is pinned by a test).
+src/*/wwwroot/lib/** -text

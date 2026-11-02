@@ -10,13 +10,13 @@
 }
 else
 {
-    <table>
+    <table class="table table-sm table-bordered">
         <thead>
             <tr>
                 <th>@T["Installation.Name.Label"]</th>
                 <th>@T["Installation.Domain.Label"]</th>
                 <th>@T["Installation.Status.Label"]</th>
-                <th>@T["Installation.CreatedAt.Label"]</th>
+                <th class="text-end">@T["Installation.CreatedAt.Label"]</th>
             </tr>
         </thead>
         <tbody>
@@ -26,7 +26,7 @@ else
                     <td><a href="/installations/@installation.Identifier.ToString("D")">@installation.Name</a></td>
                     <td>@installation.Domain</td>
                     <td>@T[InstallationDisplay.StatusKey(installation.Status)]</td>
-                    <td>@InstallationDisplay.UtcTime(installation.CreatedAt)</td>
+                    <td class="text-end">@InstallationDisplay.UtcTime(installation.CreatedAt)</td>
                 </tr>
             }
         </tbody>

@@ -65,7 +65,7 @@
     else
     {
         <div class="table-scroll">
-            <table>
+            <table class="table table-sm table-bordered">
                 <thead>
                     <tr>
                         <th>@T[CoursesTextKeys.CardColumnName]</th>
@@ -102,7 +102,7 @@
     else
     {
         <div class="table-scroll">
-            <table>
+            <table class="table table-sm table-bordered">
                 <thead>
                     <tr>
                         <th>@T[CoursesTextKeys.CardColumnName]</th>
@@ -133,13 +133,13 @@
     else
     {
         <div class="table-scroll">
-            <table>
+            <table class="table table-sm table-bordered">
                 <thead>
                     <tr>
                         <th>@T[CoursesTextKeys.CardColumnName]</th>
                         <th>@T[CoursesTextKeys.CardColumnEmail]</th>
                         <th>@T[CoursesTextKeys.CardColumnRole]</th>
-                        <th>@T[CoursesTextKeys.CardColumnLastSeen]</th>
+                        <th class="text-end">@T[CoursesTextKeys.CardColumnLastSeen]</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -149,7 +149,7 @@
                             <td>@PersonText(leaver.Name)</td>
                             <td>@leaver.Email</td>
                             <td>@T[CoursesTextKeys.CardRole(leaver.Role)]</td>
-                            <td>@leaver.LastSeenOn.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern, CultureInfo.CurrentCulture)</td>
+                            <td class="text-end">@leaver.LastSeenOn.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern, CultureInfo.CurrentCulture)</td>
                         </tr>
                     }
                 </tbody>

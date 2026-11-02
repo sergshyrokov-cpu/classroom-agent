@@ -40,8 +40,8 @@
             @foreach (var candidate in Model.Candidates)
             {
                 <p>
-                    <label>
-                        <input type="radio" name="courseId" value="@candidate.Course.Id.ToString(CultureInfo.InvariantCulture)" required />
+                    <label class="form-check">
+                        <input type="radio" name="courseId" value="@candidate.Course.Id.ToString(CultureInfo.InvariantCulture)" required class="form-check-input" />
                         @CourseLabel(candidate.Course) (@candidate.SharePercent.ToString(CultureInfo.InvariantCulture)%)
                     </label>
                 </p>
@@ -56,8 +56,8 @@
             @foreach (var course in Model.OtherCourses)
             {
                 <p>
-                    <label>
-                        <input type="radio" name="courseId" value="@course.Id.ToString(CultureInfo.InvariantCulture)" required />
+                    <label class="form-check">
+                        <input type="radio" name="courseId" value="@course.Id.ToString(CultureInfo.InvariantCulture)" required class="form-check-input" />
                         @CourseLabel(course)@Mark(course.Id)
                     </label>
                 </p>
@@ -65,7 +65,7 @@
         </fieldset>
     }
 
-    <button type="submit">@T[MeetCodesTextKeys.ChoiceSubmit]</button>
+    <button type="submit" class="btn btn-primary">@T[MeetCodesTextKeys.ChoiceSubmit]</button>
     <a href="@(SignInRoutes.MeetCodes)">@T[MeetCodesTextKeys.ChoiceCancel]</a>
 </form>
 
