@@ -148,6 +148,14 @@ stories:
       Depends on US-001 (Owner account), US-008 / US-012 (Admin and Dean
       accounts exist) and US-007 (read-only enforcement — choosing a language
       must be proven to work in read-only mode, BR-026).
+  - id: US-072
+    epic: EPIC-6
+    title: Control Plane error page without the language switcher
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-072-control-plane-error-page-without-switcher.md
+    # From US-071/API_DESIGN/m-1, SECURITY_REVIEW/INFO-2. Decided by the Owner 2026-11-03.
+    # Before the pilot.
   - id: US-040
     epic: EPIC-6
     title: Responses are not cached (Cache-Control no-store)
