@@ -65,3 +65,4 @@ obj/
 /docs/hooks/tool-usage.jsonl
 **/docs/hooks/tool-usage.jsonl
 /docs/hooks/log-timestamps-state.json
+/docs/hooks/phase-timing.jsonl

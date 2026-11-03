@@ -420,6 +420,21 @@ This section is about the **harness**. Application logging and health checks are
 - `docs/hooks/tool-usage.jsonl` — tool-usage telemetry (separate; git-ignored).
   It records tool names, artifact keys and stage identifiers — never file
   contents, student names or emails, tokens, or secret values.
+- `docs/hooks/phase-timing.jsonl` — forecast against actual time of long phases
+  (git-ignored; added 2026-11-03 as the measuring step before any test-suite
+  optimisation). Before a phase forecast to take 2 minutes or more (a full or
+  namespace `dotnet test`, a publish or kit build, a long subagent), the agent that
+  starts it appends one `START` line, and when the phase ends, however it ends, one
+  `END` line with the same `id`; the agent that delegates a phase writes both.
+  Times come from `date -u +%Y-%m-%dT%H:%M:%SZ`, and the `START` time is the `id`:
+
+  ```json
+  {"id":"<start time>","event":"START","timestamp":"<start time>","phase":"full dotnet test","story":"US-001","stage":"SECURITY_REVIEW","forecast_min":12,"free_ram_gb":5.8}
+  {"id":"<start time>","event":"END","timestamp":"<end time>","outcome":"PASS","note":"what was unusual: a retry, a timeout, a lost connection, the Owner's report of a hang"}
+  ```
+
+  `outcome` is `PASS`, `FAILED`, `TIMEOUT`, `STOPPED` or `UNKNOWN`. The file holds
+  no test output, names or secrets.
 
 Telemetry is execution evidence, never requirement authority.
 
