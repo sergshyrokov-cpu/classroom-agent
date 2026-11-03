@@ -4,27 +4,27 @@
 version: 1
 story: US-071
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: PASS
-  stage: API_DESIGN
-  recorded_at: '2026-11-03T16:47:45Z'
+  stage: DB_DESIGN
+  recorded_at: '2026-11-03T16:56:28Z'
 last_artifacts:
-  - type: openapi
-    path: docs/designs/api/US-071-openapi.yaml
+  - type: database_design
+    path: docs/designs/database/US-071-db-design.md
     version: 1
-  - type: api_design
-    path: docs/designs/api/US-071-api-design.md
+  - type: entity_model
+    path: docs/designs/database/US-071-entity-model.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - "m-1: the Control Plane's error page under a protected endpoint keeps the switcher's raw query fallback"
+  - "m-1: the openapi's course-row names CoursesTextKeys.Status(status); the row's helper is CoursesTextKeys.State(state), the same translation key"
 started_at: '2026-11-03T15:29:26Z'
-updated_at: '2026-11-03T16:47:45Z'
+updated_at: '2026-11-03T16:56:28Z'
 completed_at: null
