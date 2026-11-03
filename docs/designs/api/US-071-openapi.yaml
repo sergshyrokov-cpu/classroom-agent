@@ -1,0 +1,318 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — One search field in the header, including students with their courses (US-071)
+  version: "1"
+  description: >
+    A new server-rendered page on the installation's public port and the header field that opens it
+    (`trebovaniya.md` v109, Epic 2 "Поле «Пошук»"; BR-087, BR-088). No JSON API and no new role right. The page reads
+    stored data only: no Google call, no write, no audit event. Also a delta to the host-wide page frame:
+    the error page has no language switcher (spec FR-010), the page hints get their final texts (FR-011), disabled
+    buttons are grey on both hosts (FR-012). What this file does not restate stays as US-008, US-020, US-022, US-032,
+    US-039, US-046 and US-070 say.
+    Companion document: docs/designs/api/US-071-api-design.md.
+x-story: US-071
+x-source-specification: docs/specifications/US-071-spec.md
+x-source-specification-version: 2
+x-source-open-decisions: docs/decisions/US-071-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 109
+x-produced-by: openapi-designer
+x-extends:
+  - docs/designs/api/US-008-openapi.yaml
+  - docs/designs/api/US-020-openapi.yaml
+  - docs/designs/api/US-022-openapi.yaml
+  - docs/designs/api/US-032-openapi.yaml
+  - docs/designs/api/US-070-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type between installation
+  and Control Plane is added or changed (DC-12).
+
+servers:
+  - url: https://school.example
+    description: "Installation public port. Illustrative; the real value is the configured public base address."
+
+tags:
+  - name: search
+    description: "The results page (spec FR-002 … FR-009)"
+
+x-host-wide-rules:
+
+  inherited: >
+    Everything US-008 configured host-wide applies and is not restated: deny by default, the antiforgery
+    filter, the single error page, the session cookie, the restricted session (US-012), the exception
+    handler, `Cache-Control: no-store` (SC-14), the browser security headers (SC-15).
+
+  anonymous-list-unchanged: "The SC-4 closed list of anonymous endpoints gains nothing. No new script file."
+
+  antiforgery-list-unchanged: "The exemption list gains nothing. The header form is GET and changes nothing (API-4)."
+
+  outbound: "No operation below calls anything outside the process (spec section 7, AC-007)."
+
+  search-text: >
+    `q` is VR-001, the one implementation `CourseListQueryRules.ReadSearch`. The page holds only the result (the validated
+    text, or nothing) and re-emits only that: `Uri.EscapeDataString` in a URL, Razor encoding in markup. The program
+    builds no name, email or code into a query string. A rejected text is never echoed, read with or logged.
+
+x-page-frame:
+
+  header-rule: >
+    One Web-layer rule, `PageHeaderRules`, decides both header controls, so they cannot drift (spec FR-010).
+    `IsErrorPage(viewData)` is `viewData.Model is ErrorPageModel`.
+    Language switcher: signed in, endpoint requires sign-in, not the error page.
+    Search field: the same, and the session has no `InstallationClaimTypes.PasswordIsTemporary` claim.
+    The Control Plane's layout renders no search field.
+
+  search-field:
+    partial: Views/Shared/_HeaderSearch.cshtml, in `_Layout.cshtml`'s `<header>`, after the language switcher
+    form: '<form id="header-search-form" role="search" method="get" action="/workspace/search">'
+    label: '<label for="header-search" class="form-label">, key Search.Field.Label'
+    field: '<input id="header-search" type="search" name="q" maxlength="100" autocomplete="off" class="form-control" />'
+    submit: '<button type="submit" class="btn btn-primary">, key Search.Field.Submit'
+    value: >
+      The view data key `HeaderSearchTextKey` holds the validated text, set only by the results page and only when a
+      validated text exists. Everywhere else, the three lists included, the value attribute is absent.
+    no-script: "Works with scripts off; a plain GET form."
+    phone: "Wraps inside the header at phone width, by rules in the installation's part of `site.css` and with no inline style (SC-15)."
+
+  language-switcher: >
+    `_LanguageSwitcher.cshtml` (installation) adds the `PageHeaderRules` condition. Pages that set no return path keep the
+    existing fallback (spec section 7).
+
+  page-hints:
+    results-page: "No hint (spec FR-002, I-3)."
+    keys: >
+      The keys stay and the texts change. `PageSearchHint.Ordinary` takes `{0}`; `PageSearchHint.ListField` takes `{0}` and `{1}`.
+      `{0}` of Ordinary and `{1}` of ListField are the text of `Search.Field.Label`; `{0}` of ListField is the list field's own label key, as US-070.
+      Both names therefore come from the entries of the field labels (spec FR-011).
+    pages: "Every page that shows a hint today, «Стан даних» included (I-14). The variants of US-070 stay."
+
+  disabled-buttons:
+    rule: >
+      `.btn:disabled` in the shared first part of both hosts' `site.css`, word for word: Bootstrap's own disabled variables set to grey,
+      with readable text, for every button colour and the outlined ones. `.btn` without `:disabled` is unchanged. No inline style, no new text.
+    seen-on: "Course-choice submit, Meet and report export during a download, three erasure buttons in read-only mode (FR-012, I-15)."
+
+paths:
+
+  /workspace/search:
+    get:
+      tags: [search]
+      operationId: getSearchResults
+      summary: "The results page of the header field"
+      description: >
+        Evaluation order: authentication (`302`) → restricted session (`302`) → `ViewCourses` → `q` shape, VR-001 (refused:
+        `400`, nothing read) → no text, or fewer than 2 characters after trimming (`200`, the prompt, nothing read) → the four
+        groups' reads (`200`). The number of reads is fixed: words change conditions, never the number of commands, and
+        listing the courses of 20 students takes no read per student (spec section 9). Any other query parameter
+        is not read and never echoed (VR-004).
+      x-change: new-page
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewCourses
+      x-permission-matrix-row: "\"Просмотр курсов и участников\" — Admin ✔, Dean ✔"
+      x-note-meet-group: >
+        Both roles also hold `ViewMeetCodes`, so one policy suffices for all four groups (spec section 7).
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: nothing
+      x-audit: none
+      x-read-only-mode: allowed
+      x-spec: [FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-014, VR-001, VR-002, VR-003, VR-004]
+      x-acceptance-criteria: [AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008]
+      x-return-path: >
+        `/workspace/search?q=<encoded>` when a validated text exists, a 1-character one included; otherwise `/workspace/search`.
+        The switcher's raw fallback is never reached here. Worst case 900 encoded characters, within the 2048 limit of `UiLanguageController`.
+      x-log: >
+        Shown: the actor's id and the four totals. Refused: the trace id, the parameter name `q` and the key. Never the text.
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/SearchText"
+      responses:
+        "200":
+          description: >
+            `state: Prompt` — no text, or too short: `Search.Message.TooShort`, the warning, no group.
+            `state: Results` — the non-empty groups in the fixed order and the warning. With all four totals 0:
+            `Search.Empty.NothingFound` with the text, `Search.Empty.Reminder` and the warning, no group.
+          content:
+            text/html:
+              x-view-model: { $ref: "#/components/schemas/SearchResultsPageModel" }
+        "400":
+          description: >
+            VR-002. `state: Refused`: the existing `Courses.Validation.Search*` text, the warning, no group, no read, the field
+            empty, a return path without the text.
+          content:
+            text/html:
+              x-view-model: { $ref: "#/components/schemas/SearchResultsPageModel" }
+        "302":
+          description: "Not signed in — `/sign-in`, which carries no return URL; restricted session — `/sign-in/change-password`."
+
+x-markup-results-page:
+  warning: '<p id="search-history-warning" class="small">, key Search.Warning, in every state'
+  message: '<p id="search-message">, key Search.Message.TooShort or the refusal text'
+  nothing-found: '<p id="search-nothing-found">, key Search.Empty.NothingFound; then <p id="search-reminder">, key Search.Empty.Reminder'
+  groups: >
+    `<section id="search-group-students">`, `-teachers`, `-courses`, `-meet-codes`, in this order, each with one `<h2>`:
+    keys Search.Group.Students, Search.Group.Teachers, Search.Group.Courses, Search.Group.MeetCodes. A group with total 0 renders nothing.
+  limit-line: >
+    Total over 20: under the group `<p class="search-group-limit">`, key Search.Limit.Shown with `{0}` the rows shown and `{1}` the total.
+    Not at exactly 20.
+  whole-list-link: "Total over 20, not students: `<a class=\"search-group-whole-list\">`, key Search.Limit.WholeList."
+  student-row: >
+    The label, the email when stored and not already the label, then one link per course to `/workspace/courses/{id}`. The link text is the name, or
+    `name — section` where there is a section, the form of the Meet code page; `DataMarksTexts.Left` follows when `left` is set.
+  teacher-row: "The label, the email, a link to `CourseListUrl.Build(All, participantId, null, 1)`, key Search.Teacher.Courses."
+  course-row: "A link to the card with the name, the section where there is one, `CoursesTextKeys.Status(status)`."
+  meet-code-row: "The code as a link to `MeetCodesController.ListUrl(list, q)`, then the list's name, key `MeetCodes.List.*`."
+
+x-links:
+  teachers-whole-list: "`TeacherListUrl.Build(All, q, 1)`"
+  courses-whole-list: "`CourseListUrl.Build(All, null, q, 1)`"
+  meet-row-and-whole-list: >
+    New static `MeetCodesController.ListUrl(list, q)`: `/workspace/meet-codes?list=<token>&q=<encoded>`. No `page`, no `size`: their
+    defaults apply. The whole-list link's list is the first of Unassigned, Linked, NotACourse with a match (`firstListWithMatch`).
+  totals: >
+    Teachers and courses: the group's total equals the total of the list at status "all" with the same text. Meet codes: the sum of the
+    three list counters under the same text (spec FR-007, AC-004).
+
+x-translation-keys:
+  new-in-both-files:
+    Search.Field.Label: ["Пошук", "Search"]
+    Search.Field.Submit: ["Знайти", "Find"]
+    Search.Title: ["Результати пошуку", "Search results"]
+    Search.Message.TooShort: ["Введіть щонайменше 2 символи", "Enter at least 2 characters"]
+    Search.Empty.NothingFound: ["Нічого не знайдено за запитом «{0}»", "Nothing found for \"{0}\""]
+    Search.Empty.Reminder: ["Пошук знаходить поточні імена й назви з Google; за колишнім прізвищем або старим email не знайти", "Search finds current names and titles from Google; a former surname or an old email will not be found"]
+    Search.Warning: ["Шуканий текст залишається в історії браузера; на спільному комп'ютері очистіть її", "The text you search for stays in the browser history; clear it on a shared computer"]
+    Search.Group.Students: ["Студенти", "Students"]
+    Search.Group.Teachers: ["Викладачі", "Teachers"]
+    Search.Group.Courses: ["Курси", "Courses"]
+    Search.Group.MeetCodes: ["Коди зустрічей Meet", "Meet codes"]
+    Search.Limit.Shown: ["показано {0} з {1}, уточніть запит", "showing {0} of {1}, refine your search"]
+    Search.Limit.WholeList: ["Увесь список із цим пошуком", "The whole list with this search"]
+    Search.Teacher.Courses: ["Курси викладача", "Teacher's courses"]
+  changed-texts:
+    PageSearchHint.Ordinary: ["На цій сторінці — Ctrl+F (на Mac — ⌘F; на телефоні — меню браузера → «Знайти на сторінці»), у всій програмі — поле «{0}» угорі", "On this page: Ctrl+F (⌘F on Mac; on a phone — browser menu → \"Find in page\"); across the program: the \"{0}\" field at the top"]
+    PageSearchHint.ListField: ["У цьому списку — поле «{0}» нижче (Ctrl+F бачить лише показані рядки), у всій програмі — поле «{1}» угорі", "In this list: the \"{0}\" field below (Ctrl+F sees only the rows shown); across the program: the \"{1}\" field at the top"]
+  reused: "`Courses.Validation.Search*`, `DataMarks.Left`, `DataMarks.Left.On`, `Courses.Status.*`, `MeetCodes.List.*`."
+
+components:
+
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: session cookie of the installation
+      description: "As US-008."
+
+  parameters:
+    SearchText:
+      name: q
+      in: query
+      required: false
+      schema: { type: string, maxLength: 100 }
+      description: "VR-001, VR-003. Repeated, too long after trimming, or holding a control character: `400`."
+
+  schemas:
+
+    SearchResultsPageModel:
+      type: object
+      required: [state, returnPath, students, teachers, courses, meetCodes]
+      properties:
+        state: { type: string, enum: [Prompt, Refused, Results] }
+        searchText:
+          type: [string, "null"]
+          description: "The validated text; a 1-character one stays. Null with no text and when refused."
+        refusal:
+          type: [string, "null"]
+          enum: [SearchRepeated, SearchTooLong, SearchControlCharacter, null]
+          description: "`SearchRefusalKey`, set only when `state` is Refused."
+        returnPath: { type: string, description: "`SearchResultsUrl.Build(searchText)`, the path constant being equal to the host's route." }
+        students: { $ref: "#/components/schemas/StudentGroup" }
+        teachers: { $ref: "#/components/schemas/TeacherGroup" }
+        courses: { $ref: "#/components/schemas/CourseGroup" }
+        meetCodes: { $ref: "#/components/schemas/MeetCodeGroup" }
+
+    StudentGroup:
+      type: object
+      required: [rows, total]
+      properties:
+        rows: { type: array, maxItems: 20, items: { $ref: "#/components/schemas/StudentSearchRow" } }
+        total: { type: integer, minimum: 0 }
+
+    TeacherGroup:
+      type: object
+      required: [rows, total]
+      properties:
+        rows: { type: array, maxItems: 20, items: { $ref: "#/components/schemas/TeacherSearchRow" } }
+        total: { type: integer, minimum: 0 }
+
+    CourseGroup:
+      type: object
+      required: [rows, total]
+      properties:
+        rows: { type: array, maxItems: 20, items: { $ref: "#/components/schemas/CourseSearchRow" } }
+        total: { type: integer, minimum: 0 }
+
+    MeetCodeGroup:
+      type: object
+      required: [rows, total]
+      properties:
+        rows: { type: array, maxItems: 20, items: { $ref: "#/components/schemas/MeetCodeSearchRow" } }
+        total: { type: integer, minimum: 0, description: "The sum of the three list counters." }
+        firstListWithMatch:
+          type: [string, "null"]
+          enum: [Unassigned, Linked, NotACourse, null]
+
+    StudentSearchRow:
+      type: object
+      required: [participantId, label, courses]
+      properties:
+        participantId: { type: integer, format: int64, description: "Not rendered. Identifies the row in tests and groups namesakes." }
+        label: { type: string, description: "As `ParticipantLabel`. Never null: a matched person has a name or an email." }
+        email: { type: [string, "null"] }
+        courses:
+          type: array
+          description: "Every course of a student membership, in the course list's order; not those of a teacher membership."
+          items: { $ref: "#/components/schemas/StudentSearchCourse" }
+
+    StudentSearchCourse:
+      type: object
+      required: [courseId, name]
+      properties:
+        courseId: { type: integer, format: int64 }
+        name: { type: string }
+        section: { type: [string, "null"] }
+        left:
+          description: "`LeftMark` by `DataMarkRules.Left`: null on the roster; `lastSeenOn` null when seen once (US-060 OD-003 a)."
+          oneOf:
+            - type: "null"
+            - type: object
+              properties:
+                lastSeenOn: { type: [string, "null"], format: date }
+
+    TeacherSearchRow:
+      type: object
+      required: [participantId, label]
+      properties:
+        participantId: { type: integer, format: int64, description: "The `teacherId` of the link." }
+        label: { type: string }
+        email: { type: [string, "null"] }
+
+    CourseSearchRow:
+      type: object
+      required: [courseId, name, status]
+      properties:
+        courseId: { type: integer, format: int64 }
+        name: { type: string }
+        section: { type: [string, "null"] }
+        status: { type: string, description: "As the course list's row." }
+
+    MeetCodeSearchRow:
+      type: object
+      required: [code, list]
+      properties:
+        code: { type: string }
+        list: { type: string, enum: [Unassigned, Linked, NotACourse] }

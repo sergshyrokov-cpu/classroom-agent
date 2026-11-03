@@ -4,29 +4,27 @@
 version: 1
 story: US-071
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: '2026-11-03T16:43:20Z'
+  verdict: PASS
+  stage: API_DESIGN
+  recorded_at: '2026-11-03T16:47:45Z'
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-071-spec.md
-    version: 2
-  - type: spec_digest
-    path: docs/specifications/US-071-spec-digest.ru.md
-    version: 2
-  - type: specification_review
-    path: docs/reviews/specifications/US-071-spec-review.md
-    version: 2
+  - type: openapi
+    path: docs/designs/api/US-071-openapi.yaml
+    version: 1
+  - type: api_design
+    path: docs/designs/api/US-071-api-design.md
+    version: 1
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings: []
+non_blocking_findings:
+  - "m-1: the Control Plane's error page under a protected endpoint keeps the switcher's raw query fallback"
 started_at: '2026-11-03T15:29:26Z'
-updated_at: '2026-11-03T16:43:20Z'
+updated_at: '2026-11-03T16:47:45Z'
 completed_at: null
