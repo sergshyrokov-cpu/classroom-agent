@@ -2,13 +2,16 @@
 @using Microsoft.AspNetCore.Authorization
 @*
     US-039 header switcher (spec FR-002, openapi x-ui-elements LanguageSwitcher): rendered only on a page whose
-    endpoint requires sign-in, so the sign-in pages, the first-run setup and the error page — SC-4's anonymous
-    list — never show it (OD-002, I-5). One plain POST form per offered language, no JavaScript; the current
-    language is marked, not a submit. Built from the request, never from an entity (AD-8).
+    endpoint requires sign-in, so the sign-in pages and the first-run setup — SC-4's anonymous list — never show
+    it, and never on the error page under any endpoint (OD-002, I-5; US-072 FR-002). The endpoint cannot tell an
+    error page, because ErrorController.Page answers under the protected endpoint that failed; every path to that
+    page uses its model, so no caller has to remember a flag. One plain POST form per offered language, no
+    JavaScript; the current language is marked, not a submit. Built from the request, never from an entity (AD-8).
 *@
 @{
     var requiresSignIn = Context.GetEndpoint()?.Metadata.GetMetadata<IAllowAnonymous>() is null;
-    if (User.Identity?.IsAuthenticated == true && requiresSignIn)
+    var isErrorPage = ViewData.Model is ErrorPageModel;
+    if (User.Identity?.IsAuthenticated == true && requiresSignIn && !isErrorPage)
     {
         var current = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
         var returnPath = Context.Request.Path.Value + Context.Request.QueryString.Value;
