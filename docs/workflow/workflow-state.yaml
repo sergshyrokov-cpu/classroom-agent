@@ -2,29 +2,22 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-070
+story: US-071
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: SPECIFICATION
+previous_stage: null
+last_completed_stage: null
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
+last_invoked_skill: null
 last_result:
-  verdict: PASS
-  stage: SECURITY_REVIEW
-  recorded_at: '2026-11-03T08:39:31Z'
-last_artifacts:
-  - type: security_review
-    path: docs/reviews/security/US-070-security-review.md
-    version: 1
+  verdict: null
+  stage: null
+  recorded_at: null
+last_artifacts: []
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings:
-  - 'm-1: GET course-choice with a malformed code answers the error page, whose language switcher writes the raw query, a refused returnQ included, into its hidden field; encoded, own response only, not logged (read, not run).'
-  - 'm-2: Encoding of markup characters is tested on the teacher list only, not through the hand-built MarkForm or the other Meet code forms; the code is right as read.'
-  - 'INFO-1: A search of up to 50 words builds subqueries per word over three counts and a page read, with no rate limit; signed-in Admin or Dean only, spec section 9 accepts the scan.'
-  - 'INFO-2: picker-narrow.js has not run in a browser; the AC-009 walk should also check the F12 console for CSP errors on the five pages.'
-started_at: '2026-11-02T19:48:02Z'
-updated_at: '2026-11-03T10:49:26Z'
-completed_at: '2026-11-03T10:49:26Z'
+non_blocking_findings: []
+started_at: null
+updated_at: '2026-11-03T15:20:15Z'
+completed_at: null

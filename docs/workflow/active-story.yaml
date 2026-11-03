@@ -3,10 +3,10 @@
 # Writer: story-orchestrator (on activation). Stories are authored by a human
 # in docs/stories/ — there is no backlog-sync stage in this workflow variant.
 version: 1
-active_story: US-070
-story_path: docs/stories/US-070-search-in-lists-and-pickers.md
+active_story: US-071
+story_path: docs/stories/US-071-search-field-in-the-header.md
 source:
   type: authored
-activated_at: 2026-11-02T19:39:42Z
+activated_at: 2026-11-03T15:20:15Z
 activated_by: Serhii SHYROKOV (/so:start)
-status: COMPLETED
+status: IN_PROGRESS
