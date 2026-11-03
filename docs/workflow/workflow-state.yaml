@@ -4,26 +4,27 @@
 version: 1
 story: US-070
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: security-reviewer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: '2026-11-02T20:28:21Z'
+  stage: SECURITY_REVIEW
+  recorded_at: '2026-11-03T08:39:31Z'
 last_artifacts:
-  - type: database_design
-    path: docs/designs/database/US-070-db-design.md
-    version: 1
-  - type: entity_model
-    path: docs/designs/database/US-070-entity-model.md
+  - type: security_review
+    path: docs/reviews/security/US-070-security-review.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings: []
+non_blocking_findings:
+  - 'm-1: GET course-choice with a malformed code answers the error page, whose language switcher writes the raw query, a refused returnQ included, into its hidden field; encoded, own response only, not logged (read, not run).'
+  - 'm-2: Encoding of markup characters is tested on the teacher list only, not through the hand-built MarkForm or the other Meet code forms; the code is right as read.'
+  - 'INFO-1: A search of up to 50 words builds subqueries per word over three counts and a page read, with no rate limit; signed-in Admin or Dean only, spec section 9 accepts the scan.'
+  - 'INFO-2: picker-narrow.js has not run in a browser; the AC-009 walk should also check the F12 console for CSP errors on the five pages.'
 started_at: '2026-11-02T19:48:02Z'
-updated_at: '2026-11-02T20:28:21Z'
-completed_at: null
+updated_at: '2026-11-03T10:49:26Z'
+completed_at: '2026-11-03T10:49:26Z'

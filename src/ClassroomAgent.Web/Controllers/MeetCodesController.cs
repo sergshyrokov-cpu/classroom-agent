@@ -37,6 +37,10 @@ public sealed class MeetCodesController(
 
     public const string ReturnPageParameter = "returnPage";
 
+    public const string SearchParameter = "q";
+
+    public const string ReturnQParameter = "returnQ";
+
     [HttpGet(SignInRoutes.MeetCodes)]
     [Authorize(Policy = InstallationPolicies.ViewMeetCodes)]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -44,7 +48,8 @@ public sealed class MeetCodesController(
         var request = new MeetCodesRequest(
             Request.Query[ListParameter].ToArray(),
             Request.Query[PageParameter].ToArray(),
-            Request.Query[SizeParameter].ToArray());
+            Request.Query[SizeParameter].ToArray(),
+            Request.Query[SearchParameter].ToArray());
 
         var result = await page.ExecuteAsync(
             request, ConfirmationOf(TempData[SignInRoutes.MeetCodeMessageTempDataKey] as string), cancellationToken);
@@ -61,7 +66,8 @@ public sealed class MeetCodesController(
     public async Task<IActionResult> CourseChoice(string? meetingCode, CancellationToken cancellationToken)
     {
         var returnPage = Request.Query[ReturnPageParameter].FirstOrDefault();
-        return await ChoiceOrPageAsync(meetingCode, returnPage, null, StatusCodes.Status200OK, cancellationToken);
+        return await ChoiceOrPageAsync(
+            meetingCode, returnPage, Request.Query[ReturnQParameter].ToArray(), null, StatusCodes.Status200OK, cancellationToken);
     }
 
     [HttpPost(SignInRoutes.MeetCodeLink)]
@@ -114,6 +120,7 @@ public sealed class MeetCodesController(
                 return await ChoiceOrPageAsync(
                     meetingCode,
                     result.ReturnPage.ToString(CultureInfo.InvariantCulture),
+                    [result.ReturnQ],
                     MeetCodeFieldError.SameCourse,
                     StatusCodes.Status400BadRequest,
                     cancellationToken);
@@ -122,17 +129,18 @@ public sealed class MeetCodesController(
                 return await ChoiceOrPageAsync(
                     meetingCode,
                     result.ReturnPage.ToString(CultureInfo.InvariantCulture),
+                    [result.ReturnQ],
                     MeetCodeFieldError.CourseNotFound,
                     StatusCodes.Status404NotFound,
                     cancellationToken);
 
             case MeetCodeChangeOutcome.CodeNotFound:
                 return await PageAsync(
-                    MeetCodeList.Unassigned, 0, MeetCodesMessageKey.CodeNotFound, StatusCodes.Status404NotFound, cancellationToken);
+                    MeetCodeList.Unassigned, 0, MeetCodesMessageKey.CodeNotFound, StatusCodes.Status404NotFound, result.ReturnQ, cancellationToken);
 
             case MeetCodeChangeOutcome.StateChanged:
                 return await PageAsync(
-                    result.List, 0, MeetCodesMessageKey.StateChanged, StatusCodes.Status409Conflict, cancellationToken);
+                    result.List, 0, MeetCodesMessageKey.StateChanged, StatusCodes.Status409Conflict, result.ReturnQ, cancellationToken);
 
             default:
                 throw new InvalidOperationException("The outcome is not mapped to a response.");
@@ -142,11 +150,12 @@ public sealed class MeetCodesController(
     private async Task<IActionResult> ChoiceOrPageAsync(
         string? meetingCode,
         string? returnPage,
+        IReadOnlyList<string?> returnQ,
         MeetCodeFieldError? fieldError,
         int status,
         CancellationToken cancellationToken)
     {
-        var result = await choices.ExecuteAsync(meetingCode, returnPage, fieldError, cancellationToken);
+        var result = await choices.ExecuteAsync(meetingCode, returnPage, returnQ, fieldError, cancellationToken);
         if (result.Malformed)
         {
             return ErrorController.Page(HttpContext, StatusCodes.Status400BadRequest, SignInRoutes.MeetCodes);
@@ -155,7 +164,7 @@ public sealed class MeetCodesController(
         if (result.Model is not { } model)
         {
             return await PageAsync(
-                MeetCodeList.Unassigned, 0, MeetCodesMessageKey.CodeNotFound, StatusCodes.Status404NotFound, cancellationToken);
+                MeetCodeList.Unassigned, 0, MeetCodesMessageKey.CodeNotFound, StatusCodes.Status404NotFound, result.ReturnQ, cancellationToken);
         }
 
         Response.StatusCode = status;
@@ -163,9 +172,9 @@ public sealed class MeetCodesController(
     }
 
     private async Task<IActionResult> PageAsync(
-        MeetCodeList list, int pageNumber, MeetCodesMessageKey message, int status, CancellationToken cancellationToken)
+        MeetCodeList list, int pageNumber, MeetCodesMessageKey message, int status, string? search, CancellationToken cancellationToken)
     {
-        var model = await page.ExecuteAsync(list, pageNumber, message, cancellationToken);
+        var model = await page.ExecuteAsync(list, pageNumber, message, search, cancellationToken);
         Response.StatusCode = status;
         return View("Index", model);
     }
@@ -174,8 +183,9 @@ public sealed class MeetCodesController(
     {
         TempData[SignInRoutes.MeetCodeMessageTempDataKey] = message.ToString();
         return Redirect(
-            SignInRoutes.MeetCodes + "?" + ListParameter + "=" + ListText(result.List) + "&" + PageParameter + "="
-            + result.ReturnPage.ToString(CultureInfo.InvariantCulture));
+            SignInRoutes.MeetCodes + "?" + ListParameter + "=" + ListText(result.List)
+            + (result.ReturnQ is { } search ? "&" + SearchParameter + "=" + Uri.EscapeDataString(search) : string.Empty)
+            + "&" + PageParameter + "=" + result.ReturnPage.ToString(CultureInfo.InvariantCulture));
     }
 
     /// <summary>The list as the query string spells it (openapi <c>MeetCodeList</c>).</summary>

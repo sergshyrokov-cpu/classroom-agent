@@ -14,6 +14,41 @@ internal static class CourseListQueryRules
     /// <summary>US-020 spec VR-004, I-5: the largest page number accepted.</summary>
     private const int MaxPage = 100_000;
 
+    /// <summary>US-020 spec VR-003, I-4: characters of the trimmed search text.</summary>
+    private const int MaxSearchLength = 100;
+
+    /// <summary>
+    /// US-070 VR-001, the one implementation for every list: repeated → trim → white space only is no search → too long →
+    /// control character. Null when accepted, with the validated text (null for no search).
+    /// </summary>
+    internal static SearchRefusalKey? ReadSearch(IReadOnlyList<string?> values, out string? search)
+    {
+        search = null;
+        if (values.Count > 1)
+        {
+            return SearchRefusalKey.SearchRepeated;
+        }
+
+        var text = values.Count == 1 ? (values[0] ?? string.Empty).Trim() : string.Empty;
+        if (text.Length == 0)
+        {
+            return null;
+        }
+
+        if (text.Length > MaxSearchLength)
+        {
+            return SearchRefusalKey.SearchTooLong;
+        }
+
+        if (text.Any(char.IsControl))
+        {
+            return SearchRefusalKey.SearchControlCharacter;
+        }
+
+        search = text;
+        return null;
+    }
+
     /// <summary>US-020 spec VR-001: absent is ACTIVE; one exact token, case-insensitive, untrimmed. False when malformed.</summary>
     internal static bool TryReadStatus(IReadOnlyList<string?> values, out CourseStatusFilter status)
     {

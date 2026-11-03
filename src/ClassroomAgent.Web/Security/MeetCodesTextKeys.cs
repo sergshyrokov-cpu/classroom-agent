@@ -73,6 +73,13 @@ public static class MeetCodesTextKeys
 
     public const string PaginationNext = "MeetCodes.Pagination.Next";
 
+    public const string FormSearch = "MeetCodes.Form.Search";
+
+    public const string EmptyNoMatch = "MeetCodes.Empty.NoMatch";
+
+    /// <summary>US-070 VR-001: a refused search is rendered with the course list's texts for the same problem.</summary>
+    public static string SearchValidation(SearchRefusalKey key) => "Courses.Validation." + key;
+
     public static string ListName(MeetCodeList list) => "MeetCodes.List." + list;
 
     public static string Empty(MeetCodeList list) => "MeetCodes.Empty." + list;

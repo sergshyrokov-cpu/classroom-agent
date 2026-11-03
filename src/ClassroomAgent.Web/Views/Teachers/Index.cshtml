@@ -9,7 +9,7 @@
     ViewData[UiLanguageController.ReturnPathViewDataKey] = Model.ReturnPath;
 }
 
-@await Html.PartialAsync("_PageSearchHint", PageSearchHintTextKeys.PagedList)
+@await Html.PartialAsync("_PageSearchHint", PageSearchHintTextKeys.TeacherList)
 
 @foreach (var message in Model.MessageKeys)
 {
@@ -26,6 +26,10 @@
             }
         </select>
     </p>
+    <p>
+        <label for="teacher-list-search" class="form-label">@T[TeachersTextKeys.FormSearch]</label>
+        <input id="teacher-list-search" type="search" name="@TeachersController.SearchParameter" value="@Model.SearchText" maxlength="100" autocomplete="off" class="form-control" />
+    </p>
     <button type="submit" class="btn btn-primary">@T[CoursesTextKeys.FormSubmit]</button>
 </form>
 
@@ -33,7 +37,7 @@
 {
     if (list.IsEmpty)
     {
-        <p id="teacher-list-empty">@T[TeachersTextKeys.Empty]</p>
+        <p id="teacher-list-empty">@T[Model.SearchText is null ? TeachersTextKeys.Empty : TeachersTextKeys.EmptyNoMatch]</p>
     }
     else
     {
@@ -95,5 +99,5 @@
         name.Kind == CourseListPersonNameKind.NoName ? T[CoursesTextKeys.TeacherNoName].Value : name.Text ?? string.Empty;
 
     /// <summary>Spec FR-009: every paging link carries the effective status.</summary>
-    private string PageUrl(int page) => TeacherListUrl.Build(Model.Status, page);
+    private string PageUrl(int page) => TeacherListUrl.Build(Model.Status, Model.SearchText, page);
 }

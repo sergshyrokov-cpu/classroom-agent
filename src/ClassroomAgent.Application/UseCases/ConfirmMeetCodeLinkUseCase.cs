@@ -36,20 +36,20 @@ public sealed class ConfirmMeetCodeLinkUseCase(
         var returnPage = fields is null ? 0 : ReturnPage(Value(fields, ReturnPageField));
         if (fields is null || !IsWellFormedCode(meetingCode) || Id(Value(fields, ExpectedCourseIdField)) is not { } expectedCourse)
         {
-            return Result(MeetCodeChangeOutcome.Malformed, MeetCodeList.Linked, returnPage);
+            return Result(MeetCodeChangeOutcome.Malformed, MeetCodeList.Linked, returnPage, form);
         }
 
         var code = meetingCode!;
         var link = await links.GetByCodeAsync(code, cancellationToken);
         if (link is null && !await links.CodeHasMeetingsAsync(code, cancellationToken))
         {
-            return Result(MeetCodeChangeOutcome.CodeNotFound, MeetCodeList.Unassigned, returnPage);
+            return Result(MeetCodeChangeOutcome.CodeNotFound, MeetCodeList.Unassigned, returnPage, form);
         }
 
         // FR-013, I-9: the page offered "Confirm" only for an automatic, unconfirmed link on this course.
         if (link is null || !link.CanBeConfirmed || link.CourseId != expectedCourse)
         {
-            return Result(MeetCodeChangeOutcome.StateChanged, ListOf(Current(link).State), 0);
+            return Result(MeetCodeChangeOutcome.StateChanged, ListOf(Current(link).State), 0, form);
         }
 
         var now = timeProvider.GetUtcNow();
@@ -64,7 +64,7 @@ public sealed class ConfirmMeetCodeLinkUseCase(
             cancellationToken);
 
         return committed
-            ? Result(MeetCodeChangeOutcome.Confirmed, MeetCodeList.Linked, returnPage)
-            : Result(MeetCodeChangeOutcome.StateChanged, MeetCodeList.Linked, 0);
+            ? Result(MeetCodeChangeOutcome.Confirmed, MeetCodeList.Linked, returnPage, form)
+            : Result(MeetCodeChangeOutcome.StateChanged, MeetCodeList.Linked, 0, form);
     }
 }

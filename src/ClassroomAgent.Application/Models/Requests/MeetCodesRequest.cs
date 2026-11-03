@@ -4,4 +4,5 @@ namespace ClassroomAgent.Application.Models.Requests;
 public sealed record MeetCodesRequest(
     IReadOnlyList<string?> List,
     IReadOnlyList<string?> Page,
-    IReadOnlyList<string?> Size);
+    IReadOnlyList<string?> Size,
+    IReadOnlyList<string?> Q);

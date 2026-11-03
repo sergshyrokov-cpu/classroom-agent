@@ -39,6 +39,27 @@ public sealed class PageSearchHintTranslationTests
     }
 
     /// <summary>
+    /// US-070 FR-009, AC-010: the list variants are one template, key <c>PageSearchHint.ListField</c>, in each language;
+    /// the keys of the two retired variants are in neither file.
+    /// </summary>
+    [Fact]
+    public void TheListFieldTemplate_IsAnEntry_AndTheRetiredHintKeysAreGone()
+    {
+        foreach (var (language, expected) in new[] { ("uk", Hint.ListFieldUk), ("en", Hint.ListFieldEn) })
+        {
+            var entries = XDocument.Load(Source("ClassroomAgent.Application", "Localization", $"SharedResource.{language}.resx"))
+                .Root!
+                .Elements("data")
+                .ToDictionary(data => (string?)data.Attribute("name") ?? string.Empty, data => (string?)data.Element("value") ?? string.Empty);
+
+            Assert.True(entries.TryGetValue("PageSearchHint.ListField", out var value), $"{language}: no PageSearchHint.ListField.");
+            Assert.Equal(expected, value);
+            Assert.DoesNotContain("PageSearchHint.CourseList", entries.Keys);
+            Assert.DoesNotContain("PageSearchHint.PagedList", entries.Keys);
+        }
+    }
+
+    /// <summary>
     /// AC-006, FR-008: no view of the installation or the Control Plane holds a fragment of the texts as a literal.
     /// </summary>
     [Fact]

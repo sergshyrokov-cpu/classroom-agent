@@ -44,7 +44,8 @@ public sealed class PageSearchHintTests(PostgreSqlFixture database)
     private static string VariantOf(string page) => page switch
     {
         "course-list" => Variants.CourseList,
-        "teacher-list" or "meet-codes" => Variants.PagedList,
+        "teacher-list" => Variants.TeacherList,
+        "meet-codes" => Variants.MeetCodes,
         _ => Variants.Ordinary,
     };
 
@@ -193,7 +194,7 @@ public sealed class PageSearchHintTests(PostgreSqlFixture database)
         AssertHint(page, VariantOf(name), "uk", TitleOrdinalOf(name), name);
     }
 
-    /// <summary>AC-004, FR-006: the paged-list text is the same on one page and on any page of many.</summary>
+    /// <summary>AC-004, FR-006: the teacher-list text is the same on one page and on any page of many.</summary>
     [Fact]
     public async Task ThePagedListHint_IsTheSame_OnOnePage_AndOnEveryPageOfMany()
     {
@@ -209,7 +210,7 @@ public sealed class PageSearchHintTests(PostgreSqlFixture database)
         foreach (var page in new[] { one, first, last })
         {
             Assert.Equal(HttpStatusCode.OK, page.Status);
-            AssertHint(page, Variants.PagedList, "uk", 1, "the teacher list");
+            AssertHint(page, Variants.TeacherList, "uk", 1, "the teacher list");
         }
     }
 

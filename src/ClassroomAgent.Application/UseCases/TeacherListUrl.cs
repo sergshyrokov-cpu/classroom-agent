@@ -13,12 +13,20 @@ public static class TeacherListUrl
     public const string Path = "/workspace/teachers";
 
     /// <summary>The path with <c>status</c>, <c>page</c> in that order, each omitted at its default (<c>active</c>, 1).</summary>
-    public static string Build(CourseStatusFilter status, int page)
+    public static string Build(CourseStatusFilter status, int page) => Build(status, null, page);
+
+    /// <summary>US-070 openapi <c>query-order</c>: <c>status</c>, <c>q</c>, <c>page</c>; <c>q</c> omitted with no search, and encoded.</summary>
+    public static string Build(CourseStatusFilter status, string? search, int page)
     {
         var parts = new List<string>();
         if (status != CourseStatusFilter.Active)
         {
             parts.Add("status=" + CourseListUrl.Token(status));
+        }
+
+        if (search is not null)
+        {
+            parts.Add("q=" + Uri.EscapeDataString(search));
         }
 
         if (page > 1)

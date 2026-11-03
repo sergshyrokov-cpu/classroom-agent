@@ -54,14 +54,14 @@ public sealed class FakeTeacherListSource : ITeacherListSource
     public List<long> AddNumberedTeachers(int count) =>
         Enumerable.Range(1, count).Select(i => AddTeacher("Вчитель", i.ToString("D3", CultureInfo.InvariantCulture))).ToList();
 
-    public Task<int> CountTeachersAsync(CourseState? state, CancellationToken cancellationToken)
+    public Task<int> CountTeachersAsync(CourseState? state, string? search, CancellationToken cancellationToken)
     {
         CountRequests.Add(state);
         return Task.FromResult(Listed(state).Count);
     }
 
     public Task<IReadOnlyList<TeacherListRecord>> GetTeacherPageAsync(
-        CourseState? state, int offset, int limit, CancellationToken cancellationToken)
+        CourseState? state, string? search, int offset, int limit, CancellationToken cancellationToken)
     {
         PageRequests.Add((state, offset, limit));
         IReadOnlyList<TeacherListRecord> page = Listed(state).Skip(offset).Take(limit).ToList();

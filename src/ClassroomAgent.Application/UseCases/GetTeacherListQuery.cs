@@ -30,6 +30,20 @@ public sealed class GetTeacherListQuery(ITeacherListSource source)
             messages.Add(TeacherListMessageKey.StatusMalformed);
         }
 
+        // US-070 VR-001: the course list's rule; its message keys carry the same names.
+        switch (CourseListQueryRules.ReadSearch(request.Q, out var search))
+        {
+            case SearchRefusalKey.SearchRepeated:
+                messages.Add(TeacherListMessageKey.SearchRepeated);
+                break;
+            case SearchRefusalKey.SearchTooLong:
+                messages.Add(TeacherListMessageKey.SearchTooLong);
+                break;
+            case SearchRefusalKey.SearchControlCharacter:
+                messages.Add(TeacherListMessageKey.SearchControlCharacter);
+                break;
+        }
+
         if (!CourseListQueryRules.TryReadPage(request.Page, out var page))
         {
             messages.Add(TeacherListMessageKey.PageMalformed);
@@ -40,11 +54,11 @@ public sealed class GetTeacherListQuery(ITeacherListSource source)
             // Spec FR-010: the rejected field shows its default and appears nowhere, the return path included.
             return new TeacherListPageResult(
                 TeacherListPageOutcome.Invalid,
-                new TeacherListPageModel(status, messages, null, TeacherListUrl.Build(status, 1)));
+                new TeacherListPageModel(status, messages, null, TeacherListUrl.Build(status, search, 1), search));
         }
 
         var state = CourseListQueryRules.StateOf(status);
-        var total = await source.CountTeachersAsync(state, cancellationToken);
+        var total = await source.CountTeachersAsync(state, search, cancellationToken);
         TeacherListResult list;
         if (total == 0)
         {
@@ -56,7 +70,7 @@ public sealed class GetTeacherListQuery(ITeacherListSource source)
             // Spec FR-006: a page past the last shows the last.
             var pageCount = (total + PageSize - 1) / PageSize;
             var shown = Math.Min(page, pageCount);
-            var records = await source.GetTeacherPageAsync(state, (shown - 1) * PageSize, PageSize, cancellationToken);
+            var records = await source.GetTeacherPageAsync(state, search, (shown - 1) * PageSize, PageSize, cancellationToken);
             var rows = records
                 .Select(r => new TeacherListRow(
                     r.ParticipantId,
@@ -70,6 +84,6 @@ public sealed class GetTeacherListQuery(ITeacherListSource source)
 
         return new TeacherListPageResult(
             TeacherListPageOutcome.Shown,
-            new TeacherListPageModel(status, [], list, TeacherListUrl.Build(status, list.Page)));
+            new TeacherListPageModel(status, [], list, TeacherListUrl.Build(status, search, list.Page), search));
     }
 }

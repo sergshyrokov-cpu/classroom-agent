@@ -23,9 +23,6 @@ public sealed class GetCourseListQuery(ICourseListSource source, SchoolTimeZone 
     /// <summary>Spec FR-008, OD-006.</summary>
     public const int PageSize = 50;
 
-    /// <summary>Spec VR-003, I-4: characters of the trimmed search text.</summary>
-    private const int MaxSearchLength = 100;
-
     public async Task<CourseListPageResult> ExecuteAsync(CourseListRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -136,31 +133,20 @@ public sealed class GetCourseListQuery(ICourseListSource source, SchoolTimeZone 
         }
     }
 
-    /// <summary>Spec VR-003, api-design §2.4: repeated → too long → control character; white space only is no search.</summary>
+    /// <summary>Spec VR-003, api-design §2.4; US-070 VR-001: the shared rule.</summary>
     private static string? ReadSearch(IReadOnlyList<string?> values, List<CourseListMessageKey> messages)
     {
-        if (values.Count > 1)
+        switch (CourseListQueryRules.ReadSearch(values, out var text))
         {
-            messages.Add(CourseListMessageKey.SearchRepeated);
-            return null;
-        }
-
-        var text = values.Count == 1 ? (values[0] ?? string.Empty).Trim() : string.Empty;
-        if (text.Length == 0)
-        {
-            return null;
-        }
-
-        if (text.Length > MaxSearchLength)
-        {
-            messages.Add(CourseListMessageKey.SearchTooLong);
-            return null;
-        }
-
-        if (text.Any(char.IsControl))
-        {
-            messages.Add(CourseListMessageKey.SearchControlCharacter);
-            return null;
+            case SearchRefusalKey.SearchRepeated:
+                messages.Add(CourseListMessageKey.SearchRepeated);
+                break;
+            case SearchRefusalKey.SearchTooLong:
+                messages.Add(CourseListMessageKey.SearchTooLong);
+                break;
+            case SearchRefusalKey.SearchControlCharacter:
+                messages.Add(CourseListMessageKey.SearchControlCharacter);
+                break;
         }
 
         return text;

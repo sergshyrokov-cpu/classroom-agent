@@ -9,17 +9,18 @@ namespace ClassroomAgent.Application.Ports;
 /// </summary>
 public interface IMeetCodesReadSource
 {
-    Task<MeetCodeListCounts> GetCountsAsync(CancellationToken cancellationToken);
+    Task<MeetCodeListCounts> GetCountsAsync(string? search, CancellationToken cancellationToken);
 
     Task<PagedRows<UnassignedCodeRow>> GetUnassignedPageAsync(
         int page,
         int size,
         TimeZoneInfo zone,
+        string? search,
         CancellationToken cancellationToken);
 
-    Task<PagedRows<LinkedCodeRow>> GetLinkedPageAsync(int page, int size, CancellationToken cancellationToken);
+    Task<PagedRows<LinkedCodeRow>> GetLinkedPageAsync(int page, int size, string? search, CancellationToken cancellationToken);
 
-    Task<PagedRows<MarkedCodeRow>> GetMarkedPageAsync(int page, int size, CancellationToken cancellationToken);
+    Task<PagedRows<MarkedCodeRow>> GetMarkedPageAsync(int page, int size, string? search, CancellationToken cancellationToken);
 
     /// <summary>Every stored course (id, name, section), any order.</summary>
     Task<IReadOnlyList<Models.Dtos.CourseOption>> GetAllCoursesAsync(CancellationToken cancellationToken);

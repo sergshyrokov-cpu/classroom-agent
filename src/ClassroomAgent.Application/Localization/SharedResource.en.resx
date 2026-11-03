@@ -528,8 +528,6 @@
   <data name="Database.Failure.AskAdmin" xml:space="preserve"><value>The administrator has the details.</value></data>
   <data name="Database.Failure.ConnectionPageLink" xml:space="preserve"><value>Details are on the connection page</value></data>
   <data name="PageSearchHint.Ordinary" xml:space="preserve"><value>Search this page: Ctrl+F (⌘F on Mac); on a phone — browser menu → "Find in page".</value></data>
-  <data name="PageSearchHint.CourseList" xml:space="preserve"><value>Find a course in the "Search by name or section" field below — it searches the whole list; Ctrl+F (⌘F on Mac) finds only the rows shown.</value></data>
-  <data name="PageSearchHint.PagedList" xml:space="preserve"><value>Ctrl+F (⌘F on Mac; on a phone — browser menu → "Find in page") searches only the rows shown; the rest are on the next pages of the list (buttons below).</value></data>
   <data name="Erasure.Title" xml:space="preserve"><value>Erasure of personal data</value></data>
   <data name="Erasure.NavigationEntry" xml:space="preserve"><value>Erase a person's data on request</value></data>
   <data name="Erasure.Search.Label" xml:space="preserve"><value>Email or part of a name</value></data>
@@ -646,4 +644,11 @@
   <data name="Database.Block.Synchronization" xml:space="preserve"><value>Synchronization</value></data>
   <data name="Password.Toggle.Show" xml:space="preserve"><value>Show password</value></data>
   <data name="Password.Toggle.Hide" xml:space="preserve"><value>Hide password</value></data>
+  <data name="Teachers.Form.Search" xml:space="preserve"><value>Search by name or email</value></data>
+  <data name="MeetCodes.Form.Search" xml:space="preserve"><value>Search by code, organizer or course</value></data>
+  <data name="Teachers.Empty.NoMatch" xml:space="preserve"><value>No teacher matches the search</value></data>
+  <data name="MeetCodes.Empty.NoMatch" xml:space="preserve"><value>No code in this list matches the search</value></data>
+  <data name="Picker.Narrow.Label" xml:space="preserve"><value>Start typing to narrow the list</value></data>
+  <data name="Picker.Narrow.NothingFound" xml:space="preserve"><value>Nothing found</value></data>
+  <data name="PageSearchHint.ListField" xml:space="preserve"><value>In this list: the "{0}" field below (Ctrl+F sees only the rows shown)</value></data>
 </root>

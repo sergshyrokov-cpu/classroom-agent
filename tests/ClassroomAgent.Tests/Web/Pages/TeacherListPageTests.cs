@@ -188,11 +188,10 @@ public sealed class TeacherListPageTests(PostgreSqlFixture database)
         await using var _host = host;
 
         var page = await client.GetAsync(
-            Data.Path + "?status=ALL&page=1&teacherId=" + world.Koval + "&q=zz-echo-q&evil=zz-echo-zz", ct);
+            Data.Path + "?status=ALL&page=1&teacherId=" + world.Koval + "&evil=zz-echo-zz", ct);
 
         Assert.Equal(HttpStatusCode.OK, page.Status);
         Assert.Equal(Data.Url("all"), UiLanguageTestData.RenderedReturnPath(page.Body));
-        Assert.DoesNotContain("zz-echo-q", page.Body, StringComparison.Ordinal);
         Assert.DoesNotContain("zz-echo-zz", page.Body, StringComparison.Ordinal);
         Assert.DoesNotContain("evil", page.Body, StringComparison.Ordinal);
         var hrefs = Cl.Hrefs(page.Body);

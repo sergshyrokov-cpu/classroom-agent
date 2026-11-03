@@ -10,9 +10,9 @@ namespace ClassroomAgent.Application.Ports;
 public interface ITeacherListSource
 {
     /// <summary>T1 — number of participants with at least one current teacher membership in a course of the state (null = all).</summary>
-    Task<int> CountTeachersAsync(CourseState? state, CancellationToken cancellationToken);
+    Task<int> CountTeachersAsync(CourseState? state, string? search, CancellationToken cancellationToken);
 
     /// <summary>T2 — those participants with their course counts, in label-key order, skipping offset, at most limit.</summary>
     Task<IReadOnlyList<TeacherListRecord>> GetTeacherPageAsync(
-        CourseState? state, int offset, int limit, CancellationToken cancellationToken);
+        CourseState? state, string? search, int offset, int limit, CancellationToken cancellationToken);
 }

@@ -48,30 +48,30 @@ public sealed class SetMeetCodeCourseUseCase(
             || Id(Value(fields, CourseIdField)) is not { } courseId
             || Expected(fields) is not { } expected)
         {
-            return Result(MeetCodeChangeOutcome.Malformed, MeetCodeList.Unassigned, returnPage);
+            return Result(MeetCodeChangeOutcome.Malformed, MeetCodeList.Unassigned, returnPage, form);
         }
 
         var code = meetingCode!;
         var link = await links.GetByCodeAsync(code, cancellationToken);
         if (link is null && !await links.CodeHasMeetingsAsync(code, cancellationToken))
         {
-            return Result(MeetCodeChangeOutcome.CodeNotFound, MeetCodeList.Unassigned, returnPage);
+            return Result(MeetCodeChangeOutcome.CodeNotFound, MeetCodeList.Unassigned, returnPage, form);
         }
 
         if (!await links.CourseExistsAsync(courseId, cancellationToken))
         {
-            return Result(MeetCodeChangeOutcome.CourseNotFound, ListOf(expected.State), returnPage);
+            return Result(MeetCodeChangeOutcome.CourseNotFound, ListOf(expected.State), returnPage, form);
         }
 
         var current = Current(link);
         if (current != expected)
         {
-            return Result(MeetCodeChangeOutcome.StateChanged, ListOf(current.State), 0);
+            return Result(MeetCodeChangeOutcome.StateChanged, ListOf(current.State), 0, form);
         }
 
         if (current.State == MeetCodeExpectedState.Linked && current.CourseId == courseId)
         {
-            return Result(MeetCodeChangeOutcome.SameCourse, MeetCodeList.Linked, returnPage);
+            return Result(MeetCodeChangeOutcome.SameCourse, MeetCodeList.Linked, returnPage, form);
         }
 
         var now = timeProvider.GetUtcNow();
@@ -104,7 +104,7 @@ public sealed class SetMeetCodeCourseUseCase(
             cancellationToken);
 
         return committed
-            ? Result(outcome, ListOf(expected.State), returnPage)
-            : Result(MeetCodeChangeOutcome.StateChanged, ListOf(expected.State), 0);
+            ? Result(outcome, ListOf(expected.State), returnPage, form)
+            : Result(MeetCodeChangeOutcome.StateChanged, ListOf(expected.State), 0, form);
     }
 }

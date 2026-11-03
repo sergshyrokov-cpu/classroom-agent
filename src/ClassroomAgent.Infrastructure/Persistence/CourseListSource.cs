@@ -9,7 +9,7 @@ namespace ClassroomAgent.Infrastructure.Persistence;
 /// <summary>
 /// ICourseListSource over the database (US-020 db-design §3, entity model §2): untracked reads, one command each, no
 /// transaction, no write, nothing logged (SC-10). Order and search run under the collation <c>course_name_uk</c>
-/// (db-design §2); the search text is a bound parameter matched literally (S-09). The teacher choice orders by
+/// (db-design §2); the search goes through <see cref="SearchMatch"/> (US-070), a bound parameter matched literally (S-09). The teacher choice orders by
 /// <see cref="ParticipantLabel"/>, shared with the teacher list (US-022 db-design §3.3).
 /// </summary>
 public sealed class CourseListSource(ClassroomAgentDbContext db) : ICourseListSource
@@ -92,7 +92,7 @@ public sealed class CourseListSource(ClassroomAgentDbContext db) : ICourseListSo
             .ToListAsync(cancellationToken);
     }
 
-    /// <summary>Db-design §3.1, §3.2: state, current teacher and literal case-insensitive search, combined with AND.</summary>
+    /// <summary>Db-design §3.1, §3.2: state, current teacher and the shared search, combined with AND.</summary>
     private IQueryable<Course> Matching(CourseListFilter filter)
     {
         var courses = db.Courses.AsNoTracking();
@@ -107,14 +107,11 @@ public sealed class CourseListSource(ClassroomAgentDbContext db) : ICourseListSo
                 m.CourseId == c.Id && m.ParticipantId == teacher && m.Role == ClassroomRole.Teacher && m.OnRoster));
         }
 
-        if (filter.SearchText is { } term)
+        foreach (var word in SearchMatch.Words(filter.SearchText))
         {
-            courses = courses.Where(c =>
-                EF.Functions.Collate(c.Name, Collation).ToLower()
-                    .Contains(EF.Functions.Collate(term, Collation).ToLower())
-                || (c.Section != null
-                    && EF.Functions.Collate(c.Section, Collation).ToLower()
-                        .Contains(EF.Functions.Collate(term, Collation).ToLower())));
+            courses = courses.Where(SearchMatch.AnyOf(
+                SearchMatch.InField<Course>(c => c.Name, word),
+                SearchMatch.InField<Course>(c => c.Section, word)));
         }
 
         return courses;

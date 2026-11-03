@@ -9,187 +9,213 @@
     var culture = CultureInfo.CurrentCulture;
 }
 
-@await Html.PartialAsync("_PageSearchHint", PageSearchHintTextKeys.PagedList)
+@await Html.PartialAsync("_PageSearchHint", PageSearchHintTextKeys.MeetCodes)
 
 @if (Model.Message is { } message)
 {
     <p id="meet-codes-message" class="form-message">@T[MeetCodesTextKeys.Message(message)]</p>
 }
 
+@if (Model.SearchMessage is { } refused)
+{
+    <p class="form-error">@T[MeetCodesTextKeys.SearchValidation(refused)]</p>
+}
+
+<form id="meet-codes-search-form" method="get" action="@SignInRoutes.MeetCodes">
+    <input type="hidden" name="@MeetCodesController.ListParameter" value="@MeetCodesController.ListText(Model.List)" />
+    <input type="hidden" name="@MeetCodesController.SizeParameter" value="@Model.Size.ToString(CultureInfo.InvariantCulture)" />
+    <p>
+        <label for="meet-codes-search" class="form-label">@T[MeetCodesTextKeys.FormSearch]</label>
+        <input id="meet-codes-search" type="search" name="@MeetCodesController.SearchParameter" value="@Model.SearchText" maxlength="100" autocomplete="off" class="form-control" />
+    </p>
+    <button type="submit" class="btn btn-primary">@T[CoursesTextKeys.FormSubmit]</button>
+</form>
+
 @* Api-design §2.2: one list at a time; the switcher carries the size of all three. *@
 <nav id="meet-codes-lists">
     @foreach (var (list, count) in Lists())
     {
-        <a href="@PageUrl(list, 0)" aria-current="@(list == Model.List ? "page" : null)">@T[MeetCodesTextKeys.ListName(list)] (@count.ToString(CultureInfo.InvariantCulture))</a>
+        <a href="@PageUrl(list, 0)" aria-current="@(list == Model.List ? "page" : null)">@T[MeetCodesTextKeys.ListName(list)]@(count is { } shown ? " (" + shown.ToString(CultureInfo.InvariantCulture) + ")" : string.Empty)</a>
     }
 </nav>
 
-@if (Model.TotalElements == 0)
+@if (Model.SearchMessage is null)
 {
-    <p id="meet-codes-empty">@T[MeetCodesTextKeys.Empty(Model.List)]</p>
-}
-else if (Model.List == MeetCodeList.Unassigned)
-{
-    <div class="table-scroll">
-        <table id="meet-codes-table" class="table table-sm table-bordered">
-            <thead>
-                <tr>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnCode]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnOrganizers]</th>
-                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnFirstMeeting]</th>
-                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnLastMeeting]</th>
-                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnMeetings]</th>
-                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnParticipants]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnCandidates]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnActions]</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.Unassigned)
-                {
+    if (Model.TotalElements == 0)
+    {
+        <p id="meet-codes-empty">@T[Model.SearchText is null ? MeetCodesTextKeys.Empty(Model.List) : MeetCodesTextKeys.EmptyNoMatch]</p>
+    }
+    else if (Model.List == MeetCodeList.Unassigned)
+    {
+        <div class="table-scroll">
+            <table id="meet-codes-table" class="table table-sm table-bordered">
+                <thead>
                     <tr>
-                        <th scope="row">@item.MeetingCode</th>
-                        <td>@string.Join(", ", item.OrganizerEmails)</td>
-                        <td class="text-end">@item.FirstMeetingDate.ToString("d", culture)</td>
-                        <td class="text-end">@item.LastMeetingDate.ToString("d", culture)</td>
-                        <td class="text-end">@item.MeetingCount.ToString(CultureInfo.InvariantCulture)</td>
-                        <td class="text-end">@item.ParticipantCount.ToString(CultureInfo.InvariantCulture)</td>
-                        <td>
-                            @if (item.Candidates.Count == 0)
-                            {
-                                <span>@T[MeetCodesTextKeys.NoCandidates]</span>
-                            }
-                            else
-                            {
-                                <ul>
-                                    @foreach (var candidate in item.Candidates)
-                                    {
-                                        <li>@CourseLabel(candidate.Course) (@candidate.SharePercent.ToString(CultureInfo.InvariantCulture)%)</li>
-                                    }
-                                </ul>
-                            }
-                        </td>
-                        <td>
-                            <a href="@ChoiceUrl(item.MeetingCode)">@T[MeetCodesTextKeys.ActionPickCourse]</a>
-                            @MarkForm(item.MeetingCode, "unassigned", null)
-                        </td>
+                        <th scope="col">@T[MeetCodesTextKeys.ColumnCode]</th>
+                        <th scope="col">@T[MeetCodesTextKeys.ColumnOrganizers]</th>
+                        <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnFirstMeeting]</th>
+                        <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnLastMeeting]</th>
+                        <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnMeetings]</th>
+                        <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnParticipants]</th>
+                        <th scope="col">@T[MeetCodesTextKeys.ColumnCandidates]</th>
+                        <th scope="col">@T[MeetCodesTextKeys.ColumnActions]</th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
-else if (Model.List == MeetCodeList.Linked)
-{
-    <div class="table-scroll">
-        <table id="meet-codes-table" class="table table-sm table-bordered">
-            <thead>
-                <tr>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnCode]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnCourse]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnMadeBy]</th>
-                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnMadeAt]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnConfirmedBy]</th>
-                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnMeetings]</th>
-                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnLastMeeting]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnActions]</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.Linked)
-                {
-                    <tr>
-                        <th scope="row">@item.MeetingCode</th>
-                        <td>@CourseLabel(item.Course)</td>
-                        <td>@(item.MadeAutomatically ? T[MeetCodesTextKeys.Automatically].Value : AccountText(item.MadeBy))</td>
-                        <td class="text-end">@item.MadeAt.ToString("g", culture)</td>
-                        <td>
-                            @if (item.ConfirmedBy is { } confirmedBy)
-                            {
-                                <span>@AccountText(confirmedBy)</span>
-                                @if (item.ConfirmedAt is { } confirmedAt)
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Unassigned)
+                    {
+                        <tr>
+                            <th scope="row">@item.MeetingCode</th>
+                            <td>@string.Join(", ", item.OrganizerEmails)</td>
+                            <td class="text-end">@item.FirstMeetingDate.ToString("d", culture)</td>
+                            <td class="text-end">@item.LastMeetingDate.ToString("d", culture)</td>
+                            <td class="text-end">@item.MeetingCount.ToString(CultureInfo.InvariantCulture)</td>
+                            <td class="text-end">@item.ParticipantCount.ToString(CultureInfo.InvariantCulture)</td>
+                            <td>
+                                @if (item.Candidates.Count == 0)
                                 {
-                                    <span> @confirmedAt.ToString("g", culture)</span>
+                                    <span>@T[MeetCodesTextKeys.NoCandidates]</span>
                                 }
-                            }
-                            else
-                            {
-                                <span>@T[MeetCodesTextKeys.NotConfirmed]</span>
-                            }
-                        </td>
-                        <td class="text-end">@item.MeetingCount.ToString(CultureInfo.InvariantCulture)</td>
-                        <td class="text-end">@(item.LastMeetingDate?.ToString("d", culture))</td>
-                        <td>
-                            @if (item.CanConfirm)
-                            {
-                                <form method="post" action="@CodeUrl(item.MeetingCode, "confirmation")">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="expectedCourseId" value="@item.Course.Id.ToString(CultureInfo.InvariantCulture)" />
-                                    <input type="hidden" name="returnPage" value="@Model.Page.ToString(CultureInfo.InvariantCulture)" />
-                                    <button type="submit" class="btn btn-sm btn-outline-secondary">@T[MeetCodesTextKeys.ActionConfirm]</button>
-                                </form>
-                            }
-                            <a href="@ChoiceUrl(item.MeetingCode)">@T[MeetCodesTextKeys.ActionRelink]</a>
-                            @MarkForm(item.MeetingCode, "linked", item.Course.Id)
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
-else
-{
-    <div class="table-scroll">
-        <table id="meet-codes-table" class="table table-sm table-bordered">
-            <thead>
-                <tr>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnCode]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnMarkedBy]</th>
-                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnMarkedAt]</th>
-                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnMeetings]</th>
-                    <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnLastMeeting]</th>
-                    <th scope="col">@T[MeetCodesTextKeys.ColumnActions]</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.NotACourse)
-                {
+                                else
+                                {
+                                    <ul>
+                                        @foreach (var candidate in item.Candidates)
+                                        {
+                                            <li>@CourseLabel(candidate.Course) (@candidate.SharePercent.ToString(CultureInfo.InvariantCulture)%)</li>
+                                        }
+                                    </ul>
+                                }
+                            </td>
+                            <td>
+                                <a href="@ChoiceUrl(item.MeetingCode)">@T[MeetCodesTextKeys.ActionPickCourse]</a>
+                                @MarkForm(item.MeetingCode, "unassigned", null)
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else if (Model.List == MeetCodeList.Linked)
+    {
+        <div class="table-scroll">
+            <table id="meet-codes-table" class="table table-sm table-bordered">
+                <thead>
                     <tr>
-                        <th scope="row">@item.MeetingCode</th>
-                        <td>@AccountText(item.MarkedBy)</td>
-                        <td class="text-end">@item.MarkedAt.ToString("g", culture)</td>
-                        <td class="text-end">@item.MeetingCount.ToString(CultureInfo.InvariantCulture)</td>
-                        <td class="text-end">@(item.LastMeetingDate?.ToString("d", culture))</td>
-                        <td><a href="@ChoiceUrl(item.MeetingCode)">@T[MeetCodesTextKeys.ActionPickCourse]</a></td>
+                        <th scope="col">@T[MeetCodesTextKeys.ColumnCode]</th>
+                        <th scope="col">@T[MeetCodesTextKeys.ColumnOrganizers]</th>
+                        <th scope="col">@T[MeetCodesTextKeys.ColumnCourse]</th>
+                        <th scope="col">@T[MeetCodesTextKeys.ColumnMadeBy]</th>
+                        <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnMadeAt]</th>
+                        <th scope="col">@T[MeetCodesTextKeys.ColumnConfirmedBy]</th>
+                        <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnMeetings]</th>
+                        <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnLastMeeting]</th>
+                        <th scope="col">@T[MeetCodesTextKeys.ColumnActions]</th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Linked)
+                    {
+                        <tr>
+                            <th scope="row">@item.MeetingCode</th>
+                            <td>@string.Join(", ", item.OrganizerEmails)</td>
+                            <td>@CourseLabel(item.Course)</td>
+                            <td>@(item.MadeAutomatically ? T[MeetCodesTextKeys.Automatically].Value : AccountText(item.MadeBy))</td>
+                            <td class="text-end">@item.MadeAt.ToString("g", culture)</td>
+                            <td>
+                                @if (item.ConfirmedBy is { } confirmedBy)
+                                {
+                                    <span>@AccountText(confirmedBy)</span>
+                                    @if (item.ConfirmedAt is { } confirmedAt)
+                                    {
+                                        <span> @confirmedAt.ToString("g", culture)</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span>@T[MeetCodesTextKeys.NotConfirmed]</span>
+                                }
+                            </td>
+                            <td class="text-end">@item.MeetingCount.ToString(CultureInfo.InvariantCulture)</td>
+                            <td class="text-end">@(item.LastMeetingDate?.ToString("d", culture))</td>
+                            <td>
+                                @if (item.CanConfirm)
+                                {
+                                    <form method="post" action="@CodeUrl(item.MeetingCode, "confirmation")">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="expectedCourseId" value="@item.Course.Id.ToString(CultureInfo.InvariantCulture)" />
+                                        <input type="hidden" name="returnPage" value="@Model.Page.ToString(CultureInfo.InvariantCulture)" />
+                                        @if (Model.SearchText is { } text)
+                                        {
+                                            <input type="hidden" name="@MeetCodesController.ReturnQParameter" value="@text" />
+                                        }
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">@T[MeetCodesTextKeys.ActionConfirm]</button>
+                                    </form>
+                                }
+                                <a href="@ChoiceUrl(item.MeetingCode)">@T[MeetCodesTextKeys.ActionRelink]</a>
+                                @MarkForm(item.MeetingCode, "linked", item.Course.Id)
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="table-scroll">
+            <table id="meet-codes-table" class="table table-sm table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col">@T[MeetCodesTextKeys.ColumnCode]</th>
+                        <th scope="col">@T[MeetCodesTextKeys.ColumnOrganizers]</th>
+                        <th scope="col">@T[MeetCodesTextKeys.ColumnMarkedBy]</th>
+                        <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnMarkedAt]</th>
+                        <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnMeetings]</th>
+                        <th scope="col" class="text-end">@T[MeetCodesTextKeys.ColumnLastMeeting]</th>
+                        <th scope="col">@T[MeetCodesTextKeys.ColumnActions]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.NotACourse)
+                    {
+                        <tr>
+                            <th scope="row">@item.MeetingCode</th>
+                            <td>@string.Join(", ", item.OrganizerEmails)</td>
+                            <td>@AccountText(item.MarkedBy)</td>
+                            <td class="text-end">@item.MarkedAt.ToString("g", culture)</td>
+                            <td class="text-end">@item.MeetingCount.ToString(CultureInfo.InvariantCulture)</td>
+                            <td class="text-end">@(item.LastMeetingDate?.ToString("d", culture))</td>
+                            <td><a href="@ChoiceUrl(item.MeetingCode)">@T[MeetCodesTextKeys.ActionPickCourse]</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 
-@if (Model.TotalPages > 1)
-{
-    <nav id="meet-codes-pagination">
-        @if (Model.Page > 0)
-        {
-            <a href="@PageUrl(Model.List, Model.Page - 1)">@T[MeetCodesTextKeys.PaginationPrevious]</a>
-        }
-        <span>@((Model.Page + 1).ToString(CultureInfo.InvariantCulture)) / @Model.TotalPages.ToString(CultureInfo.InvariantCulture)</span>
-        @if (Model.Page + 1 < Model.TotalPages)
-        {
-            <a href="@PageUrl(Model.List, Model.Page + 1)">@T[MeetCodesTextKeys.PaginationNext]</a>
-        }
-    </nav>
+    if (Model.TotalPages > 1)
+    {
+        <nav id="meet-codes-pagination">
+            @if (Model.Page > 0)
+            {
+                <a href="@PageUrl(Model.List, Model.Page - 1)">@T[MeetCodesTextKeys.PaginationPrevious]</a>
+            }
+            <span>@((Model.Page + 1).ToString(CultureInfo.InvariantCulture)) / @Model.TotalPages.ToString(CultureInfo.InvariantCulture)</span>
+            @if (Model.Page + 1 < Model.TotalPages)
+            {
+                <a href="@PageUrl(Model.List, Model.Page + 1)">@T[MeetCodesTextKeys.PaginationNext]</a>
+            }
+        </nav>
+    }
 }
 
 @functions {
-    private IEnumerable<(MeetCodeList List, int Count)> Lists() =>
+    private IEnumerable<(MeetCodeList List, int? Count)> Lists() =>
     [
-        (MeetCodeList.Unassigned, Model.Counts.Unassigned),
-        (MeetCodeList.Linked, Model.Counts.Linked),
-        (MeetCodeList.NotACourse, Model.Counts.NotACourse),
+        (MeetCodeList.Unassigned, Model.Counts?.Unassigned),
+        (MeetCodeList.Linked, Model.Counts?.Linked),
+        (MeetCodeList.NotACourse, Model.Counts?.NotACourse),
     ];
 
     /// <summary>Spec I-7: the course name, then its section when it has one; Google data, not translated.</summary>
@@ -200,9 +226,10 @@ else
     private string AccountText(AccountLabel? account) =>
         account is null ? string.Empty : account.Deleted ? T[MeetCodesTextKeys.DeletedAccount].Value : account.Email ?? string.Empty;
 
-    /// <summary>This page with the validated list, page and size only.</summary>
+    /// <summary>This page with the validated list, search text, page and size only.</summary>
     private string PageUrl(MeetCodeList list, int page) =>
         SignInRoutes.MeetCodes + "?" + MeetCodesController.ListParameter + "=" + MeetCodesController.ListText(list)
+        + (Model.SearchText is { } text ? "&" + MeetCodesController.SearchParameter + "=" + Uri.EscapeDataString(text) : string.Empty)
         + "&" + MeetCodesController.PageParameter + "=" + page.ToString(CultureInfo.InvariantCulture)
         + "&" + MeetCodesController.SizeParameter + "=" + Model.Size.ToString(CultureInfo.InvariantCulture);
 
@@ -211,7 +238,8 @@ else
         SignInRoutes.MeetCodes + "/" + Uri.EscapeDataString(code) + "/" + suffix;
 
     private string ChoiceUrl(string code) =>
-        CodeUrl(code, "course-choice") + "?" + MeetCodesController.ReturnPageParameter + "=" + Model.Page.ToString(CultureInfo.InvariantCulture);
+        CodeUrl(code, "course-choice") + "?" + MeetCodesController.ReturnPageParameter + "=" + Model.Page.ToString(CultureInfo.InvariantCulture)
+        + (Model.SearchText is { } text ? "&" + MeetCodesController.ReturnQParameter + "=" + Uri.EscapeDataString(text) : string.Empty);
 
     private Microsoft.AspNetCore.Html.IHtmlContent MarkForm(string code, string expectedState, long? expectedCourseId)
     {
@@ -227,6 +255,13 @@ else
         }
 
         builder.AppendHtml("<input type=\"hidden\" name=\"returnPage\" value=\"" + Model.Page.ToString(CultureInfo.InvariantCulture) + "\" />");
+        if (Model.SearchText is { } text)
+        {
+            builder.AppendHtml("<input type=\"hidden\" name=\"" + MeetCodesController.ReturnQParameter + "\" value=\"");
+            builder.Append(text);
+            builder.AppendHtml("\" />");
+        }
+
         builder.AppendHtml("<button type=\"submit\" class=\"btn btn-sm btn-outline-secondary\">");
         builder.Append(T[MeetCodesTextKeys.ActionMarkNotACourse].Value);
         builder.AppendHtml("</button></form>");

@@ -42,20 +42,20 @@ public sealed class MarkMeetCodeNotACourseUseCase(
             || Expected(fields) is not { } expected
             || expected.State == MeetCodeExpectedState.Marked)
         {
-            return Result(MeetCodeChangeOutcome.Malformed, MeetCodeList.Unassigned, returnPage);
+            return Result(MeetCodeChangeOutcome.Malformed, MeetCodeList.Unassigned, returnPage, form);
         }
 
         var code = meetingCode!;
         var link = await links.GetByCodeAsync(code, cancellationToken);
         if (link is null && !await links.CodeHasMeetingsAsync(code, cancellationToken))
         {
-            return Result(MeetCodeChangeOutcome.CodeNotFound, MeetCodeList.Unassigned, returnPage);
+            return Result(MeetCodeChangeOutcome.CodeNotFound, MeetCodeList.Unassigned, returnPage, form);
         }
 
         var current = Current(link);
         if (current != expected)
         {
-            return Result(MeetCodeChangeOutcome.StateChanged, ListOf(current.State), 0);
+            return Result(MeetCodeChangeOutcome.StateChanged, ListOf(current.State), 0, form);
         }
 
         var now = timeProvider.GetUtcNow();
@@ -78,7 +78,7 @@ public sealed class MarkMeetCodeNotACourseUseCase(
             cancellationToken);
 
         return committed
-            ? Result(MeetCodeChangeOutcome.Marked, ListOf(expected.State), returnPage)
-            : Result(MeetCodeChangeOutcome.StateChanged, ListOf(expected.State), 0);
+            ? Result(MeetCodeChangeOutcome.Marked, ListOf(expected.State), returnPage, form)
+            : Result(MeetCodeChangeOutcome.StateChanged, ListOf(expected.State), 0, form);
     }
 }

@@ -31,7 +31,7 @@
     {
         <p>
             <label for="journal-course" class="form-label">@T[JournalTextKeys.CourseLabel]</label>
-            <select id="journal-course" name="@JournalController.CourseIdParameter" class="form-select">
+            <select id="journal-course" name="@JournalController.CourseIdParameter" class="form-select" data-narrow="select" data-narrow-label="@T[PickerTextKeys.Label]" data-narrow-none="@T[PickerTextKeys.NothingFound]">
                 <option value="">@T[JournalTextKeys.ChooseCourse]</option>
                 @foreach (var course in Model.Courses)
                 {
@@ -49,6 +49,10 @@
     <input type="hidden" name="@JournalController.ViewParameter" value="@viewText" />
     <button type="submit" class="btn btn-primary">@T[JournalTextKeys.Show]</button>
 </form>
+@if (!Model.NoCoursesStored)
+{
+    <script src="~/js/picker-narrow.js"></script>
+}
 
 @* US-060 spec FR-003.2, I-1: the selected course's header line, above the journal table. *@
 @if (Model.Notice is { } notice)

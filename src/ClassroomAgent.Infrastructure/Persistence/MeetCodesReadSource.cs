@@ -1,6 +1,7 @@
 using ClassroomAgent.Application.Models;
 using ClassroomAgent.Application.Models.Dtos;
 using ClassroomAgent.Application.Ports;
+using ClassroomAgent.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClassroomAgent.Infrastructure.Persistence;
@@ -13,16 +14,11 @@ namespace ClassroomAgent.Infrastructure.Persistence;
 /// </summary>
 public sealed class MeetCodesReadSource(ClassroomAgentDbContext db) : IMeetCodesReadSource
 {
-    public async Task<MeetCodeListCounts> GetCountsAsync(CancellationToken cancellationToken)
+    public async Task<MeetCodeListCounts> GetCountsAsync(string? search, CancellationToken cancellationToken)
     {
-        var unassigned = await db.MeetSessions
-            .AsNoTracking()
-            .Where(s => !db.MeetingCodeLinks.Any(l => l.MeetingCode == s.MeetingCode))
-            .Select(s => s.MeetingCode)
-            .Distinct()
-            .CountAsync(cancellationToken);
-        var linked = await db.MeetingCodeLinks.AsNoTracking().CountAsync(l => l.CourseId != null, cancellationToken);
-        var marked = await db.MeetingCodeLinks.AsNoTracking().CountAsync(l => l.CourseId == null, cancellationToken);
+        var unassigned = await UnassignedCodes(search).CountAsync(cancellationToken);
+        var linked = await LinkedLinks(search).CountAsync(cancellationToken);
+        var marked = await MarkedLinks(search).CountAsync(cancellationToken);
         return new MeetCodeListCounts(unassigned, linked, marked);
     }
 
@@ -30,10 +26,20 @@ public sealed class MeetCodesReadSource(ClassroomAgentDbContext db) : IMeetCodes
         int page,
         int size,
         TimeZoneInfo zone,
+        string? search,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(zone);
-        var total = (await GetCountsAsync(cancellationToken)).Unassigned;
+        var total = (await GetCountsAsync(search, cancellationToken)).Unassigned;
+
+        // US-070 db-design §4: the search stays out of the SQL text below. The LINQ filter, the one definition of a match,
+        // gives the codes (one command), and they go in as one array parameter.
+        var hasSearch = search is not null;
+        string[] matchingCodes = hasSearch ? await UnassignedCodes(search).ToArrayAsync(cancellationToken) : [];
+        if (hasSearch && matchingCodes.Length == 0)
+        {
+            return new PagedRows<UnassignedCodeRow>([], total);
+        }
 
         // The school's calendar day on both sides, converted by PostgreSQL from the IANA id (db-design §5.2); the
         // same rule as RosterOnDate. An organizer with a teacher membership covering the meeting's day is a candidate;
@@ -67,6 +73,7 @@ public sealed class MeetCodesReadSource(ClassroomAgentDbContext db) : IMeetCodes
                            count(*)::integer AS meeting_count
                     FROM meet_session s
                     WHERE NOT EXISTS (SELECT 1 FROM meeting_code_link l WHERE l.meeting_code = s.meeting_code)
+                      AND (NOT {hasSearch} OR s.meeting_code = ANY({matchingCodes}))
                     GROUP BY s.meeting_code
                 ) c
                 ORDER BY has_candidate DESC, c.last_started_at DESC, c.meeting_code COLLATE "C"
@@ -79,19 +86,7 @@ public sealed class MeetCodesReadSource(ClassroomAgentDbContext db) : IMeetCodes
         }
 
         var pageCodes = codes.Select(c => c.MeetingCode).ToList();
-        var organizers = await db.MeetSessions
-            .AsNoTracking()
-            .Where(s => pageCodes.Contains(s.MeetingCode))
-            .Select(s => new { s.MeetingCode, s.OrganizerEmail })
-            .Distinct()
-            .ToListAsync(cancellationToken);
-        var organizersByCode = organizers
-            .GroupBy(o => o.MeetingCode, StringComparer.Ordinal)
-            .ToDictionary(
-                g => g.Key,
-                // US-038 spec I-9: an erased or excluded organizer is not listed.
-                g => g.Select(o => o.OrganizerEmail).OfType<string>().OrderBy(e => e, StringComparer.Ordinal).ToList(),
-                StringComparer.Ordinal);
+        var organizersByCode = await LoadOrganizersAsync(pageCodes, cancellationToken);
 
         // Connections per code: distinct lowered emails with a count each, so the page never pulls individual connections.
         var emailGroups = await db.MeetParticipations
@@ -129,12 +124,10 @@ public sealed class MeetCodesReadSource(ClassroomAgentDbContext db) : IMeetCodes
         return new PagedRows<UnassignedCodeRow>(rows, total);
     }
 
-    public async Task<PagedRows<LinkedCodeRow>> GetLinkedPageAsync(int page, int size, CancellationToken cancellationToken)
+    public async Task<PagedRows<LinkedCodeRow>> GetLinkedPageAsync(int page, int size, string? search, CancellationToken cancellationToken)
     {
-        var total = await db.MeetingCodeLinks.AsNoTracking().CountAsync(l => l.CourseId != null, cancellationToken);
-        var items = await db.MeetingCodeLinks
-            .AsNoTracking()
-            .Where(l => l.CourseId != null)
+        var total = await LinkedLinks(search).CountAsync(cancellationToken);
+        var items = await LinkedLinks(search)
             .Select(l => new
             {
                 l.MeetingCode,
@@ -162,11 +155,14 @@ public sealed class MeetCodesReadSource(ClassroomAgentDbContext db) : IMeetCodes
             items.SelectMany(i => new[] { i.LinkedByAppUserId, i.ConfirmedByAppUserId }).OfType<long>(),
             cancellationToken);
 
+        var organizers = await LoadOrganizersAsync(items.Select(i => i.MeetingCode).ToList(), cancellationToken);
+
         AccountRef? Ref(long? id) => id is null ? null : new AccountRef(id.Value, accounts.GetValueOrDefault(id.Value));
 
         var rows = items
             .Select(i => new LinkedCodeRow(
                 i.MeetingCode,
+                OrganizersOf(organizers, i.MeetingCode),
                 i.CourseId,
                 i.CourseName,
                 i.CourseSection,
@@ -181,12 +177,10 @@ public sealed class MeetCodesReadSource(ClassroomAgentDbContext db) : IMeetCodes
         return new PagedRows<LinkedCodeRow>(rows, total);
     }
 
-    public async Task<PagedRows<MarkedCodeRow>> GetMarkedPageAsync(int page, int size, CancellationToken cancellationToken)
+    public async Task<PagedRows<MarkedCodeRow>> GetMarkedPageAsync(int page, int size, string? search, CancellationToken cancellationToken)
     {
-        var total = await db.MeetingCodeLinks.AsNoTracking().CountAsync(l => l.CourseId == null, cancellationToken);
-        var items = await db.MeetingCodeLinks
-            .AsNoTracking()
-            .Where(l => l.CourseId == null)
+        var total = await MarkedLinks(search).CountAsync(cancellationToken);
+        var items = await MarkedLinks(search)
             .Select(l => new
             {
                 l.MeetingCode,
@@ -204,9 +198,11 @@ public sealed class MeetCodesReadSource(ClassroomAgentDbContext db) : IMeetCodes
             .ToListAsync(cancellationToken);
 
         var accounts = await LoadEmailsAsync(items.Select(i => i.MarkedByAppUserId), cancellationToken);
+        var organizers = await LoadOrganizersAsync(items.Select(i => i.MeetingCode).ToList(), cancellationToken);
         var rows = items
             .Select(i => new MarkedCodeRow(
                 i.MeetingCode,
+                OrganizersOf(organizers, i.MeetingCode),
                 new AccountRef(i.MarkedByAppUserId, accounts.GetValueOrDefault(i.MarkedByAppUserId)),
                 i.MarkedAt,
                 i.MeetingCount,
@@ -227,6 +223,98 @@ public sealed class MeetCodesReadSource(ClassroomAgentDbContext db) : IMeetCodes
             .Where(c => c.AbsenceMark != null && c.AbsentSince != null)
             .Select(c => new MeetCourseAbsenceRecord(c.Id, c.AbsenceMark!.Value, c.AbsentSince!.Value))
             .ToListAsync(cancellationToken);
+
+    /// <summary>US-070 db-design §4: the distinct unassigned codes holding every word, by code or by organizer.</summary>
+    private IQueryable<string> UnassignedCodes(string? search)
+    {
+        var sessions = db.MeetSessions
+            .AsNoTracking()
+            .Where(s => !db.MeetingCodeLinks.Any(l => l.MeetingCode == s.MeetingCode));
+        foreach (var word in SearchMatch.Words(search))
+        {
+            var byOrganizer = CodesByOrganizer(word);
+            sessions = sessions.Where(SearchMatch.AnyOf<MeetSession>(
+                SearchMatch.InCode<MeetSession>(s => s.MeetingCode, word),
+                s => byOrganizer.Contains(s.MeetingCode)));
+        }
+
+        return sessions.Select(s => s.MeetingCode).Distinct();
+    }
+
+    /// <summary>US-070 db-design §4: linked codes holding every word, by code, by organizer or by the linked course.</summary>
+    private IQueryable<MeetingCodeLink> LinkedLinks(string? search)
+    {
+        var links = db.MeetingCodeLinks.AsNoTracking().Where(l => l.CourseId != null);
+        foreach (var word in SearchMatch.Words(search))
+        {
+            var byOrganizer = CodesByOrganizer(word);
+            var byCourse = db.Courses
+                .AsNoTracking()
+                .Where(SearchMatch.AnyOf(
+                    SearchMatch.InField<Course>(c => c.Name, word),
+                    SearchMatch.InField<Course>(c => c.Section, word)))
+                .Select(c => c.Id);
+            links = links.Where(SearchMatch.AnyOf<MeetingCodeLink>(
+                SearchMatch.InCode<MeetingCodeLink>(l => l.MeetingCode, word),
+                l => byOrganizer.Contains(l.MeetingCode),
+                l => l.CourseId != null && byCourse.Contains(l.CourseId.Value)));
+        }
+
+        return links;
+    }
+
+    /// <summary>US-070 db-design §4: codes marked "not a course" holding every word, by code or by organizer.</summary>
+    private IQueryable<MeetingCodeLink> MarkedLinks(string? search)
+    {
+        var links = db.MeetingCodeLinks.AsNoTracking().Where(l => l.CourseId == null);
+        foreach (var word in SearchMatch.Words(search))
+        {
+            var byOrganizer = CodesByOrganizer(word);
+            links = links.Where(SearchMatch.AnyOf<MeetingCodeLink>(
+                SearchMatch.InCode<MeetingCodeLink>(l => l.MeetingCode, word),
+                l => byOrganizer.Contains(l.MeetingCode)));
+        }
+
+        return links;
+    }
+
+    /// <summary>
+    /// The codes with a session whose organizer holds the word: the column the screen reads, where an erased or excluded
+    /// organizer is stored as null (US-038 I-9), so that email cannot match (US-070 AC-005).
+    /// </summary>
+    private IQueryable<string> CodesByOrganizer(string word) =>
+        db.MeetSessions
+            .AsNoTracking()
+            .Where(SearchMatch.InField<MeetSession>(s => s.OrganizerEmail, word))
+            .Select(s => s.MeetingCode);
+
+    /// <summary>
+    /// US-070 db-design §5: one command for a page's organizers, by code: distinct, in ordinal order; US-038 spec I-9: an
+    /// erased or excluded organizer is not listed. No command for an empty page.
+    /// </summary>
+    private async Task<Dictionary<string, List<string>>> LoadOrganizersAsync(List<string> codes, CancellationToken cancellationToken)
+    {
+        if (codes.Count == 0)
+        {
+            return new Dictionary<string, List<string>>(StringComparer.Ordinal);
+        }
+
+        var organizers = await db.MeetSessions
+            .AsNoTracking()
+            .Where(s => codes.Contains(s.MeetingCode))
+            .Select(s => new { s.MeetingCode, s.OrganizerEmail })
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        return organizers
+            .GroupBy(o => o.MeetingCode, StringComparer.Ordinal)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(o => o.OrganizerEmail).OfType<string>().OrderBy(e => e, StringComparer.Ordinal).ToList(),
+                StringComparer.Ordinal);
+    }
+
+    private static IReadOnlyList<string> OrganizersOf(Dictionary<string, List<string>> organizers, string code) =>
+        organizers.TryGetValue(code, out var list) ? list : [];
 
     private async Task<Dictionary<long, string>> LoadEmailsAsync(IEnumerable<long> ids, CancellationToken cancellationToken)
     {

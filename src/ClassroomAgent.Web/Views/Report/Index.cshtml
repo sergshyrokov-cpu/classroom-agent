@@ -41,7 +41,7 @@
     {
         <p>
             <label for="report-course" class="form-label">@T[JournalTextKeys.CourseLabel]</label>
-            <select id="report-course" name="@ReportController.CourseIdParameter" class="form-select">
+            <select id="report-course" name="@ReportController.CourseIdParameter" class="form-select" data-narrow="select" data-narrow-label="@T[PickerTextKeys.Label]" data-narrow-none="@T[PickerTextKeys.NothingFound]">
                 <option value="">@T[JournalTextKeys.ChooseCourse]</option>
                 @foreach (var course in Model.Courses)
                 {
@@ -58,6 +58,10 @@
     </p>
     <button type="submit" class="btn btn-primary">@T[JournalTextKeys.Show]</button>
 </form>
+@if (!Model.NoCoursesStored)
+{
+    <script src="~/js/picker-narrow.js"></script>
+}
 
 @if (Model.Report is { } report)
 {

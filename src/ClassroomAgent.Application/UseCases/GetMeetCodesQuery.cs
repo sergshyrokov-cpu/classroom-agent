@@ -34,22 +34,36 @@ public sealed class GetMeetCodesQuery(
         var list = One(request.List, ParseList, MeetCodeList.Unassigned);
         var page = One(request.Page, value => Whole(value, 0, int.MaxValue), 0);
         var size = One(request.Size, value => Whole(value, 1, MaxSize), DefaultSize);
+
+        // US-070 VR-003, I-5, I-13: a refused text reads nothing and takes precedence over every other message.
+        if (CourseListQueryRules.ReadSearch(request.Q, out var search) is { } refused)
+        {
+            return new MeetCodesPageResult(
+                true,
+                new MeetCodesPageModel(
+                    list ?? MeetCodeList.Unassigned, null, [], [], [], page ?? 0, size ?? DefaultSize, 0, 0, null, null, refused));
+        }
+
         if (list is not { } chosen || page is not { } number || size is not { } pageSize)
         {
-            var defaults = await BuildAsync(MeetCodeList.Unassigned, 0, DefaultSize, MeetCodesMessageKey.QueryInvalid, cancellationToken);
+            var defaults = await BuildAsync(MeetCodeList.Unassigned, 0, DefaultSize, MeetCodesMessageKey.QueryInvalid, search, cancellationToken);
             return new MeetCodesPageResult(true, defaults);
         }
 
-        return new MeetCodesPageResult(false, await BuildAsync(chosen, number, pageSize, message, cancellationToken));
+        return new MeetCodesPageResult(false, await BuildAsync(chosen, number, pageSize, message, search, cancellationToken));
     }
 
-    /// <summary>A list and page chosen by the host (after a write, a stale state or an unknown code), default size.</summary>
+    /// <summary>
+    /// A list and page chosen by the host (after a write, a stale state or an unknown code), default size, with the search
+    /// already validated (US-070 FR-005).
+    /// </summary>
     public Task<MeetCodesPageModel> ExecuteAsync(
         MeetCodeList list,
         int page,
         MeetCodesMessageKey? message,
+        string? search,
         CancellationToken cancellationToken) =>
-        BuildAsync(list, Math.Max(page, 0), DefaultSize, message, cancellationToken);
+        BuildAsync(list, Math.Max(page, 0), DefaultSize, message, search, cancellationToken);
 
     /// <summary>The query value of a list (api-design §2.2).</summary>
     public static string ListValue(MeetCodeList list) => list switch
@@ -61,12 +75,24 @@ public sealed class GetMeetCodesQuery(
 
     private async Task<MeetCodesPageModel> BuildAsync(
         MeetCodeList list,
-        int page,
+        int requestedPage,
         int size,
         MeetCodesMessageKey? message,
+        string? search,
         CancellationToken cancellationToken)
     {
-        var counts = await reads.GetCountsAsync(cancellationToken);
+        var counts = await reads.GetCountsAsync(search, cancellationToken);
+
+        // US-070 I-6, api-design D-4: a page past the last shows the last, known from the counts before any row is read.
+        var shownCount = list switch
+        {
+            MeetCodeList.Linked => counts.Linked,
+            MeetCodeList.NotACourse => counts.NotACourse,
+            _ => counts.Unassigned,
+        };
+        var lastPage = (int)(((long)shownCount + size - 1) / size) - 1;
+        var page = Math.Clamp(requestedPage, 0, Math.Max(lastPage, 0));
+
         IReadOnlyList<UnassignedCodeItem> unassigned = [];
         IReadOnlyList<LinkedCodeItem> linked = [];
         IReadOnlyList<NotACourseCodeItem> marked = [];
@@ -74,24 +100,24 @@ public sealed class GetMeetCodesQuery(
         switch (list)
         {
             case MeetCodeList.Linked:
-                var linkedRows = await reads.GetLinkedPageAsync(page, size, cancellationToken);
+                var linkedRows = await reads.GetLinkedPageAsync(page, size, search, cancellationToken);
                 linked = linkedRows.Rows.Select(Map).ToList();
                 total = linkedRows.TotalElements;
                 break;
             case MeetCodeList.NotACourse:
-                var markedRows = await reads.GetMarkedPageAsync(page, size, cancellationToken);
+                var markedRows = await reads.GetMarkedPageAsync(page, size, search, cancellationToken);
                 marked = markedRows.Rows.Select(Map).ToList();
                 total = markedRows.TotalElements;
                 break;
             default:
-                var unassignedRows = await reads.GetUnassignedPageAsync(page, size, zone.Zone, cancellationToken);
+                var unassignedRows = await reads.GetUnassignedPageAsync(page, size, zone.Zone, search, cancellationToken);
                 unassigned = await MapAsync(unassignedRows.Rows, cancellationToken);
                 total = unassignedRows.TotalElements;
                 break;
         }
 
         var totalPages = (int)((total + size - 1) / size);
-        return new MeetCodesPageModel(list, counts, unassigned, linked, marked, page, size, total, totalPages, message);
+        return new MeetCodesPageModel(list, counts, unassigned, linked, marked, page, size, total, totalPages, message, search, null);
     }
 
     private async Task<IReadOnlyList<UnassignedCodeItem>> MapAsync(
@@ -133,6 +159,7 @@ public sealed class GetMeetCodesQuery(
     private LinkedCodeItem Map(LinkedCodeRow row) =>
         new(
             row.MeetingCode,
+            row.OrganizerEmails,
             new CourseOption(row.CourseId, row.CourseName, row.CourseSection),
             row.LinkedAutomatically,
             row.LinkedAutomatically || row.LinkedBy is null ? null : Label(row.LinkedBy),
@@ -146,6 +173,7 @@ public sealed class GetMeetCodesQuery(
     private NotACourseCodeItem Map(MarkedCodeRow row) =>
         new(
             row.MeetingCode,
+            row.OrganizerEmails,
             Label(row.MarkedBy),
             Local(row.MarkedAt),
             row.MeetingCount,

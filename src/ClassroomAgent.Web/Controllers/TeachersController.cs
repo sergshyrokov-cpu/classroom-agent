@@ -16,7 +16,7 @@ namespace ClassroomAgent.Web.Controllers;
 /// §2 row "Просмотр курсов и участников", Admin and Dean (spec FR-012).
 /// </summary>
 /// <remarks>
-/// HTTP mapping only (AD-3): every occurrence of <c>status</c> and <c>page</c> is handed to the query, which decides
+/// HTTP mapping only (AD-3): every occurrence of <c>status</c>, <c>page</c> and <c>q</c> is handed to the query, which decides
 /// "exactly one value" (api-design §2.3). A refusal answers <c>400</c> with the page itself, never the host's error page
 /// (api-design §2.4). Other parameters are not collected and so never echoed (spec VR-003). Nothing is written and
 /// nothing is guarded: viewing is permitted in read-only mode (spec FR-013).
@@ -28,11 +28,15 @@ public sealed class TeachersController(GetTeacherListQuery teachers, ILogger<Tea
 
     public const string PageParameter = "page";
 
+    public const string SearchParameter = "q";
+
     [HttpGet(SignInRoutes.Teachers)]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
         var request = new TeacherListRequest(
-            Request.Query[StatusParameter].ToArray(), Request.Query[PageParameter].ToArray());
+            Request.Query[StatusParameter].ToArray(),
+            Request.Query[PageParameter].ToArray(),
+            Request.Query[SearchParameter].ToArray());
 
         var result = await teachers.ExecuteAsync(request, cancellationToken);
         var page = result.Page;
@@ -54,8 +58,12 @@ public sealed class TeachersController(GetTeacherListQuery teachers, ILogger<Tea
     }
 
     /// <summary>Spec FR-016: the parameter a message key is about, for the log line.</summary>
-    private static string ParameterOf(TeacherListMessageKey key) =>
-        key == TeacherListMessageKey.StatusMalformed ? StatusParameter : PageParameter;
+    private static string ParameterOf(TeacherListMessageKey key) => key switch
+    {
+        TeacherListMessageKey.StatusMalformed => StatusParameter,
+        TeacherListMessageKey.PageMalformed => PageParameter,
+        _ => SearchParameter,
+    };
 
     /// <summary>The signed-in account from the session, never a request value (spec VR-004); the policy guarantees one.</summary>
     private long ActorId() =>

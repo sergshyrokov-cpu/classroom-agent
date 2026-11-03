@@ -28,7 +28,7 @@ public sealed class TeacherListSourceTests(PostgreSqlFixture database)
 
     private static async Task<IReadOnlyList<(long Id, int Count)>> ListAsync(
         ITeacherListSource source, CourseState? state, CancellationToken ct) =>
-        (await source.GetTeacherPageAsync(state, 0, 50, ct)).Select(r => (r.ParticipantId, r.CourseCount)).ToList();
+        (await source.GetTeacherPageAsync(state, null, 0, 50, ct)).Select(r => (r.ParticipantId, r.CourseCount)).ToList();
 
     /// <summary>
     /// AC-001, AC-002, AC-016, FR-002, FR-003: ACTIVE lists the current teachers of active courses with their active
@@ -47,10 +47,10 @@ public sealed class TeacherListSourceTests(PostgreSqlFixture database)
             Assert.Equal([(w.Koval, 1), (w.Ukrainka, 1)], await ListAsync(source, CourseState.Archived, ct));
             Assert.Equal([(w.Koval, 1), (w.Ukrainka, 2), (w.Shevchenko, 2)], await ListAsync(source, null, ct));
             Assert.Empty(await ListAsync(source, CourseState.Declined, ct));
-            Assert.Equal(2, await source.CountTeachersAsync(CourseState.Active, ct));
-            Assert.Equal(2, await source.CountTeachersAsync(CourseState.Archived, ct));
-            Assert.Equal(3, await source.CountTeachersAsync(null, ct));
-            Assert.Equal(0, await source.CountTeachersAsync(CourseState.Declined, ct));
+            Assert.Equal(2, await source.CountTeachersAsync(CourseState.Active, null, ct));
+            Assert.Equal(2, await source.CountTeachersAsync(CourseState.Archived, null, ct));
+            Assert.Equal(3, await source.CountTeachersAsync(null, null, ct));
+            Assert.Equal(0, await source.CountTeachersAsync(CourseState.Declined, null, ct));
         });
     }
 
@@ -90,7 +90,7 @@ public sealed class TeacherListSourceTests(PostgreSqlFixture database)
 
         await host.WithTeacherListSourceAsync(async source =>
         {
-            var page = await source.GetTeacherPageAsync(CourseState.Active, 0, 50, ct);
+            var page = await source.GetTeacherPageAsync(CourseState.Active, null, 0, 50, ct);
 
             Assert.Equal(
                 new TeacherListRecord(w.Shevchenko, "Шевченко", "Тарас", Tl.ShevchenkoEmail, 2),
@@ -123,7 +123,7 @@ public sealed class TeacherListSourceTests(PostgreSqlFixture database)
 
         await host.WithTeacherListSourceAsync(async source =>
         {
-            var order = (await source.GetTeacherPageAsync(CourseState.Active, 0, 50, ct)).Select(r => r.ParticipantId);
+            var order = (await source.GetTeacherPageAsync(CourseState.Active, null, 0, 50, ct)).Select(r => r.ParticipantId);
 
             Assert.Equal(
                 [andriienkoLowerId, andriienkoHigherId, hnatiuk, gudz, ivanenko, zoe, nobody, emptyParts],
@@ -162,7 +162,7 @@ public sealed class TeacherListSourceTests(PostgreSqlFixture database)
             choice = (await source.GetTeacherChoiceAsync(ct)).Select(p => p.ParticipantId).ToList());
         IReadOnlyList<long> teachers = [];
         await host.WithTeacherListSourceAsync(async source =>
-            teachers = (await source.GetTeacherPageAsync(null, 0, 50, ct)).Select(r => r.ParticipantId).ToList());
+            teachers = (await source.GetTeacherPageAsync(null, null, 0, 50, ct)).Select(r => r.ParticipantId).ToList());
 
         Assert.Equal(8, choice.Count);
         Assert.Equal(choice, teachers);
@@ -178,11 +178,11 @@ public sealed class TeacherListSourceTests(PostgreSqlFixture database)
 
         await host.WithTeacherListSourceAsync(async source =>
         {
-            Assert.Equal(120, await source.CountTeachersAsync(CourseState.Active, ct));
-            Assert.Equal(ids.Take(50), (await source.GetTeacherPageAsync(CourseState.Active, 0, 50, ct)).Select(r => r.ParticipantId));
-            Assert.Equal(ids.Skip(50).Take(50), (await source.GetTeacherPageAsync(CourseState.Active, 50, 50, ct)).Select(r => r.ParticipantId));
-            Assert.Equal(ids.Skip(100), (await source.GetTeacherPageAsync(CourseState.Active, 100, 50, ct)).Select(r => r.ParticipantId));
-            Assert.Empty(await source.GetTeacherPageAsync(CourseState.Active, 150, 50, ct));
+            Assert.Equal(120, await source.CountTeachersAsync(CourseState.Active, null, ct));
+            Assert.Equal(ids.Take(50), (await source.GetTeacherPageAsync(CourseState.Active, null, 0, 50, ct)).Select(r => r.ParticipantId));
+            Assert.Equal(ids.Skip(50).Take(50), (await source.GetTeacherPageAsync(CourseState.Active, null, 50, 50, ct)).Select(r => r.ParticipantId));
+            Assert.Equal(ids.Skip(100), (await source.GetTeacherPageAsync(CourseState.Active, null, 100, 50, ct)).Select(r => r.ParticipantId));
+            Assert.Empty(await source.GetTeacherPageAsync(CourseState.Active, null, 150, 50, ct));
         });
     }
 
@@ -202,7 +202,7 @@ public sealed class TeacherListSourceTests(PostgreSqlFixture database)
         {
             foreach (var state in new CourseState?[] { CourseState.Active, CourseState.Archived, null })
             {
-                foreach (var r in await source.GetTeacherPageAsync(state, 0, 50, ct))
+                foreach (var r in await source.GetTeacherPageAsync(state, null, 0, 50, ct))
                 {
                     counts[(r.ParticipantId, state)] = r.CourseCount;
                 }
@@ -234,8 +234,8 @@ public sealed class TeacherListSourceTests(PostgreSqlFixture database)
 
         await host.WithTeacherListSourceAsync(async source =>
         {
-            Assert.Equal(0, await source.CountTeachersAsync(null, ct));
-            Assert.Empty(await source.GetTeacherPageAsync(null, 0, 50, ct));
+            Assert.Equal(0, await source.CountTeachersAsync(null, null, ct));
+            Assert.Empty(await source.GetTeacherPageAsync(null, null, 0, 50, ct));
         });
     }
 
@@ -267,10 +267,10 @@ public sealed class TeacherListSourceTests(PostgreSqlFixture database)
             commands.Add(counter.Count - before);
         }
 
-        await Count(() => source.CountTeachersAsync(CourseState.Active, ct));
-        await Count(() => source.CountTeachersAsync(null, ct));
-        await Count(() => source.GetTeacherPageAsync(CourseState.Active, 0, 50, ct));
-        await Count(() => source.GetTeacherPageAsync(null, 100, 50, ct));
+        await Count(() => source.CountTeachersAsync(CourseState.Active, null, ct));
+        await Count(() => source.CountTeachersAsync(null, null, ct));
+        await Count(() => source.GetTeacherPageAsync(CourseState.Active, null, 0, 50, ct));
+        await Count(() => source.GetTeacherPageAsync(null, null, 100, 50, ct));
 
         Assert.Equal([1, 1, 1, 1], commands);
     }
@@ -286,8 +286,8 @@ public sealed class TeacherListSourceTests(PostgreSqlFixture database)
 
         await host.WithTeacherListSourceAsync(async source =>
         {
-            await source.CountTeachersAsync(CourseState.Active, ct);
-            await source.GetTeacherPageAsync(null, 0, 50, ct);
+            await source.CountTeachersAsync(CourseState.Active, null, ct);
+            await source.GetTeacherPageAsync(null, null, 0, 50, ct);
         });
 
         Assert.Equal(before, await host.CourseListFingerprintAsync(ct));

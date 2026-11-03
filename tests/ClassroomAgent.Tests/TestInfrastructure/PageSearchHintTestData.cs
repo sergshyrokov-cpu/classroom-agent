@@ -18,8 +18,16 @@ public static partial class PageSearchHintTestData
 
         public const string CourseList = "course-list";
 
-        public const string PagedList = "paged-list";
+        public const string TeacherList = "teacher-list";
+
+        public const string MeetCodes = "meet-codes";
     }
+
+    /// <summary>The list-field template of key <c>PageSearchHint.ListField</c>, Ukrainian; <c>{0}</c> is the search field's label.</summary>
+    public const string ListFieldUk = "У цьому списку — поле «{0}» нижче (Ctrl+F бачить лише показані рядки)";
+
+    /// <summary>The list-field template, English.</summary>
+    public const string ListFieldEn = "In this list: the \"{0}\" field below (Ctrl+F sees only the rows shown)";
 
     /// <summary>Spec FR-003, by variant and language; the outer «» of the specification are not part of the text.</summary>
     public static string Expected(string variant, string language) => (variant, language) switch
@@ -29,26 +37,27 @@ public static partial class PageSearchHintTestData
         (Variants.Ordinary, "en") =>
             "Search this page: Ctrl+F (⌘F on Mac); on a phone — browser menu → \"Find in page\".",
         (Variants.CourseList, "uk") =>
-            "Курс шукайте в полі «Пошук за назвою або розділом» нижче — воно шукає в усьому списку; "
-            + "Ctrl+F (на Mac — ⌘F) знаходить лише показані рядки.",
+            "У цьому списку — поле «Пошук за назвою або розділом» нижче (Ctrl+F бачить лише показані рядки)",
         (Variants.CourseList, "en") =>
-            "Find a course in the \"Search by name or section\" field below — it searches the whole list; "
-            + "Ctrl+F (⌘F on Mac) finds only the rows shown.",
-        (Variants.PagedList, "uk") =>
-            "Ctrl+F (на Mac — ⌘F; на телефоні — меню браузера → «Знайти на сторінці») шукає лише серед показаних "
-            + "рядків; решта — на наступних сторінках списку (кнопки внизу).",
-        (Variants.PagedList, "en") =>
-            "Ctrl+F (⌘F on Mac; on a phone — browser menu → \"Find in page\") searches only the rows shown; "
-            + "the rest are on the next pages of the list (buttons below).",
+            "In this list: the \"Search by name or section\" field below (Ctrl+F sees only the rows shown)",
+        (Variants.TeacherList, "uk") =>
+            "У цьому списку — поле «Пошук за ім'ям або email» нижче (Ctrl+F бачить лише показані рядки)",
+        (Variants.TeacherList, "en") =>
+            "In this list: the \"Search by name or email\" field below (Ctrl+F sees only the rows shown)",
+        (Variants.MeetCodes, "uk") =>
+            "У цьому списку — поле «Пошук за кодом, організатором або курсом» нижче (Ctrl+F бачить лише показані рядки)",
+        (Variants.MeetCodes, "en") =>
+            "In this list: the \"Search by code, organizer or course\" field below (Ctrl+F sees only the rows shown)",
         _ => throw new ArgumentOutOfRangeException(nameof(variant), $"{variant}/{language}"),
     };
 
-    /// <summary>Every (variant, language) pair, for the translation tests.</summary>
+    /// <summary>
+    /// The (variant, language) pairs that are whole entries of the translation files; the list variants are composed from
+    /// the <see cref="ListFieldUk"/> / <see cref="ListFieldEn"/> template and are checked apart.
+    /// </summary>
     public static IReadOnlyList<(string Variant, string Language)> AllTexts { get; } =
     [
         (Variants.Ordinary, "uk"), (Variants.Ordinary, "en"),
-        (Variants.CourseList, "uk"), (Variants.CourseList, "en"),
-        (Variants.PagedList, "uk"), (Variants.PagedList, "en"),
     ];
 
     /// <summary>Fragments of the texts that a view holding a literal would contain (FR-008).</summary>

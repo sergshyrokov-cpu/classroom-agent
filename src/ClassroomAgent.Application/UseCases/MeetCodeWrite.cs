@@ -26,6 +26,9 @@ internal static class MeetCodeWrite
 
     public const string ReturnPageField = "returnPage";
 
+    /// <summary>US-070 api-design D-2: read apart from <see cref="KnownFields"/>, as repeating it must not refuse the action.</summary>
+    public const string ReturnQField = "returnQ";
+
     private static readonly string[] KnownFields = [CourseIdField, ExpectedStateField, ExpectedCourseIdField, ReturnPageField];
 
     /// <summary>
@@ -157,8 +160,16 @@ internal static class MeetCodeWrite
         _ => MeetCodeList.Unassigned,
     };
 
-    public static MeetCodeChangeResult Result(MeetCodeChangeOutcome outcome, MeetCodeList list, int returnPage) =>
-        new(outcome, list, returnPage);
+    public static MeetCodeChangeResult Result(MeetCodeChangeOutcome outcome, MeetCodeList list, int returnPage, MeetCodeFormInput form) =>
+        new(
+            outcome,
+            list,
+            returnPage,
+            ReturnQ(form.Fields.Where(field => string.Equals(field.Key, ReturnQField, StringComparison.Ordinal)).Select(field => field.Value).ToList()));
+
+    /// <summary>US-070 FR-005.5: the validated text; a value failing VR-001 is simply no search, and nothing says so.</summary>
+    public static string? ReturnQ(IReadOnlyList<string?> values) =>
+        CourseListQueryRules.ReadSearch(values, out var text) is null ? text : null;
 
     /// <summary>
     /// Stages the change and its audit row and commits them in one transaction (AD-7); a concurrent change found at the

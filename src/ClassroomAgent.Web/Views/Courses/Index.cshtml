@@ -8,6 +8,17 @@
 
     // Spec FR-009: the language switcher returns to the effective query, never the raw one.
     ViewData[UiLanguageController.ReturnPathViewDataKey] = Model.ReturnPath;
+
+    void TeacherOptions()
+    {
+        <text>
+            <option value="">@T[CoursesTextKeys.FormAllTeachers]</option>
+            @foreach (var teacher in Model.TeacherChoice)
+            {
+                <option value="@teacher.ParticipantId.ToString(CultureInfo.InvariantCulture)" selected="@(teacher.ParticipantId == Model.SelectedTeacherId)">@TeacherLabel(teacher)</option>
+            }
+        </text>
+    }
 }
 
 @await Html.PartialAsync("_PageSearchHint", PageSearchHintTextKeys.CourseList)
@@ -29,20 +40,29 @@
     </p>
     <p>
         <label for="course-list-teacher" class="form-label">@T[CoursesTextKeys.FormTeacher]</label>
-        <select id="course-list-teacher" name="@CoursesController.TeacherIdParameter" class="form-select">
-            <option value="">@T[CoursesTextKeys.FormAllTeachers]</option>
-            @foreach (var teacher in Model.TeacherChoice)
-            {
-                <option value="@teacher.ParticipantId.ToString(CultureInfo.InvariantCulture)" selected="@(teacher.ParticipantId == Model.SelectedTeacherId)">@TeacherLabel(teacher)</option>
-            }
-        </select>
+        @if (Model.TeacherChoice.Count > 0)
+        {
+            <select id="course-list-teacher" name="@CoursesController.TeacherIdParameter" class="form-select" data-narrow="select" data-narrow-label="@T[PickerTextKeys.Label]" data-narrow-none="@T[PickerTextKeys.NothingFound]">
+                @{ TeacherOptions(); }
+            </select>
+        }
+        else
+        {
+            <select id="course-list-teacher" name="@CoursesController.TeacherIdParameter" class="form-select">
+                @{ TeacherOptions(); }
+            </select>
+        }
     </p>
     <p>
         <label for="course-list-search" class="form-label">@T[CoursesTextKeys.FormSearch]</label>
-        <input id="course-list-search" type="search" name="@CoursesController.SearchParameter" value="@Model.SearchText" maxlength="100" class="form-control" />
+        <input id="course-list-search" type="search" name="@CoursesController.SearchParameter" value="@Model.SearchText" maxlength="100" autocomplete="off" class="form-control" />
     </p>
     <button type="submit" class="btn btn-primary">@T[CoursesTextKeys.FormSubmit]</button>
 </form>
+@if (Model.TeacherChoice.Count > 0)
+{
+    <script src="~/js/picker-narrow.js"></script>
+}
 
 @if (Model.List is { } list)
 {

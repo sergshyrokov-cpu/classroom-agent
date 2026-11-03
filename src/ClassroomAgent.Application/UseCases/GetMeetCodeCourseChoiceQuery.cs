@@ -17,12 +17,14 @@ public sealed class GetMeetCodeCourseChoiceQuery(
     SchoolTimeZone zone)
 {
     /// <summary>
-    /// <paramref name="returnPage"/> is the raw value (malformed → 0). Result: <c>Malformed</c> for a code failing its shape,
+    /// <paramref name="returnPage"/> is the raw value (malformed → 0), <paramref name="returnQ"/> every raw occurrence
+    /// (failing VR-001 → no search, US-070 FR-005.5). Result: <c>Malformed</c> for a code failing its shape,
     /// a null model for an unknown code.
     /// </summary>
     public async Task<MeetCodeChoiceResult> ExecuteAsync(
         string? meetingCode,
         string? returnPage,
+        IReadOnlyList<string?> returnQ,
         MeetCodeFieldError? fieldError,
         CancellationToken cancellationToken)
     {
@@ -31,11 +33,12 @@ public sealed class GetMeetCodeCourseChoiceQuery(
             return new MeetCodeChoiceResult(true, null);
         }
 
+        var search = MeetCodeWrite.ReturnQ(returnQ);
         var code = meetingCode!;
         var link = await links.GetByCodeAsync(code, cancellationToken);
         if (link is null && !await links.CodeHasMeetingsAsync(code, cancellationToken))
         {
-            return new MeetCodeChoiceResult(false, null);
+            return new MeetCodeChoiceResult(false, null, search);
         }
 
         var (state, currentCourseId) = MeetCodeWrite.Current(link);
@@ -64,6 +67,9 @@ public sealed class GetMeetCodeCourseChoiceQuery(
             new MeetCodeCourseChoicePageModel(code, state, current, candidates, others, MeetCodeWrite.ReturnPage(returnPage), fieldError)
             {
                 Absences = absences,
-            });
+                ReturnQ = search,
+                CurrentList = MeetCodeWrite.ListOf(state),
+            },
+            search);
     }
 }

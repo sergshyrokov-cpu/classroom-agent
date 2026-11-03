@@ -12,4 +12,10 @@ public sealed record MeetCodeCourseChoicePageModel(
 {
     /// <summary>US-061 spec FR-003.2, OD-002 a: the mark of each marked course on the page, by course id.</summary>
     public IReadOnlyDictionary<long, CourseAbsence> Absences { get; init; } = new Dictionary<long, CourseAbsence>();
+
+    /// <summary>US-070 FR-005: the validated search of the list the user came from; null with none or when it failed VR-001.</summary>
+    public string? ReturnQ { get; init; }
+
+    /// <summary>US-070 I-7: the list the code is on now, where "cancel" returns.</summary>
+    public MeetCodeList CurrentList { get; init; }
 }

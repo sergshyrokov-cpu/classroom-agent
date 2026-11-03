@@ -27,6 +27,10 @@ public static class TeachersTextKeys
 
     public const string Empty = "Teachers.Empty";
 
+    public const string FormSearch = "Teachers.Form.Search";
+
+    public const string EmptyNoMatch = "Teachers.Empty.NoMatch";
+
     /// <summary>Api-design §2.8: rendered with the course list's texts for the same problem.</summary>
     public static string Validation(TeacherListMessageKey key) => "Courses.Validation." + key;
 }

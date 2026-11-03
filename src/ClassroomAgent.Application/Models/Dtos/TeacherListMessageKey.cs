@@ -6,4 +6,10 @@ public enum TeacherListMessageKey
     StatusMalformed,
 
     PageMalformed,
+
+    SearchRepeated,
+
+    SearchTooLong,
+
+    SearchControlCharacter,
 }

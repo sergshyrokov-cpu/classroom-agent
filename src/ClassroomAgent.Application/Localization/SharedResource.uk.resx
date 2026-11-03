@@ -528,8 +528,6 @@
   <data name="Database.Failure.AskAdmin" xml:space="preserve"><value>Подробиці знає адміністратор.</value></data>
   <data name="Database.Failure.ConnectionPageLink" xml:space="preserve"><value>Подробиці — на сторінці підключення</value></data>
   <data name="PageSearchHint.Ordinary" xml:space="preserve"><value>Пошук на сторінці: Ctrl+F (на Mac — ⌘F), на телефоні — меню браузера → «Знайти на сторінці».</value></data>
-  <data name="PageSearchHint.CourseList" xml:space="preserve"><value>Курс шукайте в полі «Пошук за назвою або розділом» нижче — воно шукає в усьому списку; Ctrl+F (на Mac — ⌘F) знаходить лише показані рядки.</value></data>
-  <data name="PageSearchHint.PagedList" xml:space="preserve"><value>Ctrl+F (на Mac — ⌘F; на телефоні — меню браузера → «Знайти на сторінці») шукає лише серед показаних рядків; решта — на наступних сторінках списку (кнопки внизу).</value></data>
   <data name="Erasure.Title" xml:space="preserve"><value>Видалення персональних даних</value></data>
   <data name="Erasure.NavigationEntry" xml:space="preserve"><value>Видалення даних людини за запитом</value></data>
   <data name="Erasure.Search.Label" xml:space="preserve"><value>Електронна пошта або частина імені</value></data>
@@ -646,4 +644,11 @@
   <data name="Database.Block.Synchronization" xml:space="preserve"><value>Синхронізація</value></data>
   <data name="Password.Toggle.Show" xml:space="preserve"><value>Показати пароль</value></data>
   <data name="Password.Toggle.Hide" xml:space="preserve"><value>Сховати пароль</value></data>
+  <data name="Teachers.Form.Search" xml:space="preserve"><value>Пошук за ім'ям або email</value></data>
+  <data name="MeetCodes.Form.Search" xml:space="preserve"><value>Пошук за кодом, організатором або курсом</value></data>
+  <data name="Teachers.Empty.NoMatch" xml:space="preserve"><value>Жоден викладач не відповідає пошуку</value></data>
+  <data name="MeetCodes.Empty.NoMatch" xml:space="preserve"><value>Жоден код у цьому списку не відповідає пошуку</value></data>
+  <data name="Picker.Narrow.Label" xml:space="preserve"><value>Почніть вводити, щоб звузити список</value></data>
+  <data name="Picker.Narrow.NothingFound" xml:space="preserve"><value>Нічого не знайдено</value></data>
+  <data name="PageSearchHint.ListField" xml:space="preserve"><value>У цьому списку — поле «{0}» нижче (Ctrl+F бачить лише показані рядки)</value></data>
 </root>

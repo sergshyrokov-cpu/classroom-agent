@@ -174,7 +174,7 @@ public sealed class MembershipStartReadersTests(PostgreSqlFixture database)
 
         using var scope = host.CreateScope();
         var source = new MeetCodesReadSource(scope.ServiceProvider.GetRequiredService<ClassroomAgentDbContext>());
-        var page = await source.GetUnassignedPageAsync(0, 10, zone, ct);
+        var page = await source.GetUnassignedPageAsync(0, 10, zone, null, ct);
 
         Assert.Equal(
             [MeetTestData.MeetingCode(1), MeetTestData.MeetingCode(2), MeetTestData.MeetingCode(3), MeetTestData.MeetingCode(4)],

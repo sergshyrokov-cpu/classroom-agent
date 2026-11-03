@@ -13,14 +13,14 @@ namespace ClassroomAgent.Infrastructure.Persistence;
 /// </summary>
 public sealed class TeacherListSource(ClassroomAgentDbContext db) : ITeacherListSource
 {
-    public Task<int> CountTeachersAsync(CourseState? state, CancellationToken cancellationToken) =>
-        Listed(state).CountAsync(cancellationToken);
+    public Task<int> CountTeachersAsync(CourseState? state, string? search, CancellationToken cancellationToken) =>
+        Listed(state, search).CountAsync(cancellationToken);
 
     public async Task<IReadOnlyList<TeacherListRecord>> GetTeacherPageAsync(
-        CourseState? state, int offset, int limit, CancellationToken cancellationToken)
+        CourseState? state, string? search, int offset, int limit, CancellationToken cancellationToken)
     {
         var matching = Matching(state);
-        return await Listed(state)
+        return await Listed(state, search)
             .Select(ParticipantLabel.Projection)
             .OrderByLabel()
             .Skip(offset)
@@ -30,11 +30,20 @@ public sealed class TeacherListSource(ClassroomAgentDbContext db) : ITeacherList
             .ToListAsync(cancellationToken);
     }
 
-    /// <summary>Db-design §2: participants with at least one matching membership.</summary>
-    private IQueryable<ClassroomParticipant> Listed(CourseState? state)
+    /// <summary>Db-design §2: participants with at least one matching membership; US-070 db-design §3: holding every word.</summary>
+    private IQueryable<ClassroomParticipant> Listed(CourseState? state, string? search)
     {
         var matching = Matching(state);
-        return db.ClassroomParticipants.AsNoTracking().Where(p => matching.Any(m => m.ParticipantId == p.Id));
+        var listed = db.ClassroomParticipants.AsNoTracking().Where(p => matching.Any(m => m.ParticipantId == p.Id));
+        foreach (var word in SearchMatch.Words(search))
+        {
+            listed = listed.Where(SearchMatch.AnyOf(
+                SearchMatch.InField<ClassroomParticipant>(p => p.Surname, word),
+                SearchMatch.InField<ClassroomParticipant>(p => p.GivenName, word),
+                SearchMatch.InField<ClassroomParticipant>(p => p.Email, word)));
+        }
+
+        return listed;
     }
 
     /// <summary>Db-design §2: current teacher memberships (the partial index's predicate) in a course of the state.</summary>

@@ -161,7 +161,7 @@ public sealed class DatabaseStatisticsReadSourceTests(PostgreSqlFixture database
         DatabaseCounts? counts = null;
         MeetCodeListCounts? page = null;
         await host.WithDatabaseStatisticsSourceAsync(async source => counts = await source.GetCountsAsync(ct));
-        await host.WithMeetCodesReadSourceAsync(async source => page = await source.GetCountsAsync(ct));
+        await host.WithMeetCodesReadSourceAsync(async source => page = await source.GetCountsAsync(null, ct));
 
         Assert.NotNull(counts);
         Assert.NotNull(page);
@@ -186,7 +186,7 @@ public sealed class DatabaseStatisticsReadSourceTests(PostgreSqlFixture database
         DatabaseCounts? counts = null;
         MeetCodeListCounts? page = null;
         await host.WithDatabaseStatisticsSourceAsync(async source => counts = await source.GetCountsAsync(ct));
-        await host.WithMeetCodesReadSourceAsync(async source => page = await source.GetCountsAsync(ct));
+        await host.WithMeetCodesReadSourceAsync(async source => page = await source.GetCountsAsync(null, ct));
 
         Assert.NotNull(counts);
         Assert.Equal(0, counts.MeetCodesAwaitingDecision);

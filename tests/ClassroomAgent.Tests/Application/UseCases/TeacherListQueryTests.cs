@@ -59,7 +59,7 @@ public sealed class TeacherListQueryTests
 
     private static Task<TeacherListPageResult> RunRawAsync(FakeTeacherListSource source, string?[] status, string?[] page) =>
         new GetTeacherListQuery(source).ExecuteAsync(
-            new TeacherListRequest(status, page), TestContext.Current.CancellationToken);
+            new TeacherListRequest(status, page, []), TestContext.Current.CancellationToken);
 
     private static string?[] One(string? value) => value is null ? [] : [value];
 

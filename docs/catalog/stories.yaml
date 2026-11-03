@@ -482,7 +482,7 @@ stories:
   - id: US-070
     epic: EPIC-2
     title: Search in the teacher and Meet code lists, shared matching rules, pickers that narrow as you type
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: null
     # Story file authored: docs/stories/US-070-search-in-lists-and-pickers.md
     # (aligned with v107, v108, BR-087, NFR-075). Decided by the Owner 2026-11-02.

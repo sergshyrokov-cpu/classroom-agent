@@ -34,7 +34,7 @@ public sealed class TeacherListReadOnlyTests(PostgreSqlFixture database)
         TeacherListPageResult? result = null;
 
         await ReadOnlyModeHost.InScopeAsync<GetTeacherListQuery>(host, async q =>
-            result = await q.ExecuteAsync(new TeacherListRequest([], []), ct));
+            result = await q.ExecuteAsync(new TeacherListRequest([], [], []), ct));
 
         Assert.NotNull(result);
         Assert.Equal(TeacherListPageOutcome.Shown, result.Outcome);
