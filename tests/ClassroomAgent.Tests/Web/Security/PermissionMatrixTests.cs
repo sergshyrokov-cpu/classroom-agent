@@ -126,6 +126,7 @@ public sealed class PermissionMatrixTests(PostgreSqlFixture database)
         Cell("GET", "workspace/courses", InstallationPolicies.ViewCourses),
         Cell("GET", "workspace/courses/{courseid}", InstallationPolicies.ViewCourses),
         Cell("GET", "workspace/teachers", InstallationPolicies.ViewCourses),
+        Cell("GET", "workspace/search", InstallationPolicies.ViewCourses),
 
         Cell("GET", "workspace/meet-reports", InstallationPolicies.ViewMeetReports),
         Cell("GET", "workspace/meet-reports/meetings/{meetingid}", InstallationPolicies.ViewMeetReports),

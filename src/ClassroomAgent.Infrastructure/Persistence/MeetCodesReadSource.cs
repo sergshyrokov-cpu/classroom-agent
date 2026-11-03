@@ -211,6 +211,26 @@ public sealed class MeetCodesReadSource(ClassroomAgentDbContext db) : IMeetCodes
         return new PagedRows<MarkedCodeRow>(rows, total);
     }
 
+    /// <summary>
+    /// US-071 db-design §4: one command per list over the queries the screen uses, so a match has one definition, then a merge by
+    /// the code. No code past a list's first <paramref name="limit"/> can be in the merged first <paramref name="limit"/>.
+    /// </summary>
+    public async Task<IReadOnlyList<MeetCodeMatch>> GetFirstMatchesAsync(string search, int limit, CancellationToken cancellationToken)
+    {
+        var unassigned = await FirstCodes(UnassignedCodes(search), limit).ToListAsync(cancellationToken);
+        var linked = await FirstCodes(LinkedLinks(search).Select(l => l.MeetingCode), limit).ToListAsync(cancellationToken);
+        var marked = await FirstCodes(MarkedLinks(search).Select(l => l.MeetingCode), limit).ToListAsync(cancellationToken);
+        return unassigned.Select(code => new MeetCodeMatch(code, MeetCodeList.Unassigned))
+            .Concat(linked.Select(code => new MeetCodeMatch(code, MeetCodeList.Linked)))
+            .Concat(marked.Select(code => new MeetCodeMatch(code, MeetCodeList.NotACourse)))
+            .OrderBy(match => match.Code, StringComparer.Ordinal)
+            .Take(limit)
+            .ToList();
+    }
+
+    private static IQueryable<string> FirstCodes(IQueryable<string> codes, int limit) =>
+        codes.OrderBy(code => EF.Functions.Collate(code, "C")).Take(limit);
+
     public async Task<IReadOnlyList<CourseOption>> GetAllCoursesAsync(CancellationToken cancellationToken) =>
         await db.Courses
             .AsNoTracking()

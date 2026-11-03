@@ -15,6 +15,7 @@
 <body>
     <header class="page-header container">
         @await Html.PartialAsync("_LanguageSwitcher")
+        @await Html.PartialAsync("_HeaderSearch")
         @if (dataHealth is { } counts)
         {
             @* FR-003.2, FR-003.3: a restrained coloured strip; its whole text is one link to «Стан даних». *@

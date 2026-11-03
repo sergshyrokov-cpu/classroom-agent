@@ -527,7 +527,7 @@
   <data name="Database.Sync.NotYet" xml:space="preserve"><value>not yet</value></data>
   <data name="Database.Failure.AskAdmin" xml:space="preserve"><value>The administrator has the details.</value></data>
   <data name="Database.Failure.ConnectionPageLink" xml:space="preserve"><value>Details are on the connection page</value></data>
-  <data name="PageSearchHint.Ordinary" xml:space="preserve"><value>Search this page: Ctrl+F (⌘F on Mac); on a phone — browser menu → "Find in page".</value></data>
+  <data name="PageSearchHint.Ordinary" xml:space="preserve"><value>On this page: Ctrl+F (⌘F on Mac; on a phone — browser menu → "Find in page"); across the program: the "{0}" field at the top</value></data>
   <data name="Erasure.Title" xml:space="preserve"><value>Erasure of personal data</value></data>
   <data name="Erasure.NavigationEntry" xml:space="preserve"><value>Erase a person's data on request</value></data>
   <data name="Erasure.Search.Label" xml:space="preserve"><value>Email or part of a name</value></data>
@@ -650,5 +650,19 @@
   <data name="MeetCodes.Empty.NoMatch" xml:space="preserve"><value>No code in this list matches the search</value></data>
   <data name="Picker.Narrow.Label" xml:space="preserve"><value>Start typing to narrow the list</value></data>
   <data name="Picker.Narrow.NothingFound" xml:space="preserve"><value>Nothing found</value></data>
-  <data name="PageSearchHint.ListField" xml:space="preserve"><value>In this list: the "{0}" field below (Ctrl+F sees only the rows shown)</value></data>
+  <data name="PageSearchHint.ListField" xml:space="preserve"><value>In this list: the "{0}" field below (Ctrl+F sees only the rows shown); across the program: the "{1}" field at the top</value></data>
+  <data name="Search.Field.Label" xml:space="preserve"><value>Search</value></data>
+  <data name="Search.Field.Submit" xml:space="preserve"><value>Find</value></data>
+  <data name="Search.Title" xml:space="preserve"><value>Search results</value></data>
+  <data name="Search.Message.TooShort" xml:space="preserve"><value>Enter at least 2 characters</value></data>
+  <data name="Search.Empty.NothingFound" xml:space="preserve"><value>Nothing found for "{0}"</value></data>
+  <data name="Search.Empty.Reminder" xml:space="preserve"><value>Search finds current names and titles from Google; a former surname or an old email will not be found</value></data>
+  <data name="Search.Warning" xml:space="preserve"><value>The text you search for stays in the browser history; clear it on a shared computer</value></data>
+  <data name="Search.Group.Students" xml:space="preserve"><value>Students</value></data>
+  <data name="Search.Group.Teachers" xml:space="preserve"><value>Teachers</value></data>
+  <data name="Search.Group.Courses" xml:space="preserve"><value>Courses</value></data>
+  <data name="Search.Group.MeetCodes" xml:space="preserve"><value>Meet codes</value></data>
+  <data name="Search.Limit.Shown" xml:space="preserve"><value>showing {0} of {1}, refine your search</value></data>
+  <data name="Search.Limit.WholeList" xml:space="preserve"><value>The whole list with this search</value></data>
+  <data name="Search.Teacher.Courses" xml:space="preserve"><value>Teacher's courses</value></data>
 </root>

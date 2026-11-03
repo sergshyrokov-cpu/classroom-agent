@@ -527,7 +527,7 @@
   <data name="Database.Sync.NotYet" xml:space="preserve"><value>ще не було</value></data>
   <data name="Database.Failure.AskAdmin" xml:space="preserve"><value>Подробиці знає адміністратор.</value></data>
   <data name="Database.Failure.ConnectionPageLink" xml:space="preserve"><value>Подробиці — на сторінці підключення</value></data>
-  <data name="PageSearchHint.Ordinary" xml:space="preserve"><value>Пошук на сторінці: Ctrl+F (на Mac — ⌘F), на телефоні — меню браузера → «Знайти на сторінці».</value></data>
+  <data name="PageSearchHint.Ordinary" xml:space="preserve"><value>На цій сторінці — Ctrl+F (на Mac — ⌘F; на телефоні — меню браузера → «Знайти на сторінці»), у всій програмі — поле «{0}» угорі</value></data>
   <data name="Erasure.Title" xml:space="preserve"><value>Видалення персональних даних</value></data>
   <data name="Erasure.NavigationEntry" xml:space="preserve"><value>Видалення даних людини за запитом</value></data>
   <data name="Erasure.Search.Label" xml:space="preserve"><value>Електронна пошта або частина імені</value></data>
@@ -650,5 +650,19 @@
   <data name="MeetCodes.Empty.NoMatch" xml:space="preserve"><value>Жоден код у цьому списку не відповідає пошуку</value></data>
   <data name="Picker.Narrow.Label" xml:space="preserve"><value>Почніть вводити, щоб звузити список</value></data>
   <data name="Picker.Narrow.NothingFound" xml:space="preserve"><value>Нічого не знайдено</value></data>
-  <data name="PageSearchHint.ListField" xml:space="preserve"><value>У цьому списку — поле «{0}» нижче (Ctrl+F бачить лише показані рядки)</value></data>
+  <data name="PageSearchHint.ListField" xml:space="preserve"><value>У цьому списку — поле «{0}» нижче (Ctrl+F бачить лише показані рядки), у всій програмі — поле «{1}» угорі</value></data>
+  <data name="Search.Field.Label" xml:space="preserve"><value>Пошук</value></data>
+  <data name="Search.Field.Submit" xml:space="preserve"><value>Знайти</value></data>
+  <data name="Search.Title" xml:space="preserve"><value>Результати пошуку</value></data>
+  <data name="Search.Message.TooShort" xml:space="preserve"><value>Введіть щонайменше 2 символи</value></data>
+  <data name="Search.Empty.NothingFound" xml:space="preserve"><value>Нічого не знайдено за запитом «{0}»</value></data>
+  <data name="Search.Empty.Reminder" xml:space="preserve"><value>Пошук знаходить поточні імена й назви з Google; за колишнім прізвищем або старим email не знайти</value></data>
+  <data name="Search.Warning" xml:space="preserve"><value>Шуканий текст залишається в історії браузера; на спільному комп'ютері очистіть її</value></data>
+  <data name="Search.Group.Students" xml:space="preserve"><value>Студенти</value></data>
+  <data name="Search.Group.Teachers" xml:space="preserve"><value>Викладачі</value></data>
+  <data name="Search.Group.Courses" xml:space="preserve"><value>Курси</value></data>
+  <data name="Search.Group.MeetCodes" xml:space="preserve"><value>Коди зустрічей Meet</value></data>
+  <data name="Search.Limit.Shown" xml:space="preserve"><value>показано {0} з {1}, уточніть запит</value></data>
+  <data name="Search.Limit.WholeList" xml:space="preserve"><value>Увесь список із цим пошуком</value></data>
+  <data name="Search.Teacher.Courses" xml:space="preserve"><value>Курси викладача</value></data>
 </root>

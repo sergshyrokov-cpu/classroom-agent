@@ -36,6 +36,10 @@ public sealed class PageSearchHintTranslationTests
         {
             Assert.Contains(Hint.Expected(variant, language), ResourceValues(language));
         }
+
+        // US-071 FR-011: the ordinary text is a template too, with the header field's label as {0}.
+        Assert.Contains(Hint.OrdinaryUk, ResourceValues("uk"));
+        Assert.Contains(Hint.OrdinaryEn, ResourceValues("en"));
     }
 
     /// <summary>

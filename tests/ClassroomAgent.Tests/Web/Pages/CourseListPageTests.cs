@@ -201,7 +201,7 @@ public sealed class CourseListPageTests(PostgreSqlFixture database)
         var bySection = await client.GetAsync(Data.Url(q: "9-б"), ct);
 
         Assert.Equal([world.History], Cl.RowIds(byName.Body));
-        Assert.Equal("ІСТ", Html.InputValue(byName.Body, Data.Parameters.Q));
+        Assert.Equal("ІСТ", ListSearchTestData.FieldValue(byName.Body, ListSearchTestData.CourseField));
         Assert.Equal([world.Physics], Cl.RowIds(bySection.Body));
     }
 
@@ -433,7 +433,7 @@ public sealed class CourseListPageTests(PostgreSqlFixture database)
         Assert.Empty(Cl.RowIds(page.Body));
         Assert.DoesNotContain(Secret, page.Body, StringComparison.Ordinal);
         Assert.Equal("active", Cl.SelectedValue(page.Body, Data.Parameters.Status));
-        Assert.True(Html.InputValue(page.Body, Data.Parameters.Q) is null or "");
+        Assert.Null(ListSearchTestData.FieldValue(page.Body, ListSearchTestData.CourseField));
     }
 
     /// <summary>AC-013, VR-003: a repeated search text and a control character have their own messages.</summary>

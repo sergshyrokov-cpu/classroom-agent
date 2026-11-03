@@ -4,27 +4,23 @@
 version: 1
 story: US-071
 workflow: story-delivery
-current_stage: TEST_WRITING
-previous_stage: DB_DESIGN
-last_completed_stage: DB_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: db-designer
+last_invoked_skill: security-reviewer
 last_result:
   verdict: PASS
-  stage: DB_DESIGN
-  recorded_at: '2026-11-03T16:56:28Z'
+  stage: SECURITY_REVIEW
+  recorded_at: '2026-11-03T19:20:11Z'
 last_artifacts:
-  - type: database_design
-    path: docs/designs/database/US-071-db-design.md
-    version: 1
-  - type: entity_model
-    path: docs/designs/database/US-071-entity-model.md
+  - type: security_review
+    path: docs/reviews/security/US-071-security-review.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings:
-  - "m-1: the openapi's course-row names CoursesTextKeys.Status(status); the row's helper is CoursesTextKeys.State(state), the same translation key"
+non_blocking_findings: []
 started_at: '2026-11-03T15:29:26Z'
-updated_at: '2026-11-03T16:56:28Z'
-completed_at: null
+updated_at: '2026-11-03T20:03:17Z'
+completed_at: '2026-11-03T20:03:17Z'

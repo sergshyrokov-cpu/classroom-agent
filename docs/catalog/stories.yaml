@@ -490,7 +490,7 @@ stories:
   - id: US-071
     epic: EPIC-2
     title: One search field in the header, including students with their courses
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: null
     # Story file authored: docs/stories/US-071-search-field-in-the-header.md
     # (aligned with v107, v108, BR-088, NFR-075, NFR-078, SC-14). Decided by the Owner

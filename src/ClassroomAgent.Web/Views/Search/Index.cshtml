@@ -1,0 +1,165 @@
+@using System.Globalization
+@using ClassroomAgent.Application.Models.Dtos
+@using ClassroomAgent.Application.UseCases
+@model SearchResultsPageModel
+@{
+    ViewData["Title"] = T[SearchTextKeys.Title];
+
+    // Spec section 7: the switcher returns to the validated text, or to none; the raw fallback is never reached here.
+    ViewData[UiLanguageController.ReturnPathViewDataKey] = Model.ReturnPath;
+    ViewData[PageHeaderRules.SearchTextViewDataKey] = Model.SearchText;
+
+    var nothingFound = Model.State == SearchResultsState.Results
+        && Model.Students.Total == 0 && Model.Teachers.Total == 0 && Model.Courses.Total == 0 && Model.MeetCodes.Total == 0;
+}
+
+@if (Model.State == SearchResultsState.Prompt)
+{
+    <p id="search-message">@T[SearchTextKeys.TooShort]</p>
+}
+else if (Model.Refusal is { } refusal)
+{
+    <p id="search-message" class="form-error">@T[MeetCodesTextKeys.SearchValidation(refusal)]</p>
+}
+else if (nothingFound)
+{
+    <p id="search-nothing-found">@T[SearchTextKeys.NothingFound, Model.SearchText ?? string.Empty]</p>
+    <p id="search-reminder">@T[SearchTextKeys.Reminder]</p>
+}
+
+@if (Model.Students.Total > 0)
+{
+    <section id="search-group-students">
+        <h2>@T[SearchTextKeys.GroupStudents]</h2>
+        <ul class="search-rows">
+            @foreach (var row in Model.Students.Rows)
+            {
+                <li>
+                    @row.Label
+                    @if (row.Email is { } email && email != row.Label)
+                    {
+                        <span class="search-row-detail">@email</span>
+                    }
+                    <ul class="search-student-courses">
+                        @foreach (var course in row.Courses)
+                        {
+                            <li>
+                                <a href="@CardUrl(course.CourseId)">@CourseText(course.Name, course.Section)</a>
+                                @if (course.Left is { } left)
+                                {
+                                    <span>@DataMarksTexts.Left(T, left)</span>
+                                }
+                            </li>
+                        }
+                    </ul>
+                </li>
+            }
+        </ul>
+        @LimitLine(Model.Students.Rows.Count, Model.Students.Total)
+    </section>
+}
+
+@if (Model.Teachers.Total > 0)
+{
+    <section id="search-group-teachers">
+        <h2>@T[SearchTextKeys.GroupTeachers]</h2>
+        <ul class="search-rows">
+            @foreach (var row in Model.Teachers.Rows)
+            {
+                <li>
+                    @row.Label
+                    @if (row.Email is { } email && email != row.Label)
+                    {
+                        <span class="search-row-detail">@email</span>
+                    }
+                    <a href="@CourseListUrl.Build(CourseStatusFilter.All, row.ParticipantId, null, 1)">@T[SearchTextKeys.TeacherCourses]</a>
+                </li>
+            }
+        </ul>
+        @LimitLine(Model.Teachers.Rows.Count, Model.Teachers.Total)
+        @WholeListLink(Model.Teachers.Total, TeacherListUrl.Build(CourseStatusFilter.All, Model.SearchText, 1))
+    </section>
+}
+
+@if (Model.Courses.Total > 0)
+{
+    <section id="search-group-courses">
+        <h2>@T[SearchTextKeys.GroupCourses]</h2>
+        <ul class="search-rows">
+            @foreach (var row in Model.Courses.Rows)
+            {
+                <li>
+                    <a href="@CardUrl(row.CourseId)">@row.Name</a>
+                    @if (!string.IsNullOrEmpty(row.Section))
+                    {
+                        <span class="search-row-detail">@row.Section</span>
+                    }
+                    <span class="search-row-detail">@T[CoursesTextKeys.State(row.State)]</span>
+                </li>
+            }
+        </ul>
+        @LimitLine(Model.Courses.Rows.Count, Model.Courses.Total)
+        @WholeListLink(Model.Courses.Total, CourseListUrl.Build(CourseStatusFilter.All, null, Model.SearchText, 1))
+    </section>
+}
+
+@if (Model.MeetCodes.Total > 0)
+{
+    <section id="search-group-meet-codes">
+        <h2>@T[SearchTextKeys.GroupMeetCodes]</h2>
+        <ul class="search-rows">
+            @foreach (var row in Model.MeetCodes.Rows)
+            {
+                <li>
+                    <a href="@MeetCodesController.ListUrl(row.List, Model.SearchText ?? string.Empty)">@row.Code</a>
+                    <span class="search-row-detail">@T[MeetCodesTextKeys.ListName(row.List)]</span>
+                </li>
+            }
+        </ul>
+        @LimitLine(Model.MeetCodes.Rows.Count, Model.MeetCodes.Total)
+        @if (Model.MeetCodes.FirstListWithMatch is { } firstList)
+        {
+            @WholeListLink(Model.MeetCodes.Total, MeetCodesController.ListUrl(firstList, Model.SearchText ?? string.Empty))
+        }
+    </section>
+}
+
+<p id="search-history-warning" class="small">@T[SearchTextKeys.Warning]</p>
+
+@functions {
+    private static string CardUrl(long courseId) =>
+        SignInRoutes.Courses + "/" + courseId.ToString(CultureInfo.InvariantCulture);
+
+    /// <summary>Api-design D-6: the form the Meet code page uses, so two sections of one course are two different links.</summary>
+    private static string CourseText(string name, string? section) =>
+        string.IsNullOrEmpty(section) ? name : name + " — " + section;
+
+    /// <summary>FR-007: only with more matches than the group shows; not at exactly 20.</summary>
+    private Microsoft.AspNetCore.Html.IHtmlContent LimitLine(int shown, int total)
+    {
+        if (total <= GetSearchResultsQuery.GroupSize)
+        {
+            return Microsoft.AspNetCore.Html.HtmlString.Empty;
+        }
+
+        var builder = new Microsoft.AspNetCore.Mvc.Rendering.TagBuilder("p");
+        builder.AddCssClass("search-group-limit");
+        builder.InnerHtml.Append(T[SearchTextKeys.LimitShown, shown, total].Value);
+        return builder;
+    }
+
+    /// <summary>FR-007, I-11: teachers, courses and Meet codes, never students; only with more matches than the group shows.</summary>
+    private Microsoft.AspNetCore.Html.IHtmlContent WholeListLink(int total, string url)
+    {
+        if (total <= GetSearchResultsQuery.GroupSize)
+        {
+            return Microsoft.AspNetCore.Html.HtmlString.Empty;
+        }
+
+        var builder = new Microsoft.AspNetCore.Mvc.Rendering.TagBuilder("a");
+        builder.AddCssClass("search-group-whole-list");
+        builder.Attributes["href"] = url;
+        builder.InnerHtml.Append(T[SearchTextKeys.WholeList].Value);
+        return builder;
+    }
+}

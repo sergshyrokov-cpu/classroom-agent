@@ -23,46 +23,56 @@ public static partial class PageSearchHintTestData
         public const string MeetCodes = "meet-codes";
     }
 
-    /// <summary>The list-field template of key <c>PageSearchHint.ListField</c>, Ukrainian; <c>{0}</c> is the search field's label.</summary>
-    public const string ListFieldUk = "У цьому списку — поле «{0}» нижче (Ctrl+F бачить лише показані рядки)";
+    /// <summary>
+    /// The list-field template of key <c>PageSearchHint.ListField</c>, Ukrainian (US-071 FR-011); <c>{0}</c> is the list's own
+    /// search field label, <c>{1}</c> the header field's label.
+    /// </summary>
+    public const string ListFieldUk =
+        "У цьому списку — поле «{0}» нижче (Ctrl+F бачить лише показані рядки), у всій програмі — поле «{1}» угорі";
 
     /// <summary>The list-field template, English.</summary>
-    public const string ListFieldEn = "In this list: the \"{0}\" field below (Ctrl+F sees only the rows shown)";
+    public const string ListFieldEn =
+        "In this list: the \"{0}\" field below (Ctrl+F sees only the rows shown); across the program: the \"{1}\" field at the top";
 
-    /// <summary>Spec FR-003, by variant and language; the outer «» of the specification are not part of the text.</summary>
+    /// <summary>The ordinary template of key <c>PageSearchHint.Ordinary</c>, Ukrainian (US-071 FR-011); <c>{0}</c> is the header field's label.</summary>
+    public const string OrdinaryUk =
+        "На цій сторінці — Ctrl+F (на Mac — ⌘F; на телефоні — меню браузера → «Знайти на сторінці»), у всій програмі — поле «{0}» угорі";
+
+    /// <summary>The ordinary template, English.</summary>
+    public const string OrdinaryEn =
+        "On this page: Ctrl+F (⌘F on Mac; on a phone — browser menu → \"Find in page\"); across the program: the \"{0}\" field at the top";
+
+    /// <summary>The final texts of US-071 FR-011, by variant and language; the header field's label is «Пошук» / "Search".</summary>
     public static string Expected(string variant, string language) => (variant, language) switch
     {
         (Variants.Ordinary, "uk") =>
-            "Пошук на сторінці: Ctrl+F (на Mac — ⌘F), на телефоні — меню браузера → «Знайти на сторінці».",
+            "На цій сторінці — Ctrl+F (на Mac — ⌘F; на телефоні — меню браузера → «Знайти на сторінці»), у всій програмі — поле «Пошук» угорі",
         (Variants.Ordinary, "en") =>
-            "Search this page: Ctrl+F (⌘F on Mac); on a phone — browser menu → \"Find in page\".",
+            "On this page: Ctrl+F (⌘F on Mac; on a phone — browser menu → \"Find in page\"); across the program: the \"Search\" field at the top",
         (Variants.CourseList, "uk") =>
-            "У цьому списку — поле «Пошук за назвою або розділом» нижче (Ctrl+F бачить лише показані рядки)",
+            "У цьому списку — поле «Пошук за назвою або розділом» нижче (Ctrl+F бачить лише показані рядки), у всій програмі — поле «Пошук» угорі",
         (Variants.CourseList, "en") =>
-            "In this list: the \"Search by name or section\" field below (Ctrl+F sees only the rows shown)",
+            "In this list: the \"Search by name or section\" field below (Ctrl+F sees only the rows shown); across the program: the \"Search\" field at the top",
         (Variants.TeacherList, "uk") =>
-            "У цьому списку — поле «Пошук за ім'ям або email» нижче (Ctrl+F бачить лише показані рядки)",
+            "У цьому списку — поле «Пошук за ім'ям або email» нижче (Ctrl+F бачить лише показані рядки), у всій програмі — поле «Пошук» угорі",
         (Variants.TeacherList, "en") =>
-            "In this list: the \"Search by name or email\" field below (Ctrl+F sees only the rows shown)",
+            "In this list: the \"Search by name or email\" field below (Ctrl+F sees only the rows shown); across the program: the \"Search\" field at the top",
         (Variants.MeetCodes, "uk") =>
-            "У цьому списку — поле «Пошук за кодом, організатором або курсом» нижче (Ctrl+F бачить лише показані рядки)",
+            "У цьому списку — поле «Пошук за кодом, організатором або курсом» нижче (Ctrl+F бачить лише показані рядки), у всій програмі — поле «Пошук» угорі",
         (Variants.MeetCodes, "en") =>
-            "In this list: the \"Search by code, organizer or course\" field below (Ctrl+F sees only the rows shown)",
+            "In this list: the \"Search by code, organizer or course\" field below (Ctrl+F sees only the rows shown); across the program: the \"Search\" field at the top",
         _ => throw new ArgumentOutOfRangeException(nameof(variant), $"{variant}/{language}"),
     };
 
     /// <summary>
-    /// The (variant, language) pairs that are whole entries of the translation files; the list variants are composed from
-    /// the <see cref="ListFieldUk"/> / <see cref="ListFieldEn"/> template and are checked apart.
+    /// The (variant, language) pairs that are whole entries of the translation files. Since US-071 every variant is a template
+    /// (<see cref="OrdinaryUk"/>, <see cref="ListFieldUk"/> and their English forms), checked apart, so none is a whole entry.
     /// </summary>
-    public static IReadOnlyList<(string Variant, string Language)> AllTexts { get; } =
-    [
-        (Variants.Ordinary, "uk"), (Variants.Ordinary, "en"),
-    ];
+    public static IReadOnlyList<(string Variant, string Language)> AllTexts { get; } = [];
 
     /// <summary>Fragments of the texts that a view holding a literal would contain (FR-008).</summary>
     public static IReadOnlyList<string> LiteralFragments { get; } =
-        ["Ctrl+F", "⌘F", "Find in page", "Знайти на сторінці", "Search this page", "Пошук на сторінці"];
+        ["Ctrl+F", "⌘F", "Find in page", "Знайти на сторінці", "across the program", "у всій програмі"];
 
     /// <summary>One rendered hook element.</summary>
     public sealed record Hint(int Index, string Tag, string? Variant, string InnerHtml)

@@ -1,0 +1,14 @@
+@using ClassroomAgent.Application.UseCases
+@*
+    US-071 FR-001, openapi x-page-frame.search-field: a plain GET form, working with scripts off, no token (API-4). The value is
+    the validated text the results page set; every other page leaves it empty, the three lists included (api-design D-4).
+*@
+@if (PageHeaderRules.ShowsSearchField(Context, ViewData))
+{
+    var text = ViewData[PageHeaderRules.SearchTextViewDataKey] as string;
+    <form id="header-search-form" class="header-search" role="search" method="get" action="@SearchResultsUrl.Path">
+        <label for="header-search" class="form-label">@T[SearchTextKeys.FieldLabel]</label>
+        <input id="header-search" type="search" name="@SearchController.SearchParameter" value="@text" maxlength="100" autocomplete="off" class="form-control" />
+        <button type="submit" class="btn btn-primary">@T[SearchTextKeys.FieldSubmit]</button>
+    </form>
+}

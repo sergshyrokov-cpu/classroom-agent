@@ -139,6 +139,46 @@ body { overflow-wrap: break-word; }
 
 .password-toggle[aria-pressed="true"] { background-image: url("/img/password/eye-off.svg"); }
 
+/* ---- Shared: disabled buttons (US-071 FR-012, I-15) — grey with readable text, whatever the button's colour when enabled ---- */
+
+.btn:disabled {
+    --bs-btn-disabled-bg: var(--bs-gray-300);
+    --bs-btn-disabled-border-color: var(--bs-gray-300);
+    --bs-btn-disabled-color: var(--bs-gray-700);
+    --bs-btn-disabled-opacity: 1;
+}
+
+/* ---- Installation: header search field and results (US-071 FR-001) ---- */
+
+/* The field shares the top row with the language switcher, leaving it the room the title used to leave. */
+.header-search {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: calc(var(--content-width) - 11rem);
+    margin: 0 11rem 0.5rem 0;
+}
+
+.header-search .form-label { margin: 0; }
+
+.header-search .form-control { flex: 1 1 8rem; width: auto; min-width: 0; }
+
+/* Phone width: the switcher keeps the top row and the field takes the full width under it. */
+@media (max-width: 575.98px) {
+    .header-search { max-width: none; margin: 2.75rem 0 0.5rem; }
+}
+
+.search-rows { list-style: none; padding-left: 0; }
+
+.search-rows > li { margin-bottom: 0.5rem; }
+
+.search-row-detail { color: var(--bs-secondary-color); margin-left: 0.5rem; }
+
+.search-student-courses { margin-bottom: 0; }
+
+.search-group-whole-list { display: inline-block; margin-bottom: 0.5rem; }
+
 /* ---- Installation: landing page (AC-007 look check) ---- */
 
 #signed-in-role { font-size: 1.125rem; }

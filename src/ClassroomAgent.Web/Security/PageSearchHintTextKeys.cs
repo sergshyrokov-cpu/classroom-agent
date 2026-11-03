@@ -3,8 +3,9 @@ namespace ClassroomAgent.Web.Security;
 /// <summary>
 /// The page-search hint (US-046 spec FR-001, FR-003; US-070 FR-008, api-design D-10): its four variants, as rendered in
 /// the hook's <c>data-variant</c>. A variant with a search field names that field in the hint; <c>{0}</c> comes from
-/// the field's own label key (<see cref="FieldLabelKey"/>), so the two cannot differ. Every key exists in both the
-/// Ukrainian and the English file.
+/// the field's own label key (<see cref="FieldLabelKey"/>), so the two cannot differ; so does the header field's name, from
+/// <see cref="SearchTextKeys.FieldLabel"/> (US-071 FR-011, api-design D-9). Every key exists in both the Ukrainian and the
+/// English file.
 /// </summary>
 public static class PageSearchHintTextKeys
 {

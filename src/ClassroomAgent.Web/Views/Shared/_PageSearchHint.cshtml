@@ -3,4 +3,4 @@
 @{
     var key = PageSearchHintTextKeys.FieldLabelKey(Model);
 }
-<p id="page-search-hint" class="page-search-hint" data-variant="@Model">@(key is null ? T[PageSearchHintTextKeys.OrdinaryText] : T[PageSearchHintTextKeys.ListFieldText, T[key].Value])</p>
+<p id="page-search-hint" class="page-search-hint" data-variant="@Model">@(key is null ? T[PageSearchHintTextKeys.OrdinaryText, T[SearchTextKeys.FieldLabel].Value] : T[PageSearchHintTextKeys.ListFieldText, T[key].Value, T[SearchTextKeys.FieldLabel].Value])</p>

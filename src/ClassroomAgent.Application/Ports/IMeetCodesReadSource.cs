@@ -22,6 +22,9 @@ public interface IMeetCodesReadSource
 
     Task<PagedRows<MarkedCodeRow>> GetMarkedPageAsync(int page, int size, string? search, CancellationToken cancellationToken);
 
+    /// <summary>US-071 db-design §4: the first matches across the three lists, by the code in ordinal order.</summary>
+    Task<IReadOnlyList<MeetCodeMatch>> GetFirstMatchesAsync(string search, int limit, CancellationToken cancellationToken);
+
     /// <summary>Every stored course (id, name, section), any order.</summary>
     Task<IReadOnlyList<Models.Dtos.CourseOption>> GetAllCoursesAsync(CancellationToken cancellationToken);
 

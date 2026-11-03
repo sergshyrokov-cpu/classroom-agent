@@ -139,6 +139,15 @@ body { overflow-wrap: break-word; }
 
 .password-toggle[aria-pressed="true"] { background-image: url("/img/password/eye-off.svg"); }
 
+/* ---- Shared: disabled buttons (US-071 FR-012, I-15) — grey with readable text, whatever the button's colour when enabled ---- */
+
+.btn:disabled {
+    --bs-btn-disabled-bg: var(--bs-gray-300);
+    --bs-btn-disabled-border-color: var(--bs-gray-300);
+    --bs-btn-disabled-color: var(--bs-gray-700);
+    --bs-btn-disabled-opacity: 1;
+}
+
 /* ---- Control Plane: Owner warnings (FR-006.1) — the same quiet amber treatment as the installation's marks ---- */
 
 .warning {

@@ -1,14 +1,13 @@
 @using System.Globalization
-@using Microsoft.AspNetCore.Authorization
 @*
     US-039 header switcher (spec FR-002, openapi x-ui-elements LanguageSwitcher): rendered only on a page whose
-    endpoint requires sign-in, so the sign-in pages, the first-run setup and the error page — SC-4's anonymous
-    list — never show it (OD-002, I-5). One plain POST form per offered language, no JavaScript; the current
-    language is marked, not a submit. Built from the request, never from an entity (AD-8).
+    endpoint requires sign-in, so the sign-in pages and the first-run setup — SC-4's anonymous list — never show
+    it, and never on the error page under any endpoint (OD-002, I-5; US-071 FR-010, PageHeaderRules). One plain POST
+    form per offered language, no JavaScript; the current language is marked, not a submit. Built from the request,
+    never from an entity (AD-8).
 *@
 @{
-    var requiresSignIn = Context.GetEndpoint()?.Metadata.GetMetadata<IAllowAnonymous>() is null;
-    if (User.Identity?.IsAuthenticated == true && requiresSignIn)
+    if (PageHeaderRules.ShowsLanguageSwitcher(Context, ViewData))
     {
         var current = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
         var returnPath = ViewData[ClassroomAgent.Web.Controllers.UiLanguageController.ReturnPathViewDataKey] as string

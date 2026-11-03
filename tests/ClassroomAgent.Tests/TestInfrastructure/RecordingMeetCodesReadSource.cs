@@ -32,6 +32,12 @@ public sealed class RecordingMeetCodesReadSource(IMeetCodesReadSource inner, Lis
         return inner.GetMarkedPageAsync(page, size, search, cancellationToken);
     }
 
+    public Task<IReadOnlyList<MeetCodeMatch>> GetFirstMatchesAsync(string search, int limit, CancellationToken cancellationToken)
+    {
+        log.Add(nameof(GetFirstMatchesAsync), search);
+        return inner.GetFirstMatchesAsync(search, limit, cancellationToken);
+    }
+
     public Task<IReadOnlyList<CourseOption>> GetAllCoursesAsync(CancellationToken cancellationToken) =>
         inner.GetAllCoursesAsync(cancellationToken);
 

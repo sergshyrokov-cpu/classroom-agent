@@ -3,8 +3,10 @@ using System.Net;
 using ClassroomAgent.Tests.TestInfrastructure;
 using Actor = ClassroomAgent.Tests.TestInfrastructure.JournalHostExtensions.Actor;
 using Hint = ClassroomAgent.Tests.TestInfrastructure.PageSearchHintTestData;
+using Ls = ClassroomAgent.Tests.TestInfrastructure.ListSearchTestData;
 using Mc = ClassroomAgent.Tests.TestInfrastructure.MeetCodesHostExtensions;
 using Mr = ClassroomAgent.Tests.TestInfrastructure.MeetReportsHostExtensions;
+using S = ClassroomAgent.Tests.TestInfrastructure.SearchTestData;
 using Variants = ClassroomAgent.Tests.TestInfrastructure.PageSearchHintTestData.Variants;
 
 namespace ClassroomAgent.Tests.Web.Pages;
@@ -153,6 +155,45 @@ public sealed class PageSearchHintTests(PostgreSqlFixture database)
         Assert.Contains(quoted, hint.Text, StringComparison.Ordinal);
         var afterHint = WebUtility.HtmlDecode(page.Body[(hint.Index + hint.InnerHtml.Length)..]);
         Assert.Contains(label, afterHint, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// US-071 AC-009, FR-011: the hint quotes the header field's label of the same language, and that is the label the header
+    /// field really carries.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public async Task TheHint_NamesTheSameLabelAsTheHeaderField(string language)
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (host, client) = await JournalHostExtensions.StartAsync(database, Actor.Admin, ct);
+        await using var _host = host;
+        if (language == UiLanguageTestData.English)
+        {
+            await client.ChooseLanguageAsync(CourseListTestData.Path, UiLanguageTestData.English, ct);
+        }
+
+        var page = await client.GetAsync(CourseListTestData.Path, ct);
+
+        var label = host.Text(S.Keys.FieldLabel, language);
+        var quoted = language == "uk" ? $"«{label}»" : $"\"{label}\"";
+        var hint = Assert.Single(Hint.Hints(page.Body));
+        Assert.Contains(quoted, hint.Text, StringComparison.Ordinal);
+        Assert.Equal(label, Ls.LabelOf(page.Body, S.HeaderField));
+    }
+
+    /// <summary>The unwritten rule for one-line hints: no final period, in any variant and language.</summary>
+    [Fact]
+    public void TheHint_HasNoFinalPeriod()
+    {
+        foreach (var variant in new[] { Variants.Ordinary, Variants.CourseList, Variants.TeacherList, Variants.MeetCodes })
+        {
+            foreach (var language in new[] { "uk", "en" })
+            {
+                var text = Hint.Expected(variant, language);
+                Assert.False(text.EndsWith('.'), $"{variant}/{language} ends with a period.");
+            }
+        }
     }
 
     /// <summary>AC-004, FR-006: read-only mode changes nothing about the hint.</summary>

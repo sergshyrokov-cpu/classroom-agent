@@ -188,6 +188,10 @@ public sealed class MeetCodesController(
             + "&" + PageParameter + "=" + result.ReturnPage.ToString(CultureInfo.InvariantCulture));
     }
 
+    /// <summary>US-071 openapi <c>x-links</c>, api-design D-5: a list with this search; no <c>page</c>, no <c>size</c>, so their defaults apply.</summary>
+    public static string ListUrl(MeetCodeList list, string search) =>
+        SignInRoutes.MeetCodes + "?" + ListParameter + "=" + ListText(list) + "&" + SearchParameter + "=" + Uri.EscapeDataString(search);
+
     /// <summary>The list as the query string spells it (openapi <c>MeetCodeList</c>).</summary>
     public static string ListText(MeetCodeList list) => list switch
     {
