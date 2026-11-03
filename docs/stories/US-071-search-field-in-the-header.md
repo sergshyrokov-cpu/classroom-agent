@@ -10,6 +10,7 @@ source:
 # DRAFT prepared by the agent on 2026-11-02 from the Owner's decisions on search.
 # Aligned with trebovaniya.md v107 (section 1), v108 (Epic 2 "Поиск", section 5), v109 (section 8),
 # BR-088, NFR-075, NFR-078, SC-14. Before Deans start work in the pilot.
+# Amended 2026-11-03 after US-070: grey disabled buttons (Owner's decision) and items deferred at its approval.
 ---
 
 # User Story
@@ -49,6 +50,14 @@ without knowing the course. The Owner named search one of the program's main adv
    20 of N, refine your search"; groups other than students link to the whole list with this search.
 8. **Nothing found** and **the browser history warning:** the §4 Epic 2 v108 texts.
 9. **Hints:** the final §5 v108 texts on all hint pages, ordinary pages and paged lists.
+10. **Grey disabled buttons** (Owner, 2026-11-03). A disabled button of either host looks grey rather than a paler
+    shade of its colour, by one shared rule in each host's `site.css` (NFR-076: one look on both hosts). It shows on the
+    course-choice submit, the Meet and report export buttons during a download, and the erasure screens in read-only mode.
+    No new text, no inline style (SC-15).
+11. **Error page and the search text** (from US-070 `SECURITY_REVIEW/m-1`). The error page's language switcher never
+    copies the raw query. Today it does when the page is answered under a protected endpoint, for example `GET` course-choice
+    with a malformed code and a `returnQ`. With students' names in `?q=` this matters more here.
+12. **Tests left over from US-070** (`SECURITY_REVIEW/m-2`, `IMPLEMENTATION_VERIFICATION/m-1`, `m-2`, `m-3`): see AC-013.
 
 **Out of scope:** a student card with grades, typo tolerance, search in the Control Plane, any new role
 right, export of results, removing final periods from existing texts (by the base version, v109).
@@ -144,6 +153,37 @@ fields.
 
 **Then** the page is usable with no special index; the Specification states what was measured.
 
+## AC-011 Grey disabled buttons
+
+**Given** a disabled primary button on a page of either host
+
+**When** shown
+
+**Then** it is grey, by a rule in the host's `site.css` that a test finds in both; a person sees it on the course-choice
+page (no row left to choose) on a computer and a phone. Enabled buttons do not change.
+
+## AC-012 No raw query on the error page
+
+**Given** a signed-in user and a request answered with the error page under a protected endpoint, such as `GET`
+course-choice with a malformed code and a `returnQ` holding a marker text
+
+**When** the page is shown
+
+**Then** the marker is nowhere in the page, the language switcher's hidden field included. The test first shows the
+defect: it was established by reading the code, not by a request.
+
+## AC-013 Tests left over from US-070
+
+**Given** the behaviour US-070 built
+
+**When** the suite runs
+
+**Then** tests prove: a text with markup characters (`a&b=<c>"d'`) stays encoded through the Meet code list, the hand-built
+`MarkForm`, the confirm form and the course-choice form; `GET` course-choice for an unknown code keeps the valid `returnQ`;
+an invalid `status` or `page` with a valid `q` on the teacher list keeps the text (VR-002); and the script tests for hiding
+an empty block and disabling the submit fail if the behaviour is removed, the script's comments notwithstanding. Summaries
+of those tests cite the right FR-009 items.
+
 ---
 
 # Open Decisions
@@ -155,7 +195,7 @@ text in the URL with the browser history warning, departed students found and ma
 
 # Notes
 
-- **Depends on US-070** (matching rules, Meet code search).
+- **Built on US-070**, done `87630bd` (matching rules, Meet code search).
 - **Personal data in a query string:** this is the first screen with students' names in `?q=`. Raise
   [US-039 INFO-1] at SPECIFICATION and SECURITY_REVIEW: the switcher copies the validated query into the
   page, served only to the same user (decided acceptable in v108). `Referrer-Policy` is same-origin
@@ -164,4 +204,6 @@ text in the URL with the browser history warning, departed students found and ma
 - **Erasure screen search** is Admin-only and stays separate (`ErasureController.cs:25`).
 - **Folding** must use the explicit collation, as US-070 does, not the default in
   `ParticipantErasureReadSource.cs:26-29`.
+- **Manual checks need a clean Edge profile on the stand:** in the Owner's everyday profile the stand's pages lost their
+  styles (US-070 report §3.1), cause not found.
 - Privacy policy: `trebovaniya.md` section 7 item 30; not part of this Story.

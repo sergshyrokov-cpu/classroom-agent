@@ -491,7 +491,7 @@ stories:
     epic: EPIC-2
     title: One search field in the header, including students with their courses
     state: READY
-    blocked_by: Depends on US-070 (matching rules, Meet code search).
+    blocked_by: null
     # Story file authored: docs/stories/US-071-search-field-in-the-header.md
     # (aligned with v107, v108, BR-088, NFR-075, NFR-078, SC-14). Decided by the Owner
     # 2026-11-02. Before Deans start work in the pilot.
