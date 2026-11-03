@@ -151,7 +151,7 @@ stories:
   - id: US-072
     epic: EPIC-6
     title: Control Plane error page without the language switcher
-    state: READY
+    state: IN_PROGRESS
     blocked_by: null
     # Story file authored: docs/stories/US-072-control-plane-error-page-without-switcher.md
     # From US-071/API_DESIGN/m-1, SECURITY_REVIEW/INFO-2. Decided by the Owner 2026-11-03.

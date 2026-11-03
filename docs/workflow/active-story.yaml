@@ -3,10 +3,10 @@
 # Writer: story-orchestrator (on activation). Stories are authored by a human
 # in docs/stories/ — there is no backlog-sync stage in this workflow variant.
 version: 1
-active_story: US-071
-story_path: docs/stories/US-071-search-field-in-the-header.md
+active_story: US-072
+story_path: docs/stories/US-072-control-plane-error-page-without-switcher.md
 source:
   type: authored
-activated_at: 2026-11-03T15:20:15Z
+activated_at: 2026-11-03T20:15:49Z
 activated_by: Serhii SHYROKOV (/so:start)
-status: COMPLETED
+status: IN_PROGRESS
