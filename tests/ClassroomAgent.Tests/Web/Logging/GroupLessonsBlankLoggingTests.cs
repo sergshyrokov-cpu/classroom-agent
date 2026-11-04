@@ -72,14 +72,14 @@ public sealed class GroupLessonsBlankLoggingTests(PostgreSqlFixture database)
         var seeded = await host.SeedJournalAsync(ct);
 
         var response = await client.ExportAsync(
-            GroupLessonsBlank.RawBody(seeded.CourseId, ("layout", "\"group-lessons-blank\""), ("studentsPerCopy", "7777")), ct);
+            GroupLessonsBlank.RawBody(seeded.CourseId, ("layout", "\"group-lessons-blank\""), ("studentsPerCopy", "\"zqrefusedzq\"")), ct);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await WaitForAsync(host, e => e.EventName == Refused && e.Level == "Warning", ct);
 
         var events = await ReadEventsAsync(host, ct);
         var refused = Assert.Single(events, e => e.EventName == Refused);
         Assert.Contains("StudentsPerCopyInvalid", refused.Line, StringComparison.Ordinal);
-        Assert.DoesNotContain(events, e => e.Line.Contains("7777", StringComparison.Ordinal));
+        Assert.DoesNotContain(events, e => e.Line.Contains("zqrefusedzq", StringComparison.Ordinal));
         Assert.DoesNotContain(events, e => e.EventName == Exported);
     }
 
