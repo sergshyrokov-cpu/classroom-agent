@@ -159,7 +159,7 @@ stories:
   - id: US-073
     epic: EPIC-6
     title: The eye shows only a password the person entered, never one the browser filled in
-    state: READY
+    state: IN_PROGRESS
     blocked_by: null
     # Story file authored: docs/stories/US-073-show-password-only-for-typed-text.md
     # (aligned with v110, NFR-077, SC-2). From US-069/SECURITY_REVIEW/INFO-1, decided by the
