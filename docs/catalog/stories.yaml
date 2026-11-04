@@ -156,6 +156,14 @@ stories:
     # Story file authored: docs/stories/US-072-control-plane-error-page-without-switcher.md
     # From US-071/API_DESIGN/m-1, SECURITY_REVIEW/INFO-2. Decided by the Owner 2026-11-03.
     # Before the pilot.
+  - id: US-073
+    epic: EPIC-6
+    title: The eye shows only a password the person entered, never one the browser filled in
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-073-show-password-only-for-typed-text.md
+    # (aligned with v110, NFR-077, SC-2). From US-069/SECURITY_REVIEW/INFO-1, decided by the
+    # Owner 2026-11-04. Before the pilot.
   - id: US-040
     epic: EPIC-6
     title: Responses are not cached (Cache-Control no-store)
@@ -454,6 +462,13 @@ stories:
     # US-013 COMPLETED. Story file authored:
     # docs/stories/US-019-trigger-sync-from-ui.md (aligned with v81).
     # OD-001 … OD-008 resolved by the Owner on 2026-10-04, before activation.
+  - id: US-075
+    epic: EPIC-1
+    title: A short hint under each kind of data problem, and banner links to each section
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-075-data-problem-hints.md
+    # (aligned with v110, BR-047). Proposed by the Owner 2026-11-04. Does not hold up the pilot.
 
   # --- EPIC-2: Courses and participants -----------------------------------
   - id: US-020
@@ -638,6 +653,14 @@ stories:
     # Story file authored: docs/stories/US-044-meet-reports-export.md (aligned with v88).
     # OD-001 … OD-003 carried from US-033; OD-004 … OD-012 resolved by the Owner
     # on 2026-10-11, before activation (row filtering = Excel autofilter).
+  - id: US-074
+    epic: EPIC-4
+    title: Meet code lists show the organizer by name and find the code by that name
+    state: READY
+    blocked_by: null
+    # Story file authored: docs/stories/US-074-meet-code-organizer-by-name.md
+    # (aligned with v110, BR-087). From rehearsal finding P-15, decided by the Owner 2026-11-04.
+    # Before Deans start work in the pilot.
 
   # --- EPIC-9 (next version): Audit log viewing ----------------------------
   # Not part of the first version. AuditEvent rows are written from v1

@@ -78,6 +78,7 @@ and manage Dean accounts.
   for Admins and Deans in the installation and for the Owner in the Control Plane;
   the school's default comes from installation configuration (NFR-073). Also allowed
   in read-only mode (BR-026)
+- US-073 The eye shows only a password the person entered, never one the browser filled in
 
 ---
 
@@ -98,6 +99,7 @@ database, in the background, repeatably.
 - US-017 Retry, backoff and permission-error handling
 - US-018 Incremental synchronization
 - US-019 Trigger a synchronization from the UI
+- US-075 A short hint under each kind of data problem, and banner links to each section
 
 ---
 
@@ -187,6 +189,7 @@ class leaves no Meet data (BR-060).
   student participation, one meeting in detail (BR-062…BR-064;
   `trebovaniya.md` §2 permission matrix)
 - US-044 Export the built-in Meet reports to Excel
+- US-074 Meet code lists show the organizer by name and find the code by that name
 
 ---
 
