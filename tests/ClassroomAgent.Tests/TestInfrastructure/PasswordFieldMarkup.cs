@@ -124,16 +124,20 @@ public static partial class PasswordFieldMarkup
         ScriptLineComment().Replace(ScriptBlockComment().Replace(script, " "), " ");
 
     /// <summary>
-    /// FR-006.2, FR-006.5, SC-13: what the script must never do — read or change the value, reach the network, use
-    /// browser storage, write to the console, submit a form or load anything. Empty when it complies.
+    /// FR-006.2, FR-006.5, SC-13, US-073 FR-005, FR-008: what the script must never do — use the value beyond the one
+    /// comparison in the one helper, cancel an event, reach the network, use browser storage, write to the console, submit
+    /// a form or load anything. Empty when it complies.
     /// </summary>
     public static IReadOnlyList<string> ScriptProblems(string script)
     {
-        var code = ScriptCode(script);
+        var code = ValueHelper().Replace(ScriptCode(script), " ", 1);
         var problems = ForbiddenConstruct().Matches(code).Select(m => $"forbidden construct: {m.Value}").ToList();
         problems.AddRange(ExternalUrl().Matches(script).Select(m => $"URL of another site: {m.Value}"));
         return problems;
     }
+
+    /// <summary>US-073 FR-008.1: how many times the script holds the one helper that compares the value with the empty string.</summary>
+    public static int ValueHelperCount(string script) => ValueHelper().Matches(ScriptCode(script)).Count;
 
     /// <summary>FR-006.4: a listener for <c>submit</c> on the document or the window, so that every form on the page is covered.</summary>
     public static bool ListensForSubmitOnThePage(string script) => DocumentSubmitListener().IsMatch(ScriptCode(script));
@@ -171,10 +175,13 @@ public static partial class PasswordFieldMarkup
     private static partial Regex ScriptLineComment();
 
     [GeneratedRegex(
-        @"\.value\b|\.defaultValue\b|(?:get|set)Attribute\(\s*[""']value[""']|\bfetch\s*\(|XMLHttpRequest|sendBeacon|WebSocket|EventSource"
+        @"\.value\b|\.defaultValue\b|\[\s*[""']value[""']\s*\]|(?:get|set)Attribute\(\s*[""']value[""']|\bfetch\s*\(|XMLHttpRequest|sendBeacon|WebSocket|EventSource"
         + @"|localStorage|sessionStorage|indexedDB|\bcaches\.|document\.cookie|\bconsole\.|FormData|\bimport\s*\(|\.src\b|\.href\b|\.action\b"
-        + @"|\.submit\s*\(|requestSubmit|\.innerHTML|\.outerHTML|\.textContent|\blocation\.|document\.write")]
+        + @"|\.submit\s*\(|requestSubmit|\.innerHTML|\.outerHTML|\.textContent|\blocation\.|document\.write|\.preventDefault\b")]
     private static partial Regex ForbiddenConstruct();
+
+    [GeneratedRegex(@"\bfunction\s+isEmpty\s*\(\s*input\s*\)\s*\{\s*return\s+input\.value\s*===\s*(?:""""|'')\s*;?\s*\}")]
+    private static partial Regex ValueHelper();
 
     [GeneratedRegex(@"\b(?:https?:)?//[a-z0-9][a-z0-9.-]*\.[a-z]{2,}", RegexOptions.IgnoreCase)]
     private static partial Regex ExternalUrl();

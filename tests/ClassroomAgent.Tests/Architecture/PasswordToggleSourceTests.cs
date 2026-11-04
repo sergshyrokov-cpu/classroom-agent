@@ -26,8 +26,9 @@ public sealed partial class PasswordToggleSourceTests
     // ---- The script ----------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// AC-005, FR-005, FR-006.1, FR-006.2: it handles any number of fields by class, reveals the control, marks the
-    /// field ready, and switches the input's type, <c>aria-pressed</c> and <c>aria-label</c>.
+    /// AC-005, FR-005, FR-006.2: it handles any number of fields by class, marks the field ready, and switches the input's
+    /// type, <c>aria-pressed</c> and <c>aria-label</c>. When the control appears is US-073's rule: see
+    /// <see cref="PasswordToggleStateSourceTests"/>, which replaced the check that it is revealed at load.
     /// </summary>
     [Theory]
     [MemberData(nameof(Hosts))]
@@ -45,7 +46,6 @@ public sealed partial class PasswordToggleSourceTests
                 $"{host}: the script does not mention {expected}.");
         }
 
-        Assert.Matches(@"removeAttribute\(\s*[""']hidden[""']\s*\)|\.hidden\s*=\s*false", code);
         Assert.DoesNotContain("getElementById", code, StringComparison.Ordinal);
     }
 
@@ -64,8 +64,9 @@ public sealed partial class PasswordToggleSourceTests
     }
 
     /// <summary>
-    /// AC-005, AC-008, FR-006.2, FR-006.5, SC-13: it neither reads nor changes the value, reaches no network, uses no
-    /// storage or console, submits nothing and loads nothing from anywhere.
+    /// AC-005, AC-008, FR-006.2, FR-006.5, SC-13, US-073 AC-007, FR-008: it uses the value only in the one comparison of
+    /// the one helper and never changes it, reaches no network, uses no storage or console, cancels no event, submits
+    /// nothing and loads nothing from anywhere.
     /// </summary>
     [Theory]
     [MemberData(nameof(Hosts))]
@@ -75,6 +76,15 @@ public sealed partial class PasswordToggleSourceTests
     /// <summary>The scan above is not vacuous.</summary>
     [Theory]
     [InlineData("var v = input.value;")]
+    [InlineData("input.value = '';")]
+    [InlineData("input.value.length;")]
+    [InlineData("input['value'];")]
+    [InlineData("if (input.value === '') { hide(); }")]
+    [InlineData("function isEmpty(input) { return input.value.length === 0; }")]
+    [InlineData("function isEmpty(input) { return input.value == ''; }")]
+    [InlineData("function isEmpty(input) { return input.value === 'x'; }")]
+    [InlineData("function isEmpty(input) { return input.value === ''; } function isEmpty(input) { return input.value === ''; }")]
+    [InlineData("event.preventDefault();")]
     [InlineData("input.defaultValue = '';")]
     [InlineData("input.getAttribute('value');")]
     [InlineData("fetch('/x');")]
@@ -93,6 +103,8 @@ public sealed partial class PasswordToggleSourceTests
     /// <summary>The scan accepts what the Specification asks for, and comments are not code.</summary>
     [Theory]
     [InlineData("input.type = 'text';")]
+    [InlineData("function isEmpty(input) { return input.value === ''; }")]
+    [InlineData("function isEmpty(input) {\n    return input.value === \"\";\n}")]
     [InlineData("control.setAttribute('aria-label', control.dataset.hideName);")]
     [InlineData("// the value is never read: no .value and no console.log here")]
     [InlineData("/* no fetch( and no localStorage */")]
