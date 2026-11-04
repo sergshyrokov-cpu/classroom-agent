@@ -221,22 +221,25 @@ restrained look built on Bootstrap 5.3, CSS only (no Bootstrap scripts while the
 is no menu). Its files ship with the application in each host's static files
 directory together with its MIT licence file; nothing is loaded from another site,
 and the browser security headers are not loosened for it (SC-15). One light theme.
-The header keeps its current content (language switcher and, in the installation,
-the data-health banner); no school name or logo. Data-state marks are highlighted
+Styling does not change the header's content (language switcher and, in the
+installation, the data-health banner and the search field, BR-088); no school name or logo. Data-state marks are highlighted
 by colour only — no sound, pop-up or blinking. Pages read on a phone (NFR-070).
 Styling adds and removes no visible text. Acceptance: tests prove the stylesheets
 are linked on every page of both hosts and no inline style exists; a person checks
 the look of the key pages — sign-in, journal, Meet reports, settings, the error page,
 and in the Control Plane sign-in and the installation list — on a computer and a
-phone. *(§8, v105)*
+phone. *(§8, v105, v110)*
 
 **NFR-077** Page labels: the landing page labels the role («Роль: Декан»); a page has
 one title, the one the layout renders; the three blocks of the database page are
 named; the Meet reports course field prompts for a course in the same words as the
 journal and the template report. The language switcher keeps `УКР` and `ENG`. Every
-password field of both hosts has an eye icon that shows and hides the typed text
-(SC-2), with no new visible word; its accessible names come from translation files.
-Without scripts there is no icon and the field works as before. *(§8, v106)*
+password field of both hosts can show an eye icon that shows and hides the typed text,
+only when the person entered the password themselves (SC-2, v110), with no new visible
+word; its accessible names come from translation files. Without scripts there is no icon
+and the field works as before. Acceptance of the icon with a really saved password in Edge
+and Chrome is a person's check: an automated test does not reproduce a browser's filling.
+*(§8, v106, v110)*
 
 **NFR-078** A hint or message of one sentence on one line ends without a final period, for
 the readability of the page, in both languages and both hosts. A text of several sentences

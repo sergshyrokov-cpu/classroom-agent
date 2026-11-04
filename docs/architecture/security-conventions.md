@@ -150,9 +150,18 @@ area as production severity.
   A session cookie without `httpOnly`, any cookie without `Secure`, a `SameSite`
   value other than the one fixed here, or HTTPS rules applied to the wrong port is
   a finding.
-- **Showing a typed password** *(v106)*. Every password field of both hosts, the
-  temporary password an Admin sets included, has a control that shows and hides the
-  typed text in the browser (NFR-077). It is a same-host script file and icon: the
+- **Showing a typed password** *(v106, v110)*. Every password field of both hosts, the
+  temporary password an Admin sets included, can have a control that shows and hides the
+  typed text in the browser (NFR-077). The control appears only when the person enters
+  the password themselves, by typing or pasting; an empty field has none. A password the
+  browser filled in from its saved ones can never be shown, or anyone at the sign-in
+  page of a shared school computer could read it: a filled field has no control, editing
+  the filled value does not bring it back, and it appears only after the field is
+  cleared and the password entered anew. If the browser fills the field after typing,
+  the password is hidden and the control disappears. When typing cannot be told from
+  filling, there is no control. Known limitation: a password-manager extension that
+  imitates key presses cannot be told from a person. A control that reveals a
+  browser-filled value is a finding. It is a same-host script file and icon: the
   headers do not change (SC-15), and nothing reaches the server that a hidden field
   would not send. When the form is submitted the field is hidden again, so the browser
   neither stores the value as ordinary text nor restores it visible on "back". A shown
@@ -259,8 +268,11 @@ Admin's account (BR-015, SC-8).
   field; a REST call from the same UI sends it in the `RequestVerificationToken`
   header (`api-conventions.md` API-7). A request without a valid token is refused
   with `400`: a Razor form gets the host's error page (above) with the translated
-  "page expired — reload it and try again" text, and a REST call gets the API-6
-  body (API-7, `trebovaniya.md` §8, v64). Anonymous forms are not exempt:
+  "page expired — reload it and try again" text and a link: to the same page from
+  sign-in and, in the Control Plane, first-run setup, to the home page from other forms
+  (v110), because the refusal comes before the form is processed and where it came from
+  cannot be known reliably; a REST call gets the API-6
+  body (API-7, `trebovaniya.md` §8, v64, v110). Anonymous forms are not exempt:
   Dean sign-in, Owner sign-in, first-run setup and the "Sign in with Google" button
   (a POST form) all require the token, which protects against login CSRF.
 - **Exemption from antiforgery is a closed list.** Only these endpoints may skip

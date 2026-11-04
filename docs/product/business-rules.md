@@ -329,8 +329,11 @@ left behind. Two kinds:
   read-only mode the staleness notice is not raised.
 
 A banner at the top of every installation page, while any problem exists, shows
-"N technical problems, M teaching" and links to the «Стан даних» page with the
-details of each, linking to the course's journal. One course × one kind of problem
+"N technical problems, M teaching". Each part links to its own section of the
+«Стан даних» page (v110), which has the details of each problem, linking to the
+course's journal; a link does not wrap inside itself, so when the line does not fit
+the second part moves to the next line whole, and a part with zero is plain text with
+no link (v110). One course × one kind of problem
 counts as one; a problem without a course (failed run, staleness) counts as one.
 Notices show the current state only: a notice disappears when its problem is gone,
 with no expiry and no "read" mark; history is in the log and audit. Archived
@@ -341,7 +344,14 @@ details; the Admin sees all, technical ones with details. Notices are built from
 stored data, never by calling Google, and are visible in read-only mode. The banner
 is restrained — colour only, no sound, pop-up or blinking. Next to the teaching
 problems on «Стан даних» the Dean sees the hint to contact the Admin if the
-problem could not be solved with the teacher (v100). *(§2, Epic 1, v99, v100, v102, v103)*
+problem could not be solved with the teacher (v100). Under each kind of problem the
+page shows one or two short lines on what it means and who fixes it where, visible at
+once, with no click and no script (v110): the Dean sees them for teaching problems; the
+Admin sees them for technical ones, with what to check and on which page, while the Dean
+keeps only the hint to tell the Admin, with no details. A hint already in place stays. A
+hint is general text on the kind of problem from the translation files: it diagnoses no
+particular case and adds no data and no right. An archived course gets no hint on fixing,
+because Google allows no change there. *(§2, Epic 1, v99, v100, v102, v103, v110)*
 
 **BR-048** A stored course missing from a course list read to its end is never
 deleted: synchronization marks it "not in Classroom" with the date it noticed.
@@ -467,7 +477,8 @@ report and labelled "above maximum". In the school's scale it stays 100 %
 colour and adds a note with the raw points and maximum. An item "not in
 Classroom" (BR-045) keeps its column with its grades in the journal, report and
 export, marked in the header and, on the «Теми занять» sheet, next to the topic.
-*(§4 Epic 3, v99)*
+The rule applies when a maximum is set and is above zero: otherwise there is nothing
+to compare with (v110). *(§4 Epic 3, v99, v110)*
 
 **BR-068** A student who is not on the course's roster now is marked "left
 <last-seen date>" next to their name in the journal and report on screen (BR-051;
@@ -516,16 +527,19 @@ address in the domain is unique. *(§4 Epic 3, v104)*
 splits into words; a record matches when it holds all the words in any order, each as
 part of a word. Case does not matter, apostrophe variants (' ’ ʼ) count as one character,
 hyphens in Meet codes do not matter, typos are not forgiven. Only current names and titles
-match (BR-085). An erased or excluded person is not found, and an organizer's email only
-where the screen shows it. Search reads stored data only, never Google, so it works in
+match (BR-085). An erased or excluded person is not found, and an organizer's name and
+email only where the screen shows them (v110). Known limitation (v110): a student known only
+through submissions is not found, having neither a name nor an email; finding them would need
+synchronization to read profiles. Search reads stored data only, never Google, so it works in
 read-only mode; it writes no audit event and its text reaches no application log. The text
 is in the page address, and the browser does not remember the field. In a list the search
 covers the whole list, combines with the filters by AND and stays across pages and after a
 row action: the course list, the teacher list (surname, given name, email), the Meet codes
-(code, organizer email, linked course name and section; all three lists, with counters
-showing matches). Course pickers in the journal, template report and Meet reports, the
+(code, organizer name and email (v110), linked course name and section; all three lists,
+with counters showing matches). Course pickers in the journal, template report and Meet reports, the
 teacher filter of the course list and the full course list when choosing a course for a
-Meet code narrow as the user types; without scripts they are plain lists. *(§4 Epic 2, v108)*
+Meet code narrow as the user types; without scripts they are plain lists. *(§4 Epic 2, v108,
+v110)*
 
 **BR-088** The «Пошук» / "Search" field in the header of every installation page after
 sign-in, except the forced password change and the error page, opens a results page for
@@ -597,14 +611,18 @@ was, so a course re-created in place of a deleted one would tie with it and neve
 link itself; such a course is therefore neither linked automatically nor offered
 as a candidate, while a Dean or Admin may still pick it by hand and links already
 made to it stay (v102). Ambiguous codes wait in
-the unassigned-meetings list, where a Dean or Admin picks the course. A code is
+the unassigned-meetings list, where a Dean or Admin picks the course. In all three
+lists of codes — unassigned, linked and "not a course" — the organizer is shown as in
+the Meet reports: the name as Google gave it with the email beside it, the email alone
+when the name is not known; the name comes from Classroom participants already loaded,
+never from a new call to Google (v110). A code is
 linked once and covers every meeting of that course until the Classroom link is
 reset; re-linking moves all its meetings. Every change to a link is audited: the
 automatic link (actor `system`), picking a course for an unassigned code,
 confirmation and re-linking (v55). Linking is blocked in
 read-only mode. Known limitation: a non-Classroom link reused in several courses
 is linked to one course only, and meetings of the other courses under that code
-count there. *(§2, §4 Epic 4, v41, v102)*
+count there. *(§2, §4 Epic 4, v41, v102, v110)*
 
 **BR-066** Every meeting, whether its code is linked to a course or not, is
 deleted with its participations N years after its own date, so it cannot outlive
@@ -683,10 +701,15 @@ exclusion has no Google user id at first: synchronization skips a participant
 whose email in Google's answer has the same fingerprint and records their id in
 the exclusion, which from then on works by id even if the address changes. Known
 limitation: a participant whose email Google did not return cannot be matched and
-is erased the ordinary way after synchronization. None of this is available in
+is erased the ordinary way after synchronization. Known limitation (v110): a person
+already loaded under an old address and excluded in advance under the new one keeps
+loading from Classroom, because their Google id already belongs to a stored record and
+the exclusion does not apply; their Meet connections are already skipped by
+fingerprint. To stop the loading the Admin enters the address again and erases them the
+ordinary way. None of this is available in
 read-only mode; there, an urgent request is done by the Owner by hand, only after
 the school has removed the person from Google. *(§2, §3, §5, EPIC-10, v19, v93,
-v104)*
+v104, v110)*
 
 **BR-077** An erasure never comes back: after a database is restored from a
 backup, every erasure made after the backup's date is re-applied before the
