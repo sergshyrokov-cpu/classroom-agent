@@ -245,3 +245,21 @@ and Chrome is a person's check: an automated test does not reproduce a browser's
 the readability of the page, in both languages and both hosts. A text of several sentences
 keeps its periods. The rule binds new texts; existing ones follow by the base version, and
 both forms are accepted until then. *(§8, v108, v109)*
+
+**NFR-079** Page help: five installation pages — the journal, the Meet codes, the Meet
+reports (the meeting list and the one-meeting page, v112) and the report template list —
+have a «?» control beside the page title. Pressing
+it expands a short text in place, under the title; pressing again collapses it. No pop-up;
+the help is collapsed on every page load and nothing is stored. The text is two to four
+lines on one scheme: what the page is for; where its data comes from (Google, refreshed by
+synchronization, not edited on this page); what to do if something looks wrong. It describes
+the program's behaviour and adds no rule: where text and program differ, the text is wrong.
+Its meaning per page is in `trebovaniya.md` section 5; the exact wording in both languages
+is approved by the Owner at specification approval. Admin and Dean see the same help,
+read-only mode included: it changes nothing and grants no right. The text comes from
+translation files in the user's language (NFR-073) and keeps ordinary sentence periods
+(NFR-078 binds one line only). The control is easy to tap and the text easy to read on a
+phone (NFR-070). Other installation pages and the Control Plane have no help; which pages
+get it next is decided from the Deans' questions in the pilot. Acceptance: tests prove the
+help is on these five pages in both languages and on no other page; a person checks the
+look on a computer and a phone. *(§5, v111, v112)*
