@@ -2,25 +2,19 @@
 # Schema: docs/workflow/state-schema.md
 # Writer: story-orchestrator ONLY. Stage Skills never write this file.
 version: 1
-story: US-073
+story: US-074
 workflow: story-delivery
-current_stage: COMPLETED
-previous_stage: HUMAN_PR_APPROVAL
-last_completed_stage: HUMAN_PR_APPROVAL
-status: COMPLETED
+current_stage: SPECIFICATION
+previous_stage: null
+last_completed_stage: null
+status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: security-reviewer
-last_result:
-  verdict: PASS
-  stage: SECURITY_REVIEW
-  recorded_at: '2026-11-04T22:09:45Z'
-last_artifacts:
-  - type: security_review
-    path: docs/reviews/security/US-073-security-review.md
-    version: 2
+last_invoked_skill: null
+last_result: null
+last_artifacts: []
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings: []
-started_at: '2026-11-04T14:44:44Z'
-updated_at: '2026-11-04T22:15:37Z'
-completed_at: '2026-11-04T22:15:37Z'
+started_at: null
+updated_at: '2026-11-06T19:32:30Z'
+completed_at: null
