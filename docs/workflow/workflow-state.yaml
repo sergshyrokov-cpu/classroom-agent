@@ -4,29 +4,26 @@
 version: 1
 story: US-074
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: spec-verifier
+last_invoked_skill: openapi-designer
 last_result:
   verdict: PASS
-  stage: SPEC_REVIEW
-  recorded_at: '2026-11-06T19:39:55Z'
+  stage: API_DESIGN
+  recorded_at: '2026-11-06T19:48:02Z'
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-074-spec.md
+  - type: openapi
+    path: docs/designs/api/US-074-openapi.yaml
     version: 1
-  - type: spec_digest
-    path: docs/specifications/US-074-spec-digest.ru.md
-    version: 1
-  - type: specification_review
-    path: docs/reviews/specifications/US-074-spec-review.md
+  - type: api_design
+    path: docs/designs/api/US-074-api-design.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings: []
 started_at: '2026-11-06T19:37:19Z'
-updated_at: '2026-11-06T19:43:49Z'
+updated_at: '2026-11-06T19:48:02Z'
 completed_at: null

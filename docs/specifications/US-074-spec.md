@@ -2,9 +2,9 @@
 artifact_type: specification
 story: US-074
 version: 1
-status: DRAFT
+status: APPROVED
 created_at: 2026-11-06T19:35:52Z
-updated_at: 2026-11-06T19:35:52Z
+updated_at: 2026-11-06T19:46:41Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-074-meet-code-organizer-by-name.md

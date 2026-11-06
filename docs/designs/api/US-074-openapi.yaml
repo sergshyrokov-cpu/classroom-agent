@@ -1,0 +1,186 @@
+openapi: 3.1.0
+info:
+  title: ClassroomAgent — Meet code lists show the organizer by name and find the code by that name (US-074)
+  version: "1"
+  description: >
+    Delta to the HTTP contracts of US-032, US-070 and US-071 on the installation's public port
+    (`trebovaniya.md` v112, Epic 4 «организатор в списках кодов» v110; section 5 «Поиск»; BR-087, BR-088).
+    Server-rendered pages only; no JSON API, no new path, no new parameter, no new status code, no new
+    role right, no new translation key. `GET /workspace/meet-codes` changes the shape of the organizer
+    item on its three lists (an email list becomes a list of people, each a name and an email) and its
+    `q` gains one searchable field, the organizer's name. `GET /workspace/search` gains the same field in
+    its "Meet codes" group through the shared read, with no change of its own shape. Reads stored data
+    only: no Google call, no write, no audit event. What this file does not restate stays as US-032,
+    US-070 and US-071 say. Companion document: docs/designs/api/US-074-api-design.md.
+x-story: US-074
+x-source-specification: docs/specifications/US-074-spec.md
+x-source-specification-version: 1
+x-source-open-decisions: docs/decisions/US-074-open-decisions.md
+x-source-open-decisions-version: 1
+x-requirements-version: 112
+x-produced-by: openapi-designer
+x-extends:
+  - docs/designs/api/US-032-openapi.yaml
+  - docs/designs/api/US-070-openapi.yaml
+  - docs/designs/api/US-071-openapi.yaml
+x-contract-version: 1
+x-contract-version-note: >
+  `ClassroomAgent.Contracts.ContractVersion.Current` stays **1**. No wire type between installation
+  and Control Plane is added or changed (DC-12).
+
+servers:
+  - url: https://{installation-host}
+    variables:
+      installation-host:
+        default: localhost
+
+tags:
+  - name: meet-codes
+    description: Meet code lists and search (US-032, US-070, US-074)
+
+paths:
+  /workspace/meet-codes:
+    get:
+      tags: [meet-codes]
+      operationId: getMeetCodes
+      summary: "Existing US-032/US-070 page — the organizer cell shows name and email; `q` also matches the organizer's name"
+      description: >
+        Evaluation order, parameters, status codes, validation and refusal are unchanged from US-070. Two changes.
+        (1) Each row's organizers are people (spec FR-001, FR-002): distinct by lower-cased email (I-1), each with the
+        name chosen by the Meet reports' rule or none, in ordinal order of the shown email. (2) `q` matches by US-070
+        FR-001 over the code (rule 6), the organizer emails, **the organizers' names** (spec FR-003; only the chosen
+        name, I-3; words may land in different organizers, I-2), and the linked course's name and section. The three
+        counters, list links, paging links, return path and row actions carry `q` as before.
+      x-change: response-shape-and-search-field
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewMeetCodes
+      x-permission-matrix-row: "\"Привязка кода встречи Meet к курсу\" — Admin ✔, Dean ✔"
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: nothing
+      x-audit: none
+      x-read-only-mode: allowed
+      x-logs-search-text: false
+      x-spec: [FR-001, FR-002, FR-003, FR-005, VR-001, VR-002, VR-003]
+      x-acceptance-criteria: [AC-001, AC-002, AC-003, AC-004, AC-005, AC-007, AC-008, AC-009]
+      x-markup:
+        organizer-cell: >
+          The existing organizer cell of the Unassigned, Linked and Not-a-course tables; organizers separated by «, »;
+          each organizer rendered as `MeetReports/_MeetPerson.cshtml` renders a `PersonRef` (a `.meet-person-name`
+          span when a name exists, then a `.meet-person-email` span). Razor-encoded, never `Html.Raw`, never
+          translated. The "unnamed" label cannot appear: `email` is never null here.
+        unchanged: column header key, column position, other columns, row actions, paging, empty-state keys
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/SearchText"
+      responses:
+        "200":
+          description: "The page."
+          content:
+            text/html:
+              x-view-model-delta: { $ref: "#/components/schemas/MeetCodesPageModelDelta" }
+        "400":
+          description: "Unchanged from US-070 (refused `q`, VR-003; invalid `list`/`page`/`size`, VR-004)."
+          content:
+            text/html:
+              x-view-model-delta: { $ref: "#/components/schemas/MeetCodesPageModelDelta" }
+        "302":
+          description: "Not signed in — `/sign-in`; restricted session — `/sign-in/change-password`."
+        "403":
+          description: "Signed in without `ViewMeetCodes` — the existing access-denied response (unchanged)."
+
+  /workspace/search:
+    get:
+      tags: [meet-codes]
+      operationId: getSearchResults
+      summary: "Existing US-071 page — the \"Meet codes\" group also finds a code by its organizer's name"
+      description: >
+        No change of its own (spec FR-004). The "Meet codes" group reads through the same `GetFirstMatchesAsync` and
+        `GetCountsAsync` as `/workspace/meet-codes`, so it gains the organizer-name field with the code page. Rows,
+        the 20-result rule, «показано 20 з N» (N = the sum of the three counters), the link to the whole list with
+        `q`, the order of groups, validation and status codes are as in US-071. The group's rows still show no
+        organizer.
+      x-change: search-field-through-shared-read
+      x-host: ClassroomAgent.Web
+      x-port: public
+      x-anonymous: false
+      x-policy: ViewCourses
+      x-permission-matrix-row: "\"Просмотр курсов и участников\" — Admin ✔, Dean ✔"
+      x-antiforgery: not-applicable
+      x-calls-google: false
+      x-writes: nothing
+      x-audit: none
+      x-read-only-mode: allowed
+      x-logs-search-text: false
+      x-spec: [FR-004]
+      x-acceptance-criteria: [AC-006, AC-007]
+      security:
+        - installationSession: []
+      parameters:
+        - $ref: "#/components/parameters/SearchText"
+      responses:
+        "200":
+          description: "Unchanged shape (US-071)."
+        "400":
+          description: "Unchanged (US-071 VR-001)."
+        "302":
+          description: "Not signed in — `/sign-in`; restricted session — `/sign-in/change-password`."
+        "403":
+          description: "Signed in without `ViewCourses` — the existing access-denied response (unchanged)."
+
+components:
+  securitySchemes:
+    installationSession:
+      type: apiKey
+      in: cookie
+      name: ClassroomAgent.Session
+      description: "The installation's session cookie (US-008); name illustrative, unchanged."
+
+  parameters:
+    SearchText:
+      name: q
+      in: query
+      required: false
+      description: "Unchanged from US-070 VR-001…VR-004 (and US-071 VR-001 on `/workspace/search`)."
+      schema:
+        type: string
+        maxLength: 100
+
+  schemas:
+    PersonRef:
+      type: object
+      description: >
+        Existing DTO `ClassroomAgent.Application.Models.Dtos.PersonRef` (US-033), reused. On the Meet code lists
+        `email` is always non-null (an erased or excluded organizer is never listed, spec FR-001) and `fullName` is
+        null when no name is known or the chosen one is blank (spec FR-001, AC-002).
+      required: [fullName, email]
+      properties:
+        fullName:
+          type: [string, "null"]
+          description: "As stored from Google; never corrected, translated or composed from surname and given name."
+        email:
+          type: string
+          description: "The organizer email as the first ordinal stored spelling of its lower-cased form (I-1)."
+
+    MeetCodesPageModelDelta:
+      type: object
+      description: >
+        Changes to the US-032/US-070 `MeetCodesPageModel`. The property `organizerEmails` of each list item is
+        **replaced** by `organizers`. Breaking for in-process callers only (the Razor view and tests); no external
+        client reads these types.
+      properties:
+        unassignedCodeItem.organizers:
+          type: array
+          items: { $ref: "#/components/schemas/PersonRef" }
+          description: "Replaces `UnassignedCodeItem.organizerEmails`. Distinct by lower-cased email, ordinal order of `email`."
+        linkedCodeItem.organizers:
+          type: array
+          items: { $ref: "#/components/schemas/PersonRef" }
+          description: "Replaces `LinkedCodeItem.organizerEmails`, the same rules."
+        notACourseCodeItem.organizers:
+          type: array
+          items: { $ref: "#/components/schemas/PersonRef" }
+          description: "Replaces `NotACourseCodeItem.organizerEmails`, the same rules."
