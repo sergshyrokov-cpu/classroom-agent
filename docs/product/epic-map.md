@@ -79,6 +79,7 @@ and manage Dean accounts.
   the school's default comes from installation configuration (NFR-073). Also allowed
   in read-only mode (BR-026)
 - US-073 The eye shows only a password the person entered, never one the browser filled in
+- US-076 A «?» beside the title opens short help on the journal, Meet codes, Meet reports and template list
 
 ---
 

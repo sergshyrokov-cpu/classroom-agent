@@ -164,6 +164,14 @@ stories:
     # Story file authored: docs/stories/US-073-show-password-only-for-typed-text.md
     # (aligned with v110, NFR-077, SC-2). From US-069/SECURITY_REVIEW/INFO-1, decided by the
     # Owner 2026-11-04. Before the pilot.
+  - id: US-076
+    epic: EPIC-6
+    title: A «?» beside the title opens short help on the journal, Meet codes, Meet reports and template list
+    state: READY
+    blocked_by: >
+      To be built after US-074, which changes the Meet code page.
+    # Story file authored: docs/stories/US-076-page-help.md
+    # (aligned with v112, NFR-079). Decided by the Owner 2026-11-06. Before the pilot.
   - id: US-040
     epic: EPIC-6
     title: Responses are not cached (Cache-Control no-store)
