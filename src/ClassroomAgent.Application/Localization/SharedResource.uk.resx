@@ -618,12 +618,20 @@
   <data name="DataHealth.Hint.TellTheAdmin" xml:space="preserve"><value>Повідомте Адміністратора</value></data>
   <data name="DataHealth.Hint.ContactTheAdmin" xml:space="preserve"><value>Якщо з викладачем вирішити не вдалося, зверніться до Адміністратора</value></data>
   <data name="DataHealth.Hint.TellTheOwner" xml:space="preserve"><value>Повідомте Власника</value></data>
+  <data name="DataHealth.Hint.AboveMaximum" xml:space="preserve"><value>Зазвичай це помилка введення: викладач виправляє оцінку або максимум завдання в Classroom, і після наступної синхронізації проблема зникає</value></data>
+  <data name="DataHealth.Hint.ItemsNotInClassroom" xml:space="preserve"><value>Завдання видалено або повернуто в чернетку в Classroom, оцінки в програмі збережено. Якщо це помилка, зверніться до викладача.</value></data>
+  <data name="DataHealth.Hint.NoRecentSuccess" xml:space="preserve"><value>Перегляньте стан синхронізації на сторінці підключення. Якщо запуски не починаються, повідомте Власника.</value></data>
+  <data name="DataHealth.Hint.NoSuccessYet" xml:space="preserve"><value>Перевірте налаштування на сторінці підключення. Перша синхронізація великої школи може тривати понад добу.</value></data>
+  <data name="DataHealth.Hint.CourseListEmpty" xml:space="preserve"><value>З меншими ролями Google курсів не показує. Роль технічного акаунта змінює супер-адміністратор школи в консолі адміністратора Google.</value></data>
+  <data name="DataHealth.Hint.CoursesNotVisible" xml:space="preserve"><value>Якщо акаунт змінено помилково, поверніть попередній або дайте новому потрібну роль, і позначка зникне сама. Якщо курси справді видалено, позначте їх і підтвердьте.</value></data>
+  <data name="DataHealth.Hint.UnknownCourseState" xml:space="preserve"><value>Google повернув стан курсу, якого ця версія програми не знає, і курс не оновлюється. Повідомте Власника.</value></data>
   <data name="DataHealth.Course.Untitled" xml:space="preserve"><value>Курс без назви ({0})</value></data>
   <data name="DataHealth.Technical.LastRunFailed" xml:space="preserve"><value>Остання синхронізація завершилася помилкою</value></data>
   <data name="DataHealth.Technical.NoRecentSuccess" xml:space="preserve"><value>Успішної синхронізації не було понад 24 години</value></data>
   <data name="DataHealth.Technical.NoSuccessYet" xml:space="preserve"><value>Успішної синхронізації ще не було</value></data>
   <data name="DataHealth.Technical.UnknownCourseState" xml:space="preserve"><value>Курс пропущено: стан курсу, якого програма не знає</value></data>
   <data name="DataHealth.Technical.CourseListEmpty" xml:space="preserve"><value>Google не повертає жодного курсу з {0} — перевірте роль технічного акаунта</value></data>
+  <data name="DataHealth.Technical.CourseListEmpty.Dean" xml:space="preserve"><value>Google не повертає жодного курсу з {0}</value></data>
   <data name="DataHealth.Technical.CoursesNotVisible" xml:space="preserve"><value>Технічний акаунт не бачить курсів, які бачив попередній</value></data>
   <data name="DataHealth.Technical.ControlPlaneUnreachable" xml:space="preserve"><value>Немає зв'язку із сервісом з {0}; з {1} програма перейде в режим «лише для читання», якщо зв'язок не відновиться</value></data>
   <data name="DataHealth.Technical.UpgradeRequired" xml:space="preserve"><value>Причина: ця версія програми більше не підтримується, потрібне оновлення</value></data>

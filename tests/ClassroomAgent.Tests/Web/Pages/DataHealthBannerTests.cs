@@ -158,14 +158,99 @@ public sealed class DataHealthBannerTests(PostgreSqlFixture database)
 
         var body = (await client.GetAsync("/", ct)).Body;
 
-        var start = body.IndexOf($"id=\"{BannerHook}\"", StringComparison.Ordinal);
-        Assert.True(start >= 0);
-        var end = body.IndexOf("</a>", start, StringComparison.OrdinalIgnoreCase);
-        var banner = body[body.LastIndexOf('<', start)..end];
+        // US-075 FR-001: the banner holds two links now, so the whole element is checked, not only the first link.
+        var banner = BannerHtml(body);
+        Assert.NotNull(banner);
         foreach (var forbidden in new[] { "<button", "<audio", "<video", "<script", "<marquee", "<blink", "<dialog", "onclick" })
         {
             Assert.DoesNotContain(forbidden, banner, StringComparison.OrdinalIgnoreCase);
         }
+    }
+
+    // ---- US-075: two links (AC-001, AC-002, FR-001) ---------------------------------------------------------------
+
+    private const string TechnicalTarget = PagePath + "#" + TechnicalHook;
+
+    private const string TeachingTarget = PagePath + "#" + TeachingHook;
+
+    /// <summary>
+    /// US-075 AC-001, FR-001.2, FR-001.4: N and M above zero — on every layout page each part is its own link, the
+    /// technical part to the technical section and the teaching part to the teaching section, each with the no-wrap
+    /// class; the separator is outside both links and the banner's text is unchanged.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(LayoutPages))]
+    public async Task EachPartOfTheBanner_IsALinkToItsSection(string path)
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (host, client) = await JournalHostExtensions.StartAsync(database, Actor.Dean, ct);
+        await using var _host = host;
+        await SeedAc001Async(host, ct);
+
+        var body = (await client.GetAsync(path, ct)).Body;
+
+        Assert.Equal("1 технічна проблема, 3 навчальні", Banner(body));
+        var links = BannerLinks(body);
+        Assert.Equal(2, links.Count);
+        Assert.Equal((TechnicalTarget, "1 технічна проблема"), (links[0].Href, links[0].Text));
+        Assert.Equal((TeachingTarget, "3 навчальні"), (links[1].Href, links[1].Text));
+        Assert.All(links, l => Assert.Contains(BannerPartClass, l.Class.Split(' '), StringComparer.Ordinal));
+        Assert.All(links, l => Assert.DoesNotContain(",", l.Text, StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// US-075 AC-002, FR-001.3: one part zero — that part is plain text with its usual plural wording, outside any link,
+    /// and the other part is the one link, to its own section; in both languages.
+    /// </summary>
+    [Theory]
+    [InlineData("uk", 0, 3)]
+    [InlineData("uk", 2, 0)]
+    [InlineData("en", 0, 1)]
+    [InlineData("en", 1, 0)]
+    public async Task AZeroPart_IsPlainText_AndTheOtherPartIsTheLink(string language, int technical, int teaching)
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (host, client) = await DataMarksHostExtensions.StartAsync(database, language, ct);
+        await using var _host = host;
+        await host.ReadyToSeedAsync(ct);
+        await host.RecentSuccessAsync(ct);
+        for (var i = 1; i <= technical; i++)
+        {
+            await host.SkipAsync(CourseTestData.CourseId(100 + i), $"Test Unknown {i}", UnknownStateReason, D1, ct);
+        }
+
+        for (var i = 1; i <= teaching; i++)
+        {
+            var id = await host.CourseAsync(i, $"Test Gone {i}", ct);
+            await host.MarkCourseAsync(id, "not_in_classroom", D1, ct);
+        }
+
+        var body = (await client.GetAsync("/", ct)).Body;
+
+        var expected = DataHealthTexts.Of(language).Banner(technical, teaching);
+        Assert.Equal(expected, Banner(body));
+        var parts = expected.Split(", ");
+        var link = Assert.Single(BannerLinks(body));
+        Assert.Equal(technical > 0 ? (TechnicalTarget, parts[0]) : (TeachingTarget, parts[1]), (link.Href, link.Text));
+        Assert.Contains(BannerPartClass, link.Class.Split(' '), StringComparer.Ordinal);
+    }
+
+    /// <summary>US-075 AC-007, FR-005.1: in read-only mode, in English, both parts are links as outside it.</summary>
+    [Fact]
+    public async Task InReadOnlyMode_TheBannerParts_AreLinks()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (host, client) = await DataMarksHostExtensions.StartAsync(database, "en", ct, Cause.Suspended);
+        await using var _host = host;
+        await host.ReadyToSeedAsync(ct);
+        var gone = await host.CourseAsync(1, "Test Gone Course", ct);
+        await host.MarkCourseAsync(gone, "not_in_classroom", D1, ct);
+        var hidden = await host.CourseAsync(2, "Test Hidden Course", ct);
+        await host.MarkCourseAsync(hidden, "not_visible_to_technical_account", D1, ct);
+
+        var links = BannerLinks((await client.GetAsync("/", ct)).Body);
+
+        Assert.Equal([TechnicalTarget, TeachingTarget], links.Select(l => l.Href));
     }
 
     /// <summary>AC-012, FR-003.4: in read-only mode, in English, the banner is shown.</summary>

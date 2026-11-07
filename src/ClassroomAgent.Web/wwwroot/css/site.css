@@ -511,6 +511,24 @@ main.page:has(#dean-accounts) > .form-message { width: 0; min-width: 100%; max-w
 
 .data-health-banner a { color: inherit; }
 
+/* US-075 FR-001.4: a banner part moves to the next line whole; it never breaks inside itself. */
+.data-health-banner-part { white-space: nowrap; }
+
+/* US-075 R-1 (HUMAN_PR_APPROVAL): the first part and the separator's comma move together; the comma never starts a line. */
+.data-health-banner-lead { white-space: nowrap; }
+
+/* US-075 R-2 (HUMAN_PR_APPROVAL): on a phone the language switcher sits on the row above the header search field, so the
+   banner drops the right reserve left for it and both parts fit inside its fill. */
+@media (max-width: 575.98px) {
+    .page-header:has(.language-switcher) .data-health-banner { max-width: none; margin-right: 0; }
+}
+
+/* US-075 FR-009.1: the hint under a kind of data problem — restrained secondary text, no banner or icon. */
+.data-health-hint {
+    color: var(--bs-secondary-color);
+    margin: 0 0 0.5rem;
+}
+
 /* US-060 spec FR-004.2, BR-047: a light highlight of a grade above the maximum; the label is always shown too. */
 .mark-above-maximum {
     background-color: var(--bs-warning-bg-subtle);

@@ -47,6 +47,15 @@ public static class DataHealthTextKeys
 
     public const string TellTheOwner = "DataHealth.Hint.TellTheOwner";
 
+    /// <summary>US-075 FR-002.1: the hint under «Бали вище максимуму» (T1).</summary>
+    public const string HintAboveMaximum = "DataHealth.Hint.AboveMaximum";
+
+    /// <summary>US-075 FR-002.2: the hint under the items not in Classroom (T2).</summary>
+    public const string HintItemsNotInClassroom = "DataHealth.Hint.ItemsNotInClassroom";
+
+    /// <summary>US-075 FR-004.2, OD-001 a: the Dean's X4 title, ending at its date.</summary>
+    public const string CourseListEmptyDean = "DataHealth.Technical.CourseListEmpty.Dean";
+
     public const string Untitled = "DataHealth.Course.Untitled";
 
     public const string UpgradeRequired = "DataHealth.Technical.UpgradeRequired";
@@ -69,6 +78,9 @@ public static class DataHealthTextKeys
 
     /// <summary>FR-007: the title of a technical problem (X1 … X6).</summary>
     public static string Of(TechnicalProblemKind kind) => "DataHealth.Technical." + kind;
+
+    /// <summary>US-075 FR-003: the Admin's hint under a technical problem (X2a, X2b, X3, X4, X5).</summary>
+    public static string Hint(TechnicalProblemKind kind) => "DataHealth.Hint." + kind;
 
     /// <summary>The one-shot message of the page.</summary>
     public static string Of(DataHealthMessage message) => "DataHealth.Message." + message;

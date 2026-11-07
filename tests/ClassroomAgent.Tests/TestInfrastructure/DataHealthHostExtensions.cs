@@ -231,10 +231,18 @@ public static partial class DataHealthHostExtensions
     // ---- HTML ---------------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// Strategy §3.2: the banner's text, or null when the page has none. The banner is the element with id
-    /// <c>data-health-banner</c>; its whole text is one link to the page, so the text is the first link after the hook.
+    /// Strategy §3.2 (US-075 strategy §3.1): the banner's text, or null when the page has none. The banner is the
+    /// <c>&lt;p&gt;</c> with id <c>data-health-banner</c>; since US-075 FR-001 its parts are separate links, so the text is
+    /// the whole element's with tags removed, not replaced by spaces — as a browser shows «A, B» for
+    /// <c>&lt;a&gt;A&lt;/a&gt;, &lt;a&gt;B&lt;/a&gt;</c>. The links are read by <see cref="BannerLinks"/>.
     /// </summary>
-    public static string? Banner(string html)
+    public static string? Banner(string html) =>
+        BannerHtml(html) is { } banner
+            ? Spaces().Replace(WebUtility.HtmlDecode(Tags().Replace(banner, string.Empty)), " ").Trim()
+            : null;
+
+    /// <summary>The banner element's markup, from its opening tag to its closing <c>&lt;/p&gt;</c>, or null when absent.</summary>
+    public static string? BannerHtml(string html)
     {
         var at = html.IndexOf($"id=\"{BannerHook}\"", StringComparison.Ordinal);
         if (at < 0)
@@ -242,10 +250,64 @@ public static partial class DataHealthHostExtensions
             return null;
         }
 
-        var link = BannerLink().Match(html, at);
-        Assert.True(link.Success, "The banner has no link.");
-        Assert.Equal(PagePath, WebUtility.HtmlDecode(link.Groups["href"].Value));
-        return Text(link.Groups["body"].Value);
+        var start = html.LastIndexOf('<', at);
+        var end = html.IndexOf("</p>", at, StringComparison.OrdinalIgnoreCase);
+        Assert.True(end > at, "The banner element is not closed.");
+        return html[start..(end + "</p>".Length)];
+    }
+
+    /// <summary>US-075 strategy §3.1: every link inside the banner — its decoded href, its class attribute and its text.</summary>
+    public static IReadOnlyList<(string Href, string Class, string Text)> BannerLinks(string html)
+    {
+        var banner = BannerHtml(html);
+        Assert.True(banner is not null, "The page has no banner.");
+        return AnchorTag().Matches(banner)
+            .Select(m => (
+                WebUtility.HtmlDecode(AttributeValue(m.Groups["attrs"].Value, "href") ?? string.Empty),
+                AttributeValue(m.Groups["attrs"].Value, "class") ?? string.Empty,
+                Text(m.Groups["body"].Value)))
+            .ToList();
+    }
+
+    /// <summary>
+    /// US-075 strategy §3.2: the raw markup of a page section, from its hook to the next section hook — the markup twin of
+    /// <see cref="Section"/>, for placement and element checks.
+    /// </summary>
+    public static string SectionHtml(string html, string hook)
+    {
+        var start = html.IndexOf($"id=\"{hook}\"", StringComparison.Ordinal);
+        Assert.True(start >= 0, $"The page has no section #{hook}.");
+        var end = SectionHooks
+            .Where(h => h != hook)
+            .Select(h => html.IndexOf($"id=\"{h}\"", start, StringComparison.Ordinal))
+            .Where(i => i > start)
+            .DefaultIfEmpty(html.Length)
+            .Min();
+        return html[html.LastIndexOf('<', start)..end];
+    }
+
+    /// <summary>
+    /// US-075 strategy §3.2: every hint paragraph in the markup — a <c>&lt;p&gt;</c> whose class list holds
+    /// <see cref="HintClass"/> — with its raw inner markup, its text and its position, in page order.
+    /// </summary>
+    public static IReadOnlyList<(string Inner, string Text, int Position)> HintParagraphs(string markup) =>
+        Paragraph().Matches(markup)
+            .Where(m => (AttributeValue(m.Groups["attrs"].Value, "class") ?? string.Empty)
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Contains(HintClass, StringComparer.Ordinal))
+            .Select(m => (m.Groups["body"].Value, Text(m.Groups["body"].Value), m.Index))
+            .ToList();
+
+    /// <summary>US-075 strategy §3.2: the class of a hint paragraph.</summary>
+    public const string HintClass = "data-health-hint";
+
+    /// <summary>US-075 strategy §3.1: the no-wrap class of a banner link.</summary>
+    public const string BannerPartClass = "data-health-banner-part";
+
+    private static string? AttributeValue(string attributes, string name)
+    {
+        var match = Regex.Match(attributes, $@"\b{name}=""(?<v>[^""]*)""", RegexOptions.IgnoreCase);
+        return match.Success ? match.Groups["v"].Value : null;
     }
 
     /// <summary>
@@ -309,8 +371,11 @@ public static partial class DataHealthHostExtensions
         return count;
     }
 
-    [GeneratedRegex(@"<a\b[^>]*\bhref=""(?<href>[^""]*)""[^>]*>(?<body>.*?)</a>", RegexOptions.Singleline | RegexOptions.IgnoreCase)]
-    private static partial Regex BannerLink();
+    [GeneratedRegex(@"<a\b(?<attrs>[^>]*)>(?<body>.*?)</a>", RegexOptions.Singleline | RegexOptions.IgnoreCase)]
+    private static partial Regex AnchorTag();
+
+    [GeneratedRegex(@"<p\b(?<attrs>[^>]*)>(?<body>.*?)</p>", RegexOptions.Singleline | RegexOptions.IgnoreCase)]
+    private static partial Regex Paragraph();
 
     [GeneratedRegex(@"<input\b[^>]*type=""checkbox""[^>]*>", RegexOptions.IgnoreCase)]
     private static partial Regex Checkbox();

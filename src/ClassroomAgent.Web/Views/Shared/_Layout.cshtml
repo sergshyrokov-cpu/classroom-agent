@@ -19,8 +19,16 @@
         @await Html.PartialAsync("_HeaderSearch")
         @if (dataHealth is { } counts)
         {
-            @* FR-003.2, FR-003.3: a restrained coloured strip; its whole text is one link to «Стан даних». *@
-            <p id="data-health-banner" class="data-health-banner"><a href="@SignInRoutes.DataHealth">@T[DataHealthTextKeys.Banner, T[DataHealthTextKeys.BannerPart("Technical", counts.TechnicalCount), counts.TechnicalCount], T[DataHealthTextKeys.BannerPart("Teaching", counts.TeachingCount), counts.TeachingCount]]</a></p>
+            @* US-062 FR-003.3: a restrained coloured strip. US-075 FR-001: each non-zero part links to its own section of
+               «Стан даних»; a zero part is plain text; the separator of DataHealth.Banner ("{0}, {1}") stays outside the links. *@
+            var bannerFormat = T[DataHealthTextKeys.Banner].Value;
+            var technicalAt = bannerFormat.IndexOf("{0}", StringComparison.Ordinal);
+            var teachingAt = bannerFormat.IndexOf("{1}", StringComparison.Ordinal);
+            @* US-075 R-1 (HUMAN_PR_APPROVAL): the separator's punctuation (the comma) stays glued to the end of the first part,
+               outside its link, so a wrap happens only at the separator's space. *@
+            var separator = bannerFormat[(technicalAt + 3)..teachingAt];
+            var separatorGlue = separator.TrimEnd();
+            <p id="data-health-banner" class="data-health-banner">@bannerFormat[..technicalAt]<span class="data-health-banner-lead">@BannerPart("Technical", counts.TechnicalCount, "data-health-technical")@separatorGlue</span>@separator[separatorGlue.Length..]@BannerPart("Teaching", counts.TeachingCount, "data-health-teaching")@bannerFormat[(teachingAt + 3)..]</p>
         }
     </header>
     <main class="page container">
@@ -40,3 +48,20 @@
     </main>
 </body>
 </html>
+@functions {
+    /// <summary>US-075 FR-001.2 … FR-001.5: one banner part — a no-wrap link to its section when above zero, plain text at zero.</summary>
+    private Microsoft.AspNetCore.Html.IHtmlContent BannerPart(string part, int count, string section)
+    {
+        var text = T[DataHealthTextKeys.BannerPart(part, count), count].Value;
+        if (count == 0)
+        {
+            return new Microsoft.AspNetCore.Html.HtmlContentBuilder().Append(text);
+        }
+
+        var link = new Microsoft.AspNetCore.Mvc.Rendering.TagBuilder("a");
+        link.AddCssClass("data-health-banner-part");
+        link.Attributes["href"] = SignInRoutes.DataHealth + "#" + section;
+        link.InnerHtml.Append(text);
+        return link;
+    }
+}

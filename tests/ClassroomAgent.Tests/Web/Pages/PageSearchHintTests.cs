@@ -19,9 +19,9 @@ namespace ClassroomAgent.Tests.Web.Pages;
 /// </summary>
 public sealed class PageSearchHintTests(PostgreSqlFixture database)
 {
-    /// <summary>The nine teaching-data pages of spec FR-001, by name.</summary>
+    /// <summary>The nine teaching-data pages of spec FR-001, by name, and «Стан даних» (trebovaniya v113, US-075 FR-007).</summary>
     private static readonly string[] TeachingPageNames =
-        ["course-list", "course-card", "teacher-list", "journal", "report", "meet-reports", "meeting", "meet-codes", "database"];
+        ["course-list", "course-card", "teacher-list", "journal", "report", "meet-reports", "meeting", "meet-codes", "database", "data-health"];
 
     public static TheoryData<string> TeachingPages => new(TeachingPageNames);
 
@@ -69,6 +69,7 @@ public sealed class PageSearchHintTests(PostgreSqlFixture database)
             MeetReportsTestData.Period.ToText),
         "meet-codes" => Mc.Path,
         "database" => DatabaseStatisticsTestData.Path,
+        "data-health" => DataHealthHostExtensions.PagePath,
         _ => throw new ArgumentOutOfRangeException(nameof(page), page, null),
     };
 
@@ -222,6 +223,7 @@ public sealed class PageSearchHintTests(PostgreSqlFixture database)
     [InlineData("meet-reports")]
     [InlineData("meet-codes")]
     [InlineData("database")]
+    [InlineData("data-health")]
     public async Task WithNoRowsAtAll_TheHintIsShown(string name)
     {
         var ct = TestContext.Current.CancellationToken;
