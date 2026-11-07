@@ -4,24 +4,24 @@
 version: 1
 story: US-076
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
+current_stage: TEST_WRITING
+previous_stage: DB_DESIGN
+last_completed_stage: DB_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: db-designer
 last_result:
   verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: '2026-11-07T07:06:48Z'
+  stage: DB_DESIGN
+  recorded_at: '2026-11-07T07:21:53Z'
 last_artifacts:
-  - type: api_design
-    path: docs/designs/api/US-076-api-design.md
+  - type: database_design
+    path: docs/designs/database/US-076-db-design.md
     version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
   - 'US-076/SPECIFICATION/m-2: Owner 2026-11-07 decided to add the data-health page to the hint list in v113; hint tests follow in the first Story after v113 — NOT in US-076 tests; close DEFERRED at HUMAN_PR_APPROVAL (ref memory project_v113_agenda.md item 2)'
 started_at: '2026-11-07T06:36:37Z'
-updated_at: '2026-11-07T07:06:48Z'
+updated_at: '2026-11-07T07:21:53Z'
 completed_at: null
