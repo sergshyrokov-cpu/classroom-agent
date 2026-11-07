@@ -1,10 +1,10 @@
 ---
 artifact_type: specification
 story: US-076
-version: 2
+version: 3
 status: DRAFT
 created_at: 2026-11-07T06:34:24Z
-updated_at: 2026-11-07T06:48:46Z
+updated_at: 2026-11-07T10:54:20Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-076-page-help.md
@@ -13,7 +13,7 @@ inputs:
     version: 112
   - path: docs/decisions/US-076-open-decisions.md
     version: 1
-supersedes: null
+supersedes: docs/specifications/US-076-spec.md@v2
 ---
 
 # US-076 Specification: a «?» beside the title opens short help on five pages
@@ -42,6 +42,11 @@ journal really shows (F-1; facts read directly from `Web/Security/DataMarksTexts
 `Views/Journal/Index.cshtml` and both resx files); I-1 corrected; Meet codes line 2 softened (m-1); Meet
 reports and meeting lines 3 tightened to the real labels and BR-064 (m-2); digest rewritten from this
 version and now names I-7 (m-3); finding m-1 of section 14 reworded.
+
+**Version 3** (loop-back from `IMPLEMENTATION`, finding US-076/IMPLEMENTATION/B-1; Owner's decision
+2026-11-07, option 1): AC-006 and section 9 now allow an existing test of the five pages to read the page
+text outside the help block, because the approved help lines name labels those tests look for in the whole
+page (Interpretation I-8). The help texts of section 4.1 and every other part of version 2 are unchanged.
 
 ---
 
@@ -237,7 +242,9 @@ page renders a help control or help text. *(FR-001)*
 
 **AC-006 Nothing else changes.** On the five pages the content, forms, links, policies, read-only
 behaviour and exports are unchanged (the existing tests of these pages stay green without edits other than
-the title-block position the page-search hint tests assert); opening the help sends no request; the CSP and
+the title-block position the page-search hint tests assert and, where a test searches the whole page text
+for a phrase the help also contains, reading the page text outside the help block — Interpretation I-8; the
+assertion itself is not weakened); opening the help sends no request; the CSP and
 other security headers are unchanged (SC-15); without scripts the help is reachable and hides no content.
 *(FR-008, FR-009)*
 
@@ -285,6 +292,9 @@ the same view) shows the help as usual.
 - NFR-075 the page-search hint stays one line under the title block, unchanged.
 - Test conventions TC-2 (real PostgreSQL), TC-5 (both roles; read-only mode); page tests read rendered
   pages of both roles and both languages, as `tests/.../Web/Pages/PageSearchHintTests.cs` does.
+- An existing page test that looks for a phrase in the whole page text and is broken only because a help
+  line names the same label reads the text outside the help block instead (AC-006, I-8); finding every such
+  test is the work of `TEST_WRITING`.
 
 ## 10. Out of Scope
 
@@ -347,6 +357,13 @@ interpretations of section 13 are for the Owner's approval at `HUMAN_SPEC_APPROV
   page lists.
 - **I-7 Template report export named on the template list.** Template line 2 names «Експорт в Excel» on
   the report page, since the list itself has no export.
+- **I-8 Existing tests read the page outside the help** (Owner's decision 2026-11-07, finding
+  US-076/IMPLEMENTATION/B-1, option 1). The approved help lines name labels the page itself shows — journal
+  line 2 names «Курсу немає в Classroom з …» and «Дані не оновлювалися з …» — and an existing test such as
+  `JournalMarksPageTests.AssertHeaderLine` checks that the whole page holds such a line once and no other.
+  The page is right; the test's scope no longer fits. Such a test may read the page text without the help
+  block (the help's `<details>`); what it asserts about the page stays the same. Alternative not taken:
+  rewording the approved help so it names no label — it would explain the marks less clearly.
 
 ## 14. Findings for later
 
