@@ -474,7 +474,7 @@ stories:
   - id: US-075
     epic: EPIC-1
     title: A short hint under each kind of data problem, and banner links to each section
-    state: READY
+    state: IN_PROGRESS
     blocked_by: null
     # Story file authored: docs/stories/US-075-data-problem-hints.md
     # (aligned with v110, BR-047). Proposed by the Owner 2026-11-04. Does not hold up the pilot.
