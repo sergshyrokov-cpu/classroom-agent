@@ -204,8 +204,8 @@ set, in the school's time zone. Due dates are compared as exact UTC instants.
 *(§5, v40, `persistence-conventions.md` PC-6, `deployment-conventions.md` DC-3)*
 
 **NFR-075** Every page with teaching data — the course list, course card,
-teacher list, journal, template report, Meet reports, Meet codes and the
-database page — shows a one-line page-search hint in small text at the top,
+teacher list, journal, template report, Meet reports, Meet codes, the
+database page and the data-health page (v113) — shows a one-line page-search hint in small text at the top,
 directly under the page title. It is always visible, cannot be dismissed,
 stores nothing and does not detect the device: the text names both the computer
 shortcuts and the phone browser menu path. The text comes from translation files
@@ -214,7 +214,7 @@ names browser search for the page and the header field for the whole program; an
 paged lists (courses, teachers, Meet codes), which name the list's own field by its
 label, warn that browser search sees only the rows shown, and name the header field.
 Sign-in, password and settings forms, the Admin's service pages, the error page and the
-Control Plane have no hint. *(§5, v91, v108)*
+Control Plane have no hint. *(§5, v91, v108, v113)*
 
 **NFR-076** Both hosts — the installation and the Control Plane — share one
 restrained look built on Bootstrap 5.3, CSS only (no Bootstrap scripts while there
