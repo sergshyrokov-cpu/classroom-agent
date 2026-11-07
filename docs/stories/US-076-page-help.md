@@ -43,6 +43,11 @@ in the pilot.
    (`MeetReports/Meeting`, v112): what the program counts as presence and why a person may be missing from a
    report.
 4. **The report template list**: how a template becomes a report for a course.
+5. **A carried test fix (US-074/IMPLEMENTATION/m-1, deferred by the Owner 2026-11-07).** The test
+   `MeetCodeOrganizerNamePageTests.SeveralOrganizers_AreOrdered_AndEachShowsOnce` normalises white space before
+   commas, so it would not notice a visible space before a comma in the organizer cell. It is tightened to
+   check the rendered markup, as `MeetCodesSearchPageTests.LinkedAndNotACourse_ShowTheOrganizers_RightAfterTheCode`
+   does (`</span>, <span`). Tests only; the Meet code page itself does not change for this.
 
 On each of these five pages:
 
@@ -149,5 +154,6 @@ is restrained. The walk is recorded in the implementation report.
 - **Tests** read the rendered pages of both roles and both languages, as the page-search hint tests do; the
   look on a phone is a person's check (AC-007). The look-check stand can serve the walk.
 - **US-074** changes the Meet code page; this Story is built after it so the help describes the organizer
-  shown by name.
+  shown by name. US-074 is done (`4fc9cae`). Its deferred test finding m-1 is Scope item 5: TEST_WRITING
+  tightens the test, and the AC test matrix lists it as a supporting change with no AC of its own.
 - No new endpoint or schema is expected: API and database design should be empty deltas.

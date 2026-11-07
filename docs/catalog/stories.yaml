@@ -168,8 +168,9 @@ stories:
     epic: EPIC-6
     title: A «?» beside the title opens short help on the journal, Meet codes, Meet reports and template list
     state: READY
-    blocked_by: >
-      To be built after US-074, which changes the Meet code page.
+    blocked_by: null
+    # Was to be built after US-074, which changes the Meet code page; US-074 done `4fc9cae` 2026-11-07.
+    # Carries US-074/IMPLEMENTATION/m-1 (test tightening) as Scope item 5, added 2026-11-07.
     # Story file authored: docs/stories/US-076-page-help.md
     # (aligned with v112, NFR-079). Decided by the Owner 2026-11-06. Before the pilot.
   - id: US-040
