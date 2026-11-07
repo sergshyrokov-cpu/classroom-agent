@@ -136,7 +136,7 @@ public sealed class GetMeetCodesQuery(
         return rows
             .Select(row => new UnassignedCodeItem(
                 row.MeetingCode,
-                row.OrganizerEmails,
+                Organizers(row.Organizers),
                 RosterOnDate.LocalDate(row.FirstStartedAt, zone.Zone),
                 RosterOnDate.LocalDate(row.LastStartedAt, zone.Zone),
                 row.MeetingCount,
@@ -159,7 +159,7 @@ public sealed class GetMeetCodesQuery(
     private LinkedCodeItem Map(LinkedCodeRow row) =>
         new(
             row.MeetingCode,
-            row.OrganizerEmails,
+            Organizers(row.Organizers),
             new CourseOption(row.CourseId, row.CourseName, row.CourseSection),
             row.LinkedAutomatically,
             row.LinkedAutomatically || row.LinkedBy is null ? null : Label(row.LinkedBy),
@@ -173,11 +173,18 @@ public sealed class GetMeetCodesQuery(
     private NotACourseCodeItem Map(MarkedCodeRow row) =>
         new(
             row.MeetingCode,
-            row.OrganizerEmails,
+            Organizers(row.Organizers),
             Label(row.MarkedBy),
             Local(row.MarkedAt),
             row.MeetingCount,
             row.LastStartedAt is { } last ? RosterOnDate.LocalDate(last, zone.Zone) : null);
+
+    /// <summary>
+    /// US-074 entity model §3, db-design §2 step 3: each organizer as a person; a blank chosen name is no name, by the rule
+    /// the Meet reports apply (spec AC-009).
+    /// </summary>
+    private static IReadOnlyList<PersonRef> Organizers(IReadOnlyList<MeetOrganizerRecord> organizers) =>
+        organizers.Select(o => new PersonRef(MeetReportRules.Name(o.StoredFullName), o.Email)).ToList();
 
     /// <summary>Spec I-7: the account's email, or a deleted account.</summary>
     private static AccountLabel Label(AccountRef account) => new(account.Email is null, account.Email);

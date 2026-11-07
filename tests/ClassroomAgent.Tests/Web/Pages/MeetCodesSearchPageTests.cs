@@ -168,7 +168,10 @@ public sealed class MeetCodesSearchPageTests(PostgreSqlFixture database)
 
         var headers = Ls.TableHeaders(page.Body);
         Assert.Equal(host.Text(Ls.Keys.ColumnOrganizers, "uk"), headers[1]);
-        Assert.Equal(second + ", " + Shared, Ls.CellsOfCode(page.Body, code)[0]);
+        // US-074 FR-002: each organizer is now a person element; CellsOfCode turns each tag into a space, so the text is compared
+        // without the space a tag leaves before the comma, and the markup itself must hold none.
+        Assert.Equal(second + ", " + Shared, Ls.CellsOfCode(page.Body, code)[0].Replace(" ,", ",", StringComparison.Ordinal));
+        Assert.Contains(second + "</span>, <span", page.Body, StringComparison.Ordinal);
     }
 
     /// <summary>FR-004: a linked code with no organizer left has an empty cell, not a hole in the row.</summary>

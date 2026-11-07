@@ -664,7 +664,7 @@ stories:
   - id: US-074
     epic: EPIC-4
     title: Meet code lists show the organizer by name and find the code by that name
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: null
     # Story file authored: docs/stories/US-074-meet-code-organizer-by-name.md
     # (aligned with v110, BR-087). From rehearsal finding P-15, decided by the Owner 2026-11-04.

@@ -1,0 +1,7 @@
+@using ClassroomAgent.Application.Models.Dtos
+@model IReadOnlyList<PersonRef>
+@* US-074 spec FR-002: the organizers of a code, separated by ", ", each in the structure of the Meet reports' _MeetPerson
+   (a name element, then an email element; the email alone without a name). The loop is one line so that no line break
+   falls before a comma, where the browser would show it as a space. An organizer always has an email here, so the
+   "unnamed" label cannot apply. *@
+@for (var i = 0; i < Model.Count; i++){var organizer = Model[i];if (i > 0){<text>, </text>}if (organizer.FullName is not null){<span class="meet-person-name">@organizer.FullName</span><text> </text>}<span class="meet-person-email">@organizer.Email</span>}

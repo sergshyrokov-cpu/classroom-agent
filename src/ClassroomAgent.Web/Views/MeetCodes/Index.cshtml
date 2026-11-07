@@ -66,7 +66,7 @@
                     {
                         <tr>
                             <th scope="row">@item.MeetingCode</th>
-                            <td>@string.Join(", ", item.OrganizerEmails)</td>
+                            <td>@await Html.PartialAsync("_MeetCodeOrganizers", item.Organizers)</td>
                             <td class="text-end">@item.FirstMeetingDate.ToString("d", culture)</td>
                             <td class="text-end">@item.LastMeetingDate.ToString("d", culture)</td>
                             <td class="text-end">@item.MeetingCount.ToString(CultureInfo.InvariantCulture)</td>
@@ -118,7 +118,7 @@
                     {
                         <tr>
                             <th scope="row">@item.MeetingCode</th>
-                            <td>@string.Join(", ", item.OrganizerEmails)</td>
+                            <td>@await Html.PartialAsync("_MeetCodeOrganizers", item.Organizers)</td>
                             <td>@CourseLabel(item.Course)</td>
                             <td>@(item.MadeAutomatically ? T[MeetCodesTextKeys.Automatically].Value : AccountText(item.MadeBy))</td>
                             <td class="text-end">@item.MadeAt.ToString("g", culture)</td>
@@ -181,7 +181,7 @@
                     {
                         <tr>
                             <th scope="row">@item.MeetingCode</th>
-                            <td>@string.Join(", ", item.OrganizerEmails)</td>
+                            <td>@await Html.PartialAsync("_MeetCodeOrganizers", item.Organizers)</td>
                             <td>@AccountText(item.MarkedBy)</td>
                             <td class="text-end">@item.MarkedAt.ToString("g", culture)</td>
                             <td class="text-end">@item.MeetingCount.ToString(CultureInfo.InvariantCulture)</td>

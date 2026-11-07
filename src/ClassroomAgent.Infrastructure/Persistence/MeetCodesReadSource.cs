@@ -104,7 +104,7 @@ public sealed class MeetCodesReadSource(ClassroomAgentDbContext db) : IMeetCodes
         foreach (var code in codes)
         {
             var codeOrganizers = organizersByCode.TryGetValue(code.MeetingCode, out var list) ? list : [];
-            var organizerSet = new HashSet<string>(codeOrganizers, StringComparer.OrdinalIgnoreCase);
+            var organizerSet = new HashSet<string>(codeOrganizers.Select(o => o.Email), StringComparer.OrdinalIgnoreCase);
             var own = emailGroups
                 .Where(g => string.Equals(g.MeetingCode, code.MeetingCode, StringComparison.Ordinal))
                 .ToList();
@@ -302,38 +302,90 @@ public sealed class MeetCodesReadSource(ClassroomAgentDbContext db) : IMeetCodes
     /// The codes with a session whose organizer holds the word: the column the screen reads, where an erased or excluded
     /// organizer is stored as null (US-038 I-9), so that email cannot match (US-070 AC-005).
     /// </summary>
-    private IQueryable<string> CodesByOrganizer(string word) =>
-        db.MeetSessions
+    /// <remarks>
+    /// US-074 db-design §5: the word may also be in the organizer's chosen name. The names are a subquery evaluated in the
+    /// database with the other fields; a null organizer email matches neither branch, so an erased or excluded person is not
+    /// found through a name either (US-074 AC-004).
+    /// </remarks>
+    private IQueryable<string> CodesByOrganizer(string word)
+    {
+        var named = OrganizerNames()
+            .Where(SearchMatch.InField<OrganizerNameRow>(n => n.FullName, word))
+            .Select(n => n.LowerEmail);
+        return db.MeetSessions
             .AsNoTracking()
-            .Where(SearchMatch.InField<MeetSession>(s => s.OrganizerEmail, word))
+            .Where(SearchMatch.AnyOf<MeetSession>(
+                SearchMatch.InField<MeetSession>(s => s.OrganizerEmail, word),
+                s => s.OrganizerEmail != null && named.Contains(s.OrganizerEmail.ToLower())))
             .Select(s => s.MeetingCode);
+    }
+
+    /// <summary>
+    /// US-074 db-design §2, §3: the one definition of an organizer's name, for display and search. Per lower-cased email, the
+    /// participant with the lowest id among those whose full name is not null; a blank chosen name is no name, which display
+    /// tests afterwards (<c>MeetReportRules.Name</c>) and which holds no search word. At most one row per lower-cased email.
+    /// </summary>
+    private IQueryable<OrganizerNameRow> OrganizerNames() =>
+        db.ClassroomParticipants
+            .AsNoTracking()
+            .Where(p => p.Email != null && p.FullName != null
+                && !db.ClassroomParticipants.Any(q => q.Email != null && q.FullName != null
+                    && q.Email.ToLower() == p.Email.ToLower() && q.Id < p.Id))
+            .Select(p => new OrganizerNameRow { LowerEmail = p.Email!.ToLower(), FullName = p.FullName! });
 
     /// <summary>
     /// US-070 db-design §5: one command for a page's organizers, by code: distinct, in ordinal order; US-038 spec I-9: an
     /// erased or excluded organizer is not listed. No command for an empty page.
     /// </summary>
-    private async Task<Dictionary<string, List<string>>> LoadOrganizersAsync(List<string> codes, CancellationToken cancellationToken)
+    /// <remarks>
+    /// US-074 db-design §4: at most two commands whatever the number of rows — the organizer emails, then the chosen names of
+    /// those emails (none when the page has no organizer). Per code an organizer is one lower-cased email, shown with its
+    /// ordinally first stored spelling (spec I-1).
+    /// </remarks>
+    private async Task<Dictionary<string, List<MeetOrganizerRecord>>> LoadOrganizersAsync(List<string> codes, CancellationToken cancellationToken)
     {
         if (codes.Count == 0)
         {
-            return new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            return new Dictionary<string, List<MeetOrganizerRecord>>(StringComparer.Ordinal);
         }
 
-        var organizers = await db.MeetSessions
+        var stored = await db.MeetSessions
             .AsNoTracking()
-            .Where(s => codes.Contains(s.MeetingCode))
-            .Select(s => new { s.MeetingCode, s.OrganizerEmail })
+            .Where(s => codes.Contains(s.MeetingCode) && s.OrganizerEmail != null)
+            .Select(s => new { s.MeetingCode, OrganizerEmail = s.OrganizerEmail! })
             .Distinct()
             .ToListAsync(cancellationToken);
-        return organizers
+        var emailsByCode = stored
             .GroupBy(o => o.MeetingCode, StringComparer.Ordinal)
             .ToDictionary(
                 g => g.Key,
-                g => g.Select(o => o.OrganizerEmail).OfType<string>().OrderBy(e => e, StringComparer.Ordinal).ToList(),
+                g => g.Select(o => o.OrganizerEmail)
+                    .GroupBy(e => e.ToLowerInvariant(), StringComparer.Ordinal)
+                    .Select(same => same.Min(StringComparer.Ordinal)!)
+                    .OrderBy(e => e, StringComparer.Ordinal)
+                    .ToList(),
                 StringComparer.Ordinal);
+
+        var lowered = emailsByCode.Values
+            .SelectMany(e => e)
+            .Select(e => e.ToLowerInvariant())
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        var names = lowered.Length == 0
+            ? new Dictionary<string, string>(StringComparer.Ordinal)
+            : await OrganizerNames()
+                .Where(n => lowered.Contains(n.LowerEmail))
+                .ToDictionaryAsync(n => n.LowerEmail, n => n.FullName, StringComparer.Ordinal, cancellationToken);
+
+        return emailsByCode.ToDictionary(
+            pair => pair.Key,
+            pair => pair.Value
+                .Select(e => new MeetOrganizerRecord(e, names.TryGetValue(e.ToLowerInvariant(), out var name) ? name : null))
+                .ToList(),
+            StringComparer.Ordinal);
     }
 
-    private static IReadOnlyList<string> OrganizersOf(Dictionary<string, List<string>> organizers, string code) =>
+    private static IReadOnlyList<MeetOrganizerRecord> OrganizersOf(Dictionary<string, List<MeetOrganizerRecord>> organizers, string code) =>
         organizers.TryGetValue(code, out var list) ? list : [];
 
     private async Task<Dictionary<long, string>> LoadEmailsAsync(IEnumerable<long> ids, CancellationToken cancellationToken)
@@ -348,6 +400,17 @@ public sealed class MeetCodesReadSource(ClassroomAgentDbContext db) : IMeetCodes
             .AsNoTracking()
             .Where(u => distinct.Contains(u.Id))
             .ToDictionaryAsync(u => u.Id, u => u.Email, cancellationToken);
+    }
+
+    /// <summary>
+    /// US-074 db-design §3, entity model §4: one organizer email, lower-cased, with its chosen stored name. Init properties
+    /// rather than a positional record, so that EF Core can compose a filter over the projection.
+    /// </summary>
+    private sealed record OrganizerNameRow
+    {
+        public required string LowerEmail { get; init; }
+
+        public required string FullName { get; init; }
     }
 
     /// <summary>The columns of the raw unassigned-page query; settable properties because EF materializes by name.</summary>

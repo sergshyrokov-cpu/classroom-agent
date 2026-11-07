@@ -472,14 +472,14 @@ public sealed class SearchMatchingSourceTests(PostgreSqlFixture database)
             var linked = (await source.GetLinkedPageAsync(0, 50, null, ct)).Rows;
             string[] expectedLinked = [LinkedOrganizer, ann, zed];
             Array.Sort(expectedLinked, StringComparer.Ordinal);
-            Assert.Equal(expectedLinked, linked.Single(r => r.MeetingCode == LinkedCode).OrganizerEmails);
-            Assert.Empty(linked.Single(r => r.MeetingCode == "lnk-noss-ion").OrganizerEmails);
+            Assert.Equal(expectedLinked, linked.Single(r => r.MeetingCode == LinkedCode).Organizers.Select(o => o.Email));
+            Assert.Empty(linked.Single(r => r.MeetingCode == "lnk-noss-ion").Organizers.Select(o => o.Email));
 
             var marked = (await source.GetMarkedPageAsync(0, 50, null, ct)).Rows;
             string[] expectedMarked = [MarkedOrganizer, zed];
             Array.Sort(expectedMarked, StringComparer.Ordinal);
-            Assert.Equal(expectedMarked, marked.Single(r => r.MeetingCode == MarkedCode).OrganizerEmails);
-            Assert.Empty(marked.Single(r => r.MeetingCode == "mrk-noss-ion").OrganizerEmails);
+            Assert.Equal(expectedMarked, marked.Single(r => r.MeetingCode == MarkedCode).Organizers.Select(o => o.Email));
+            Assert.Empty(marked.Single(r => r.MeetingCode == "mrk-noss-ion").Organizers.Select(o => o.Email));
         });
     }
 
@@ -496,8 +496,8 @@ public sealed class SearchMatchingSourceTests(PostgreSqlFixture database)
         await host.WithMeetCodesReadSourceAsync(async source =>
         {
             var row = Assert.Single((await source.GetLinkedPageAsync(0, 50, "second.person", ct)).Rows);
-            Assert.Contains(LinkedOrganizer, row.OrganizerEmails);
-            Assert.Contains(second, row.OrganizerEmails);
+            Assert.Contains(LinkedOrganizer, row.Organizers.Select(o => o.Email));
+            Assert.Contains(second, row.Organizers.Select(o => o.Email));
         });
     }
 
