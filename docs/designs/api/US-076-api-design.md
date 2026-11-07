@@ -1,19 +1,19 @@
 ---
 artifact_type: api_design
 story: US-076
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-11-07T07:06:13Z
-updated_at: 2026-11-07T07:06:13Z
+updated_at: 2026-11-07T11:04:50Z
 produced_by: openapi-designer
 inputs:
   - path: docs/specifications/US-076-spec.md
-    version: 2
+    version: 3
   - path: docs/decisions/US-076-open-decisions.md
     version: 1
   - path: trebovaniya.md
     version: 112
-supersedes: null
+supersedes: docs/designs/api/US-076-api-design.md@v1
 ---
 
 # US-076 API Design — A «?» beside the title opens short help on five pages
@@ -25,6 +25,11 @@ OpenAPI contract.
 recorded decision, as in earlier Stories with no API change (US-068, US-069, US-073). Downstream stages
 that list `openapi` among their inputs read this document instead.
 
+**Version 2** (re-run after the loop-back from `IMPLEMENTATION`, finding US-076/IMPLEMENTATION/B-1):
+Specification v3 changed only AC-006, section 9 and Interpretation I-8 — which existing page tests may
+read the page text outside the help block. That is test scope, not HTTP contract; the help texts are
+unchanged. Everything below is version 1 unchanged, re-checked against Specification v3.
+
 This document still fixes what the Specification left to API design: the translation key names and their
 final values (Specification FR-006, section 4.1 label check).
 
@@ -35,7 +40,7 @@ this stage.
 ## 1. Why the stage does not apply
 
 `stage-map.yaml` marks `API_DESIGN` optional when the approved Specification states the Story does not
-change public API behaviour. Specification v2 states it:
+change public API behaviour. Specification v3 (as v2) states it:
 
 - **FR-008:** the help "adds no endpoint, no form, no link, no request when opened, no audit event, no log
   line, and no write"; the five pages' "forms, links, policies, read-only behaviour and exports stay as
@@ -134,5 +139,6 @@ Unchanged. The help is part of five already-protected pages (SC-3, SC-4); it has
 
 - `US-076/SPEC_REVIEW/m-4` — **fixed** here (section 3.1).
 - `US-076/SPECIFICATION/m-2` — not this stage's; the Owner deferred it to `trebovaniya.md` v113.
+- `US-076/IMPLEMENTATION/B-1` — not this stage's; `TEST_WRITING` adjusts the affected existing tests (I-8).
 
 No new finding.
