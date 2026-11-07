@@ -271,6 +271,13 @@ public sealed partial class MeetCodeOrganizerNamePageTests(PostgreSqlFixture dat
         {
             Assert.Equal(1, Regex.Count(cell, Regex.Escape(email), RegexOptions.IgnoreCase));
         }
+
+        // US-076 FR-010 (US-074/IMPLEMENTATION/m-1): the text above normalises white space before commas, so the rendered markup
+        // itself is checked — each of the two separators sits right after an organizer's closing tag, and no white space precedes
+        // a comma anywhere in the cell (as MeetCodesSearchPageTests.LinkedAndNotACourse_ShowTheOrganizers_RightAfterTheCode does).
+        var raw = RawCell(page.Body, code);
+        Assert.Equal(2, Regex.Count(raw, Regex.Escape("</span>, <span"), RegexOptions.None));
+        Assert.DoesNotMatch(SpaceBeforeComma(), raw);
     }
 
     /// <summary>AC-004, FR-005: an erased person's name is found nowhere and no longer shows; the survivor's name stays.</summary>

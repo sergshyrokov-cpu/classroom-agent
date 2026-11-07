@@ -5,6 +5,7 @@
 @model MeetReportMeetingPageModel
 @{
     ViewData["Title"] = T[MeetReportsTextKeys.MeetingTitle];
+    ViewData[PageHelpTextKeys.ViewDataKey] = PageHelpTextKeys.Meeting; // US-076 FR-004: this page carries the help
 
     // api-design §2.4: the language switcher returns to the meeting with the validated query only.
     ViewData[UiLanguageController.ReturnPathViewDataKey] = Model.Meeting is null

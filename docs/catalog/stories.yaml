@@ -167,7 +167,7 @@ stories:
   - id: US-076
     epic: EPIC-6
     title: A «?» beside the title opens short help on the journal, Meet codes, Meet reports and template list
-    state: IN_PROGRESS
+    state: COMPLETED
     blocked_by: null
     # Was to be built after US-074, which changes the Meet code page; US-074 done `4fc9cae` 2026-11-07.
     # Carries US-074/IMPLEMENTATION/m-1 (test tightening) as Scope item 5, added 2026-11-07.

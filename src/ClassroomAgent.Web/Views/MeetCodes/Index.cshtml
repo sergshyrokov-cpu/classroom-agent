@@ -3,6 +3,7 @@
 @model MeetCodesPageModel
 @{
     ViewData["Title"] = T[MeetCodesTextKeys.Title];
+    ViewData[PageHelpTextKeys.ViewDataKey] = PageHelpTextKeys.MeetCodes; // US-076 FR-004: this page carries the help
 
     // Api-design §2.11, spec I-14: the switcher returns to the effective, validated query — never the raw one.
     ViewData[UiLanguageController.ReturnPathViewDataKey] = PageUrl(Model.List, Model.Page);

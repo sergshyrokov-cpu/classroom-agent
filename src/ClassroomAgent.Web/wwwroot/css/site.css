@@ -448,6 +448,56 @@ main.page:has(#dean-accounts) > .form-message { width: 0; min-width: 100%; max-w
     margin: 0 0 1rem;
 }
 
+/* US-076 spec FR-002, FR-004, FR-007: the «?» stands on the title's line; the opened text falls under the title, before
+   the page-search hint. A quiet ring, no colour alert, no animation; the whole 2.75rem square is the touch target. */
+.page-title {
+    display: flow-root;
+    max-width: var(--content-width);
+    margin-bottom: 0.5rem;
+}
+
+.page-title h1 {
+    float: left;
+    margin: 0 0.25rem 0 0;
+    padding-block: 0.55rem;
+}
+
+.page-header:has(.language-switcher):not(:has(.data-health-banner)) + .page .page-title { padding-right: 11rem; }
+
+.page-header:has(.language-switcher):not(:has(.data-health-banner)) + .page .page-title h1 { padding-right: 0; }
+
+/* The opened text sits below the switcher's row, so it takes the whole content column back. */
+.page-header:has(.language-switcher):not(:has(.data-health-banner)) + .page .page-help-body { margin-right: -11rem; }
+
+.page-help > summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    list-style: none;
+    cursor: pointer;
+    border-radius: 50%;
+    font-weight: 600;
+    color: var(--bs-secondary-color);
+    box-shadow: inset 0 0 0 0.45rem var(--bs-body-bg), inset 0 0 0 calc(0.45rem + 1px) var(--bs-border-color);
+}
+
+.page-help > summary::-webkit-details-marker { display: none; }
+
+.page-help > summary:hover,
+.page-help[open] > summary { color: var(--bs-body-color); }
+
+.page-help > summary:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: -2px; }
+
+.page-help-body {
+    clear: left;
+    padding-top: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.page-help-body p:last-child { margin-bottom: 0; }
+
 /* ---- Installation: data-state marks (FR-006) — amber tint, no icon, animation or dismiss control ---- */
 
 /* US-062 FR-003.3: the data-health banner — a quiet coloured strip. */

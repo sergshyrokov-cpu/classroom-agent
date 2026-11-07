@@ -5,6 +5,7 @@
 @model MeetReportsPageModel
 @{
     ViewData["Title"] = T[MeetReportsTextKeys.Title];
+    ViewData[PageHelpTextKeys.ViewDataKey] = PageHelpTextKeys.MeetReports; // US-076 FR-004: this page carries the help
 
     // Spec VR-004: the language switcher returns to the effective query — never the raw one, so a malformed value or an
     // unknown parameter is not echoed.

@@ -4,25 +4,23 @@
 version: 1
 story: US-076
 workflow: story-delivery
-current_stage: DB_DESIGN
-previous_stage: API_DESIGN
-last_completed_stage: API_DESIGN
-status: IN_PROGRESS
+current_stage: COMPLETED
+previous_stage: HUMAN_PR_APPROVAL
+last_completed_stage: HUMAN_PR_APPROVAL
+status: COMPLETED
 attempt: 1
-last_invoked_skill: openapi-designer
+last_invoked_skill: security-reviewer
 last_result:
-  verdict: NOT_APPLICABLE
-  stage: API_DESIGN
-  recorded_at: '2026-11-07T11:05:11Z'
+  verdict: PASS
+  stage: SECURITY_REVIEW
+  recorded_at: '2026-11-07T12:18:38Z'
 last_artifacts:
-  - type: api_design
-    path: docs/designs/api/US-076-api-design.md
-    version: 2
+  - type: security_review
+    path: docs/reviews/security/US-076-security-review.md
+    version: 1
 pending_human_gate: null
 blocking_issues: []
-non_blocking_findings:
-  - 'US-076/IMPLEMENTATION/B-1 (OPEN, routed): Owner 2026-11-07 chose option 1 — AC-006 amended in spec v3 (I-8) so existing page tests may read the page without the help block; then SPEC_REVIEW, HUMAN_SPEC_APPROVAL, TEST_WRITING finds and adjusts every affected existing test; production code of US-076 is already written (implementation report v1)'
-  - 'US-076/SPECIFICATION/m-2: Owner 2026-11-07 decided to add the data-health page to the hint list in v113; hint tests follow in the first Story after v113 — NOT in US-076 tests; close DEFERRED at HUMAN_PR_APPROVAL (ref memory project_v113_agenda.md item 2)'
+non_blocking_findings: []
 started_at: '2026-11-07T06:36:37Z'
-updated_at: '2026-11-07T11:05:11Z'
-completed_at: null
+updated_at: '2026-11-07T15:15:44Z'
+completed_at: '2026-11-07T15:15:44Z'

@@ -4,6 +4,7 @@
 @model JournalPageModel
 @{
     ViewData["Title"] = T[JournalTextKeys.Title];
+    ViewData[PageHelpTextKeys.ViewDataKey] = PageHelpTextKeys.Journal; // US-076 FR-004: this page carries the help
 
     // Spec VR-005, api-design §2.3: the language switcher returns to the effective query — never the raw one, so a
     // malformed value or an unknown parameter is not echoed.

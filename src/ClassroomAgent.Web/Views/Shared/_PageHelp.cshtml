@@ -1,0 +1,5 @@
+@model string
+@* US-076 spec FR-002 … FR-006: a native disclosure beside the title — no script, never rendered open, nothing stored; its
+   lines come from the translation files, HTML-encoded (VR-002). The model is a page id the layout has already checked. *@
+<details class="page-help"><summary aria-label="@T[PageHelpTextKeys.ControlName]">?</summary><div class="page-help-body">@foreach (var key in PageHelpTextKeys.LineKeys(Model))
+{<p>@T[key]</p>}</div></details>

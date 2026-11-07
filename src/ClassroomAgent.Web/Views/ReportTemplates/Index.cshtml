@@ -3,6 +3,7 @@
 @model ReportTemplateListPageModel
 @{
     ViewData["Title"] = T[ReportTemplateTextKeys.ListTitle];
+    ViewData[PageHelpTextKeys.ViewDataKey] = PageHelpTextKeys.ReportTemplates; // US-076 FR-004: this page carries the help
     var culture = CultureInfo.CurrentCulture;
 }
 

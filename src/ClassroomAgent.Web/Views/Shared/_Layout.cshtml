@@ -2,6 +2,7 @@
 @{
     // US-062 FR-003, api-design §2.3: computed once per page; null renders nothing (I-4, OD-001 a).
     var dataHealth = await DataHealth.ForAsync(Context);
+    var helpPage = PageHelpTextKeys.PageOf(ViewData[PageHelpTextKeys.ViewDataKey]);
 }
 <!DOCTYPE html>
 <html lang="@System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
@@ -23,7 +24,18 @@
         }
     </header>
     <main class="page container">
+        @* US-076 FR-004, VR-001: on the five pages that name their page id the title and the help form one title block;
+           a missing or unknown id renders the plain title, as on every other page. *@
+        @if (helpPage is not null)
+        {
+            @:<div class="page-title">
+        }
         <h1>@ViewData["Title"]</h1>
+        @if (helpPage is not null)
+        {
+            @await Html.PartialAsync("_PageHelp", helpPage)
+            @:</div>
+        }
         @RenderBody()
     </main>
 </body>

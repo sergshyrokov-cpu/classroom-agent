@@ -113,9 +113,10 @@ public static partial class PageSearchHintTestData
     public static bool HasAnyHint(string html) => html.Contains(Hook, StringComparison.Ordinal);
 
     /// <summary>
-    /// The markup that follows the <paramref name="ordinal"/>-th <c>&lt;/h1&gt;</c> inside <c>&lt;main&gt;</c>
-    /// (1 = the layout title, the only one since US-069 FR-002), with leading white space and HTML
-    /// comments removed; null when there is no such title.
+    /// The markup that follows the title block — the <paramref name="ordinal"/>-th <c>&lt;/h1&gt;</c> inside
+    /// <c>&lt;main&gt;</c> (1 = the layout title, the only one since US-069 FR-002) and, on the five pages of US-076, the
+    /// page help's <c>&lt;details&gt;</c> beside it with any closing tag of a title wrapper (US-076 spec FR-004, AC-006) —
+    /// with leading white space and HTML comments removed; null when there is no such title.
     /// </summary>
     public static string? AfterTitle(string html, int ordinal)
     {
@@ -137,7 +138,14 @@ public static partial class PageSearchHintTestData
             position = close + "</h1>".Length;
         }
 
-        return LeadingFiller().Replace(html[position..], string.Empty);
+        var after = LeadingFiller().Replace(html[position..], string.Empty);
+        if (!after.StartsWith("<details", StringComparison.OrdinalIgnoreCase))
+        {
+            return after;
+        }
+
+        var help = after.IndexOf("</details>", StringComparison.OrdinalIgnoreCase);
+        return help < 0 ? after : TitleBlockEnd().Replace(after[(help + "</details>".Length)..], string.Empty);
     }
 
     /// <summary>Whether the markup after the title starts with the hook element (api-design §3 placement).</summary>
@@ -158,6 +166,9 @@ public static partial class PageSearchHintTestData
 
     [GeneratedRegex(@"^(?:\s+|<!--.*?-->)*", RegexOptions.Singleline)]
     private static partial Regex LeadingFiller();
+
+    [GeneratedRegex(@"^(?:\s+|<!--.*?-->|</div\s*>)*", RegexOptions.Singleline | RegexOptions.IgnoreCase)]
+    private static partial Regex TitleBlockEnd();
 
     [GeneratedRegex(@"^<p\b[^>]*\bid\s*=\s*""page-search-hint""", RegexOptions.IgnoreCase)]
     private static partial Regex HintFirst();

@@ -408,10 +408,13 @@ public static partial class MeetCodesHostExtensions
                 r.IsDBNull(9) ? null : r.GetInt64(9)),
             cancellationToken);
 
-    /// <summary>The page text with markup removed, for assertions on what a person reads.</summary>
+    /// <summary>
+    /// The page text outside the page help with markup removed, for assertions on what a person reads. US-076 spec I-8:
+    /// the help names labels its page shows, so the text is read without the help's <c>&lt;details&gt;</c>.
+    /// </summary>
     public static string VisibleText(string html)
     {
-        var withoutBlocks = Blocks().Replace(html, " ");
+        var withoutBlocks = Blocks().Replace(PageHelpTestData.WithoutHelp(html), " ");
         var withoutTags = Tags().Replace(withoutBlocks, " ");
         return Spaces().Replace(WebUtility.HtmlDecode(withoutTags), " ").Trim();
     }
