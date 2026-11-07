@@ -4,34 +4,24 @@
 version: 1
 story: US-076
 workflow: story-delivery
-current_stage: API_DESIGN
-previous_stage: HUMAN_SPEC_APPROVAL
-last_completed_stage: HUMAN_SPEC_APPROVAL
+current_stage: DB_DESIGN
+previous_stage: API_DESIGN
+last_completed_stage: API_DESIGN
 status: IN_PROGRESS
 attempt: 1
-last_invoked_skill: null
+last_invoked_skill: openapi-designer
 last_result:
-  verdict: HUMAN_APPROVED
-  stage: HUMAN_SPEC_APPROVAL
-  recorded_at: '2026-11-07T07:01:27Z'
-  decided_by: Serhii SHYROKOV (/so:approve)
-  decided_at: '2026-11-07T07:01:27Z'
-  comment: "Тексты справки (раздел 4.1) и толкования I-1…I-7 подтверждаю. m-4: поправить на стадии API-дизайна, строку 2 журнала начать с «Позначка «вибув(-ла)» з датою…» / \"The mark \"left\" with a date…\", чтобы подпись совпадала с журналом. SPECIFICATION/m-1: перенести в повестку v113. SPECIFICATION/m-2: учесть на стадии TEST_WRITING."
+  verdict: NOT_APPLICABLE
+  stage: API_DESIGN
+  recorded_at: '2026-11-07T07:06:48Z'
 last_artifacts:
-  - type: specification
-    path: docs/specifications/US-076-spec.md
-    version: 2
-  - type: spec_digest
-    path: docs/specifications/US-076-spec-digest.ru.md
-    version: 2
-  - type: specification_review
-    path: docs/reviews/specifications/US-076-spec-review.md
-    version: 2
+  - type: api_design
+    path: docs/designs/api/US-076-api-design.md
+    version: 1
 pending_human_gate: null
 blocking_issues: []
 non_blocking_findings:
-  - 'US-076/SPEC_REVIEW/m-4: fix at API_DESIGN — journal line 2 to start «Позначка «вибув(-ла)» з датою…» / "The mark "left" with a date…"'
   - 'US-076/SPECIFICATION/m-2: Owner 2026-11-07 decided to add the data-health page to the hint list in v113; hint tests follow in the first Story after v113 — NOT in US-076 tests; close DEFERRED at HUMAN_PR_APPROVAL (ref memory project_v113_agenda.md item 2)'
 started_at: '2026-11-07T06:36:37Z'
-updated_at: '2026-11-07T07:01:27Z'
+updated_at: '2026-11-07T07:06:48Z'
 completed_at: null
