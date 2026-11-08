@@ -481,7 +481,7 @@ stories:
   - id: US-077
     epic: EPIC-1
     title: Fewer Google token requests, and logs that explain failures, before the pilot
-    state: READY
+    state: IN_PROGRESS
     blocked_by: null
     # Story file authored: docs/stories/US-077-diagnostics-before-pilot.md (aligned with v113).
     # From rehearsal notes P-2, P-3, P-4, P-7 a and pre-pilot triage item 4. No text changes (Owner 2026-11-08).
