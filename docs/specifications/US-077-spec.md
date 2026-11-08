@@ -1,10 +1,10 @@
 ---
 artifact_type: specification
 story: US-077
-version: 1
+version: 2
 status: DRAFT
 created_at: 2026-11-08T11:49:55Z
-updated_at: 2026-11-08T11:49:55Z
+updated_at: 2026-11-08T12:04:42Z
 produced_by: spec-writer
 inputs:
   - path: docs/stories/US-077-diagnostics-before-pilot.md
@@ -13,7 +13,7 @@ inputs:
     version: 113
   - path: docs/decisions/US-077-open-decisions.md
     version: 1
-supersedes: null
+supersedes: docs/specifications/US-077-spec.md
 ---
 
 # US-077 Specification: fewer Google token requests, and logs that explain failures, before the pilot
@@ -81,14 +81,22 @@ A token request keeps today's behaviour: the same `TokenServerUrl`, delegated su
 (`GoogleRetryHandler`), per-attempt bound and no library back-off. Its HTTP client lives for that request and does not
 depend on a `ClassroomService` that a finished read has disposed.
 
+**A token request is not repeated by a Classroom attempt's retry.** `GoogleRetryHandler` repeats a failed Classroom
+attempt, and the token request has its own retry handler with at most four HTTP attempts. These two do not multiply: a
+token request that fails, in any way, ends the read at once with today's classification (FR-005). No Classroom attempt's
+retry loop catches or repeats that failure, whether it is a bare `HttpRequestException`, a time-out or a refusal.
+Where the token lookup sits relative to that loop is left to the design, under this rule.
+
 ### FR-004 Concurrent reads
 
 For each pair, at most one token request is in flight at any moment. A read that finds another read requesting the
 token for its pair waits (honouring its own `CancellationToken`) and then re-checks the entry.
 
 **The exact bound for AC-004:** when the token endpoint succeeds, N concurrent reads for one pair with no valid token
-cause **exactly one** token request; for K different pairs, exactly K. When it fails, the waiting reads try one after
-another, so there are never more token requests than reads, which is today's count.
+cause **exactly one** token request; for K different pairs, exactly K. When it fails, each waiting read makes
+its own token request in turn and ends, so one read makes at most **one failed token request**, of at most **four
+HTTP attempts** to the token endpoint, as today. N reads therefore cause at most N token requests and 4 × N HTTP attempts.
+A read cancelled while waiting makes none.
 
 ### FR-005 Failures, a rejected token, and clean-up
 
@@ -119,6 +127,10 @@ Order matters: a token-endpoint failure with a standard error body also carries 
 rule 3. The message and `Data` are only compared in memory and never written, logged or carried further. If a future
 framework version changes a message, the result degrades to `Other`, and a test that drives the real authentication
 handler catches it (I-5).
+
+A network failure or time-out during the exchange, and an error answer whose body is not JSON, arrive as other
+exception types and are `Other`. The same types also arrive from the failed reading of Google's user information, so
+they do not identify the exchange (I-10).
 
 In this path the existing line of event `AdminSignInCallbackFailed` (2203, `Warning`) gains `{FailureKind}` and is
 still the **only** application log line written for the failure: `Warning`, the kind and `{RequestId}`. The same event
@@ -188,8 +200,10 @@ The Story's criteria, unchanged, with the bounds this Specification fixes.
 ## Validation Rules
 
 - **VR-001** A token response with an empty token string is not remembered; the read ends as `Unexpected`.
-- **VR-002** A token whose `expires_in` is missing, zero, negative, or not above the 5-minute margin is used for the
+- **VR-002** A token whose `expires_in` is missing, or positive but not above the 5-minute margin, is used for the
   attempt that requested it and is not remembered.
+- **VR-002a** A token response whose `expires_in` is zero or negative says the token is already expired: it is neither
+  sent nor remembered, and the read ends as `Unexpected` (AC-003, I-12).
 - **VR-003** `FailureKind` takes only the four values of FR-006.
 - **VR-004** Reader inputs keep today's guards (`ArgumentException.ThrowIfNullOrWhiteSpace`).
 
@@ -207,7 +221,9 @@ No request body, query parameter or endpoint is added.
 - **S-04** The `FailureKind` line holds only a closed-list value and the request id: no exception message, Google
   response, callback address, query string or email (SC-10). Framework `Information` lines carrying the failure message
   stay filtered by the existing `Microsoft` → `Warning` override (`InstallationLogging`), which this Story does not
-  change.
+  change. The framework's own `Warning` lines for a correlation failure (`CorrelationCookieNotFound` and its neighbours)
+  pass that override, exist today and hold no failure message; they stay as they are. AC-007's "one Warning" counts
+  lines of the application's category `ClassroomAgent.Web.Security.GoogleSignInEvents`.
 - **S-05** No new outbound destination: token requests go to the same endpoint as today (SC-13).
 - **S-06** `GoogleAccessProbe` does not use the cache: «check access» really asks Google each time.
 - **S-07** No authorization, session or audit behaviour changes (SC-11).
@@ -243,8 +259,9 @@ None. See `docs/decisions/US-077-open-decisions.md`.
 
 - **I-1** Token taken per HTTP attempt, not per read, because a long paged read can outlast a token and AC-003 says a
   read never goes out with an expired token (FR-003).
-- **I-2** "Near expiry" is 5 minutes (FR-003). Long enough to cover a retry sequence's single attempt; Google tokens
-  last an hour.
+- **I-2** "Near expiry" is 5 minutes (FR-003): more than the 100 s one attempt may take, so a token cannot expire
+  while an attempt is under way. A whole retry sequence can last about 12.7 minutes, which is why the token is taken per
+  attempt (I-1). Google tokens last an hour.
 - **I-3** **Consequence of reuse:** while a remembered token is valid the key is not loaded and Google is not asked. A
   key removed, or a delegation withdrawn, during a run is noticed only when the token expires or Classroom refuses it,
   at most about 55 minutes later. Today a removed key is noticed at the next read. AC-005's "same failure kind" holds
@@ -260,6 +277,12 @@ None. See `docs/decisions/US-077-open-decisions.md`.
 - **I-8** The Meet reports reader is left out of this Story (Out of Scope). Its reads are few compared with
   per-course Classroom reads. It can be added later by the same pattern.
 - **I-9** The new id is 5290, outside the retention series 5201…5205 (FR-007).
+- **I-10** `TokenExchangeFailed` means Google's token endpoint answered with a failure. A network failure, a time-out or
+  an unreadable answer during the exchange is `Other`, because it cannot be told apart from a failed user-information
+  request without reading more than the closed list allows (FR-006).
+- **I-11** A failed token request ends the read and is not repeated by the Classroom attempt's retry, so a token outage
+  costs no more token attempts than today (FR-003, FR-004).
+- **I-12** A token Google reports as already expired fails the read as `Unexpected` rather than being sent (VR-002a).
 
 ## Traceability
 
@@ -267,8 +290,8 @@ None. See `docs/decisions/US-077-open-decisions.md`.
 |---|---|---|
 | AC-001 | FR-001, FR-002, FR-003 | S-03 |
 | AC-002 | FR-002 | S-03 |
-| AC-003 | FR-003, VR-002 | — |
-| AC-004 | FR-004 | S-03 |
+| AC-003 | FR-003, VR-002, VR-002a | — |
+| AC-004 | FR-003, FR-004 | S-03 |
 | AC-005 | FR-005, VR-001 | S-01 |
 | AC-006 | FR-001, FR-005 | S-01, S-02 |
 | AC-007 | FR-006, VR-003 | S-04, S-07 |
