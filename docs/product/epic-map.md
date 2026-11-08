@@ -101,6 +101,7 @@ database, in the background, repeatably.
 - US-018 Incremental synchronization
 - US-019 Trigger a synchronization from the UI
 - US-075 A short hint under each kind of data problem, and banner links to each section
+- US-077 Fewer Google token requests, and logs that explain failures, before the pilot
 
 ---
 
