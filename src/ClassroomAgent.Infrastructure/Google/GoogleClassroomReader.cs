@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using ClassroomAgent.Application.Models;
 using ClassroomAgent.Application.Ports;
@@ -35,8 +36,8 @@ namespace ClassroomAgent.Infrastructure.Google;
 /// adapter — applies OD-010 and skips a value it does not recognise. Every list answer is followed to the end of
 /// its continuation token (spec VR-005): the prototype lost student data by fetching a single page.
 /// <para>
-/// The key is resolved from the secret store for every call and held only for it; nothing about it, no token and
-/// no Google error text is logged or returned (SC-7, SC-10). Each call asks only for the read-only scopes it needs, all already on the fixed list
+/// The key is resolved from the secret store for each token request and held only for it; a token is remembered until
+/// it expires (US-077), and nothing about the key, no token and no Google error text is logged or returned (SC-7, SC-10). Each call asks only for the read-only scopes it needs, all already on the fixed list
 /// of §6 and nothing is added (spec FR-002).
 /// </para>
 /// </remarks>
@@ -82,6 +83,7 @@ public sealed partial class GoogleClassroomReader : IClassroomReader
     private readonly IGoogleRetryJitter _jitter;
     private readonly ILogger<GoogleClassroomReader> _logger;
     private readonly TimeSpan? _attemptTimeout;
+    private readonly GoogleAccessTokenCache _tokens;
 
     /// <summary>
     /// The retry seam of US-017 spec FR-002, FR-003: pauses on <paramref name="timeProvider"/>, the random factor from
@@ -111,6 +113,7 @@ public sealed partial class GoogleClassroomReader : IClassroomReader
         _jitter = jitter;
         _logger = logger;
         _attemptTimeout = attemptTimeout;
+        _tokens = new GoogleAccessTokenCache(timeProvider);
     }
 
     public async IAsyncEnumerable<CourseSnapshot> ReadCoursesAsync(
@@ -463,13 +466,14 @@ public sealed partial class GoogleClassroomReader : IClassroomReader
 
     private ClassroomService CreateService(string impersonationUser, string[] scopes)
     {
+        var authorizer = new TokenAuthorizer(this, impersonationUser, scopes);
         var httpClients = new TransportFactory(
-            new GoogleRetryHandler(_transport, _timeProvider, _jitter, LogRetry, _attemptTimeout));
+            new GoogleRetryHandler(_transport, _timeProvider, _jitter, LogRetry, _attemptTimeout, authorizer.AuthorizeAsync));
         return new ClassroomService(new BaseClientService.Initializer
         {
             ApplicationName = ApplicationName,
             HttpClientFactory = httpClients,
-            HttpClientInitializer = Credential(impersonationUser, scopes, httpClients),
+            HttpClientInitializer = authorizer,
             DefaultExponentialBackOffPolicy = ExponentialBackOffPolicy.None,
             GZipEnabled = false,
 
@@ -559,7 +563,24 @@ public sealed partial class GoogleClassroomReader : IClassroomReader
         new(GoogleReadFailureKind.Unexpected, SyncDiagnosis.Unexpected);
 
     /// <summary>
-    /// The delegated credential of one call: the school's technical account as the impersonated subject (BR-015,
+    /// One token request (US-077 FR-001, FR-003, S-02): the credential, and so the key, exists only for it, and only the
+    /// token string and its life are kept. Its HTTP client belongs to this request alone, with today's retry handler and
+    /// no token step of its own.
+    /// </summary>
+    private async Task<GoogleAccessTokenCache.IssuedToken> RequestTokenAsync(
+        string impersonationUser,
+        string[] scopes,
+        CancellationToken cancellationToken)
+    {
+        var httpClients = new TransportFactory(
+            new GoogleRetryHandler(_transport, _timeProvider, _jitter, LogRetry, _attemptTimeout));
+        var credential = Credential(impersonationUser, scopes, httpClients);
+        await credential.RequestAccessTokenAsync(cancellationToken);
+        return new GoogleAccessTokenCache.IssuedToken(credential.Token.AccessToken, credential.Token.ExpiresInSeconds);
+    }
+
+    /// <summary>
+    /// The delegated credential of one token request: the school's technical account as the impersonated subject (BR-015,
     /// spec S-03), only the read-only scopes that call needs, and no retry of its own (OD-008). A missing or unusable
     /// key ends the call before any request is sent.
     /// </summary>
@@ -604,6 +625,40 @@ public sealed partial class GoogleClassroomReader : IClassroomReader
             or NullReferenceException)
         {
             return null;
+        }
+    }
+
+    /// <summary>
+    /// The token side of one read (US-077 FR-003, FR-005): every Classroom attempt, each page and each retry included,
+    /// takes its token at that moment; a <c>401</c> drops the token that attempt carried, and the client library's own
+    /// tries repeat the attempt, as its credential did before this Story.
+    /// </summary>
+    private sealed class TokenAuthorizer(GoogleClassroomReader reader, string impersonationUser, string[] scopes)
+        : IConfigurableHttpClientInitializer, IHttpUnsuccessfulResponseHandler
+    {
+        private readonly GoogleAccessTokenCache.PairKey _key = GoogleAccessTokenCache.KeyOf(impersonationUser, scopes);
+
+        public void Initialize(ConfigurableHttpClient httpClient) =>
+            httpClient.MessageHandler.AddUnsuccessfulResponseHandler(this);
+
+        public async Task AuthorizeAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var token = await reader._tokens.GetAsync(
+                _key,
+                ct => reader.RequestTokenAsync(impersonationUser, scopes, ct),
+                cancellationToken);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+
+        public Task<bool> HandleResponseAsync(HandleUnsuccessfulResponseArgs args)
+        {
+            if (args.Response.StatusCode != HttpStatusCode.Unauthorized)
+            {
+                return Task.FromResult(false);
+            }
+
+            reader._tokens.Forget(_key, args.Request.Headers.Authorization?.Parameter);
+            return Task.FromResult(true);
         }
     }
 

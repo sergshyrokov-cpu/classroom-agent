@@ -74,7 +74,7 @@
                     data-meeting-id="@export.MeetingId.ToString(CultureInfo.InvariantCulture)" class="btn btn-outline-secondary">@T[JournalExportTextKeys.Action]</button>
             <p id="meet-export-error" class="form-error" aria-live="polite"></p>
         </section>
-        <script src="~/js/meet-export.js"></script>
+        <script src="~/js/meet-export.js" asp-append-version="true"></script>
     }
 
     @* Spec FR-010, I-11: one line per identified person, then one line for the other participants — a count and

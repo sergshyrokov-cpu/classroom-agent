@@ -32,6 +32,14 @@ public static class SignInLog
             appUserId,
             requestId);
 
+    /// <summary>US-077 FR-006, S-04: the failed callback's one line — the kind from the closed list and the request id, nothing else.</summary>
+    public static void CallbackFailedWithKind(ILogger logger, GoogleSignInFailureKind kind, string? requestId) =>
+        logger.LogWarning(
+            CallbackFailed,
+            "Admin sign-in refused in request {RequestId}: the callback itself failed ({FailureKind})",
+            requestId,
+            kind);
+
     /// <summary>
     /// FR-020: a refusal that is a decision — not approved, a failed callback, a disabled account, an account that is
     /// not an Admin account (US-051 FR-007) — is a

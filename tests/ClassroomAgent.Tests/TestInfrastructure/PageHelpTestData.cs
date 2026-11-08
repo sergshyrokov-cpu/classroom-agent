@@ -263,7 +263,7 @@ public static partial class PageHelpTestData
 
     /// <summary>The <c>src</c> of every <c>&lt;script&gt;</c> of the page.</summary>
     public static IReadOnlyList<string?> ScriptSources(string html) =>
-        ScriptOpen().Matches(html).Select(m => Attribute(m.Groups["attributes"].Value, "src")).ToList();
+        ScriptOpen().Matches(html).Select(m => Attribute(m.Groups["attributes"].Value, "src")?.Split('?')[0]).ToList(); // US-077 FR-009: without the content version
 
     /// <summary>Markup in the help that would make it more than text (spec FR-008, SC-15): a link, a form, a script, a style.</summary>
     public static IReadOnlyList<string> ForbiddenMarkup(string markup) =>

@@ -60,7 +60,7 @@
 </form>
 @if (!Model.NoCoursesStored)
 {
-    <script src="~/js/picker-narrow.js"></script>
+    <script src="~/js/picker-narrow.js" asp-append-version="true"></script>
 }
 
 @if (Model.Report is { } report)
@@ -138,7 +138,7 @@
                     data-names="@NameSourceCode.Of(export.Names)" class="btn btn-outline-secondary">@T[JournalExportTextKeys.Action]</button>
             <p id="report-export-error" class="form-error" aria-live="polite"></p>
         </section>
-        <script src="~/js/report-export.js"></script>
+        <script src="~/js/report-export.js" asp-append-version="true"></script>
     }
 
     @if (report.EmptyStateKey is { } empty)

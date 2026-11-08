@@ -63,7 +63,15 @@ public static class GoogleSignInEvents
         var outcome = await useCase.RecordFailedCallbackAsync(requestId, httpContext.RequestAborted);
 
         context.HandleResponse();
-        SignInLog.Refuse(Logger(httpContext), outcome.Refusal!.Value, requestId);
+        if (outcome.Refusal == SignInRefusal.SignInFailed)
+        {
+            SignInLog.CallbackFailedWithKind(Logger(httpContext), GoogleSignInFailureClassifier.Classify(context.Failure), requestId);
+        }
+        else
+        {
+            SignInLog.Refuse(Logger(httpContext), outcome.Refusal!.Value, requestId);
+        }
+
         Refuse(httpContext, outcome.Refusal!.Value);
     }
 

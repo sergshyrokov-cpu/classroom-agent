@@ -51,7 +51,7 @@
 </form>
 @if (!Model.NoCoursesStored)
 {
-    <script src="~/js/picker-narrow.js"></script>
+    <script src="~/js/picker-narrow.js" asp-append-version="true"></script>
 }
 
 @if (Model.Reports is { } reports)
@@ -93,7 +93,7 @@
                     data-to="@export.To.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" class="btn btn-outline-secondary">@T[JournalExportTextKeys.Action]</button>
             <p id="meet-export-error" class="form-error" aria-live="polite"></p>
         </section>
-        <script src="~/js/meet-export.js"></script>
+        <script src="~/js/meet-export.js" asp-append-version="true"></script>
     }
 
     @* Report 1 (spec FR-007, I-6). *@

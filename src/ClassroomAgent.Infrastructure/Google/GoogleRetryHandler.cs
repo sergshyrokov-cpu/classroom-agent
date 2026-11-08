@@ -11,7 +11,8 @@ internal sealed class GoogleRetryHandler(
     TimeProvider timeProvider,
     IGoogleRetryJitter jitter,
     Action<int, TimeSpan, int?> onRetry,
-    TimeSpan? attemptTimeout = null) : HttpMessageHandler
+    TimeSpan? attemptTimeout = null,
+    Func<HttpRequestMessage, CancellationToken, Task>? beforeAttempt = null) : HttpMessageHandler
 {
     private const int MaxAttempts = 4;
 
@@ -42,6 +43,13 @@ internal sealed class GoogleRetryHandler(
     {
         for (var attempt = 1; ; attempt++)
         {
+            // US-077 FR-003: before the attempt's time bound starts and outside the catches below, so the wait for a
+            // token is not charged to the attempt and a failed token request ends the read instead of being repeated.
+            if (beforeAttempt is not null)
+            {
+                await beforeAttempt(request, cancellationToken);
+            }
+
             HttpResponseMessage response;
             try
             {

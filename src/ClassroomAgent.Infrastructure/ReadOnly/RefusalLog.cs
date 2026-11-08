@@ -10,7 +10,7 @@ namespace ClassroomAgent.Infrastructure.ReadOnly;
 /// </summary>
 internal static class RefusalLog
 {
-    private static readonly EventId Refused = new(5201, "ReadOnlyWriteRefused");
+    private static readonly EventId Refused = new(5290, "ReadOnlyWriteRefused");
 
     public static void Write(ILogger logger, ReadOnlyModeException refusal) =>
         logger.LogWarning(

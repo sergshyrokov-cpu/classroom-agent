@@ -14,11 +14,11 @@ public sealed class WorkspaceConnectionRepository(ClassroomAgentDbContext db) : 
     /// <summary>Untracked: the read path never writes, and a tracked entity could be flushed by a later commit
     /// in the same request — the defect US-008 security review F-4 named (db-design §3.4).</summary>
     public Task<WorkspaceConnection?> GetForReadAsync(CancellationToken cancellationToken) =>
-        db.WorkspaceConnections.AsNoTracking().FirstOrDefaultAsync(cancellationToken);
+        db.WorkspaceConnections.AsNoTracking().OrderBy(c => c.Id).FirstOrDefaultAsync(cancellationToken);
 
     /// <summary>Tracked, because the save changes the row it finds.</summary>
     public Task<WorkspaceConnection?> GetForUpdateAsync(CancellationToken cancellationToken) =>
-        db.WorkspaceConnections.FirstOrDefaultAsync(cancellationToken);
+        db.WorkspaceConnections.OrderBy(c => c.Id).FirstOrDefaultAsync(cancellationToken);
 
     public void Add(WorkspaceConnection connection)
     {

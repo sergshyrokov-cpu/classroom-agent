@@ -53,6 +53,12 @@ public sealed class GoogleSignInStub
 
     public string DisplayName { get; set; } = "Ivan Petrenko";
 
+    /// <summary>US-077: replaces the token endpoint's answer; it may throw, as a dropped connection does.</summary>
+    public Func<HttpResponseMessage>? TokenAnswer { get; set; }
+
+    /// <summary>US-077: replaces the user-information endpoint's answer.</summary>
+    public Func<HttpResponseMessage>? UserInformationAnswer { get; set; }
+
     /// <summary>Every request the handler made to Google — asserted empty where no exchange may happen.</summary>
     public ScriptedHttpHandler Backchannel { get; }
 
@@ -123,12 +129,12 @@ public sealed class GoogleSignInStub
         var uri = request.RequestUri?.GetLeftPart(UriPartial.Path) ?? string.Empty;
         if (uri == TokenEndpoint)
         {
-            return Task.FromResult(ScriptedHttpHandler.JsonResponse(HttpStatusCode.OK, TokenJson()));
+            return Task.FromResult(TokenAnswer?.Invoke() ?? ScriptedHttpHandler.JsonResponse(HttpStatusCode.OK, TokenJson()));
         }
 
         if (uri == UserInformationEndpoint)
         {
-            return Task.FromResult(ScriptedHttpHandler.JsonResponse(HttpStatusCode.OK, UserInformationJson()));
+            return Task.FromResult(UserInformationAnswer?.Invoke() ?? ScriptedHttpHandler.JsonResponse(HttpStatusCode.OK, UserInformationJson()));
         }
 
         Assert.Fail($"The Google handler called an endpoint no test scripted: {uri}.");

@@ -42,7 +42,7 @@ public sealed class InstallationDetailTests(PostgreSqlFixture database)
             $"<[a-z0-9]+[^>]*\\bid=\"installation-identifier\"[^>]*>\\s*{identifier:D}\\s*<",
             response.Body);
         Assert.Matches("<button[^>]*\\bdata-copy-target=\"installation-identifier\"", response.Body);
-        Assert.Matches("<script[^>]*\\bsrc=\"(https://localhost)?/js/copy-identifier\\.js\"", response.Body);
+        Assert.Matches("<script[^>]*\\bsrc=\"(https://localhost)?/js/copy-identifier\\.js\\?v=[^\"]+\"", response.Body); // US-077 FR-009
         Assert.Contains(host.Text("Installation.Identifier.ConfigurationNote", "uk"), response.Text, StringComparison.Ordinal);
         Assert.Contains(host.Text("Installation.Identifier.Copied", "uk"), response.Text, StringComparison.Ordinal);
     }

@@ -48,7 +48,7 @@ public static partial class ConnectionInstructionHostExtensions
     /// so this is what a test compares against the inline scripts below.
     /// </summary>
     public static IReadOnlyList<string> ScriptSources(PageResponse page) =>
-        ScriptWithSource().Matches(page.Body).Select(m => m.Groups[1].Value).ToList();
+        ScriptWithSource().Matches(page.Body).Select(m => m.Groups[1].Value.Split('?')[0]).ToList(); // US-077 FR-009: without the content version
 
     /// <summary>
     /// Every inline script body on the page. Spec I-5 requires this to be empty: a Content-Security-Policy

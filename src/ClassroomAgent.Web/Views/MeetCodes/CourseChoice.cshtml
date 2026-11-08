@@ -83,7 +83,7 @@
     <form id="meet-code-choice-form" method="post" action="@(SignInRoutes.MeetCodes + "/" + Uri.EscapeDataString(Model.MeetingCode) + "/link")" data-narrow="radios" data-narrow-label="@T[PickerTextKeys.Label]" data-narrow-none="@T[PickerTextKeys.NothingFound]">
         @{ FormBody(); }
     </form>
-    <script src="~/js/picker-narrow.js"></script>
+    <script src="~/js/picker-narrow.js" asp-append-version="true"></script>
 }
 else
 {

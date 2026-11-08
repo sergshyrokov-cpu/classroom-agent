@@ -52,7 +52,7 @@
 
 @* Spec I-5: a static file, never inline script, so a Content-Security-Policy added later needs no
    'unsafe-inline'. The page is complete without it — the text above is already selectable and printable. *@
-<script src="/js/copy-instruction.js" defer></script>
+<script src="/js/copy-instruction.js" asp-append-version="true" defer></script>
 
 @functions {
     private static string ReasonKey(LegitimacyModeReason? reason) => reason switch
