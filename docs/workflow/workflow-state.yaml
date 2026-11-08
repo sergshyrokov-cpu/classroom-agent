@@ -5,19 +5,28 @@ version: 1
 story: US-077
 workflow: story-delivery
 current_stage: SPECIFICATION
-previous_stage: null
-last_completed_stage: null
+previous_stage: SPEC_REVIEW
+last_completed_stage: SPECIFICATION
 status: IN_PROGRESS
-attempt: 1
-last_invoked_skill: null
+attempt: 2
+last_invoked_skill: spec-verifier
 last_result:
-  verdict: null
-  stage: null
-  recorded_at: null
-last_artifacts: []
+  verdict: CHANGES_REQUIRED
+  stage: SPEC_REVIEW
+  recorded_at: '2026-11-08T11:55:13Z'
+last_artifacts:
+  - type: specification_review
+    path: docs/reviews/specifications/US-077-spec-review.md
+    version: 1
 pending_human_gate: null
-blocking_issues: []
-non_blocking_findings: []
-started_at: null
-updated_at: '2026-11-08T11:44:16Z'
+blocking_issues:
+  - "M-1: FR-003/FR-004 do not define how a token request sits inside the Classroom retry loop; up to 16 token attempts per read, and the FR-004 bound is false."
+  - "M-2: FR-006 leaves network and unreadable-answer exchange failures as Other, an interpretation not named in digest section 2."
+non_blocking_findings:
+  - "m-1: VR-002 sends a token with expires_in of zero or below, against AC-003."
+  - "m-2: S-04 names only framework Information lines; framework correlation Warning lines also exist, so AC-007 must count by application category."
+  - "m-3: Digest on I-4 omits that an expired token stays until the next request or a restart when none is requested."
+  - "m-4: The reason given in I-2 mixes one attempt (100 s) with a whole retry sequence (about 12.7 minutes)."
+started_at: '2026-11-08T11:50:07Z'
+updated_at: '2026-11-08T11:55:13Z'
 completed_at: null
